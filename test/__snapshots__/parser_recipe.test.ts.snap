@@ -1,0 +1,580 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parse function > parses complex recipes correctly 1`] = `
+Recipe {
+  "cookware": [
+    {
+      "hidden": false,
+      "name": "Dutch oven",
+      "optional": false,
+    },
+    {
+      "hidden": false,
+      "name": "small bowl",
+      "optional": false,
+    },
+    {
+      "hidden": false,
+      "name": "13×9-inch baking dish",
+      "optional": false,
+    },
+    {
+      "hidden": false,
+      "name": "rubber spatula",
+      "optional": false,
+    },
+    {
+      "hidden": false,
+      "name": "icing spatula",
+      "optional": true,
+    },
+  ],
+  "ingredients": [
+    {
+      "hidden": false,
+      "name": "lasagne noodles",
+      "optional": false,
+      "quantity": 9,
+      "unit": undefined,
+    },
+    {
+      "hidden": false,
+      "name": "bulk Italian sausage",
+      "optional": false,
+      "quantity": 1.2,
+      "unit": "lb",
+    },
+    {
+      "hidden": false,
+      "name": "ground beef",
+      "optional": false,
+      "quantity": 0.75,
+      "unit": "lb",
+    },
+    {
+      "hidden": false,
+      "name": "onion",
+      "optional": false,
+      "quantity": 1,
+      "unit": undefined,
+    },
+    {
+      "hidden": false,
+      "name": "garlic",
+      "optional": false,
+      "quantity": 3,
+      "unit": "cloves",
+    },
+    {
+      "hidden": false,
+      "name": "crushed tomatoes",
+      "optional": false,
+      "quantity": 2,
+      "unit": "cans",
+    },
+    {
+      "hidden": false,
+      "name": "tomato paste",
+      "optional": false,
+      "quantity": 2,
+      "unit": "cans",
+    },
+    {
+      "hidden": false,
+      "name": "water",
+      "optional": false,
+      "quantity": 0.6666666666666666,
+      "unit": "cup",
+    },
+    {
+      "hidden": false,
+      "name": "sugar",
+      "optional": false,
+      "quantity": 2,
+      "unit": "tbsp",
+    },
+    {
+      "hidden": false,
+      "name": "fresh parsley",
+      "optional": false,
+      "quantity": 0.1,
+      "unit": "l",
+    },
+    {
+      "hidden": false,
+      "name": "dried basil",
+      "optional": false,
+      "quantity": 2,
+      "unit": "tsp",
+    },
+    {
+      "hidden": false,
+      "name": "fennel seed",
+      "optional": false,
+      "quantity": 0.75,
+      "unit": "tsp",
+    },
+    {
+      "hidden": false,
+      "name": "salt",
+      "optional": false,
+      "quantity": 0.75,
+      "unit": "tsp",
+    },
+    {
+      "hidden": false,
+      "name": "pepper",
+      "optional": false,
+      "quantity": 0.25,
+      "unit": "tsp",
+    },
+    {
+      "hidden": false,
+      "name": "egg",
+      "optional": false,
+      "quantity": 1,
+      "unit": undefined,
+    },
+    {
+      "hidden": false,
+      "name": "ricotta cheese",
+      "optional": false,
+      "quantity": 1,
+      "unit": "carton",
+    },
+    {
+      "hidden": false,
+      "name": "mozzarella",
+      "optional": false,
+      "quantity": 4,
+      "unit": "cups",
+    },
+    {
+      "hidden": false,
+      "name": "Parmesan",
+      "optional": false,
+      "quantity": 0.75,
+      "unit": "cup",
+    },
+  ],
+  "metadata": {
+    "author": "Pam Thompson",
+    "cookTime": "50m",
+    "prepTime": "1h",
+    "servings": "12, 12 slices",
+    "source": "https://www.tasteofhome.com/recipes/best-lasagna/",
+    "tags": [
+      "pasta",
+      "casserole",
+      "classic",
+    ],
+    "title": "Best Lasagna",
+    "totalTime": "1h50m",
+  },
+  "sections": [
+    Section {
+      "content": [
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Bring a large pot of salted water to a boil. Cook the ",
+            },
+            {
+              "type": "ingredient",
+              "value": 0,
+            },
+            {
+              "type": "text",
+              "value": " according to the package directions. When complete, drain the noodles, and set aside.",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Meanwhile, heat a ",
+            },
+            {
+              "type": "cookware",
+              "value": 0,
+            },
+            {
+              "type": "text",
+              "value": " over medium heat. Add the ",
+            },
+            {
+              "type": "ingredient",
+              "value": 1,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 2,
+            },
+            {
+              "type": "text",
+              "value": " and diced ",
+            },
+            {
+              "type": "ingredient",
+              "value": 3,
+            },
+            {
+              "type": "text",
+              "value": ". Cook for ",
+            },
+            {
+              "type": "timer",
+              "value": 0,
+            },
+            {
+              "type": "text",
+              "value": " or until the meat is no longer pink, breaking up the meat with a large spoon as it cooks to create gorgeous crumbles. Add the ",
+            },
+            {
+              "type": "ingredient",
+              "value": 4,
+            },
+            {
+              "type": "text",
+              "value": ", and cook for ",
+            },
+            {
+              "type": "timer",
+              "value": 1,
+            },
+            {
+              "type": "text",
+              "value": ", until the mixture is fragrant.",
+            },
+          ],
+        },
+        {
+          "note": "Editor’s Tip: To ensure the noodles will not stick to each other, stir the water like a whirlpool when you add the pasta sheets.",
+        },
+      ],
+      "name": "Brown the beef",
+    },
+    Section {
+      "content": [
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Drain the mixture in the Dutch oven. Then, add the remaining sauce ingredients: ",
+            },
+            {
+              "type": "ingredient",
+              "value": 5,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 6,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 7,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 8,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 9,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 10,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 11,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 12,
+            },
+            {
+              "type": "text",
+              "value": " and ",
+            },
+            {
+              "type": "ingredient",
+              "value": 13,
+            },
+            {
+              "type": "text",
+              "value": ". ",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Bring the mixture to a boil. Reduce the heat to a simmer. Cook, uncovered, for ",
+            },
+            {
+              "type": "timer",
+              "value": 2,
+            },
+            {
+              "type": "text",
+              "value": ", stirring occasionally.",
+            },
+          ],
+        },
+      ],
+      "name": "Make the meat sauce",
+    },
+    Section {
+      "content": [
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "In a ",
+            },
+            {
+              "type": "cookware",
+              "value": 1,
+            },
+            {
+              "type": "text",
+              "value": ", whisk together the ",
+            },
+            {
+              "type": "ingredient",
+              "value": 14,
+            },
+            {
+              "type": "text",
+              "value": ", ",
+            },
+            {
+              "type": "ingredient",
+              "value": 15,
+            },
+            {
+              "type": "text",
+              "value": ", and remaining ",
+            },
+            {
+              "type": "ingredient",
+              "value": 9,
+            },
+            {
+              "type": "text",
+              "value": " and ",
+            },
+            {
+              "type": "ingredient",
+              "value": 12,
+            },
+            {
+              "type": "text",
+              "value": ". ",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "If you haven’t already, grate the ",
+            },
+            {
+              "type": "ingredient",
+              "value": 16,
+            },
+            {
+              "type": "text",
+              "value": " and ",
+            },
+            {
+              "type": "ingredient",
+              "value": 17,
+            },
+            {
+              "type": "text",
+              "value": " cheeses.",
+            },
+          ],
+        },
+        {
+          "note": "Editor’s Tip: For the freshest, creamiest taste, grate your own cheese at home.",
+        },
+      ],
+      "name": "Prepare the cheese filling",
+    },
+    Section {
+      "content": [
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Preheat the oven to 375°. ",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Spoon 2 cups meat sauce into an ungreased ",
+            },
+            {
+              "type": "cookware",
+              "value": 2,
+            },
+            {
+              "type": "text",
+              "value": ", spreading it out to cover the entire dish. Layer three noodles onto the sauce. Add one-third of the ricotta mixture, spreading it over the noodles with a ",
+            },
+            {
+              "type": "cookware",
+              "value": 3,
+            },
+            {
+              "type": "text",
+              "value": " or an ",
+            },
+            {
+              "type": "cookware",
+              "value": 4,
+            },
+            {
+              "type": "text",
+              "value": ". Sprinkle with 1 cup mozzarella cheese and 2 tablespoons Parmesan cheese.",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Repeat the layers twice, finishing with remaining meat sauce and cheeses. The dish will be very full by the time you get to the top!",
+            },
+          ],
+        },
+      ],
+      "name": "Layer the lasagna ingredients",
+    },
+    Section {
+      "content": [
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Cover the baking dish, and bake for ",
+            },
+            {
+              "type": "timer",
+              "value": 3,
+            },
+            {
+              "type": "text",
+              "value": ". ",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Remove the cover, and cook for an additional ",
+            },
+            {
+              "type": "timer",
+              "value": 3,
+            },
+            {
+              "type": "text",
+              "value": ", until the sauce is bubbling around the edges and the cheese is fully melted. ",
+            },
+          ],
+        },
+        {
+          "items": [
+            {
+              "type": "text",
+              "value": "Let the lasagna stand for ",
+            },
+            {
+              "type": "timer",
+              "value": 4,
+            },
+            {
+              "type": "text",
+              "value": " before slicing and serving.",
+            },
+          ],
+        },
+      ],
+      "name": "Bake the lasagna",
+    },
+  ],
+  "servings": 12,
+  "timers": [
+    {
+      "duration": 10,
+      "name": undefined,
+      "unit": "minutes",
+    },
+    {
+      "duration": 1,
+      "name": undefined,
+      "unit": "min",
+    },
+    {
+      "duration": 30,
+      "name": undefined,
+      "unit": "min",
+    },
+    {
+      "duration": 25,
+      "name": undefined,
+      "unit": "min",
+    },
+    {
+      "duration": 15,
+      "name": undefined,
+      "unit": "min",
+    },
+  ],
+}
+`;

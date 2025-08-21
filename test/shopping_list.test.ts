@@ -1,0 +1,208 @@
+import { describe, it, expect } from "vitest";
+import { ShoppingList } from "../src/classes/shopping_list";
+import type { CategorizedIngredients } from "../src/types";
+import { Recipe } from "../src/classes/recipe";
+
+describe("ShoppingList", () => {
+  const recipe1 = new Recipe();
+  recipe1.metadata = {};
+  recipe1.ingredients = [
+    { name: "flour", quantity: 100, unit: "g" },
+    { name: "sugar", quantity: 50, unit: "g" },
+    { name: "eggs", quantity: 2 },
+    { name: "milk", quantity: 200, unit: "ml" },
+    { name: "pepper", quantity: "to taste" },
+    { name: "salt", hidden: true },
+    { name: "spices" },
+  ];
+  recipe1.cookware = [];
+  recipe1.timers = [];
+  recipe1.sections = [];
+  recipe1.servings = 1;
+
+  const recipe2 = new Recipe();
+  recipe2.metadata = {};
+  recipe2.ingredients = [
+    { name: "flour", quantity: 50, unit: "g" },
+    { name: "butter", quantity: 25, unit: "g" },
+    { name: "eggs", quantity: 1 },
+    { name: "pepper", quantity: 1, unit: "tsp" },
+    { name: "spices", quantity: 1, unit: "pinch" },
+  ];
+  recipe2.cookware = [];
+  recipe2.timers = [];
+  recipe2.sections = [];
+
+  it("should add a recipe's ingredients", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    expect(shoppingList.ingredients).toEqual([
+      { name: "flour", quantity: 100, unit: "g" },
+      { name: "sugar", quantity: 50, unit: "g" },
+      { name: "eggs", quantity: 2 },
+      { name: "milk", quantity: 200, unit: "ml" },
+      { name: "pepper", quantity: "to taste" },
+      { name: "spices" },
+    ]);
+  });
+
+  it("should merge ingredients from multiple recipes", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    shoppingList.add_recipe(recipe2);
+    expect(shoppingList.ingredients).toEqual([
+      { name: "flour", quantity: 150, unit: "g" },
+      { name: "sugar", quantity: 50, unit: "g" },
+      { name: "eggs", quantity: 3 },
+      { name: "milk", quantity: 200, unit: "ml" },
+      { name: "pepper", quantity: "to taste" },
+      { name: "spices", quantity: 1, unit: "pinch" },
+      { name: "butter", quantity: 25, unit: "g" },
+      { name: "pepper", quantity: 1, unit: "tsp" },
+    ]);
+  });
+
+  it("should scale recipe ingredients", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1, 2);
+    expect(shoppingList.ingredients).toEqual([
+      { name: "flour", quantity: 200, unit: "g" },
+      { name: "sugar", quantity: 100, unit: "g" },
+      { name: "eggs", quantity: 4 },
+      { name: "milk", quantity: 400, unit: "ml" },
+      { name: "pepper", quantity: "to taste" },
+      { name: "spices" },
+    ]);
+  });
+
+  it("should parse at creation if an aisle config is provided", () => {
+    const shoppingList = new ShoppingList(`
+[Dairy]
+milk
+butter
+
+[Bakery]
+flour
+sugar
+    `);
+    expect(shoppingList.aisle_config).toBeDefined();
+    expect(shoppingList.aisle_config?.categories.length).toBe(2);
+  });
+
+  it("should set aisle config", () => {
+    const shoppingList = new ShoppingList();
+    const config = `
+[Dairy]
+milk
+butter
+
+[Bakery]
+flour
+sugar
+    `;
+    shoppingList.set_aisle_config(config);
+    expect(shoppingList.aisle_config).toBeDefined();
+    expect(shoppingList.aisle_config?.categories.length).toBe(2);
+  });
+
+  it("should categorize ingredients", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    shoppingList.add_recipe(recipe2);
+    const config = `
+[Dairy]
+milk
+butter
+
+[Bakery]
+flour
+sugar
+    `;
+    shoppingList.set_aisle_config(config);
+    shoppingList.categorize();
+
+    // Sort ingredients within each category
+    for (const category in shoppingList.categories!) {
+      shoppingList.categories[category]!.sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+    }
+
+    const expected: CategorizedIngredients = {
+      Bakery: [
+        { name: "flour", quantity: 150, unit: "g" },
+        { name: "sugar", quantity: 50, unit: "g" },
+      ],
+      Dairy: [
+        { name: "butter", quantity: 25, unit: "g" },
+        { name: "milk", quantity: 200, unit: "ml" },
+      ],
+      other: [
+        { name: "eggs", quantity: 3 },
+        { name: "pepper", quantity: "to taste" },
+        { name: "pepper", quantity: 1, unit: "tsp" },
+        { name: "spices", quantity: 1, unit: "pinch" },
+      ],
+    };
+
+    // Sort ingredients in expected categories
+    for (const category in expected as any) {
+      expected[category]!.sort((a: any, b: any) =>
+        a.name.localeCompare(b.name),
+      );
+    }
+
+    expect(shoppingList.categories).toEqual(expected);
+  });
+
+  it("should remove a recipe and recalculate ingredients", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    shoppingList.add_recipe(recipe2);
+    shoppingList.remove_recipe(0);
+    expect(shoppingList.ingredients).toEqual([
+      { name: "flour", quantity: 50, unit: "g" },
+      { name: "butter", quantity: 25, unit: "g" },
+      { name: "eggs", quantity: 1 },
+      { name: "pepper", quantity: 1, unit: "tsp" },
+      { name: "spices", quantity: 1, unit: "pinch" },
+    ]);
+  });
+
+  it("should remove a recipe and re-categorize ingredients", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    shoppingList.add_recipe(recipe2);
+    const config = `[Bakery]
+                    flour`;
+    shoppingList.set_aisle_config(config);
+    expect(shoppingList.categories?.Bakery).toEqual([
+      { name: "flour", quantity: 150, unit: "g" },
+    ]);
+    shoppingList.remove_recipe(0);
+    expect(shoppingList.categories?.Bakery).toEqual([
+      { name: "flour", quantity: 50, unit: "g" },
+    ]);
+  });
+  it("should throw an error when removing a recipe with an invalid index", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    expect(() => shoppingList.remove_recipe(1)).toThrow("Index out of bounds");
+  });
+
+  it('should categorize all ingredients as "other" if no aisle config is set', () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(recipe1);
+    shoppingList.categorize();
+    expect(shoppingList.categories).toEqual({
+      other: [
+        { name: "flour", quantity: 100, unit: "g" },
+        { name: "sugar", quantity: 50, unit: "g" },
+        { name: "eggs", quantity: 2 },
+        { name: "milk", quantity: 200, unit: "ml" },
+        { name: "pepper", quantity: "to taste" },
+        { name: "spices" },
+      ],
+    });
+  });
+});

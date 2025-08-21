@@ -1,0 +1,15 @@
+{
+  "entryPoints": ["./src"],
+  "entryPointStrategy": "resolve",
+  "out": "./docs/api",
+  "docsRoot": "./docs",
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": false,
+    "includeFolders": false,
+    "compactFolders": true,
+    "excludeReferences": true
+  },
+  "categorizeByGroup": false,
+  "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"]
+}
