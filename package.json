@@ -1,5 +1,5 @@
 {
-  "name": "cooklang-parser",
+  "name": "@tmlmt/cooklang-parser",
   "version": "1.0.1",
   "description": "Cooklang parsers and utilities",
   "author": "Thomas Lamant <tom@tmlmt.com>",
