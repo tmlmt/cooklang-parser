@@ -79,8 +79,8 @@ var Section = class {
 var metadataRegex = /---\n(.*?)\n---/s;
 var multiwordIngredient = /@(?<mIngredientModifier>[@\-&+*!?])?(?<mIngredientName>(?:[^\s@#~\[\]{(.,;:!?]+(?:\s+[^\s@#~\[\]{(.,;:!?]+)+))(?=\s*(?:\{|\}|\(\s*[^)]*\s*\)))(?:\{(?<mIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))?(?:%(?<mIngredientUnits>[^}]+?))?\})?(?:\((?<mIngredientPreparation>[^)]*?)\))?/gu;
 var singleWordIngredient = /@(?<sIngredientModifier>[@\-&+*!?])?(?<sIngredientName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?<sIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))(?:%(?<sIngredientUnits>[^}]+?))?\})?(?:\((?<sIngredientPreparation>[^)]*?)\))?/gu;
-var multiwordCookware = /#(?<mCookwareModifier>[@\-&+*!?])?(?<mCookwareName>[^@#~[]+?)\{(?<mCookwareQuantity>.*?)\}/;
-var singleWordCookware = /#(?<sCookwareModifier>[@\-&+*!?])?(?<sCookwareName>[^\s\t\s\p{P}]+)/u;
+var multiwordCookware = /#(?<mCookwareModifier>[\-&+*!?])?(?<mCookwareName>[^#~[]+?)\{(?<mCookwareQuantity>.*?)\}/;
+var singleWordCookware = /#(?<sCookwareModifier>[\-&+*!?])?(?<sCookwareName>[^\s\t\s\p{P}]+)/u;
 var timer = /~(?<timerName>.*?)(?:\{(?<timerQuantity>.*?)(?:%(?<timerUnits>.+?))?\})/;
 var tokensRegex = new RegExp(
   [
@@ -214,6 +214,16 @@ function normalizeUnit(unit) {
 function addQuantities(q1, q2) {
   const unit1Def = normalizeUnit(q1.unit);
   const unit2Def = normalizeUnit(q2.unit);
+  if (isNaN(Number(q1.value))) {
+    throw new Error(
+      `Cannot add quantity to string-quantified value: ${q1.value}`
+    );
+  }
+  if (isNaN(Number(q2.value))) {
+    throw new Error(
+      `Cannot add quantity to string-quantified value: ${q2.value}`
+    );
+  }
   if (q1.unit === "" && unit2Def) {
     return {
       value: Math.round((q1.value + q2.value) * 100) / 100,
@@ -327,7 +337,7 @@ function findAndUpsertCookware(cookware, newCookware, isReference) {
 }
 function parseNumber(input_str) {
   const clean_str = String(input_str).replace(",", ".");
-  if (clean_str.includes("/")) {
+  if (!clean_str.startsWith("/") && clean_str.includes("/")) {
     const [num, den] = clean_str.split("/").map(Number);
     return num / den;
   }
@@ -373,7 +383,10 @@ function extractMetadata(content) {
   for (const metaVar of [
     "title",
     "source",
+    "source.name",
+    "source.url",
     "author",
+    "source.author",
     "prep time",
     "time.prep",
     "cook time",
@@ -381,16 +394,16 @@ function extractMetadata(content) {
     "time required",
     "time",
     "duration",
+    "locale",
     "introduction",
     "description",
-    "servings",
-    "yield",
-    "serves",
     "course",
     "category",
     "diet",
     "cuisine",
-    "difficulty"
+    "difficulty",
+    "image",
+    "picture"
   ]) {
     const stringMetaValue = parseSimpleMetaVar(metadataContent, metaVar);
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
@@ -402,7 +415,7 @@ function extractMetadata(content) {
       servings = scalingMetaValue[0];
     }
   }
-  for (const metaVar of ["tags", "images"]) {
+  for (const metaVar of ["tags", "images", "pictures"]) {
     const listMetaValue = parseListMetaVar(metadataContent, metaVar);
     if (listMetaValue) metadata[metaVar] = listMetaValue;
   }
@@ -510,24 +523,34 @@ var Recipe = class _Recipe {
         if (idx > cursor) {
           items.push({ type: "text", value: line.slice(cursor, idx) });
         }
-        const groups = match.groups ?? {};
+        const groups = match.groups;
         if (groups.mIngredientName || groups.sIngredientName) {
-          const name = groups.mIngredientName || groups.sIngredientName || "";
+          const name = groups.mIngredientName || groups.sIngredientName;
           const quantityRaw = groups.mIngredientQuantity || groups.sIngredientQuantity;
           const units2 = groups.mIngredientUnits || groups.sIngredientUnits;
+          const preparation = groups.mIngredientPreparation || groups.sIngredientPreparation;
           const modifier = groups.mIngredientModifier || groups.sIngredientModifier;
           const optional = modifier === "?";
           const hidden = modifier === "-";
           const reference = modifier === "&";
+          const isRecipe = modifier === "@";
           const quantity = quantityRaw ? parseNumber(quantityRaw) : void 0;
           const idxInList = findAndUpsertIngredient(
             this.ingredients,
-            { name, quantity, unit: units2, optional, hidden },
+            {
+              name,
+              quantity,
+              unit: units2,
+              optional,
+              hidden,
+              preparation,
+              isRecipe
+            },
             reference
           );
           items.push({ type: "ingredient", value: idxInList });
         } else if (groups.mCookwareName || groups.sCookwareName) {
-          const name = groups.mCookwareName || groups.sCookwareName || "";
+          const name = groups.mCookwareName || groups.sCookwareName;
           const modifier = groups.mCookwareModifier || groups.sCookwareModifier;
           const optional = modifier === "?";
           const hidden = modifier === "-";
@@ -539,7 +562,7 @@ var Recipe = class _Recipe {
           );
           items.push({ type: "cookware", value: idxInList });
         } else if (groups.timerQuantity !== void 0) {
-          const durationStr = (groups.timerQuantity || "").trim();
+          const durationStr = groups.timerQuantity.trim();
           const unit = (groups.timerUnits || "").trim();
           if (!unit) {
             throw new Error("Timer missing units");
@@ -579,15 +602,7 @@ var Recipe = class _Recipe {
   scaleTo(newServings) {
     const originalServings = this.getServings();
     if (originalServings === void 0 || originalServings === 0) {
-      const newRecipe = this.clone();
-      newRecipe.servings = newServings;
-      if (newRecipe.metadata.servings)
-        newRecipe.metadata.servings = String(newServings);
-      if (newRecipe.metadata.yield)
-        newRecipe.metadata.yield = String(newServings);
-      if (newRecipe.metadata.serves)
-        newRecipe.metadata.serves = String(newServings);
-      return newRecipe;
+      throw new Error("Error scaling recipe: no initial servings value set");
     }
     const factor = newServings / originalServings;
     return this.scaleBy(factor);
@@ -601,34 +616,29 @@ var Recipe = class _Recipe {
     const newRecipe = this.clone();
     const originalServings = newRecipe.getServings();
     if (originalServings === void 0 || originalServings === 0) {
-      newRecipe.servings = factor;
-      if (newRecipe.metadata.servings)
-        newRecipe.metadata.servings = String(factor);
-      if (newRecipe.metadata.yield) newRecipe.metadata.yield = String(factor);
-      if (newRecipe.metadata.serves) newRecipe.metadata.serves = String(factor);
-      return newRecipe;
+      throw new Error("Error scaling recipe: no initial servings value set");
     }
     newRecipe.ingredients = newRecipe.ingredients.map((ingredient) => {
-      if (ingredient.quantity) {
+      if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
         ingredient.quantity *= factor;
       }
       return ingredient;
     }).filter((ingredient) => ingredient.quantity !== null);
     newRecipe.servings = originalServings * factor;
-    if (newRecipe.metadata.servings) {
-      const servingsValue = parseFloat(this.metadata.servings || "");
+    if (newRecipe.metadata.servings && this.metadata.servings) {
+      const servingsValue = parseFloat(this.metadata.servings);
       if (!isNaN(servingsValue)) {
         newRecipe.metadata.servings = String(servingsValue * factor);
       }
     }
-    if (newRecipe.metadata.yield) {
-      const yieldValue = parseFloat(this.metadata.yield || "");
+    if (newRecipe.metadata.yield && this.metadata.yield) {
+      const yieldValue = parseFloat(this.metadata.yield);
       if (!isNaN(yieldValue)) {
         newRecipe.metadata.yield = String(yieldValue * factor);
       }
     }
-    if (newRecipe.metadata.serves) {
-      const servesValue = parseFloat(this.metadata.serves || "");
+    if (newRecipe.metadata.serves && this.metadata.serves) {
+      const servesValue = parseFloat(this.metadata.serves);
       if (!isNaN(servesValue)) {
         newRecipe.metadata.serves = String(servesValue * factor);
       }
@@ -691,23 +701,49 @@ var ShoppingList = class {
   calculate_ingredients() {
     this.ingredients = [];
     for (const { recipe, factor } of this.recipes) {
-      for (const ingredient of recipe.ingredients) {
+      const scaledRecipe = factor === 1 ? recipe : recipe.scaleBy(factor);
+      for (const ingredient of scaledRecipe.ingredients) {
         if (ingredient.hidden) {
           continue;
         }
         const existingIngredient = this.ingredients.find(
-          (i) => i.name === ingredient.name && i.unit === ingredient.unit
+          (i) => i.name === ingredient.name
         );
-        if (existingIngredient) {
-          if (existingIngredient.quantity && ingredient.quantity) {
-            existingIngredient.quantity += ingredient.quantity * factor;
-          } else if (ingredient.quantity) {
-            existingIngredient.quantity = ingredient.quantity * factor;
+        let addSeparate = false;
+        try {
+          if (existingIngredient) {
+            if (existingIngredient.quantity && ingredient.quantity) {
+              const newQuantity = addQuantities(
+                {
+                  value: existingIngredient.quantity,
+                  unit: existingIngredient.unit ?? ""
+                },
+                {
+                  value: ingredient.quantity,
+                  unit: ingredient.unit ?? ""
+                }
+              );
+              existingIngredient.quantity = newQuantity.value;
+              if (newQuantity.unit) {
+                existingIngredient.unit = newQuantity.unit;
+              }
+            } else if (ingredient.quantity) {
+              existingIngredient.quantity = ingredient.quantity;
+              if (ingredient.unit) {
+                existingIngredient.unit = ingredient.unit;
+              }
+            }
           }
-        } else {
-          const newIngredient = { ...ingredient };
-          if (newIngredient.quantity) {
-            newIngredient.quantity *= factor;
+        } catch {
+          addSeparate = true;
+        }
+        if (!existingIngredient || addSeparate) {
+          const newIngredient = { name: ingredient.name };
+          if (ingredient.quantity) {
+            newIngredient.quantity = ingredient.quantity;
+          }
+          if (ingredient.unit) {
+            newIngredient.unit = ingredient.unit;
           }
           this.ingredients.push(newIngredient);
         }

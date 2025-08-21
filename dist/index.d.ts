@@ -154,13 +154,17 @@ interface Ingredient {
     /** The name of the ingredient. */
     name: string;
     /** The quantity of the ingredient. */
-    quantity?: number;
+    quantity?: number | string;
     /** The unit of the ingredient. */
     unit?: string;
+    /** The preparation of the ingredient. */
+    preparation?: string;
     /** Whether the ingredient is optional. */
     optional?: boolean;
     /** Whether the ingredient is hidden. */
     hidden?: boolean;
+    /** Whether the ingredient is a recipe. */
+    isRecipe?: boolean;
 }
 /**
  * Represents a timer in a recipe.
