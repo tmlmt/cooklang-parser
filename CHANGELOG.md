@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.4
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.3...v1.0.4)
+
+### 📦 Build
+
+- Produce both CommonJS and ESM ([b8d3608](https://github.com/tmlmt/cooklang-parser/commit/b8d3608))
+
+### 🏡 Chore
+
+- Fix endpoints in package.json ([935497a](https://github.com/tmlmt/cooklang-parser/commit/935497a))
+
 ## v1.0.3
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.2...v1.0.3)
