@@ -2,7 +2,7 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: ["src/index.ts"],
-  format: ["esm"], // produce CommonJS (.cjs) and ESM (.mjs)
+  format: ["cjs", "esm"], // produce CommonJS (.cjs) and ESM (.mjs)
   dts: true, // generate .d.ts
   sourcemap: true,
   clean: true,
