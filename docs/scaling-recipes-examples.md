@@ -2,6 +2,6 @@
 outline: deep
 ---
 
-# Parsing Recipes Examples
+# Scaling Recipes Examples
 
 TODO

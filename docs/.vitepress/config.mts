@@ -10,7 +10,7 @@ export default defineConfig({
     nav: [
       { text: "Home", link: "/" },
       { text: "API", link: "/api/" },
-      { text: "Examples", link: "/markdown-examples" },
+      { text: "Examples", link: "/parsing-recipes-examples" },
     ],
 
     sidebar: [
@@ -22,6 +22,7 @@ export default defineConfig({
         text: "Examples",
         items: [
           { text: "Parsing recipes", link: "/parsing-recipes-examples" },
+          { text: "Scaling recipes", link: "/scaling-recipes-examples" }, 
           { text: "Creating a shopping list", link: "/shopping-list-examples" },
         ],
       },
