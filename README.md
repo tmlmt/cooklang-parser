@@ -6,6 +6,8 @@ A typescript library to parse and manipulate [cooklang](https://cooklang.org/) r
 
 This library provides a set of tools to work with recipes written in the Cooklang format. It allows you to parse recipes, extract ingredients, cookware, and timers, scale recipes, and generate shopping lists.
 
+The documentation is available at [https://cooklang-parser.tmlmt.com](https://cooklang-parser.tmlmt.com) (work in progress)
+
 ## Features
 
 - **Cooklang Compliant:** Fully compliant with the Cooklang specifications.
@@ -85,11 +87,17 @@ shoppingList.categorize();
 console.log(shoppingList.categories);
 ```
 
+## Future plans
+
+I plan to further develop features depending on the needs I will encounter in using this library in a practical application.
+
 ## Test coverage
 
-This project maintains a high level of test coverage to ensure reliability. You can run the tests yourself by cloning the repository and running `pnpm test`.
+This project include a test setup aimed at eventually ensuring reliable parsing/scaling of as many recipe use cases as possible.
 
-To see the coverage report, run `pnpm run test:coverage`.
+You can run the tests yourself by cloning the repository and running `pnpm test`. To see the coverage report, run `pnpm run test:coverage`.
+
+If you find any issue with your own examples of recipes, feel free to open an Issue and if you want to help fix it, to submit a Pull Request.
 
 ## License
 
