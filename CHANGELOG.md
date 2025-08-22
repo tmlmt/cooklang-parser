@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.0.5
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.4...v1.0.5)
+
+### 📖 Documentation
+
+- Fix and add placeholders ([d30192e](https://github.com/tmlmt/cooklang-parser/commit/d30192e))
+
+### 🏡 Chore
+
+- **git:** Ignore vitepress and typedoc build files ([e6e5cb3](https://github.com/tmlmt/cooklang-parser/commit/e6e5cb3))
+- **README:** Fix recipe parsing example ([4a95488](https://github.com/tmlmt/cooklang-parser/commit/4a95488))
+
+### 🤖 CI
+
+- Build and deploy docs ([8043d50](https://github.com/tmlmt/cooklang-parser/commit/8043d50))
+
 ## v1.0.4
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.3...v1.0.4)
