@@ -22,7 +22,7 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
-  publish-and-deploy:
+  publish-npm:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
@@ -39,6 +39,19 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm publish --access public
+
+  deploy-docs:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org/"
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install
       - name: Build docs
         run: pnpm docs:build
       - name: Deploy docs to production server
