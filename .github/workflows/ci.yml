@@ -22,7 +22,7 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
-  publish:
+  publish-and-deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
@@ -39,3 +39,14 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm publish --access public
+      - name: Build docs
+        run: pnpm docs:build
+      - name: Deploy docs to production server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          SOURCE: "docs/.vitepress/dist"
+          TARGET: ${{ secrets.TARGET_DIR_DOCS }}
