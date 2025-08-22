@@ -34,10 +34,12 @@ const recipeString = `
 title: Pancakes
 tags: breakfast, easy
 ---
-
 Crack the @eggs{3} into a bowl, and add @coarse salt{}.
+
 Melt the @butter{50%g} in a #pan on medium heat.
+
 Cook for ~{15%minutes}.
+
 Serve hot.
 `;
 
