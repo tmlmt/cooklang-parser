@@ -34,7 +34,8 @@
     "predocs:build": "typedoc",
     "docs:build": "vitepress build docs",
     "predocs:preview": "typedoc",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@iconify-json/material-symbols": "1.2.32",
@@ -45,6 +46,7 @@
     "@vitest/ui": "3.2.4",
     "eslint": "9.33.0",
     "eslint-config-prettier": "10.1.8",
+    "execa": "9.6.0",
     "prettier": "3.6.2",
     "rimraf": "6.0.1",
     "tsup": "8.5.0",
