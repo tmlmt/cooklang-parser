@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.6
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.5...v1.0.6)
+
+### 🏡 Chore
+
+- Add release script ([36df049](https://github.com/tmlmt/cooklang-parser/commit/36df049))
+
+### 🤖 CI
+
+- Separate publish-npm and deploy-docs jobs ([a6ad2ed](https://github.com/tmlmt/cooklang-parser/commit/a6ad2ed))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.0.5
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.4...v1.0.5)
