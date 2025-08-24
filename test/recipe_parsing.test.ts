@@ -237,8 +237,13 @@ describe("parse function", () => {
 
   it("extracts cookware correctly", () => {
     const result = new Recipe(simpleRecipe);
-    expect(result.cookware.length).toBe(1);
+    expect(result.cookware.length).toBe(2);
     expect(result.cookware[0]).toEqual({
+      hidden: false,
+      name: "bowl",
+      optional: false,
+    });
+    expect(result.cookware[1]).toEqual({
       hidden: false,
       name: "pan",
       optional: false,

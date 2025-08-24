@@ -16,7 +16,15 @@ exports[`parse function > extracts steps correctly 1`] = `
           },
           {
             "type": "text",
-            "value": " into a bowl, and add ",
+            "value": " into a ",
+          },
+          {
+            "type": "cookware",
+            "value": 0,
+          },
+          {
+            "type": "text",
+            "value": ", and add ",
           },
           {
             "type": "ingredient",
@@ -44,7 +52,7 @@ exports[`parse function > extracts steps correctly 1`] = `
           },
           {
             "type": "cookware",
-            "value": 0,
+            "value": 1,
           },
           {
             "type": "text",

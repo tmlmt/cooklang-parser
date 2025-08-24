@@ -6,9 +6,9 @@ const singleWordIngredient =
   /@(?<sIngredientModifier>[@\-&+*!?])?(?<sIngredientName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?<sIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))(?:%(?<sIngredientUnits>[^}]+?))?\})?(?:\((?<sIngredientPreparation>[^)]*?)\))?/gu;
 
 const multiwordCookware =
-  /#(?<mCookwareModifier>[\-&+*!?])?(?<mCookwareName>[^#~[]+?)\{(?<mCookwareQuantity>.*?)\}/;
+  /#(?<mCookwareModifier>[\-&+*!?])?(?<mCookwareName>(?:[^\s@#~\[\]{(.,;:!?]+(?:\s+[^\s@#~\[\]{(.,;:!?]+)+))(?=\s*(?:\{|\}|\(\s*[^)]*\s*\)))\{(?<mCookwareQuantity>.*?)\}/;
 const singleWordCookware =
-  /#(?<sCookwareModifier>[\-&+*!?])?(?<sCookwareName>[^\s\t\s\p{P}]+)/u;
+  /#(?<sCookwareModifier>[\-&+*!?])?(?<sCookwareName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?<sCookwareQuantity>.*?)\})?/u;
 
 const timer =
   /~(?<timerName>.*?)(?:\{(?<timerQuantity>.*?)(?:%(?<timerUnits>.+?))?\})/;
