@@ -280,87 +280,7 @@ describe("parse function", () => {
 
   it("extracts steps correctly", () => {
     const result = new Recipe(simpleRecipe);
-    expect(result.sections).toMatchInlineSnapshot(`
-      [
-        Section {
-          "content": [
-            {
-              "items": [
-                {
-                  "type": "text",
-                  "value": "Crack the ",
-                },
-                {
-                  "type": "ingredient",
-                  "value": 0,
-                },
-                {
-                  "type": "text",
-                  "value": " into a bowl, and add ",
-                },
-                {
-                  "type": "ingredient",
-                  "value": 1,
-                },
-                {
-                  "type": "text",
-                  "value": ".",
-                },
-              ],
-            },
-            {
-              "items": [
-                {
-                  "type": "text",
-                  "value": "Melt the ",
-                },
-                {
-                  "type": "ingredient",
-                  "value": 2,
-                },
-                {
-                  "type": "text",
-                  "value": " in a ",
-                },
-                {
-                  "type": "cookware",
-                  "value": 0,
-                },
-                {
-                  "type": "text",
-                  "value": " on medium heat.",
-                },
-              ],
-            },
-            {
-              "items": [
-                {
-                  "type": "text",
-                  "value": "Cook for ",
-                },
-                {
-                  "type": "timer",
-                  "value": 0,
-                },
-                {
-                  "type": "text",
-                  "value": ".",
-                },
-              ],
-            },
-            {
-              "items": [
-                {
-                  "type": "text",
-                  "value": "Serve hot.",
-                },
-              ],
-            },
-          ],
-          "name": "",
-        },
-      ]
-    `);
+    expect(result.sections).toMatchSnapshot();
   });
 
   it("throws error for missing timer unit", () => {
@@ -387,51 +307,7 @@ Another step.
 > A final note.
 `;
     const result = new Recipe(recipeWithNotes);
-    expect(result.sections).toMatchInlineSnapshot(`
-      [
-        Section {
-          "content": [
-            {
-              "note": "This is a note at the beginning.",
-            },
-            {
-              "items": [
-                {
-                  "type": "text",
-                  "value": "Add ",
-                },
-                {
-                  "type": "ingredient",
-                  "value": 0,
-                },
-                {
-                  "type": "text",
-                  "value": "> and this.",
-                },
-              ],
-            },
-            {
-              "note": "This is a note in the middle which continues on the next line.",
-            },
-            {
-              "items": [
-                {
-                  "type": "text",
-                  "value": "Another step.",
-                },
-              ],
-            },
-            {
-              "note": "Another note on multiple lines starting with > for readability",
-            },
-            {
-              "note": "A final note.",
-            },
-          ],
-          "name": "",
-        },
-      ]
-    `);
+    expect(result.sections).toMatchSnapshot();
   });
 
   it("parses complex recipes correctly", () => {

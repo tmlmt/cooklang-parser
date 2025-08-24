@@ -1,5 +1,87 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`parse function > extracts steps correctly 1`] = `
+[
+  Section {
+    "content": [
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "Crack the ",
+          },
+          {
+            "type": "ingredient",
+            "value": 0,
+          },
+          {
+            "type": "text",
+            "value": " into a bowl, and add ",
+          },
+          {
+            "type": "ingredient",
+            "value": 1,
+          },
+          {
+            "type": "text",
+            "value": ".",
+          },
+        ],
+      },
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "Melt the ",
+          },
+          {
+            "type": "ingredient",
+            "value": 2,
+          },
+          {
+            "type": "text",
+            "value": " in a ",
+          },
+          {
+            "type": "cookware",
+            "value": 0,
+          },
+          {
+            "type": "text",
+            "value": " on medium heat.",
+          },
+        ],
+      },
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "Cook for ",
+          },
+          {
+            "type": "timer",
+            "value": 0,
+          },
+          {
+            "type": "text",
+            "value": ".",
+          },
+        ],
+      },
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "Serve hot.",
+          },
+        ],
+      },
+    ],
+    "name": "",
+  },
+]
+`;
+
 exports[`parse function > parses complex recipes correctly 1`] = `
 Recipe {
   "cookware": [
@@ -613,4 +695,50 @@ Recipe {
     },
   ],
 }
+`;
+
+exports[`parse function > parses notes correctly 1`] = `
+[
+  Section {
+    "content": [
+      {
+        "note": "This is a note at the beginning.",
+      },
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "Add ",
+          },
+          {
+            "type": "ingredient",
+            "value": 0,
+          },
+          {
+            "type": "text",
+            "value": "> and this.",
+          },
+        ],
+      },
+      {
+        "note": "This is a note in the middle which continues on the next line.",
+      },
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "Another step.",
+          },
+        ],
+      },
+      {
+        "note": "Another note on multiple lines starting with > for readability",
+      },
+      {
+        "note": "A final note.",
+      },
+    ],
+    "name": "",
+  },
+]
 `;
