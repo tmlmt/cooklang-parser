@@ -89,11 +89,13 @@ console.log(shoppingList.categories);
 
 ## Future plans
 
-I plan to further develop features depending on the needs I will encounter in using this library in a practical application.
+I plan to further develop features depending on the needs I will encounter in using this library in a practical application. The current todo includes:
+
+- Range values for ingredient quantities and timers
 
 ## Test coverage
 
-This project include a test setup aimed at eventually ensuring reliable parsing/scaling of as many recipe use cases as possible.
+This project includes a test setup aimed at eventually ensuring reliable parsing/scaling of as many recipe use cases as possible.
 
 You can run the tests yourself by cloning the repository and running `pnpm test`. To see the coverage report, run `pnpm run test:coverage`.
 
