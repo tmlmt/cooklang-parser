@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.0.7
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.6...v1.0.7)
+
+### 🩹 Fixes
+
+- Parsing of cookware ([857b653](https://github.com/tmlmt/cooklang-parser/commit/857b653))
+
+### 🏡 Chore
+
+- **README:** Add link to docs, precise tests, and add future plans ([a4ec76e](https://github.com/tmlmt/cooklang-parser/commit/a4ec76e))
+- **README:** Update future plans ([0c938f2](https://github.com/tmlmt/cooklang-parser/commit/0c938f2))
+
+### ✅ Tests
+
+- **recipe_parsing:** Move snapshots from inline to separate file ([2f3921a](https://github.com/tmlmt/cooklang-parser/commit/2f3921a))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.0.6
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.5...v1.0.6)
