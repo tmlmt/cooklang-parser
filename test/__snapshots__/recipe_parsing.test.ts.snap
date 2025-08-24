@@ -24,11 +24,19 @@ exports[`parse function > extracts steps correctly 1`] = `
           },
           {
             "type": "text",
-            "value": ", and add ",
+            "value": ". Mix with some ",
           },
           {
             "type": "ingredient",
             "value": 1,
+          },
+          {
+            "type": "text",
+            "value": " and add ",
+          },
+          {
+            "type": "ingredient",
+            "value": 2,
           },
           {
             "type": "text",
@@ -44,7 +52,7 @@ exports[`parse function > extracts steps correctly 1`] = `
           },
           {
             "type": "ingredient",
-            "value": 2,
+            "value": 3,
           },
           {
             "type": "text",

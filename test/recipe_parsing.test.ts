@@ -11,34 +11,45 @@ describe("parse function", () => {
 
   it("extracts ingredients correctly", () => {
     const result = new Recipe(simpleRecipe);
-    expect(result.ingredients.length).toBe(3);
-    expect(result.ingredients[0]).toEqual({
-      name: "eggs",
-      optional: false,
-      hidden: false,
-      quantity: 3,
-      unit: undefined,
-      preparation: undefined,
-      isRecipe: false,
-    });
-    expect(result.ingredients[1]).toEqual({
-      name: "coarse salt",
-      optional: false,
-      hidden: false,
-      quantity: undefined,
-      unit: undefined,
-      preparation: undefined,
-      isRecipe: false,
-    });
-    expect(result.ingredients[2]).toEqual({
-      name: "butter",
-      optional: false,
-      hidden: false,
-      quantity: 50,
-      unit: "g",
-      preparation: undefined,
-      isRecipe: false,
-    });
+    expect(result.ingredients.length).toBe(4);
+    expect(result.ingredients).toEqual([
+      {
+        name: "eggs",
+        optional: false,
+        hidden: false,
+        quantity: 3,
+        unit: undefined,
+        preparation: undefined,
+        isRecipe: false,
+      },
+      {
+        name: "flour",
+        optional: false,
+        hidden: false,
+        quantity: undefined,
+        unit: undefined,
+        preparation: undefined,
+        isRecipe: false,
+      },
+      {
+        name: "coarse salt",
+        hidden: false,
+        isRecipe: false,
+        optional: false,
+        preparation: undefined,
+        quantity: undefined,
+        unit: undefined,
+      },
+      {
+        name: "butter",
+        optional: false,
+        hidden: false,
+        quantity: 50,
+        unit: "g",
+        preparation: undefined,
+        isRecipe: false,
+      },
+    ]);
   });
 
   it("parses ingredients that are other recipes", () => {

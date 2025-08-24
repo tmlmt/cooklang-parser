@@ -3,7 +3,7 @@ export const metadataRegex = /---\n(.*?)\n---/s;
 const multiwordIngredient =
   /@(?<mIngredientModifier>[@\-&+*!?])?(?<mIngredientName>(?:[^\s@#~\[\]{(.,;:!?]+(?:\s+[^\s@#~\[\]{(.,;:!?]+)+))(?=\s*(?:\{|\}|\(\s*[^)]*\s*\)))(?:\{(?<mIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))?(?:%(?<mIngredientUnits>[^}]+?))?\})?(?:\((?<mIngredientPreparation>[^)]*?)\))?/gu;
 const singleWordIngredient =
-  /@(?<sIngredientModifier>[@\-&+*!?])?(?<sIngredientName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?<sIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))(?:%(?<sIngredientUnits>[^}]+?))?\})?(?:\((?<sIngredientPreparation>[^)]*?)\))?/gu;
+  /@(?<sIngredientModifier>[@\-&+*!?])?(?<sIngredientName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?:(?<sIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))(?:%(?<sIngredientUnits>[^}]+?))?)?\})?(?:\((?<sIngredientPreparation>[^)]*?)\))?/gu;
 
 const multiwordCookware =
   /#(?<mCookwareModifier>[\-&+*!?])?(?<mCookwareName>(?:[^\s@#~\[\]{(.,;:!?]+(?:\s+[^\s@#~\[\]{(.,;:!?]+)+))(?=\s*(?:\{|\}|\(\s*[^)]*\s*\)))\{(?<mCookwareQuantity>.*?)\}/;
