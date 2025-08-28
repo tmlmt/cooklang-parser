@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.8
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.7...v1.0.8)
+
+### 🩹 Fixes
+
+- Parsing of single-word ingredient ending with {} ([d130a4f](https://github.com/tmlmt/cooklang-parser/commit/d130a4f))
+- Qtt info of referred ingredients is aggregated then lost ([f9830e1](https://github.com/tmlmt/cooklang-parser/commit/f9830e1))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.0.7
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.6...v1.0.7)
