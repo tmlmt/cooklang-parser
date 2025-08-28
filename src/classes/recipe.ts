@@ -1,6 +1,7 @@
 import type {
   Metadata,
   Ingredient,
+  IngredientItem,
   Timer,
   Step,
   Note,
@@ -176,7 +177,17 @@ export class Recipe {
             reference,
           );
 
-          items.push({ type: "ingredient", value: idxInList });
+          const newItem: IngredientItem = {
+            type: "ingredient",
+            value: idxInList,
+          };
+          if (reference) {
+            newItem.partialQuantity = quantity;
+            newItem.partialUnit = units;
+            newItem.partialPreparation = preparation;
+          }
+
+          items.push(newItem);
         } else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;
           const modifier = groups.mCookwareModifier || groups.sCookwareModifier;

@@ -528,6 +528,9 @@ Recipe {
               "value": ", and remaining ",
             },
             {
+              "partialPreparation": undefined,
+              "partialQuantity": 0.25,
+              "partialUnit": "cup",
               "type": "ingredient",
               "value": 9,
             },
@@ -536,6 +539,9 @@ Recipe {
               "value": " and ",
             },
             {
+              "partialPreparation": undefined,
+              "partialQuantity": 0.25,
+              "partialUnit": "tsp",
               "type": "ingredient",
               "value": 12,
             },
