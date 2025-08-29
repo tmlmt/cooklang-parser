@@ -1,17 +1,145 @@
-export const metadataRegex = /---\n(.*?)\n---/s;
+import { createRegex } from "human-regex";
 
-const multiwordIngredient =
-  /@(?<mIngredientModifier>[@\-&+*!?])?(?<mIngredientName>(?:[^\s@#~\[\]{(.,;:!?]+(?:\s+[^\s@#~\[\]{(.,;:!?]+)+))(?=\s*(?:\{|\}|\(\s*[^)]*\s*\)))(?:\{(?<mIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))?(?:%(?<mIngredientUnits>[^}]+?))?\})?(?:\((?<mIngredientPreparation>[^)]*?)\))?/gu;
-const singleWordIngredient =
-  /@(?<sIngredientModifier>[@\-&+*!?])?(?<sIngredientName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?:(?<sIngredientQuantity>\p{No}|(?:\p{Nd}+(?:[.,\/][\p{Nd}]+)?))(?:%(?<sIngredientUnits>[^}]+?))?)?\})?(?:\((?<sIngredientPreparation>[^)]*?)\))?/gu;
+export const metadataRegex = createRegex()
+  .literal("---").newline()
+  .startCaptureGroup().anyCharacter().zeroOrMore().optional().endGroup()
+  .newline().literal("---")
+  .dotAll().toRegExp();
 
-const multiwordCookware =
-  /#(?<mCookwareModifier>[\-&+*!?])?(?<mCookwareName>(?:[^\s@#~\[\]{(.,;:!?]+(?:\s+[^\s@#~\[\]{(.,;:!?]+)+))(?=\s*(?:\{|\}|\(\s*[^)]*\s*\)))\{(?<mCookwareQuantity>.*?)\}/;
-const singleWordCookware =
-  /#(?<sCookwareModifier>[\-&+*!?])?(?<sCookwareName>[^\s@#~\[\]{(.,;:!?]+)(?:\{(?<sCookwareQuantity>.*?)\})?/u;
+const nonWordChar = "\\s@#~\\[\\]{(.,;:!?"
 
-const timer =
-  /~(?<timerName>.*?)(?:\{(?<timerQuantity>.*?)(?:%(?<timerUnits>.+?))?\})/;
+const multiwordIngredient = createRegex()
+  .literal("@")
+  .startNamedGroup("mIngredientModifier")
+    .anyOf("@\\-&?")
+  .endGroup().optional()
+  .startNamedGroup("mIngredientName")
+    .notAnyOf(nonWordChar).oneOrMore()
+    .startGroup()
+      .whitespace().oneOrMore().notAnyOf(nonWordChar).oneOrMore()
+    .endGroup().oneOrMore()
+  .endGroup()
+  .positiveLookahead("\\s*(?:\\{[^\\}]*\\}|\\([^)]*\\))")
+  .startGroup()
+    .literal("{")
+    .startNamedGroup("mIngredientQuantity")
+      .unicodeDigit()
+       .or()
+      .startGroup()
+        .unicodeDigit().oneOrMore()
+        .startGroup()
+          .anyOf("\\.,\\/")
+          .unicodeDigit().oneOrMore()
+        .endGroup().optional()
+      .endGroup()
+    .endGroup().optional()
+    .startGroup()
+      .literal("%")
+      .startNamedGroup("mIngredientUnits")
+        .notAnyOf("}").oneOrMore().lazy()
+      .endGroup()
+    .endGroup().optional()
+    .literal("}")
+  .endGroup().optional()
+  .startGroup()
+    .literal("(")
+    .startNamedGroup("mIngredientPreparation")
+      .notAnyOf(")").oneOrMore().lazy()
+    .endGroup()
+    .literal(")")
+  .endGroup().optional()
+  .toRegExp();
+
+const singleWordIngredient = createRegex()
+  .literal("@")
+  .startNamedGroup("sIngredientModifier")
+    .anyOf("@\\-&?")
+  .endGroup().optional()
+  .startNamedGroup("sIngredientName")
+    .notAnyOf(nonWordChar).oneOrMore()
+  .endGroup()
+  .startGroup()
+    .literal("{")
+    .startNamedGroup("sIngredientQuantity")
+      .unicodeDigit()
+       .or()
+      .startGroup()
+        .unicodeDigit().oneOrMore()
+        .startGroup()
+          .anyOf("\\.,\\/")
+          .unicodeDigit().oneOrMore()
+        .endGroup().optional()
+      .endGroup()
+    .endGroup().optional()
+    .startGroup()
+      .literal("%")
+      .startNamedGroup("sIngredientUnits")
+        .notAnyOf("}").oneOrMore().lazy()
+      .endGroup()
+    .endGroup().optional()
+    .literal("}")
+  .endGroup().optional()
+  .startGroup()
+    .literal("(")
+    .startNamedGroup("sIngredientPreparation")
+      .notAnyOf(")").oneOrMore().lazy()
+    .endGroup()
+    .literal(")")
+  .endGroup().optional()
+  .toRegExp();
+
+const multiwordCookware = createRegex()
+  .literal("#")
+  .startNamedGroup("mCookwareModifier")
+    .anyOf("\\-&?")
+  .endGroup().optional()
+  .startNamedGroup("mCookwareName")
+    .notAnyOf(nonWordChar).oneOrMore()
+    .startGroup()
+      .whitespace().oneOrMore().notAnyOf(nonWordChar).oneOrMore()
+    .endGroup().oneOrMore()
+  .endGroup().positiveLookahead("\\s*(?:\\{[^\\}]*\\})")
+  .literal("{")
+  .startNamedGroup("mCookwareQuantity")
+    .anyCharacter().zeroOrMore().lazy()
+  .endGroup()
+  .literal("}")
+  .toRegExp();
+
+const singleWordCookware = createRegex()
+  .literal("#")
+  .startNamedGroup("sCookwareModifier")
+    .anyOf("\\-&?")
+  .endGroup().optional()
+  .startNamedGroup("sCookwareName")
+    .notAnyOf(nonWordChar).oneOrMore()
+  .endGroup()
+  .startGroup()
+    .literal("{")
+    .startNamedGroup("sCookwareQuantity")
+      .anyCharacter().zeroOrMore().lazy()
+    .endGroup()
+    .literal("}")
+  .endGroup().optional()
+  .toRegExp();
+
+const timer = createRegex()
+  .literal("~")
+  .startNamedGroup("timerName")
+    .anyCharacter().zeroOrMore().lazy()
+  .endGroup()
+  .literal("{")
+  .startNamedGroup("timerQuantity")
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .startGroup()
+    .literal("%")
+    .startNamedGroup("timerUnits")
+      .anyCharacter().oneOrMore().lazy()
+    .endGroup()
+  .endGroup().optional()
+  .literal("}")
+  .toRegExp()
 
 export const tokensRegex = new RegExp(
   [
@@ -26,8 +154,35 @@ export const tokensRegex = new RegExp(
   "gu",
 );
 
-export const commentRegex = /--.*/g;
-export const blockCommentRegex = /\s*\[\-.*?\-\]\s*/g;
+export const commentRegex = createRegex()
+  .literal("--")
+  .anyCharacter().zeroOrMore()
+  .global()
+  .toRegExp();
 
-export const shoppingListRegex =
-  /\n\s*\[(?<name>.+)\]\n(?<items>[^]*?)(?:\n\n|$)/g;
+export const blockCommentRegex = createRegex()
+  .whitespace().zeroOrMore()
+  .literal("[-")
+  .anyCharacter().zeroOrMore().lazy()
+  .literal("-]")
+  .whitespace().zeroOrMore()
+  .global()
+  .toRegExp();
+
+export const shoppingListRegex = createRegex()
+  .literal("[")
+  .startNamedGroup("name")
+    .anyCharacter().oneOrMore()
+  .endGroup()
+  .literal("]")
+  .newline()
+  .startNamedGroup("items")
+    .anyCharacter().zeroOrMore().lazy()
+  .endGroup()
+  .startGroup()
+    .newline().newline()
+      .or()
+    .endAnchor()
+  .endGroup()
+  .global()
+  .toRegExp()

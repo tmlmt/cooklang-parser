@@ -47,6 +47,7 @@
     "eslint": "9.33.0",
     "eslint-config-prettier": "10.1.8",
     "execa": "9.6.0",
+    "human-regex": "2.1.5",
     "prettier": "3.6.2",
     "rimraf": "6.0.1",
     "tsup": "8.5.0",
