@@ -91,7 +91,9 @@ console.log(shoppingList.categories);
 
 I plan to further develop features depending on the needs I will encounter in using this library in a practical application. The current todo includes:
 
-- Range values for ingredient quantities and timers
+- Range values for ingredient quantities and timers. See issue #3
+- Preserved fractions for ingredients quantities. See issue #6
+- Ingredients aliases. See issue #5
 
 ## Test coverage
 
