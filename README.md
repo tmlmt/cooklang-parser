@@ -99,7 +99,7 @@ I plan to further develop features depending on the needs I will encounter in us
 
 This project includes a test setup aimed at eventually ensuring reliable parsing/scaling of as many recipe use cases as possible.
 
-You can run the tests yourself by cloning the repository and running `pnpm test`. To see the coverage report, run `pnpm run test:coverage`.
+You can run the tests yourself by cloning the repository and running `pnpm test`. To see the coverage report, run `pnpm test:coverage`.
 
 If you find any issue with your own examples of recipes, feel free to open an Issue and if you want to help fix it, to submit a Pull Request.
 
