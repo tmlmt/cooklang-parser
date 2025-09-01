@@ -7,11 +7,29 @@ describe("ShoppingList", () => {
   const recipe1 = new Recipe();
   recipe1.metadata = {};
   recipe1.ingredients = [
-    { name: "flour", quantity: 100, unit: "g" },
-    { name: "sugar", quantity: 50, unit: "g" },
-    { name: "eggs", quantity: 2 },
-    { name: "milk", quantity: 200, unit: "ml" },
-    { name: "pepper", quantity: "to taste" },
+    {
+      name: "flour",
+      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+      unit: "g",
+    },
+    {
+      name: "sugar",
+      quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+      unit: "g",
+    },
+    {
+      name: "eggs",
+      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+    },
+    {
+      name: "milk",
+      quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+      unit: "ml",
+    },
+    {
+      name: "pepper",
+      quantity: { type: "fixed", value: { type: "text", value: "to taste" } },
+    },
     { name: "salt", hidden: true },
     { name: "spices" },
   ];
@@ -23,11 +41,30 @@ describe("ShoppingList", () => {
   const recipe2 = new Recipe();
   recipe2.metadata = {};
   recipe2.ingredients = [
-    { name: "flour", quantity: 50, unit: "g" },
-    { name: "butter", quantity: 25, unit: "g" },
-    { name: "eggs", quantity: 1 },
-    { name: "pepper", quantity: 1, unit: "tsp" },
-    { name: "spices", quantity: 1, unit: "pinch" },
+    {
+      name: "flour",
+      quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+      unit: "g",
+    },
+    {
+      name: "butter",
+      quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+      unit: "g",
+    },
+    {
+      name: "eggs",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+    },
+    {
+      name: "pepper",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      unit: "tsp",
+    },
+    {
+      name: "spices",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      unit: "pinch",
+    },
   ];
   recipe2.cookware = [];
   recipe2.timers = [];
@@ -37,11 +74,29 @@ describe("ShoppingList", () => {
     const shoppingList = new ShoppingList();
     shoppingList.add_recipe(recipe1);
     expect(shoppingList.ingredients).toEqual([
-      { name: "flour", quantity: 100, unit: "g" },
-      { name: "sugar", quantity: 50, unit: "g" },
-      { name: "eggs", quantity: 2 },
-      { name: "milk", quantity: 200, unit: "ml" },
-      { name: "pepper", quantity: "to taste" },
+      {
+        name: "flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+        unit: "g",
+      },
+      {
+        name: "sugar",
+        quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+        unit: "g",
+      },
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+      },
+      {
+        name: "milk",
+        quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+        unit: "ml",
+      },
+      {
+        name: "pepper",
+        quantity: { type: "fixed", value: { type: "text", value: "to taste" } },
+      },
       { name: "spices" },
     ]);
   });
@@ -51,14 +106,44 @@ describe("ShoppingList", () => {
     shoppingList.add_recipe(recipe1);
     shoppingList.add_recipe(recipe2);
     expect(shoppingList.ingredients).toEqual([
-      { name: "flour", quantity: 150, unit: "g" },
-      { name: "sugar", quantity: 50, unit: "g" },
-      { name: "eggs", quantity: 3 },
-      { name: "milk", quantity: 200, unit: "ml" },
-      { name: "pepper", quantity: "to taste" },
-      { name: "spices", quantity: 1, unit: "pinch" },
-      { name: "butter", quantity: 25, unit: "g" },
-      { name: "pepper", quantity: 1, unit: "tsp" },
+      {
+        name: "flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+        unit: "g",
+      },
+      {
+        name: "sugar",
+        quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+        unit: "g",
+      },
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 3 } },
+      },
+      {
+        name: "milk",
+        quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+        unit: "ml",
+      },
+      {
+        name: "pepper",
+        quantity: { type: "fixed", value: { type: "text", value: "to taste" } },
+      },
+      {
+        name: "spices",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "pinch",
+      },
+      {
+        name: "butter",
+        quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+        unit: "g",
+      },
+      {
+        name: "pepper",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "tsp",
+      },
     ]);
   });
 
@@ -66,11 +151,29 @@ describe("ShoppingList", () => {
     const shoppingList = new ShoppingList();
     shoppingList.add_recipe(recipe1, 2);
     expect(shoppingList.ingredients).toEqual([
-      { name: "flour", quantity: 200, unit: "g" },
-      { name: "sugar", quantity: 100, unit: "g" },
-      { name: "eggs", quantity: 4 },
-      { name: "milk", quantity: 400, unit: "ml" },
-      { name: "pepper", quantity: "to taste" },
+      {
+        name: "flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+        unit: "g",
+      },
+      {
+        name: "sugar",
+        quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+        unit: "g",
+      },
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 4 } },
+      },
+      {
+        name: "milk",
+        quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
+        unit: "ml",
+      },
+      {
+        name: "pepper",
+        quantity: { type: "fixed", value: { type: "text", value: "to taste" } },
+      },
       { name: "spices" },
     ]);
   });
@@ -130,18 +233,51 @@ sugar
 
     const expected: CategorizedIngredients = {
       Bakery: [
-        { name: "flour", quantity: 150, unit: "g" },
-        { name: "sugar", quantity: 50, unit: "g" },
+        {
+          name: "flour",
+          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+          unit: "g",
+        },
+        {
+          name: "sugar",
+          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+          unit: "g",
+        },
       ],
       Dairy: [
-        { name: "butter", quantity: 25, unit: "g" },
-        { name: "milk", quantity: 200, unit: "ml" },
+        {
+          name: "butter",
+          quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+          unit: "g",
+        },
+        {
+          name: "milk",
+          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          unit: "ml",
+        },
       ],
       other: [
-        { name: "eggs", quantity: 3 },
-        { name: "pepper", quantity: "to taste" },
-        { name: "pepper", quantity: 1, unit: "tsp" },
-        { name: "spices", quantity: 1, unit: "pinch" },
+        {
+          name: "eggs",
+          quantity: { type: "fixed", value: { type: "decimal", value: 3 } },
+        },
+        {
+          name: "pepper",
+          quantity: {
+            type: "fixed",
+            value: { type: "text", value: "to taste" },
+          },
+        },
+        {
+          name: "pepper",
+          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          unit: "tsp",
+        },
+        {
+          name: "spices",
+          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          unit: "pinch",
+        },
       ],
     };
 
@@ -161,11 +297,30 @@ sugar
     shoppingList.add_recipe(recipe2);
     shoppingList.remove_recipe(0);
     expect(shoppingList.ingredients).toEqual([
-      { name: "flour", quantity: 50, unit: "g" },
-      { name: "butter", quantity: 25, unit: "g" },
-      { name: "eggs", quantity: 1 },
-      { name: "pepper", quantity: 1, unit: "tsp" },
-      { name: "spices", quantity: 1, unit: "pinch" },
+      {
+        name: "flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+        unit: "g",
+      },
+      {
+        name: "butter",
+        quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+        unit: "g",
+      },
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      },
+      {
+        name: "pepper",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "tsp",
+      },
+      {
+        name: "spices",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "pinch",
+      },
     ]);
   });
 
@@ -177,11 +332,19 @@ sugar
                     flour`;
     shoppingList.set_aisle_config(config);
     expect(shoppingList.categories?.Bakery).toEqual([
-      { name: "flour", quantity: 150, unit: "g" },
+      {
+        name: "flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+        unit: "g",
+      },
     ]);
     shoppingList.remove_recipe(0);
     expect(shoppingList.categories?.Bakery).toEqual([
-      { name: "flour", quantity: 50, unit: "g" },
+      {
+        name: "flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+        unit: "g",
+      },
     ]);
   });
   it("should throw an error when removing a recipe with an invalid index", () => {
@@ -196,11 +359,32 @@ sugar
     shoppingList.categorize();
     expect(shoppingList.categories).toEqual({
       other: [
-        { name: "flour", quantity: 100, unit: "g" },
-        { name: "sugar", quantity: 50, unit: "g" },
-        { name: "eggs", quantity: 2 },
-        { name: "milk", quantity: 200, unit: "ml" },
-        { name: "pepper", quantity: "to taste" },
+        {
+          name: "flour",
+          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+          unit: "g",
+        },
+        {
+          name: "sugar",
+          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+          unit: "g",
+        },
+        {
+          name: "eggs",
+          quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+        },
+        {
+          name: "milk",
+          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          unit: "ml",
+        },
+        {
+          name: "pepper",
+          quantity: {
+            type: "fixed",
+            value: { type: "text", value: "to taste" },
+          },
+        },
         { name: "spices" },
       ],
     });

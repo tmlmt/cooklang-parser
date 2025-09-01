@@ -1,3 +1,4 @@
+import type { FixedValue, Range, DecimalValue, FractionValue } from "./types";
 export type UnitType = "mass" | "volume" | "count";
 export type UnitSystem = "metric" | "imperial";
 
@@ -10,7 +11,7 @@ export interface UnitDefinition {
 }
 
 export interface Quantity {
-  value: number | string;
+  value: FixedValue | Range;
   unit: string;
 }
 
@@ -136,65 +137,214 @@ export function normalizeUnit(unit: string): UnitDefinition | undefined {
   return unitMap.get(unit.toLowerCase().trim());
 }
 
+export class CannotAddTextValueError extends Error {
+  constructor() {
+    super("Cannot add a quantity with a text value.");
+    this.name = "CannotAddTextValueError";
+  }
+}
+
+export class IncompatibleUnitsError extends Error {
+  constructor(unit1: string, unit2: string) {
+    super(
+      `Cannot add quantities with incompatible or unknown units: ${unit1} and ${unit2}`,
+    );
+    this.name = "IncompatibleUnitsError";
+  }
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+export function simplifyFraction(
+  num: number,
+  den: number,
+): DecimalValue | FractionValue {
+  if (den === 0) {
+    throw new Error("Denominator cannot be zero.");
+  }
+
+  const commonDivisor = gcd(Math.abs(num), Math.abs(den));
+  let simplifiedNum = num / commonDivisor;
+  let simplifiedDen = den / commonDivisor;
+  if (simplifiedDen < 0) {
+    simplifiedNum = -simplifiedNum;
+    simplifiedDen = -simplifiedDen;
+  }
+
+  if (simplifiedDen === 1) {
+    return { type: "decimal", value: simplifiedNum };
+  } else {
+    return { type: "fraction", num: simplifiedNum, den: simplifiedDen };
+  }
+}
+
+export function multiplyNumericValue(
+  v: DecimalValue | FractionValue,
+  factor: number,
+): DecimalValue | FractionValue {
+  if (v.type === "decimal") {
+    return { type: "decimal", value: v.value * factor };
+  }
+  return simplifyFraction(v.num * factor, v.den);
+}
+
+export function addNumericValues(
+  val1: DecimalValue | FractionValue,
+  val2: DecimalValue | FractionValue,
+): DecimalValue | FractionValue {
+  let num1: number;
+  let den1: number;
+  let num2: number;
+  let den2: number;
+
+  if (val1.type === "decimal") {
+    num1 = val1.value;
+    den1 = 1;
+  } else {
+    num1 = val1.num;
+    den1 = val1.den;
+  }
+
+  if (val2.type === "decimal") {
+    num2 = val2.value;
+    den2 = 1;
+  } else {
+    num2 = val2.num;
+    den2 = val2.den;
+  }
+
+  // We only return a fraction where both input values are fractions themselves
+  if (val1.type === "fraction" && val2.type === "fraction") {
+    const commonDen = den1 * den2;
+    const sumNum = num1 * den2 + num2 * den1;
+    return simplifyFraction(sumNum, commonDen);
+  } else {
+    return { type: "decimal", value: num1 / den1 + num2 / den2 };
+  }
+}
+
+const toRoundedDecimal = (v: DecimalValue | FractionValue): DecimalValue => {
+  const value = v.type === "decimal" ? v.value : v.num / v.den;
+  return { type: "decimal", value: Math.floor(value * 100) / 100 };
+};
+
+export function multiplyQuantityValue(
+  value: FixedValue | Range,
+  factor: number,
+): FixedValue | Range {
+  if (value.type === "fixed") {
+    return {
+      type: "fixed",
+      value: toRoundedDecimal(
+        multiplyNumericValue(
+          value.value as DecimalValue | FractionValue,
+          factor,
+        ),
+      ),
+    };
+  }
+
+  return {
+    type: "range",
+    min: toRoundedDecimal(
+      multiplyNumericValue(value.min as DecimalValue | FractionValue, factor),
+    ),
+    max: toRoundedDecimal(
+      multiplyNumericValue(value.max as DecimalValue | FractionValue, factor),
+    ),
+  };
+}
+
+const convertQuantityValue = (
+  value: FixedValue | Range,
+  def: UnitDefinition,
+  targetDef: UnitDefinition,
+): FixedValue | Range => {
+  if (def.name === targetDef.name) return value;
+
+  const factor = def.toBase / targetDef.toBase;
+
+  return multiplyQuantityValue(value, factor);
+};
+
 /**
  * Adds two quantities, returning the result in the most appropriate unit.
  */
 export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
+  const v1 = q1.value;
+  const v2 = q2.value;
+
+  // Case 1: one of the two values is a text, we throw an error we can catch on the other end
+  if (
+    (v1.type === "fixed" && v1.value.type === "text") ||
+    (v2.type === "fixed" && v2.value.type === "text")
+  ) {
+    throw new CannotAddTextValueError();
+  }
+
   const unit1Def = normalizeUnit(q1.unit);
   const unit2Def = normalizeUnit(q2.unit);
 
-  if (isNaN(Number(q1.value))) {
-    throw new Error(
-      `Cannot add quantity to string-quantified value: ${q1.value}`,
+  const addQuantityValuesAndSetUnit = (
+    val1: FixedValue | Range,
+    val2: FixedValue | Range,
+    unit: string,
+  ): Quantity => {
+    if (val1.type === "fixed" && val2.type === "fixed") {
+      const res = addNumericValues(
+        val1.value as DecimalValue | FractionValue,
+        val2.value as DecimalValue | FractionValue,
+      );
+      return { value: { type: "fixed", value: res }, unit };
+    }
+    const r1 =
+      val1.type === "range"
+        ? val1
+        : { type: "range", min: val1.value, max: val1.value };
+    const r2 =
+      val2.type === "range"
+        ? val2
+        : { type: "range", min: val2.value, max: val2.value };
+    const newMin = addNumericValues(
+      r1.min as DecimalValue | FractionValue,
+      r2.min as DecimalValue | FractionValue,
     );
-  }
-  if (isNaN(Number(q2.value))) {
-    throw new Error(
-      `Cannot add quantity to string-quantified value: ${q2.value}`,
+    const newMax = addNumericValues(
+      r1.max as DecimalValue | FractionValue,
+      r2.max as DecimalValue | FractionValue,
     );
-  }
+    return { value: { type: "range", min: newMin, max: newMax }, unit };
+  };
 
-  // If one unit is empty, assume it's of the same type as the other
+  // Case 2: one of the two values doesn't have a unit, we consider its value to be 0 and the unit to be that of the other one
   if (q1.unit === "" && unit2Def) {
-    return {
-      value:
-        Math.round(((q1.value as number) + (q2.value as number)) * 100) / 100,
-      unit: q2.unit,
-    };
+    return addQuantityValuesAndSetUnit(v1, v2, q2.unit); // Prefer q2's unit
   }
   if (q2.unit === "" && unit1Def) {
-    return {
-      value:
-        Math.round(((q1.value as number) + (q2.value as number)) * 100) / 100,
-      unit: q1.unit,
-    };
+    return addQuantityValuesAndSetUnit(v1, v2, q1.unit); // Prefer q1's unit
   }
 
-  // If both units are the same (even if unknown, e.g. "cloves")
+  // Case 3: the two quantities have the exact same unit
   if (q1.unit.toLowerCase() === q2.unit.toLowerCase()) {
-    return {
-      value:
-        Math.round(((q1.value as number) + (q2.value as number)) * 100) / 100,
-      unit: q1.unit,
-    };
+    return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
   }
 
-  // If both are known and compatible
+  // Case 4: the two quantities do not have the same unit
   if (unit1Def && unit2Def) {
+    // Case 4.1: different unit type => we can't add quantities
+
     if (unit1Def.type !== unit2Def.type) {
-      throw new Error(
-        `Cannot add quantities of different types: ${unit1Def.type} (${q1.unit}) and ${unit2Def.type} (${q2.unit})`,
+      throw new IncompatibleUnitsError(
+        `${unit1Def.type} (${q1.unit})`,
+        `${unit2Def.type} (${q2.unit})`,
       );
     }
 
-    // Convert both to base unit value
-    const baseValue1 = (q1.value as number) * unit1Def.toBase;
-    const baseValue2 = (q2.value as number) * unit2Def.toBase;
-    const totalBaseValue = baseValue1 + baseValue2;
-
     let targetUnitDef: UnitDefinition;
 
-    // Rule: If systems differ, convert to the largest metric unit.
+    // Case 4.2: same unit type but different system => we convert to metric
     if (unit1Def.system !== unit2Def.system) {
       const metricUnitDef = unit1Def.system === "metric" ? unit1Def : unit2Def;
       targetUnitDef = units
@@ -202,21 +352,20 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
         .reduce((prev, current) =>
           prev.toBase > current.toBase ? prev : current,
         );
-    } else {
-      // Rule: Same system, use the biggest of the two input units.
+    }
+    // Case 4.3: same unit type, same system but different unit => we use the biggest unit of the two
+    else {
       targetUnitDef = unit1Def.toBase >= unit2Def.toBase ? unit1Def : unit2Def;
     }
+    const convertedV1 = convertQuantityValue(v1, unit1Def, targetUnitDef);
+    const convertedV2 = convertQuantityValue(v2, unit2Def, targetUnitDef);
 
-    const finalValue = totalBaseValue / targetUnitDef.toBase;
-
-    return {
-      value: Math.round(finalValue * 100) / 100,
-      unit: targetUnitDef.name,
-    };
+    return addQuantityValuesAndSetUnit(
+      convertedV1,
+      convertedV2,
+      targetUnitDef.name,
+    );
   }
 
-  // Otherwise, units are different and at least one is unknown.
-  throw new Error(
-    `Cannot add quantities with incompatible or unknown units: ${q1.unit} and ${q2.unit}`,
-  );
+  throw new IncompatibleUnitsError(q1.unit, q2.unit);
 }

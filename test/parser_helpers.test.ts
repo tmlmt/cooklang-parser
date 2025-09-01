@@ -8,7 +8,6 @@ import {
   parseSimpleMetaVar,
   parseScalingMetaVar,
   parseListMetaVar,
-  parseNumber,
   extractMetadata,
   findAndUpsertCookware,
   findAndUpsertIngredient,
@@ -233,17 +232,6 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
   });
 });
 
-describe("parseNumber", () => {
-  it("should correctly parse numbers of all kind", () => {
-    expect(parseNumber("1")).toBe(1);
-    expect(parseNumber("1.5")).toBe(1.5);
-    expect(parseNumber("1,5")).toBe(1.5);
-    expect(parseNumber("1/2")).toBe(0.5);
-    expect(parseNumber("/2")).toBe(NaN);
-    expect(parseNumber("text")).toBe(NaN);
-  });
-});
-
 describe("findOrPush", () => {
   it("should add an item if it does not exist and return its index", () => {
     const list = [{ id: 1, name: "one" }];
@@ -346,16 +334,30 @@ describe("findAndUpsertCookware", () => {
 describe("findAndUpsertIngredient", () => {
   it("should correctly add a non-referenced ingredient", () => {
     const ingredients: Ingredient[] = [];
-    const newIngredient: Ingredient = { name: "eggs", quantity: 1 };
+    const newIngredient: Ingredient = {
+      name: "eggs",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+    };
     expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toBe(0);
     expect(ingredients).toEqual([newIngredient]);
   });
 
   it("should correctly add a referenced ingredient", () => {
-    const ingredients: Ingredient[] = [{ name: "eggs", quantity: 1 }];
-    const newIngredient: Ingredient = { name: "eggs", quantity: 2 };
+    const ingredients: Ingredient[] = [
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      },
+    ];
+    const newIngredient: Ingredient = {
+      name: "eggs",
+      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+    };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toBe(0);
-    expect(ingredients[0]!.quantity).toBe(3);
+    expect(ingredients[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 3 },
+    });
 
     const ingredients_noqtt: Ingredient[] = [{ name: "salt" }];
     const newIngredient_noqtt: Ingredient = { name: "salt" };
@@ -367,16 +369,27 @@ describe("findAndUpsertIngredient", () => {
 
   it("should adopt quantity of new ingredient if referenced one has none", () => {
     const ingredients: Ingredient[] = [{ name: "eggs" }];
-    const newIngredient: Ingredient = { name: "eggs", quantity: 1 };
+    const newIngredient: Ingredient = {
+      name: "eggs",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+    };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toBe(0);
-    expect(ingredients[0]?.quantity).toBe(1);
+    expect(ingredients[0]?.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 1 },
+    });
   });
 
   it("should throw an error if an non-existing ingredient is referenced", () => {
-    const ingredients: Ingredient[] = [{ name: "eggs", quantity: 1 }];
+    const ingredients: Ingredient[] = [
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      },
+    ];
     const newIngredient: Ingredient = {
       name: "unreferenced-ingredient",
-      quantity: 100,
+      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
       unit: "g",
     };
     expect(() =>
