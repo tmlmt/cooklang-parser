@@ -21,9 +21,10 @@ import {
   flushPendingNote,
   findAndUpsertIngredient,
   findAndUpsertCookware,
-  parseNumber,
+  parseQuantityInput,
   extractMetadata,
 } from "../parser_helpers";
+import { multiplyQuantityValue } from "../units";
 
 /**
  * Represents a recipe.
@@ -161,7 +162,9 @@ export class Recipe {
           const hidden = modifier === "-";
           const reference = modifier === "&";
           const isRecipe = modifier === "@";
-          const quantity = quantityRaw ? parseNumber(quantityRaw) : undefined;
+          const quantity = quantityRaw
+            ? parseQuantityInput(quantityRaw)
+            : undefined;
 
           const idxInList = findAndUpsertIngredient(
             this.ingredients,
@@ -208,7 +211,7 @@ export class Recipe {
             throw new Error("Timer missing units");
           }
           const name = groups.timerName || undefined;
-          const duration = parseNumber(durationStr);
+          const duration = parseQuantityInput(durationStr);
           const timerObj: Timer = {
             name,
             duration,
@@ -275,8 +278,17 @@ export class Recipe {
 
     newRecipe.ingredients = newRecipe.ingredients
       .map((ingredient) => {
-        if (ingredient.quantity && !isNaN(Number(ingredient.quantity))) {
-          (ingredient.quantity as number) *= factor;
+        if (
+          ingredient.quantity &&
+          !(
+            ingredient.quantity.type === "fixed" &&
+            ingredient.quantity.value.type === "text"
+          )
+        ) {
+          ingredient.quantity = multiplyQuantityValue(
+            ingredient.quantity,
+            factor,
+          );
         }
         return ingredient;
       })

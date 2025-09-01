@@ -86,6 +86,56 @@ export interface MetadataExtract {
 }
 
 /**
+ * Represents a quantity described by text, e.g. "a pinch"
+ * @category Types
+ */
+export interface TextValue {
+  type: "text";
+  value: string;
+}
+
+/**
+ * Represents a quantity described by a decimal number, e.g. "1.5"
+ * @category Types
+ */
+export interface DecimalValue {
+  type: "decimal";
+  value: number;
+}
+
+/**
+ * Represents a quantity described by a fraction, e.g. "1/2"
+ * @category Types
+ */
+export interface FractionValue {
+  type: "fraction";
+  /** The numerator of the fraction */
+  num: number;
+  /** The denominator of the fraction */
+  den: number;
+}
+
+/**
+ * Represents a single, fixed quantity.
+ * This can be a text, decimal, or fraction.
+ * @category Types
+ */
+export interface FixedValue {
+  type: "fixed";
+  value: TextValue | DecimalValue | FractionValue;
+}
+
+/**
+ * Represents a range of quantities, e.g. "1-2"
+ * @category Types
+ */
+export interface Range {
+  type: "range";
+  min: DecimalValue | FractionValue;
+  max: DecimalValue | FractionValue;
+}
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -93,7 +143,7 @@ export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
   /** The quantity of the ingredient. */
-  quantity?: number | string;
+  quantity?: FixedValue | Range;
   /** The unit of the ingredient. */
   unit?: string;
   /** The preparation of the ingredient. */
@@ -114,7 +164,7 @@ export interface Timer {
   /** The name of the timer. */
   name?: string;
   /** The duration of the timer. */
-  duration: number;
+  duration: FixedValue | Range;
   /** The unit of the timer. */
   unit: string;
 }
@@ -140,7 +190,7 @@ export interface IngredientItem {
   /** The value of the item. */
   value: number;
   /** If this is a referenced ingredient, quantity specific to this instance */
-  partialQuantity?: number | string;
+  partialQuantity?: FixedValue | Range;
   /** If this is a referenced ingredient, unit specific to this instance  */
   partialUnit?: string;
   /** If this is a referenced ingredient, preparation specific to this instance  */

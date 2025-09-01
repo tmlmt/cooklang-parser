@@ -6,7 +6,7 @@ import type {
   AddedRecipe,
   AddedIngredient,
 } from "../types";
-import { addQuantities } from "../units";
+import { addQuantities, type Quantity } from "../units";
 
 /**
  * Represents a shopping list.
@@ -61,7 +61,7 @@ export class ShoppingList {
         try {
           if (existingIngredient) {
             if (existingIngredient.quantity && ingredient.quantity) {
-              const newQuantity = addQuantities(
+              const newQuantity: Quantity = addQuantities(
                 {
                   value: existingIngredient.quantity,
                   unit: existingIngredient.unit ?? "",

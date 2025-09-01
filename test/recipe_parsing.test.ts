@@ -17,7 +17,10 @@ describe("parse function", () => {
         name: "eggs",
         optional: false,
         hidden: false,
-        quantity: 3,
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", value: 3 },
+        },
         unit: undefined,
         preparation: undefined,
         isRecipe: false,
@@ -44,7 +47,10 @@ describe("parse function", () => {
         name: "butter",
         optional: false,
         hidden: false,
-        quantity: 50,
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", value: 50 },
+        },
         unit: "g",
         preparation: undefined,
         isRecipe: false,
@@ -61,7 +67,7 @@ describe("parse function", () => {
     expect(result.ingredients).toHaveLength(2);
     expect(result.ingredients[0]).toEqual({
       name: "pizza dough",
-      quantity: 1,
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
       unit: undefined,
       preparation: undefined,
       optional: false,
@@ -88,7 +94,7 @@ describe("parse function", () => {
     expect(result.ingredients).toHaveLength(2);
     expect(result.ingredients[0]).toEqual({
       name: "wheat flour",
-      quantity: 100,
+      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
       unit: "g",
       preparation: "sifted",
       optional: false,
@@ -97,7 +103,7 @@ describe("parse function", () => {
     });
     expect(result.ingredients[1]).toEqual({
       name: "eggs",
-      quantity: 2,
+      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
       unit: undefined,
       preparation: "large, beaten",
       optional: false,
@@ -143,7 +149,7 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantity: 150,
+        quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
         unit: "g",
         optional: false,
         hidden: false,
@@ -161,7 +167,7 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantity: 100,
+        quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
         unit: "g",
         optional: false,
         hidden: false,
@@ -170,7 +176,7 @@ describe("parse function", () => {
       });
       expect(result.ingredients[1]).toEqual({
         name: "flour",
-        quantity: 50,
+        quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
         unit: "g",
         optional: false,
         hidden: false,
@@ -188,7 +194,7 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "Sugar", // Note: original casing is preserved
-        quantity: 150,
+        quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
         unit: "g",
         optional: false,
         hidden: false,
@@ -206,7 +212,7 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "sugar",
-        quantity: 1.5,
+        quantity: { type: "fixed", value: { type: "decimal", value: 1.5 } },
         unit: "kg",
         optional: false,
         hidden: false,
@@ -225,7 +231,11 @@ describe("parse function", () => {
       const butter = result.ingredients[0]!;
       expect(butter.name).toBe("butter");
       expect(butter.unit).toBe("kg"); // largest metric mass unit
-      expect(butter.quantity).toBe(0.7);
+      expect(butter.quantity).toEqual({
+        type: "fixed",
+        value: { type: "decimal", value: 0.7 },
+      });
+      // TODO: 700g would be more elegant
     });
 
     it("should throw an error if referenced ingredient does not exist", () => {
@@ -235,14 +245,31 @@ describe("parse function", () => {
       );
     });
 
-    it("should throw an error for incompatible units", () => {
+    it("adds a referenced ingredient as a new ingredient when units are incompatible", () => {
       const recipe = `
         Add @water{1%l}.
         Then add some more @&water{1%kg}.
       `;
-      expect(() => new Recipe(recipe)).toThrow(
-        /Cannot add quantities of different types/,
-      );
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients[0]).toEqual({
+        name: "water",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "l",
+        hidden: false,
+        isRecipe: false,
+        optional: false,
+        preparation: undefined,
+      });
+      expect(result.ingredients[1]).toEqual({
+        name: "water",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "kg",
+        hidden: false,
+        isRecipe: false,
+        optional: false,
+        preparation: undefined,
+      });
     });
   });
 
@@ -289,7 +316,7 @@ describe("parse function", () => {
     expect(result.timers.length).toBe(1);
     expect(result.timers[0]).toEqual({
       name: undefined,
-      duration: 15,
+      duration: { type: "fixed", value: { type: "decimal", value: 15 } },
       unit: "minutes",
     }); // Note: timer name may be empty based on regex
   });

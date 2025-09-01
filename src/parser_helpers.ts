@@ -1,8 +1,21 @@
-import type { MetadataExtract, Metadata } from "./types";
-import { metadataRegex } from "./regex";
+import type {
+  MetadataExtract,
+  Metadata,
+  FixedValue,
+  Range,
+  TextValue,
+  DecimalValue,
+  FractionValue,
+} from "./types";
+import { metadataRegex, rangeRegex, numberLikeRegex } from "./regex";
 import { Section as SectionObject } from "./classes/section";
 import type { Ingredient, Note, Step, Cookware } from "./types";
-import { addQuantities } from "./units";
+import {
+  addQuantities,
+  CannotAddTextValueError,
+  IncompatibleUnitsError,
+  Quantity,
+} from "./units";
 
 /**
  * Finds an item in a list or adds it if not present, then returns its index.
@@ -88,15 +101,28 @@ export function findAndUpsertIngredient(
     // Ingredient already exists, update it
     const existingIngredient = ingredients[index]!;
     if (quantity !== undefined) {
-      const currentQuantity = {
-        value: existingIngredient.quantity ?? 0,
+      const currentQuantity: Quantity = {
+        value: existingIngredient.quantity ?? {
+          type: "fixed",
+          value: { type: "decimal", value: 0 },
+        },
         unit: existingIngredient.unit ?? "",
       };
       const newQuantity = { value: quantity, unit: unit ?? "" };
 
-      const total = addQuantities(currentQuantity, newQuantity);
-      existingIngredient.quantity = total.value;
-      existingIngredient.unit = total.unit || undefined;
+      try {
+        const total = addQuantities(currentQuantity, newQuantity);
+        existingIngredient.quantity = total.value;
+        existingIngredient.unit = total.unit || undefined;
+      } catch (e) {
+        if (
+          e instanceof IncompatibleUnitsError ||
+          e instanceof CannotAddTextValueError
+        ) {
+          // Addition not possible, so add as a new ingredient.
+          return ingredients.push(newIngredient) - 1;
+        }
+      }
     }
     return index;
   }
@@ -129,18 +155,52 @@ export function findAndUpsertCookware(
   return cookware.push(newCookware) - 1;
 }
 
-export function parseNumber(input_str: string): number {
-  const clean_str = String(input_str).replace(",", ".");
-  if (!clean_str.startsWith("/") && clean_str.includes("/")) {
-    const [num, den] = clean_str.split("/").map(Number);
-    return num! / den!;
+// Parser when we know the input is either a number-like value
+const parseFixedValue = (
+  input_str: string,
+): TextValue | DecimalValue | FractionValue => {
+  if (!numberLikeRegex.test(input_str)) {
+    return { type: "text", value: input_str };
   }
-  return Number(clean_str);
+
+  // After this we know that s is either a fraction or a decimal value
+  const s = input_str.trim().replace(",", ".");
+
+  // fraction
+  if (s.includes("/")) {
+    const parts = s.split("/");
+
+    const num = Number(parts[0]);
+    const den = Number(parts[1]);
+
+    return { type: "fraction", num, den };
+  }
+
+  // decimal
+  return { type: "decimal", value: Number(s) };
+};
+
+export function parseQuantityInput(input_str: string): FixedValue | Range {
+  const clean_str = String(input_str).trim();
+
+  if (rangeRegex.test(clean_str)) {
+    const range_parts = clean_str.split("-");
+    // As we've tested for it, we know that we have Number-like Quantities to parse
+    const min = parseFixedValue(range_parts[0]!.trim()) as
+      | DecimalValue
+      | FractionValue;
+    const max = parseFixedValue(range_parts[1]!.trim()) as
+      | DecimalValue
+      | FractionValue;
+    return { type: "range", min, max };
+  }
+
+  return { type: "fixed", value: parseFixedValue(clean_str) };
 }
 
 export function parseSimpleMetaVar(content: string, varName: string) {
   const varMatch = content.match(
-    new RegExp(`^${varName}:\\s*(.*(?:\\r?\\n\\s+.*)*)+`, "m"),
+    new RegExp(`^${varName}:\s*(.*(?:\r?\n\s+.*)*)+`, "m"),
   );
   return varMatch
     ? varMatch[1]?.trim().replace(/\s*\r?\n\s+/g, " ")
@@ -149,7 +209,7 @@ export function parseSimpleMetaVar(content: string, varName: string) {
 
 export function parseScalingMetaVar(content: string, varName: string) {
   const varMatch = content.match(
-    new RegExp(`^${varName}:[\\t ]*(([^,\\n]*),? ?(?:.*)?)`, "m"),
+    new RegExp(`^${varName}:[\t ]*(([^,\n]*),? ?(?:.*)?)`, "m"),
   );
   if (!varMatch) return undefined;
   if (isNaN(Number(varMatch[2]?.trim()))) {
@@ -161,10 +221,7 @@ export function parseScalingMetaVar(content: string, varName: string) {
 export function parseListMetaVar(content: string, varName: string) {
   // Handle both inline and YAML-style tags
   const listMatch = content.match(
-    new RegExp(
-      `^${varName}:\\s*(?:\\[([^\\]]*)\\]|((?:\\r?\\n\\s*-\\s*.+)+))`,
-      "m",
-    ),
+    new RegExp(`^${varName}:\s*(?:[([^]]*)]|((?:\r?\n\s*-\s*.+)+))`, "m"),
   );
   if (!listMatch) return undefined;
 
