@@ -320,6 +320,11 @@ export class Recipe {
     return newRecipe;
   }
 
+  /**
+   * Gets the number of servings for the recipe.
+   * @private
+   * @returns The number of servings, or undefined if not set.
+   */
   private getServings(): number | undefined {
     if (this.servings) {
       return this.servings;
