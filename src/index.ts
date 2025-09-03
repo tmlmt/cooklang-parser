@@ -1,6 +1,8 @@
 import { AisleConfig } from "./classes/aisle_config";
 import { Recipe } from "./classes/recipe";
 import { ShoppingList } from "./classes/shopping_list";
+import { Section } from "./classes/section";
+
 import type {
   Metadata,
   MetadataExtract,
@@ -50,4 +52,5 @@ export {
   AddedRecipe,
   AisleIngredient,
   AisleCategory,
+  Section,
 };
