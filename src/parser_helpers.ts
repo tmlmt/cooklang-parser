@@ -200,7 +200,7 @@ export function parseQuantityInput(input_str: string): FixedValue | Range {
 
 export function parseSimpleMetaVar(content: string, varName: string) {
   const varMatch = content.match(
-    new RegExp(`^${varName}:\s*(.*(?:\r?\n\s+.*)*)+`, "m"),
+    new RegExp(`^${varName}:\\s*(.*(?:\\r?\\n\\s+.*)*)+`, "m"),
   );
   return varMatch
     ? varMatch[1]?.trim().replace(/\s*\r?\n\s+/g, " ")
@@ -209,7 +209,7 @@ export function parseSimpleMetaVar(content: string, varName: string) {
 
 export function parseScalingMetaVar(content: string, varName: string) {
   const varMatch = content.match(
-    new RegExp(`^${varName}:[\t ]*(([^,\n]*),? ?(?:.*)?)`, "m"),
+    new RegExp(`^${varName}:[\\t ]*(([^,\\n]*),? ?(?:.*)?)`, "m"),
   );
   if (!varMatch) return undefined;
   if (isNaN(Number(varMatch[2]?.trim()))) {
@@ -221,7 +221,10 @@ export function parseScalingMetaVar(content: string, varName: string) {
 export function parseListMetaVar(content: string, varName: string) {
   // Handle both inline and YAML-style tags
   const listMatch = content.match(
-    new RegExp(`^${varName}:\s*(?:[([^]]*)]|((?:\r?\n\s*-\s*.+)+))`, "m"),
+    new RegExp(
+      `^${varName}:\\s*(?:\\[([^\\]]*)\\]|((?:\\r?\\n\\s*-\\s*.+)+))`,
+      "m",
+    ),
   );
   if (!listMatch) return undefined;
 
