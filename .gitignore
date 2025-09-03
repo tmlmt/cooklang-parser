@@ -1,5 +1,6 @@
 node_modules
 dist
 coverage
+docs/.vitepress/cache
 docs/.vitepress/dist
 docs/api
