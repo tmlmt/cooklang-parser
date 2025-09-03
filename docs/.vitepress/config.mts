@@ -3,8 +3,8 @@ import typedocSidebar from "../api/typedoc-sidebar.json";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "Cooklang Parser",
-  description: "Documentation for the npm package cooklang-parser",
+  title: "@tmlmt/cooklang-parser",
+  description: "Documentation for the npm package @tmlmt/cooklang-parser",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [

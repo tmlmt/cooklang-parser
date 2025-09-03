@@ -4,11 +4,11 @@ layout: home
 
 hero:
   name: "Cooklang Parser"
-  tagline: Docs for the npm package cooklang-parser
+  tagline: Toolbox for using cooklang recipes in your Typescript project
   actions:
     - theme: brand
       text: Quick Start
-      link: /api
+      link: /api/#quick-start
     - theme: alt
       text: API Reference
       link: /api

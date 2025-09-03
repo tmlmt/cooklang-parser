@@ -10,6 +10,8 @@
     "compactFolders": true,
     "excludeReferences": true
   },
+  "sort": ["alphabetical"],
+  "disableSources": true,
   "categorizeByGroup": false,
   "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"]
 }
