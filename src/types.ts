@@ -250,6 +250,8 @@ export interface Note {
 export interface Cookware {
   /** The name of the cookware. */
   name: string;
+  /** The quantity of cookware */
+  quantity?: FixedValue | Range;
   /** Whether the cookware is optional. */
   optional?: boolean;
   /** Whether the cookware is hidden. */

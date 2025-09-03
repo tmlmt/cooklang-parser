@@ -105,26 +105,31 @@ Recipe {
       "hidden": false,
       "name": "Dutch oven",
       "optional": false,
+      "quantity": undefined,
     },
     {
       "hidden": false,
       "name": "small bowl",
       "optional": false,
+      "quantity": undefined,
     },
     {
       "hidden": false,
       "name": "13×9-inch baking dish",
       "optional": false,
+      "quantity": undefined,
     },
     {
       "hidden": false,
       "name": "rubber spatula",
       "optional": false,
+      "quantity": undefined,
     },
     {
       "hidden": false,
       "name": "icing spatula",
       "optional": true,
+      "quantity": undefined,
     },
   ],
   "ingredients": [

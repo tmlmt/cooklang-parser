@@ -194,13 +194,18 @@ export class Recipe {
         } else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;
           const modifier = groups.mCookwareModifier || groups.sCookwareModifier;
+          const quantityRaw =
+            groups.mCookwareQuantity || groups.sCookwareQuantity;
           const optional = modifier === "?";
           const hidden = modifier === "-";
           const reference = modifier === "&";
+          const quantity = quantityRaw
+            ? parseQuantityInput(quantityRaw)
+            : undefined;
 
           const idxInList = findAndUpsertCookware(
             this.cookware,
-            { name, optional, hidden },
+            { name, quantity, optional, hidden },
             reference,
           );
           items.push({ type: "cookware", value: idxInList });

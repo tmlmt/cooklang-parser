@@ -92,7 +92,6 @@ console.log(shoppingList.categories);
 I plan to further develop features depending on the needs I will encounter in using this library in a practical application. The current todo includes:
 
 - Ingredients aliases. See issue tmlmt/cooklang-parser#5
-- Cookware quantities
 
 ## Test coverage
 

@@ -4,7 +4,7 @@ title: Pancakes
 tags: [breakfast, easy]
 ---
 
-Crack the @eggs{3} into a #bowl. Mix with some @flour{} and add @coarse salt{}.
+Crack the @eggs{3} into a #bowl{1}. Mix with some @flour{} and add @coarse salt{}.
 
 Melt the @butter{50%g} in a #pan{} on medium heat.
 

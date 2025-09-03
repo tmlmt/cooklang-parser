@@ -273,41 +273,44 @@ describe("parse function", () => {
     });
   });
 
-  it("extracts cookware correctly", () => {
-    const result = new Recipe(simpleRecipe);
-    expect(result.cookware.length).toBe(2);
-    expect(result.cookware[0]).toEqual({
-      hidden: false,
-      name: "bowl",
-      optional: false,
+  describe("cookware parsing", () => {
+    it("extracts cookware correctly", () => {
+      const result = new Recipe(simpleRecipe);
+      expect(result.cookware.length).toBe(2);
+      expect(result.cookware[0]).toEqual({
+        hidden: false,
+        name: "bowl",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        optional: false,
+      });
+      expect(result.cookware[1]).toEqual({
+        hidden: false,
+        name: "pan",
+        optional: false,
+      });
     });
-    expect(result.cookware[1]).toEqual({
-      hidden: false,
-      name: "pan",
-      optional: false,
-    });
-  });
 
-  it("should correctly handle modifiers for cookware", () => {
-    const recipe = `
+    it("should correctly handle modifiers for cookware", () => {
+      const recipe = `
         Use an #oven or a #?pan to cook. Clean the #&oven after use. Don't bother using a #-stove
       `;
-    const result = new Recipe(recipe);
-    expect(result.cookware).toHaveLength(3);
-    expect(result.cookware[0]).toEqual({
-      name: "oven",
-      optional: false,
-      hidden: false,
-    });
-    expect(result.cookware[1]).toEqual({
-      name: "pan",
-      optional: true,
-      hidden: false,
-    });
-    expect(result.cookware[2]).toEqual({
-      name: "stove",
-      optional: false,
-      hidden: true,
+      const result = new Recipe(recipe);
+      expect(result.cookware).toHaveLength(3);
+      expect(result.cookware[0]).toEqual({
+        name: "oven",
+        optional: false,
+        hidden: false,
+      });
+      expect(result.cookware[1]).toEqual({
+        name: "pan",
+        optional: true,
+        hidden: false,
+      });
+      expect(result.cookware[2]).toEqual({
+        name: "stove",
+        optional: false,
+        hidden: true,
+      });
     });
   });
 
