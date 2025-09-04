@@ -58,5 +58,21 @@
     "vitepress": "2.0.0-alpha.12",
     "vitest": "3.2.4"
   },
+  "bugs": {
+    "url": "https://github.com/tmlmt/cooklang-parser/issues",
+    "email": "tom@tmlmt.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmlmt/cooklang-parser.git"
+  },
+  "homepage": "https://cooklang-parser.tmlmt.com",
+  "keywords": [
+    "cooklang",
+    "parser",
+    "typescript",
+    "cooking",
+    "recipes"
+  ],
   "license": "MIT"
 }
