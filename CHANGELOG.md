@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.1
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.0...v1.2.1)
+
+### 🏡 Chore
+
+- Lint and turn some repetitive errors to warnings for now ([5c5efe2](https://github.com/tmlmt/cooklang-parser/commit/5c5efe2))
+- **README:** Add v1.2 features ([a9408fe](https://github.com/tmlmt/cooklang-parser/commit/a9408fe))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.2.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.1.0...v1.2.0)
