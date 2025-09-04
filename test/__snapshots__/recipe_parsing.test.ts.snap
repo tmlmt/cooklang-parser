@@ -28,6 +28,13 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " into a ",
           },
           {
+            "itemQuantity": {
+              "type": "fixed",
+              "value": {
+                "type": "decimal",
+                "value": 1,
+              },
+            },
             "type": "cookware",
             "value": 0,
           },
@@ -84,6 +91,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " in a ",
           },
           {
+            "itemQuantity": undefined,
             "type": "cookware",
             "value": 1,
           },
@@ -488,6 +496,7 @@ Recipe {
               "value": "Meanwhile, heat a ",
             },
             {
+              "itemQuantity": undefined,
               "type": "cookware",
               "value": 0,
             },
@@ -787,6 +796,7 @@ Recipe {
               "value": "In a ",
             },
             {
+              "itemQuantity": undefined,
               "type": "cookware",
               "value": 1,
             },
@@ -936,6 +946,7 @@ Recipe {
               "value": "Spoon 2 cups meat sauce into an ungreased ",
             },
             {
+              "itemQuantity": undefined,
               "type": "cookware",
               "value": 2,
             },
@@ -944,6 +955,7 @@ Recipe {
               "value": ", spreading it out to cover the entire dish. Layer three noodles onto the sauce. Add one-third of the ricotta mixture, spreading it over the noodles with a ",
             },
             {
+              "itemQuantity": undefined,
               "type": "cookware",
               "value": 3,
             },
@@ -952,6 +964,7 @@ Recipe {
               "value": " or an ",
             },
             {
+              "itemQuantity": undefined,
               "type": "cookware",
               "value": 4,
             },
