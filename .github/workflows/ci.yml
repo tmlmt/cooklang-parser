@@ -61,5 +61,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          SOURCE: "docs/.vitepress/dist"
+          SOURCE: "docs/.vitepress/dist/."
           TARGET: ${{ secrets.TARGET_DIR_DOCS }}
