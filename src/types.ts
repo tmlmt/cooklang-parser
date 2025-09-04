@@ -189,6 +189,8 @@ export interface IngredientItem {
   type: "ingredient";
   /** The value of the item. */
   value: number;
+  /** The alias/name of the ingredient as it should be displayed in the preparation */
+  displayName: string;
   /** Quantity specific to this step item for this ingredient which may also be referenced elsewhere */
   itemQuantity?: FixedValue | Range;
   /** Unit specific to this step item for this ingredient which may also be referenced elsewhere */

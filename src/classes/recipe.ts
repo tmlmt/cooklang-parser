@@ -14,6 +14,7 @@ import {
   commentRegex,
   blockCommentRegex,
   metadataRegex,
+  ingredientAliasRegex,
 } from "../regex";
 import {
   findOrPush,
@@ -165,11 +166,24 @@ export class Recipe {
           const quantity = quantityRaw
             ? parseQuantityInput(quantityRaw)
             : undefined;
+          const aliasMatch = name.match(ingredientAliasRegex);
+          let listName, displayName: string;
+          if (
+            aliasMatch &&
+            aliasMatch.groups!.ingredientListName!.trim().length > 0 &&
+            aliasMatch.groups!.ingredientDisplayName!.trim().length > 0
+          ) {
+            listName = aliasMatch.groups!.ingredientListName!.trim();
+            displayName = aliasMatch.groups!.ingredientDisplayName!.trim();
+          } else {
+            listName = name;
+            displayName = name;
+          }
 
           const idxInList = findAndUpsertIngredient(
             this.ingredients,
             {
-              name,
+              name: listName,
               quantity,
               unit: units,
               optional,
@@ -185,6 +199,7 @@ export class Recipe {
             value: idxInList,
             itemQuantity: quantity,
             itemUnit: units,
+            displayName,
           };
 
           items.push(newItem);

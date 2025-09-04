@@ -11,6 +11,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Crack the ",
           },
           {
+            "displayName": "eggs",
             "itemQuantity": {
               "type": "fixed",
               "value": {
@@ -35,6 +36,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": ". Mix with some ",
           },
           {
+            "displayName": "flour",
             "itemQuantity": undefined,
             "itemUnit": undefined,
             "type": "ingredient",
@@ -45,6 +47,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " and add ",
           },
           {
+            "displayName": "coarse salt",
             "itemQuantity": undefined,
             "itemUnit": undefined,
             "type": "ingredient",
@@ -63,6 +66,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Melt the ",
           },
           {
+            "displayName": "butter",
             "itemQuantity": {
               "type": "fixed",
               "value": {
@@ -454,6 +458,7 @@ Recipe {
               "value": "Bring a large pot of salted water to a boil. Cook the ",
             },
             {
+              "displayName": "lasagne noodles",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -486,6 +491,7 @@ Recipe {
               "value": " over medium heat. Add the ",
             },
             {
+              "displayName": "bulk Italian sausage",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -502,6 +508,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "ground beef",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -519,6 +526,7 @@ Recipe {
               "value": " and diced ",
             },
             {
+              "displayName": "onion",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -543,6 +551,7 @@ Recipe {
               "value": " or until the meat is no longer pink, breaking up the meat with a large spoon as it cooks to create gorgeous crumbles. Add the ",
             },
             {
+              "displayName": "garlic",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -583,6 +592,7 @@ Recipe {
               "value": "Drain the mixture in the Dutch oven. Then, add the remaining sauce ingredients: ",
             },
             {
+              "displayName": "crushed tomatoes",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -599,6 +609,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "tomato paste",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -615,6 +626,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "water",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -632,6 +644,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "sugar",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -648,6 +661,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "fresh parsley",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -664,6 +678,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "dried basil",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -680,6 +695,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "fennel seed",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -697,6 +713,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "salt",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -714,6 +731,7 @@ Recipe {
               "value": " and ",
             },
             {
+              "displayName": "pepper",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -768,6 +786,7 @@ Recipe {
               "value": ", whisk together the ",
             },
             {
+              "displayName": "egg",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -784,6 +803,7 @@ Recipe {
               "value": ", ",
             },
             {
+              "displayName": "ricotta cheese",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -800,6 +820,7 @@ Recipe {
               "value": ", and remaining ",
             },
             {
+              "displayName": "fresh parsley",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -817,6 +838,7 @@ Recipe {
               "value": " and ",
             },
             {
+              "displayName": "salt",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -842,6 +864,7 @@ Recipe {
               "value": "If you haven’t already, grate the ",
             },
             {
+              "displayName": "mozzarella",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -858,6 +881,7 @@ Recipe {
               "value": " and ",
             },
             {
+              "displayName": "Parmesan",
               "itemQuantity": {
                 "type": "fixed",
                 "value": {
@@ -1075,6 +1099,7 @@ exports[`parse function > parses notes correctly 1`] = `
             "value": "Add ",
           },
           {
+            "displayName": "flour",
             "itemQuantity": {
               "type": "fixed",
               "value": {

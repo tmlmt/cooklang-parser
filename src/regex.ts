@@ -72,6 +72,20 @@ const singleWordIngredient = createRegex()
   .endGroup().optional()
   .toRegExp();
 
+export const ingredientAliasRegex = createRegex()
+  .startAnchor()
+  .startNamedGroup("ingredientListName")
+    .notAnyOf("|").oneOrMore()
+  .endGroup()
+  .literal("|")
+  .startNamedGroup("ingredientDisplayName")
+    .notAnyOf("|").oneOrMore()
+  .endGroup()
+  .endAnchor()
+  .toRegExp();
+
+console.log(ingredientAliasRegex.source)
+
 const multiwordCookware = createRegex()
   .literal("#")
   .startNamedGroup("mCookwareModifier")
