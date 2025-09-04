@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.5
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.4...v1.2.5)
+
+### 🤖 CI
+
+- Fix ts error due to linting performed before typedoc is generated ([5cee224](https://github.com/tmlmt/cooklang-parser/commit/5cee224))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.2.4
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.3...v1.2.4)
