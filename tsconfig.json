@@ -20,12 +20,6 @@
     /* Library code */
     "lib": ["es2022"]
   },
-  "include": [
-    "src",
-    "test",
-    "docs/.vitepress/config.mts",
-    "tsup.config.ts",
-    "vitest.config.ts"
-  ],
+  "include": ["src", "test", "tsup.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
