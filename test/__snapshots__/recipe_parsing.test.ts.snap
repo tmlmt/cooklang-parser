@@ -11,6 +11,14 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Crack the ",
           },
           {
+            "itemQuantity": {
+              "type": "fixed",
+              "value": {
+                "type": "decimal",
+                "value": 3,
+              },
+            },
+            "itemUnit": undefined,
             "type": "ingredient",
             "value": 0,
           },
@@ -27,6 +35,8 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": ". Mix with some ",
           },
           {
+            "itemQuantity": undefined,
+            "itemUnit": undefined,
             "type": "ingredient",
             "value": 1,
           },
@@ -35,6 +45,8 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " and add ",
           },
           {
+            "itemQuantity": undefined,
+            "itemUnit": undefined,
             "type": "ingredient",
             "value": 2,
           },
@@ -51,6 +63,14 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Melt the ",
           },
           {
+            "itemQuantity": {
+              "type": "fixed",
+              "value": {
+                "type": "decimal",
+                "value": 50,
+              },
+            },
+            "itemUnit": "g",
             "type": "ingredient",
             "value": 3,
           },
@@ -434,6 +454,14 @@ Recipe {
               "value": "Bring a large pot of salted water to a boil. Cook the ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 9,
+                },
+              },
+              "itemUnit": undefined,
               "type": "ingredient",
               "value": 0,
             },
@@ -458,6 +486,14 @@ Recipe {
               "value": " over medium heat. Add the ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 1.2,
+                },
+              },
+              "itemUnit": "lb",
               "type": "ingredient",
               "value": 1,
             },
@@ -466,6 +502,15 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "den": 4,
+                  "num": 3,
+                  "type": "fraction",
+                },
+              },
+              "itemUnit": "lb",
               "type": "ingredient",
               "value": 2,
             },
@@ -474,6 +519,14 @@ Recipe {
               "value": " and diced ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 1,
+                },
+              },
+              "itemUnit": undefined,
               "type": "ingredient",
               "value": 3,
             },
@@ -490,6 +543,14 @@ Recipe {
               "value": " or until the meat is no longer pink, breaking up the meat with a large spoon as it cooks to create gorgeous crumbles. Add the ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 3,
+                },
+              },
+              "itemUnit": "cloves",
               "type": "ingredient",
               "value": 4,
             },
@@ -522,6 +583,14 @@ Recipe {
               "value": "Drain the mixture in the Dutch oven. Then, add the remaining sauce ingredients: ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 2,
+                },
+              },
+              "itemUnit": "cans",
               "type": "ingredient",
               "value": 5,
             },
@@ -530,6 +599,14 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 2,
+                },
+              },
+              "itemUnit": "cans",
               "type": "ingredient",
               "value": 6,
             },
@@ -538,6 +615,15 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "den": 3,
+                  "num": 2,
+                  "type": "fraction",
+                },
+              },
+              "itemUnit": "cup",
               "type": "ingredient",
               "value": 7,
             },
@@ -546,6 +632,14 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 2,
+                },
+              },
+              "itemUnit": "tbsp",
               "type": "ingredient",
               "value": 8,
             },
@@ -554,6 +648,14 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 3,
+                },
+              },
+              "itemUnit": "tbsp",
               "type": "ingredient",
               "value": 9,
             },
@@ -562,6 +664,14 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 2,
+                },
+              },
+              "itemUnit": "tsp",
               "type": "ingredient",
               "value": 10,
             },
@@ -570,6 +680,15 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "den": 4,
+                  "num": 3,
+                  "type": "fraction",
+                },
+              },
+              "itemUnit": "tsp",
               "type": "ingredient",
               "value": 11,
             },
@@ -578,6 +697,15 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "den": 2,
+                  "num": 1,
+                  "type": "fraction",
+                },
+              },
+              "itemUnit": "tsp",
               "type": "ingredient",
               "value": 12,
             },
@@ -586,6 +714,15 @@ Recipe {
               "value": " and ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "den": 4,
+                  "num": 1,
+                  "type": "fraction",
+                },
+              },
+              "itemUnit": "tsp",
               "type": "ingredient",
               "value": 13,
             },
@@ -631,6 +768,14 @@ Recipe {
               "value": ", whisk together the ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 1,
+                },
+              },
+              "itemUnit": undefined,
               "type": "ingredient",
               "value": 14,
             },
@@ -639,6 +784,14 @@ Recipe {
               "value": ", ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 1,
+                },
+              },
+              "itemUnit": "carton",
               "type": "ingredient",
               "value": 15,
             },
@@ -647,8 +800,7 @@ Recipe {
               "value": ", and remaining ",
             },
             {
-              "partialPreparation": undefined,
-              "partialQuantity": {
+              "itemQuantity": {
                 "type": "fixed",
                 "value": {
                   "den": 4,
@@ -656,7 +808,7 @@ Recipe {
                   "type": "fraction",
                 },
               },
-              "partialUnit": "cup",
+              "itemUnit": "cup",
               "type": "ingredient",
               "value": 9,
             },
@@ -665,8 +817,7 @@ Recipe {
               "value": " and ",
             },
             {
-              "partialPreparation": undefined,
-              "partialQuantity": {
+              "itemQuantity": {
                 "type": "fixed",
                 "value": {
                   "den": 4,
@@ -674,7 +825,7 @@ Recipe {
                   "type": "fraction",
                 },
               },
-              "partialUnit": "tsp",
+              "itemUnit": "tsp",
               "type": "ingredient",
               "value": 12,
             },
@@ -691,6 +842,14 @@ Recipe {
               "value": "If you haven’t already, grate the ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "type": "decimal",
+                  "value": 4,
+                },
+              },
+              "itemUnit": "cups",
               "type": "ingredient",
               "value": 16,
             },
@@ -699,6 +858,15 @@ Recipe {
               "value": " and ",
             },
             {
+              "itemQuantity": {
+                "type": "fixed",
+                "value": {
+                  "den": 4,
+                  "num": 3,
+                  "type": "fraction",
+                },
+              },
+              "itemUnit": "cup",
               "type": "ingredient",
               "value": 17,
             },
@@ -907,6 +1075,14 @@ exports[`parse function > parses notes correctly 1`] = `
             "value": "Add ",
           },
           {
+            "itemQuantity": {
+              "type": "fixed",
+              "value": {
+                "type": "decimal",
+                "value": 100,
+              },
+            },
+            "itemUnit": "g",
             "type": "ingredient",
             "value": 0,
           },

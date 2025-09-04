@@ -189,12 +189,10 @@ export interface IngredientItem {
   type: "ingredient";
   /** The value of the item. */
   value: number;
-  /** If this is a referenced ingredient, quantity specific to this instance */
-  partialQuantity?: FixedValue | Range;
-  /** If this is a referenced ingredient, unit specific to this instance  */
-  partialUnit?: string;
-  /** If this is a referenced ingredient, preparation specific to this instance  */
-  partialPreparation?: string;
+  /** Quantity specific to this step item for this ingredient which may also be referenced elsewhere */
+  itemQuantity?: FixedValue | Range;
+  /** Unit specific to this step item for this ingredient which may also be referenced elsewhere */
+  itemUnit?: string;
 }
 
 /**

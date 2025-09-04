@@ -158,6 +158,56 @@ describe("parse function", () => {
       });
     });
 
+    it("should keep track of individual quantities in the preparation steps", () => {
+      const recipe = `
+        Add @flour{100%g}.
+        Then add some more @&flour{50%g}.
+      `;
+      const result = new Recipe(recipe);
+      expect(result.sections).toHaveLength(1);
+      expect(result.sections[0]?.content).toHaveLength(1);
+      expect(result.sections[0]?.content).toEqual([
+        {
+          items: [
+            {
+              type: "text",
+              value: "Add ",
+            },
+            {
+              type: "ingredient",
+              value: 0,
+              itemQuantity: {
+                type: "fixed",
+                value: { type: "decimal", value: 100 },
+              },
+              itemUnit: "g",
+            },
+            {
+              type: "text",
+              value: ".",
+            },
+            {
+              type: "text",
+              value: "        Then add some more ",
+            },
+            {
+              itemQuantity: {
+                type: "fixed",
+                value: { type: "decimal", value: 50 },
+              },
+              itemUnit: "g",
+              type: "ingredient",
+              value: 0,
+            },
+            {
+              type: "text",
+              value: ".",
+            },
+          ],
+        },
+      ]);
+    });
+
     it("should list ingredients separately if not referenced with '&'", () => {
       const recipe = `
         Add @flour{100%g}.

@@ -183,12 +183,9 @@ export class Recipe {
           const newItem: IngredientItem = {
             type: "ingredient",
             value: idxInList,
+            itemQuantity: quantity,
+            itemUnit: units,
           };
-          if (reference) {
-            newItem.partialQuantity = quantity;
-            newItem.partialUnit = units;
-            newItem.partialPreparation = preparation;
-          }
 
           items.push(newItem);
         } else if (groups.mCookwareName || groups.sCookwareName) {
