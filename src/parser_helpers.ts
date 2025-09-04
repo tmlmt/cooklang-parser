@@ -47,7 +47,7 @@ export function flushPendingNote(
   note: Note["note"],
 ): Note["note"] {
   if (note.length > 0) {
-    section.content.push({ note });
+    section.content.push({ type: "note", note });
     return "";
   }
   return note;
@@ -64,7 +64,7 @@ export function flushPendingItems(
   items: Step["items"],
 ): boolean {
   if (items.length > 0) {
-    section.content.push({ items: [...items] });
+    section.content.push({ type: "step", items: [...items] });
     items.length = 0;
     return true;
   }

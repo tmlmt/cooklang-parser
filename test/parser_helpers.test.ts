@@ -268,7 +268,10 @@ describe("flushPendingNote", () => {
     const result = flushPendingNote(section, note);
 
     expect(section.content).toHaveLength(1);
-    expect(section.content[0]).toEqual({ note: "This is a test note." });
+    expect(section.content[0]).toEqual({
+      type: "note",
+      note: "This is a test note.",
+    });
     expect(result).toBe("");
   });
 

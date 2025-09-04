@@ -166,6 +166,7 @@ describe("parse function", () => {
       ]);
       expect(recipe.sections[0]?.content).toEqual([
         {
+          type: "step",
           items: [
             {
               type: "text",
@@ -257,6 +258,7 @@ describe("parse function", () => {
       expect(result.sections[0]?.content).toHaveLength(1);
       expect(result.sections[0]?.content).toEqual([
         {
+          type: "step",
           items: [
             {
               type: "text",
@@ -347,6 +349,7 @@ describe("parse function", () => {
       ]);
       expect(result.sections[0]?.content).toEqual([
         {
+          type: "step",
           items: [
             {
               type: "text",
