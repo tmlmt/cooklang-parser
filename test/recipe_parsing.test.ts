@@ -235,6 +235,65 @@ describe("parse function", () => {
       });
     });
 
+    it("should ignore preparation given for ingredient items referencing another one", () => {
+      const result = new Recipe(`Mix @eggs{1}(boiled) and @&eggs{1}(poached)`);
+      expect(result.ingredients).toEqual([
+        {
+          hidden: false,
+          isRecipe: false,
+          name: "eggs",
+          optional: false,
+          preparation: "boiled",
+          quantity: {
+            type: "fixed",
+            value: {
+              type: "decimal",
+              value: 2,
+            },
+          },
+          unit: undefined,
+        },
+      ]);
+      expect(result.sections[0]?.content).toEqual([
+        {
+          items: [
+            {
+              type: "text",
+              value: "Mix ",
+            },
+            {
+              itemQuantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  value: 1,
+                },
+              },
+              itemUnit: undefined,
+              type: "ingredient",
+              value: 0,
+            },
+            {
+              type: "text",
+              value: " and ",
+            },
+            {
+              itemQuantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  value: 1,
+                },
+              },
+              itemUnit: undefined,
+              type: "ingredient",
+              value: 0,
+            },
+          ],
+        },
+      ]);
+    });
+
     it("should combine explicitly referenced ingredients case-insensitively", () => {
       const recipe = `
         Add @Sugar{100%g}.
