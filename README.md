@@ -100,9 +100,7 @@ console.log(shoppingList.categories);
 
 ## Future plans
 
-I plan to further develop features depending on the needs I will encounter in using this library in a practical application. The current todo includes:
-
-- Ingredients aliases. See issue tmlmt/cooklang-parser#5
+I plan to further develop features depending on the needs I will encounter in using this library in a practical application. The main item on the todo list is to improve the documentation with detailed explanation of the extensions, as well as examples.
 
 ## Test coverage
 
