@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ShoppingList } from "../src/classes/shopping_list";
-import type { CategorizedIngredients } from "../src/types";
+import type { CategorizedIngredients, Ingredient } from "../src/types";
 import { Recipe } from "../src/classes/recipe";
 
 describe("ShoppingList", () => {
@@ -282,8 +282,8 @@ sugar
     };
 
     // Sort ingredients in expected categories
-    for (const category in expected as any) {
-      expected[category]!.sort((a: any, b: any) =>
+    for (const category in expected) {
+      expected[category]!.sort((a: Ingredient, b: Ingredient): number =>
         a.name.localeCompare(b.name),
       );
     }

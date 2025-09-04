@@ -11,6 +11,12 @@ export interface Metadata {
   tags?: string[];
   /** The source of the recipe. */
   source?: string;
+  /** The source name of the recipe. */
+  "source.name"?: string;
+  /** The source url of the recipe. */
+  "source.url"?: string;
+  /** The source author of the recipe. */
+  "source.author"?: string;
   /** The author of the recipe. */
   author?: string;
   /** The number of servings the recipe makes.
@@ -31,6 +37,8 @@ export interface Metadata {
   course?: string;
   /** The category of the recipe. */
   category?: string;
+  /** The locale of the recipe. */
+  locale?: string;
   /**
    *  The preparation time of the recipe.
    *  Will not be further parsed into any DateTime format nor normalize
@@ -70,8 +78,16 @@ export interface Metadata {
   diet?: string;
   /** The description of the recipe. */
   description?: string;
-  /** The images of the recipe. */
+  /** The images of the recipe. Alias of `pictures` */
   images?: string[];
+  /** The images of the recipe. Alias of `images` */
+  pictures?: string[];
+  /** The picture of the recipe. Alias of `picture` */
+  image?: string;
+  /** The picture of the recipe. Alias of `image` */
+  picture?: string;
+  /** The introduction of the recipe. */
+  introduction?: string;
 }
 
 /**

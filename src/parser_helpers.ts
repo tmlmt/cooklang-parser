@@ -207,7 +207,10 @@ export function parseSimpleMetaVar(content: string, varName: string) {
     : undefined;
 }
 
-export function parseScalingMetaVar(content: string, varName: string) {
+export function parseScalingMetaVar(
+  content: string,
+  varName: string,
+): [number, string] | undefined {
   const varMatch = content.match(
     new RegExp(`^${varName}:[\\t ]*(([^,\\n]*),? ?(?:.*)?)`, "m"),
   );
@@ -215,7 +218,7 @@ export function parseScalingMetaVar(content: string, varName: string) {
   if (isNaN(Number(varMatch[2]?.trim()))) {
     throw new Error("Scaling variables should be numbers");
   }
-  return [Number(varMatch[2]?.trim()), varMatch[1]?.trim()];
+  return [Number(varMatch[2]?.trim()), varMatch[1]!.trim()];
 }
 
 export function parseListMetaVar(content: string, varName: string) {
@@ -278,14 +281,42 @@ export function extractMetadata(content: string): MetadataExtract {
     "difficulty",
     "image",
     "picture",
-  ] as (keyof Metadata)[]) {
-    const stringMetaValue: any = parseSimpleMetaVar(metadataContent, metaVar);
+  ] as (keyof Pick<
+    Metadata,
+    | "title"
+    | "source"
+    | "source.name"
+    | "source.url"
+    | "author"
+    | "source.author"
+    | "prep time"
+    | "time.prep"
+    | "cook time"
+    | "time.cook"
+    | "time required"
+    | "time"
+    | "duration"
+    | "locale"
+    | "introduction"
+    | "description"
+    | "course"
+    | "category"
+    | "diet"
+    | "cuisine"
+    | "difficulty"
+    | "image"
+    | "picture"
+  >)[]) {
+    const stringMetaValue = parseSimpleMetaVar(metadataContent, metaVar);
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
   }
 
   // String metadata variables
-  for (const metaVar of ["servings", "yield", "serves"] as (keyof Metadata)[]) {
-    const scalingMetaValue: any = parseScalingMetaVar(metadataContent, metaVar);
+  for (const metaVar of ["servings", "yield", "serves"] as (keyof Pick<
+    Metadata,
+    "servings" | "yield" | "serves"
+  >)[]) {
+    const scalingMetaValue = parseScalingMetaVar(metadataContent, metaVar);
     if (scalingMetaValue && scalingMetaValue[1]) {
       metadata[metaVar] = scalingMetaValue[1];
       servings = scalingMetaValue[0];
@@ -293,8 +324,11 @@ export function extractMetadata(content: string): MetadataExtract {
   }
 
   // List metadata variables
-  for (const metaVar of ["tags", "images", "pictures"] as (keyof Metadata)[]) {
-    const listMetaValue: any = parseListMetaVar(metadataContent, metaVar);
+  for (const metaVar of ["tags", "images", "pictures"] as (keyof Pick<
+    Metadata,
+    "tags" | "images" | "pictures"
+  >)[]) {
+    const listMetaValue = parseListMetaVar(metadataContent, metaVar);
     if (listMetaValue) metadata[metaVar] = listMetaValue;
   }
 
