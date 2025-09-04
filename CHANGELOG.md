@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.4
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.3...v1.2.4)
+
+### 💅 Refactors
+
+- Improve typing, remove related eslint warnings and rules overrides ([a0f6bb7](https://github.com/tmlmt/cooklang-parser/commit/a0f6bb7))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.2.3
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.2...v1.2.3)
