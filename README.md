@@ -11,12 +11,16 @@ The documentation is available at [https://cooklang-parser.tmlmt.com](https://co
 ## Features
 
 - **Cooklang Compliant:** Fully compliant with the Cooklang specifications.
-- **Useful modifiers:** in line with the same in the canonical cooklang parser in Rust ([cooklang-rs](https://github.com/cooklang/cooklang-rs/blob/main/extensions.md))
-  - `@`: referenced recipe
-  - `&`: referenced ingredient (quantities will be added)
-  - `-`: hidden ingredient
-  - `?`: optional ingredient
-- **Recipe Parsing:** Parse Cooklang recipes to extract metadata, ingredients, cookware, timers, and steps.
+- **Recipe Parsing:** Parse Cooklang recipes to extract metadata, ingredients, cookware, timers, and steps. Several extensions on top of the original cooklang specifications:
+  - **Useful modifiers:** in line with the same in the canonical cooklang parser in Rust ([cooklang-rs](https://github.com/cooklang/cooklang-rs/blob/main/extensions.md))
+    - `@`: referenced recipe
+    - `&`: referenced ingredient (quantities will be added)
+    - `-`: hidden ingredient
+    - `?`: optional ingredient
+  - **Range values:**
+    - `@eggs{2-4}` will show eggs as an ingredient with a quantity range of 2 to 4
+    - `@water{1%L} and @&water{1/4-1/2%L}` will show water as an ingredient with a quantity range of 1.25 to 1.5 L
+    - Also works with Cookware and Timers
 - **Recipe Scaling:** Scale recipes by a given factor.
 - **Shopping Lists:** Generate shopping lists from one or more recipes.
 - **Aisle Configuration:** Categorize shopping list ingredients based on a custom aisle configuration.
