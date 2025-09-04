@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@iconify-json/material-symbols": "1.2.33",
-    "@types/node": "24.2.1",
+    "@types/node": "22.18.1",
     "@typescript-eslint/eslint-plugin": "8.42.0",
     "@typescript-eslint/parser": "8.42.0",
     "@vitest/coverage-v8": "3.2.4",
