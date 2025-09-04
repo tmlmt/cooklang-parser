@@ -1,5 +1,47 @@
 # Changelog
 
+## v1.2.0
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.1.0...v1.2.0)
+
+#### ⚠️ Breaking Changes
+
+As part of fixing the non-preservation of individual quantities of referenced ingredients, the `partialQuantity` and `partialUnit` properties of `IngredientItem` in preparation steps are renamed respectively `itemQuantity` and `itemUnit`. Moreover, the `partialPreparation` is removed as the preparation is fixed for a given ingredient in the list and can be accessed via the ingredient reference index.
+
+This is considered part of arbitrary changes during the rapid development of the parser and therefore do not trigger a bump to a new major version.
+
+### 🚀 Enhancements
+
+- Ingredient aliases ([731d856](https://github.com/tmlmt/cooklang-parser/commit/731d856))
+
+### 🩹 Fixes
+
+- ⚠️ Individual quantities of referenced ingredient not preserved in preparation steps ([d233eba](https://github.com/tmlmt/cooklang-parser/commit/d233eba))
+- Individual quantities of cookware not preserved in preparation steps ([9f6a008](https://github.com/tmlmt/cooklang-parser/commit/9f6a008))
+
+### 🏡 Chore
+
+- **README:** Add range values to features ([c38463a](https://github.com/tmlmt/cooklang-parser/commit/c38463a))
+- **package:** Add useful properties for npm ([e72cbc3](https://github.com/tmlmt/cooklang-parser/commit/e72cbc3))
+- Remove `console.log()` ([d956853](https://github.com/tmlmt/cooklang-parser/commit/d956853))
+- Reconfigure eslint from scratch ([1b85287](https://github.com/tmlmt/cooklang-parser/commit/1b85287))
+
+### ✅ Tests
+
+- Add test to check that a referenced ingredient's original preparation is immutable ([1f43c47](https://github.com/tmlmt/cooklang-parser/commit/1f43c47))
+
+### 🎨 Styles
+
+- Add `type` property to Note and Step content types ([8266d85](https://github.com/tmlmt/cooklang-parser/commit/8266d85))
+
+### 🤖 CI
+
+- Fix wrong source folder for docs deployment ([4f492a0](https://github.com/tmlmt/cooklang-parser/commit/4f492a0))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.1.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.0.8...v1.1.0)
