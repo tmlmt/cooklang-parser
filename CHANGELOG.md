@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.2.3
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.2...v1.2.3)
+
+### 📦 Build
+
+- Fix build of docs due to bad tsconfig ([06bc22b](https://github.com/tmlmt/cooklang-parser/commit/06bc22b))
+
+### 🏡 Chore
+
+- Add vitepress config.mts file to files to lint outside of the actual TS project ([1ae7079](https://github.com/tmlmt/cooklang-parser/commit/1ae7079))
+
+### 🤖 CI
+
+- Also check types ([10266d3](https://github.com/tmlmt/cooklang-parser/commit/10266d3))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.2.2
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.1...v1.2.2)
