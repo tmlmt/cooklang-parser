@@ -206,6 +206,8 @@ export interface CookwareItem {
   type: "cookware";
   /** The value of the item. */
   value: number;
+  /** Quantity specific to this step item for this cookware which may also be referenced elsewhere */
+  itemQuantity?: FixedValue | Range;
 }
 
 /**

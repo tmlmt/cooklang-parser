@@ -7,6 +7,7 @@ import type {
   Note,
   Cookware,
   MetadataExtract,
+  CookwareItem,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -220,7 +221,11 @@ export class Recipe {
             { name, quantity, optional, hidden },
             reference,
           );
-          items.push({ type: "cookware", value: idxInList });
+          items.push({
+            type: "cookware",
+            value: idxInList,
+            itemQuantity: quantity,
+          } as CookwareItem);
         } else if (groups.timerQuantity !== undefined) {
           const durationStr = groups.timerQuantity.trim();
           const unit = (groups.timerUnits || "").trim();
