@@ -58,6 +58,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": ".",
           },
         ],
+        "type": "step",
       },
       {
         "items": [
@@ -91,6 +92,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " on medium heat.",
           },
         ],
+        "type": "step",
       },
       {
         "items": [
@@ -107,6 +109,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": ".",
           },
         ],
+        "type": "step",
       },
       {
         "items": [
@@ -115,6 +118,7 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Serve hot.",
           },
         ],
+        "type": "step",
       },
     ],
     "name": "",
@@ -475,6 +479,7 @@ Recipe {
               "value": " according to the package directions. When complete, drain the noodles, and set aside.",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -576,9 +581,11 @@ Recipe {
               "value": ", until the mixture is fragrant.",
             },
           ],
+          "type": "step",
         },
         {
           "note": "Editor’s Tip: To ensure the noodles will not stick to each other, stir the water like a whirlpool when you add the pasta sheets.",
+          "type": "note",
         },
       ],
       "name": "Brown the beef",
@@ -749,6 +756,7 @@ Recipe {
               "value": ". ",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -765,6 +773,7 @@ Recipe {
               "value": ", stirring occasionally.",
             },
           ],
+          "type": "step",
         },
       ],
       "name": "Make the meat sauce",
@@ -856,6 +865,7 @@ Recipe {
               "value": ". ",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -899,9 +909,11 @@ Recipe {
               "value": " cheeses.",
             },
           ],
+          "type": "step",
         },
         {
           "note": "Editor’s Tip: For the freshest, creamiest taste, grate your own cheese at home.",
+          "type": "note",
         },
       ],
       "name": "Prepare the cheese filling",
@@ -915,6 +927,7 @@ Recipe {
               "value": "Preheat the oven to 375°. ",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -947,6 +960,7 @@ Recipe {
               "value": ". Sprinkle with 1 cup mozzarella cheese and 2 tablespoons Parmesan cheese.",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -955,6 +969,7 @@ Recipe {
               "value": "Repeat the layers twice, finishing with remaining meat sauce and cheeses. The dish will be very full by the time you get to the top!",
             },
           ],
+          "type": "step",
         },
       ],
       "name": "Layer the lasagna ingredients",
@@ -976,6 +991,7 @@ Recipe {
               "value": ". ",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -992,6 +1008,7 @@ Recipe {
               "value": ", until the sauce is bubbling around the edges and the cheese is fully melted. ",
             },
           ],
+          "type": "step",
         },
         {
           "items": [
@@ -1008,6 +1025,7 @@ Recipe {
               "value": " before slicing and serving.",
             },
           ],
+          "type": "step",
         },
       ],
       "name": "Bake the lasagna",
@@ -1091,6 +1109,7 @@ exports[`parse function > parses notes correctly 1`] = `
     "content": [
       {
         "note": "This is a note at the beginning.",
+        "type": "note",
       },
       {
         "items": [
@@ -1116,9 +1135,11 @@ exports[`parse function > parses notes correctly 1`] = `
             "value": "> and this.",
           },
         ],
+        "type": "step",
       },
       {
         "note": "This is a note in the middle which continues on the next line.",
+        "type": "note",
       },
       {
         "items": [
@@ -1127,12 +1148,15 @@ exports[`parse function > parses notes correctly 1`] = `
             "value": "Another step.",
           },
         ],
+        "type": "step",
       },
       {
         "note": "Another note on multiple lines starting with > for readability",
+        "type": "note",
       },
       {
         "note": "A final note.",
+        "type": "note",
       },
     ],
     "name": "",

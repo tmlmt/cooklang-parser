@@ -230,6 +230,7 @@ export type Item = TextItem | IngredientItem | CookwareItem | TimerItem;
  * @category Types
  */
 export interface Step {
+  type: "step";
   /** The items in the step. */
   items: Item[];
 }
@@ -239,6 +240,7 @@ export interface Step {
  * @category Types
  */
 export interface Note {
+  type: "note";
   /** The content of the note. */
   note: string;
 }
