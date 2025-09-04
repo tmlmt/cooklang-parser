@@ -361,11 +361,15 @@ export class Recipe {
   clone(): Recipe {
     const newRecipe = new Recipe();
     // deep copy
-    newRecipe.metadata = JSON.parse(JSON.stringify(this.metadata));
-    newRecipe.ingredients = JSON.parse(JSON.stringify(this.ingredients));
-    newRecipe.sections = JSON.parse(JSON.stringify(this.sections));
-    newRecipe.cookware = JSON.parse(JSON.stringify(this.cookware));
-    newRecipe.timers = JSON.parse(JSON.stringify(this.timers));
+    newRecipe.metadata = JSON.parse(JSON.stringify(this.metadata)) as Metadata;
+    newRecipe.ingredients = JSON.parse(
+      JSON.stringify(this.ingredients),
+    ) as Ingredient[];
+    newRecipe.sections = JSON.parse(JSON.stringify(this.sections)) as Section[];
+    newRecipe.cookware = JSON.parse(
+      JSON.stringify(this.cookware),
+    ) as Cookware[];
+    newRecipe.timers = JSON.parse(JSON.stringify(this.timers)) as Timer[];
     newRecipe.servings = this.servings;
     return newRecipe;
   }

@@ -248,12 +248,8 @@ export function multiplyQuantityValue(
 
   return {
     type: "range",
-    min: toRoundedDecimal(
-      multiplyNumericValue(value.min as DecimalValue | FractionValue, factor),
-    ),
-    max: toRoundedDecimal(
-      multiplyNumericValue(value.max as DecimalValue | FractionValue, factor),
-    ),
+    min: toRoundedDecimal(multiplyNumericValue(value.min, factor)),
+    max: toRoundedDecimal(multiplyNumericValue(value.max, factor)),
   };
 }
 

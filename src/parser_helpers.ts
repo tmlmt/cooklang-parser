@@ -279,7 +279,7 @@ export function extractMetadata(content: string): MetadataExtract {
     "image",
     "picture",
   ] as (keyof Metadata)[]) {
-    const stringMetaValue = parseSimpleMetaVar(metadataContent, metaVar);
+    const stringMetaValue: any = parseSimpleMetaVar(metadataContent, metaVar);
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
   }
 
