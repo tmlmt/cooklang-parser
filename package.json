@@ -26,7 +26,7 @@
     "test:watch": "vitest watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint",
+    "lint": "tsc --noemit && eslint",
     "format": "prettier --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "predocs:dev": "typedoc",
