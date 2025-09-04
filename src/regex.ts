@@ -84,8 +84,6 @@ export const ingredientAliasRegex = createRegex()
   .endAnchor()
   .toRegExp();
 
-console.log(ingredientAliasRegex.source)
-
 const multiwordCookware = createRegex()
   .literal("#")
   .startNamedGroup("mCookwareModifier")
