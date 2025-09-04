@@ -9,133 +9,222 @@ describe("parse function", () => {
     expect(result.metadata.tags).toEqual(["breakfast", "easy"]);
   });
 
-  it("extracts ingredients correctly", () => {
-    const result = new Recipe(simpleRecipe);
-    expect(result.ingredients.length).toBe(4);
-    expect(result.ingredients).toEqual([
-      {
-        name: "eggs",
-        optional: false,
-        hidden: false,
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", value: 3 },
+  describe("ingredients with variants", () => {
+    it("extracts ingredients correctly", () => {
+      const result = new Recipe(simpleRecipe);
+      expect(result.ingredients.length).toBe(4);
+      expect(result.ingredients).toEqual([
+        {
+          name: "eggs",
+          optional: false,
+          hidden: false,
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", value: 3 },
+          },
+          unit: undefined,
+          preparation: undefined,
+          isRecipe: false,
         },
-        unit: undefined,
-        preparation: undefined,
-        isRecipe: false,
-      },
-      {
-        name: "flour",
-        optional: false,
-        hidden: false,
-        quantity: undefined,
-        unit: undefined,
-        preparation: undefined,
-        isRecipe: false,
-      },
-      {
-        name: "coarse salt",
-        hidden: false,
-        isRecipe: false,
-        optional: false,
-        preparation: undefined,
-        quantity: undefined,
-        unit: undefined,
-      },
-      {
-        name: "butter",
-        optional: false,
-        hidden: false,
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", value: 50 },
+        {
+          name: "flour",
+          optional: false,
+          hidden: false,
+          quantity: undefined,
+          unit: undefined,
+          preparation: undefined,
+          isRecipe: false,
         },
-        unit: "g",
-        preparation: undefined,
-        isRecipe: false,
-      },
-    ]);
-  });
+        {
+          name: "coarse salt",
+          hidden: false,
+          isRecipe: false,
+          optional: false,
+          preparation: undefined,
+          quantity: undefined,
+          unit: undefined,
+        },
+        {
+          name: "butter",
+          optional: false,
+          hidden: false,
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", value: 50 },
+          },
+          unit: "g",
+          preparation: undefined,
+          isRecipe: false,
+        },
+      ]);
+    });
 
-  it("parses ingredients that are other recipes", () => {
-    const recipe = `
+    it("parses ingredients that are other recipes", () => {
+      const recipe = `
       Defrost @@pizza dough{1} and form it into a nice disc
       And @@toppings on top
     `;
-    const result = new Recipe(recipe);
-    expect(result.ingredients).toHaveLength(2);
-    expect(result.ingredients[0]).toEqual({
-      name: "pizza dough",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      unit: undefined,
-      preparation: undefined,
-      optional: false,
-      hidden: false,
-      isRecipe: true,
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients[0]).toEqual({
+        name: "pizza dough",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: undefined,
+        preparation: undefined,
+        optional: false,
+        hidden: false,
+        isRecipe: true,
+      });
+      expect(result.ingredients[1]).toEqual({
+        name: "toppings",
+        quantity: undefined,
+        unit: undefined,
+        preparation: undefined,
+        optional: false,
+        hidden: false,
+        isRecipe: true,
+      });
     });
-    expect(result.ingredients[1]).toEqual({
-      name: "toppings",
-      quantity: undefined,
-      unit: undefined,
-      preparation: undefined,
-      optional: false,
-      hidden: false,
-      isRecipe: true,
-    });
-  });
 
-  it("parses ingredients with preparation", () => {
-    const recipe = `
+    it("parses ingredients with preparation", () => {
+      const recipe = `
       Add some @wheat flour{100%g}(sifted).
       And @eggs{2}(large, beaten).
     `;
-    const result = new Recipe(recipe);
-    expect(result.ingredients).toHaveLength(2);
-    expect(result.ingredients[0]).toEqual({
-      name: "wheat flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-      unit: "g",
-      preparation: "sifted",
-      optional: false,
-      hidden: false,
-      isRecipe: false,
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients[0]).toEqual({
+        name: "wheat flour",
+        quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+        unit: "g",
+        preparation: "sifted",
+        optional: false,
+        hidden: false,
+        isRecipe: false,
+      });
+      expect(result.ingredients[1]).toEqual({
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+        unit: undefined,
+        preparation: "large, beaten",
+        optional: false,
+        hidden: false,
+        isRecipe: false,
+      });
     });
-    expect(result.ingredients[1]).toEqual({
-      name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
-      unit: undefined,
-      preparation: "large, beaten",
-      optional: false,
-      hidden: false,
-      isRecipe: false,
-    });
-  });
 
-  it("parses hidden and optional ingredients", () => {
-    const recipe = `
+    it("parses hidden and optional ingredients", () => {
+      const recipe = `
       Add some @-salt{}.
       And maybe some @?pepper{}.
     `;
-    const result = new Recipe(recipe);
-    expect(result.ingredients).toHaveLength(2);
-    expect(result.ingredients[0]).toEqual({
-      name: "salt",
-      hidden: true,
-      optional: false,
-      quantity: undefined,
-      unit: undefined,
-      preparation: undefined,
-      isRecipe: false,
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients[0]).toEqual({
+        name: "salt",
+        hidden: true,
+        optional: false,
+        quantity: undefined,
+        unit: undefined,
+        preparation: undefined,
+        isRecipe: false,
+      });
+      expect(result.ingredients[1]).toEqual({
+        name: "pepper",
+        hidden: false,
+        optional: true,
+        quantity: undefined,
+        unit: undefined,
+        preparation: undefined,
+        isRecipe: false,
+      });
     });
-    expect(result.ingredients[1]).toEqual({
-      name: "pepper",
-      hidden: false,
-      optional: true,
-      quantity: undefined,
-      unit: undefined,
-      preparation: undefined,
-      isRecipe: false,
+
+    it("detects and correctly extracts ingredients aliases", () => {
+      const recipe =
+        new Recipe(`Mix @flour tipo 00|flour{100%g} with @water{300%mL}, 
+    then add more @&flour tipo 00|flour{50%g}`);
+      expect(recipe.ingredients).toEqual([
+        {
+          name: "flour tipo 00",
+          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+          unit: "g",
+          hidden: false,
+          optional: false,
+          isRecipe: false,
+          preparation: undefined,
+        },
+        {
+          name: "water",
+          quantity: { type: "fixed", value: { type: "decimal", value: 300 } },
+          unit: "mL",
+          hidden: false,
+          optional: false,
+          isRecipe: false,
+          preparation: undefined,
+        },
+      ]);
+      expect(recipe.sections[0]?.content).toEqual([
+        {
+          items: [
+            {
+              type: "text",
+              value: "Mix ",
+            },
+            {
+              displayName: "flour",
+              itemQuantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  value: 100,
+                },
+              },
+              itemUnit: "g",
+              type: "ingredient",
+              value: 0,
+            },
+            {
+              type: "text",
+              value: " with ",
+            },
+            {
+              displayName: "water",
+              itemQuantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  value: 300,
+                },
+              },
+              itemUnit: "mL",
+              type: "ingredient",
+              value: 1,
+            },
+            {
+              type: "text",
+              value: ", ",
+            },
+            {
+              type: "text",
+              value: "    then add more ",
+            },
+            {
+              displayName: "flour",
+              itemQuantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  value: 50,
+                },
+              },
+              itemUnit: "g",
+              type: "ingredient",
+              value: 0,
+            },
+          ],
+        },
+      ]);
     });
   });
 
@@ -175,6 +264,7 @@ describe("parse function", () => {
             },
             {
               type: "ingredient",
+              displayName: "flour",
               value: 0,
               itemQuantity: {
                 type: "fixed",
@@ -197,6 +287,7 @@ describe("parse function", () => {
               },
               itemUnit: "g",
               type: "ingredient",
+              displayName: "flour",
               value: 0,
             },
             {
@@ -271,6 +362,7 @@ describe("parse function", () => {
               },
               itemUnit: undefined,
               type: "ingredient",
+              displayName: "eggs",
               value: 0,
             },
             {
@@ -287,6 +379,7 @@ describe("parse function", () => {
               },
               itemUnit: undefined,
               type: "ingredient",
+              displayName: "eggs",
               value: 0,
             },
           ],
