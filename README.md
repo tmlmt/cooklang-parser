@@ -2,11 +2,11 @@
 
 A typescript library to parse and manipulate [cooklang](https://cooklang.org/) recipes.
 
+[<img src="https://badges.ws/badge/documentation-5672CD?icon=vitepress" />](https://cooklang-parser.tmlmt.com)
+
 ## Introduction
 
 This library provides a set of tools to work with recipes written in the Cooklang format. It allows you to parse recipes, extract ingredients, cookware, and timers, scale recipes, and generate shopping lists.
-
-The documentation is available at [https://cooklang-parser.tmlmt.com](https://cooklang-parser.tmlmt.com) (work in progress)
 
 ## Features
 
@@ -59,43 +59,9 @@ Serve hot.
 const recipe = new Recipe(recipeString);
 
 console.log(recipe.metadata.title); // "Pancakes"
-console.log(recipe.ingredients);
-console.log(recipe.cookware);
-console.log(recipe.timers);
-```
-
-You can also create a shopping list from multiple recipes:
-
-```typescript
-import { ShoppingList, Recipe } from "@tmlmt/cooklang-parser";
-
-const recipe1 = new Recipe(/* ... */);
-const recipe2 = new Recipe(/* ... */);
-
-const shoppingList = new ShoppingList();
-shoppingList.add_recipe(recipe1);
-shoppingList.add_recipe(recipe2);
-
-console.log(shoppingList.ingredients);
-```
-
-And you can categorize those ingredients according to a category configuration defined in the cooklang format:
-
-```typescript
-const shoppingList = `
-[Dairy]
-milk
-butter
-
-[Bakery]
-flour
-sugar
-`;
-
-shoppingList.set_category_config(categoryConfig);
-shoppingList.categorize();
-
-console.log(shoppingList.categories);
+console.log(recipe.ingredients); // [{ name: "eggs", ...}, ...]
+console.log(recipe.cookware); // [{ name: "pan", ...}]
+console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined}]
 ```
 
 ## Future plans

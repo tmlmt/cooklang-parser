@@ -1,13 +1,37 @@
 import type { Category, CategoryIngredient } from "../types";
 
 /**
- * Represents the category configuration for a shopping list.
+ * Parser for category configurations specified à-la-cooklang.
+ *
+ * ## Usage
+ *
+ * You can either directly provide the category configuration string when creating the instance
+ * e.g. `const categoryConfig = new CategoryConfig(<...>)`, or create it first and then pass
+ * the category configuration string to the {@link CategoryConfig.parse | parse()} method.
+ *
+ * @example
+ * ```typescript
+ * import { CategoryConfig } from @tmlmt/cooklang-parser;
+ *
+ * const categoryConfigString = `
+ * [Dairy]
+ * milk
+ * butter
+ *
+ * [Bakery]
+ * flour
+ * sugar`;
+ *
+ * const categoryConfig = new CategoryConfig(categoryConfigString);
+ * ```
+ *
+ * @see [Category Configuration](https://cooklang.org/docs/spec/#shopping-lists) section of the cooklang specs
+ *
  * @category Classes
  */
 export class CategoryConfig {
   /**
-   * The list of categories with their ingredients.
-   * @see {@link Category}
+   * The parsed categories of ingredients.
    */
   categories: Category[] = [];
 
@@ -22,7 +46,8 @@ export class CategoryConfig {
   }
 
   /**
-   * Parses a category configuration from a string.
+   * Parses a category configuration from a string into property
+   *   {@link CategoryConfig.categories | categories}
    * @param config - The category configuration to parse.
    */
   parse(config: string) {

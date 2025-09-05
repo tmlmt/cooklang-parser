@@ -29,37 +29,63 @@ import {
 import { multiplyQuantityValue } from "../units";
 
 /**
- * Represents a recipe.
+ * Recipe parser.
+ *
+ * ## Usage
+ *
+ * You can either directly provide the recipe string when creating the instance
+ * e.g. `const recipe = new Recipe('Add @eggs{3}')`, or create it first and then pass
+ * the recipe string to the {@link Recipe.parse | parse()} method.
+ *
+ * Look at the [properties](#properties) to see how the recipe's properties are parsed.
+ *
  * @category Classes
+ *
+ * @example
+ * ```typescript
+ * import { Recipe } from "@tmlmt/cooklang-parser";
+ *
+ * const recipeString = `
+ * ---
+ * title: Pancakes
+ * tags: [breakfast, easy]
+ * ---
+ * Crack the @eggs{3} with @flour{100%g} and @milk{200%mL}
+ *
+ * Melt some @butter{50%g} in a #pan on medium heat.
+ *
+ * Cook for ~{5%minutes} on each side.
+ * `
+ * const recipe = new Recipe(recipeString);
+ * ```
  */
 export class Recipe {
   /**
-   * The recipe's metadata.
-   * @see {@link Metadata}
+   * The parsed recipe metadata.
    */
   metadata: Metadata = {};
   /**
-   * The recipe's ingredients.
-   * @see {@link Ingredient}
+   * The parsed recipe ingredients.
    */
   ingredients: Ingredient[] = [];
   /**
-   * The recipe's sections.
-   * @see {@link Section}
+   * The parsed recipe sections.
    */
   sections: Section[] = [];
   /**
-   * The recipe's cookware.
-   * @see {@link Cookware}
+   * The parsed recipe cookware.
    */
   cookware: Cookware[] = [];
   /**
-   * The recipe's timers.
-   * @see {@link Timer}
+   * The parsed recipe timers.
    */
   timers: Timer[] = [];
   /**
-   * The recipe's servings. Used for scaling
+   * The parsed recipe servings. Used for scaling. Parsed from one of
+   * {@link Metadata.servings}, {@link Metadata.yield} or {@link Metadata.serves}
+   * metadata fields.
+   *
+   * @see {@link Recipe.scaleBy | scaleBy()} and {@link Recipe.scaleTo | scaleTo()} methods
    */
   servings?: number;
 
@@ -269,9 +295,12 @@ export class Recipe {
   }
 
   /**
-   * Scales the recipe to a new number of servings.
+   * Scales the recipe to a new number of servings. In practice, it calls
+   * {@link Recipe.scaleBy | scaleBy} with a factor corresponding to the ratio between `newServings`
+   *   and the recipe's {@link Recipe.servings | servings} value.
    * @param newServings - The new number of servings.
    * @returns A new Recipe instance with the scaled ingredients.
+   * @throws `Error` if the recipe does not contains an initial {@link Recipe.servings | servings} value
    */
   scaleTo(newServings: number): Recipe {
     const originalServings = this.getServings();

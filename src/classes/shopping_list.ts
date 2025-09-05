@@ -9,28 +9,45 @@ import type {
 import { addQuantities, type Quantity } from "../units";
 
 /**
- * Represents a shopping list.
+ * Shopping List generator.
+ *
+ * ## Usage
+ *
+ * - Create a new ShoppingList instance with an optional category configuration (see {@link ShoppingList:constructor | constructor})
+ * - Add recipes, scaling them as needed (see {@link ShoppingList.add_recipe | add_recipe()})
+ * - Categorize the ingredients (see {@link ShoppingList.categorize() | categorize()})
+ *
+ * @example
+ *
+ * ```typescript
+ * import * as fs from "fs";
+ * import { ShoppingList } from @tmlmt/cooklang-parser;
+ *
+ * const categoryConfig = fs.readFileSync("./myconfig.txt", "utf-8")
+ * const recipe1 = new Recipe(fs.readFileSync("./myrecipe.cook", "utf-8"));
+ * const shoppingList = new ShoppingList();
+ * shoppingList.set_category_config(categoryConfig);
+ * shoppingList.add_recipe(recipe1);
+ * shoppingList.categorize();
+ * ```
+ *
  * @category Classes
  */
 export class ShoppingList {
   /**
    * The ingredients in the shopping list.
-   * @see {@link Ingredient}
    */
   ingredients: Ingredient[] = [];
   /**
    * The recipes in the shopping list.
-   * @see {@link AddedRecipe}
    */
   recipes: AddedRecipe[] = [];
   /**
    * The category configuration for the shopping list.
-   * @see {@link CategoryConfig}
    */
   category_config?: CategoryConfig;
   /**
    * The categorized ingredients in the shopping list.
-   * @see {@link CategorizedIngredients}
    */
   categories?: CategorizedIngredients;
 

@@ -21,16 +21,19 @@ export interface Metadata {
   author?: string;
   /** The number of servings the recipe makes.
    * Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
+   *
    * Interchangeable with `yield` or `serves`. If multiple ones are defined, the latest one will be used for scaling */
   servings?: string;
   /** The yield of the recipe.
-   *  Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
-   *  Interchangeable with `servings` or `serves`. If multiple ones are defined, the latest one will be used for scaling
+   * Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
+   *
+   * Interchangeable with `servings` or `serves`. If multiple ones are defined, the latest one will be used for scaling
    */
   yield?: string;
   /** The number of people the recipe serves.
-   *  Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
-   *  Interchangeable with `servings` or `yield`. If multiple ones are defined, the latest one will be used for scaling
+   * Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
+   *
+   * Interchangeable with `servings` or `yield`. If multiple ones are defined, the latest one will be used for scaling
    */
   serves?: string;
   /** The course of the recipe. */
@@ -283,7 +286,6 @@ export interface Cookware {
  * @category Types
  */
 export interface CategorizedIngredients {
-  /** The category of the ingredients. */
   [category: string]: Ingredient[];
 }
 

@@ -2,12 +2,17 @@ import type { Step, Note } from "../types";
 
 /**
  * Represents a recipe section
- * Wrapped as a Class and not as a simple type to expose some useful helper
- * classes (e.g. `isBlank()`)
+ *
+ * Wrapped as a _Class_ and not defined as a simple _Type_ to expose some useful helper
+ * classes (e.g. {@link Section.isBlank | isBlank()})
+ *
  * @category Types
  */
 export class Section {
-  /** The name of the section. Can be an empty string for the default (first) section. */
+  /**
+   * The name of the section. Can be an empty string for the default (first) section.
+   * @defaultValue `""`
+   */
   name: string;
   /** An array of steps and notes that make up the content of the section. */
   content: (Step | Note)[] = [];
