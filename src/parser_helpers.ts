@@ -19,9 +19,9 @@ import {
 
 /**
  * Finds an item in a list or adds it if not present, then returns its index.
- * @param list The list to search in.
- * @param finder A predicate to find the item.
- * @param creator A function to create the item if not found.
+ * @param list - The list to search in.
+ * @param finder - A predicate to find the item.
+ * @param creator - A function to create the item if not found.
  * @returns The index of the item in the list.
  */
 export function findOrPush<T>(
@@ -38,8 +38,8 @@ export function findOrPush<T>(
 
 /**
  * Pushes a pending note to the section content if it's not empty.
- * @param section The current section object.
- * @param note The note content.
+ * @param section - The current section object.
+ * @param note - The note content.
  * @returns An empty string if the note was pushed, otherwise the original note.
  */
 export function flushPendingNote(
@@ -55,8 +55,8 @@ export function flushPendingNote(
 
 /**
  * Pushes pending step items and a pending note to the section content.
- * @param section The current section object.
- * @param items The list of step items. This array will be cleared.
+ * @param section - The current section object.
+ * @param items - The list of step items. This array will be cleared.
  * @returns true if the items were pushed, otherwise false.
  */
 export function flushPendingItems(
@@ -74,9 +74,9 @@ export function flushPendingItems(
 /**
  * Finds an ingredient in the list (case-insensitively) and updates it, or adds it if not present.
  * This function mutates the `ingredients` array.
- * @param ingredients The list of ingredients.
- * @param newIngredient The ingredient to find or add.
- * @param isReference Whether this is a reference ingredient (`&` modifier).
+ * @param ingredients - The list of ingredients.
+ * @param newIngredient - The ingredient to find or add.
+ * @param isReference - Whether this is a reference ingredient (`&` modifier).
  * @returns The index of the ingredient in the list.
  */
 export function findAndUpsertIngredient(
