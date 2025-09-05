@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.4.0
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.3.0...v1.4.0)
+
+### 🚀 Enhancements
+
+- **units:** Add additional aliases ([1efe2e1](https://github.com/tmlmt/cooklang-parser/commit/1efe2e1))
+
+### 📖 Documentation
+
+- **ShoppingList:** Add note about automatic tasks done by add/remove_recipe ([f5b2e51](https://github.com/tmlmt/cooklang-parser/commit/f5b2e51))
+- Add guides for cooklang spec, extensions, units and conversions ([a80c4fe](https://github.com/tmlmt/cooklang-parser/commit/a80c4fe))
+
+### 🎨 Styles
+
+- **README:** More concise quick-start with bullets ([b7de32d](https://github.com/tmlmt/cooklang-parser/commit/b7de32d))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.3.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.5...v1.3.0)
