@@ -13,9 +13,9 @@ import { addQuantities, type Quantity } from "../units";
  *
  * ## Usage
  *
- * - Create a new ShoppingList instance with an optional category configuration (see {@link ShoppingList:constructor | constructor})
+ * - Create a new ShoppingList instance with an optional category configuration (see {@link ShoppingList.constructor | constructor})
  * - Add recipes, scaling them as needed (see {@link ShoppingList.add_recipe | add_recipe()})
- * - Categorize the ingredients (see {@link ShoppingList.categorize() | categorize()})
+ * - Categorize the ingredients (see {@link ShoppingList.categorize | categorize()})
  *
  * @example
  *
@@ -52,10 +52,10 @@ export class ShoppingList {
   categories?: CategorizedIngredients;
 
   /**
-   * Creates a new ShoppingList instance.
+   * Creates a new ShoppingList instance
    * @param category_config_str - The category configuration to parse.
    */
-  constructor(category_config_str?: string) {
+  constructor(category_config_str?: string | CategoryConfig) {
     if (category_config_str) {
       this.set_category_config(category_config_str);
     }
@@ -143,11 +143,15 @@ export class ShoppingList {
   }
 
   /**
-   * Sets the category configuration for the shopping list.
+   * Sets the category configuration for the shopping list
+   * and automatically categorize current ingredients from the list.
    * @param config - The category configuration to parse.
    */
-  set_category_config(config: string) {
-    this.category_config = new CategoryConfig(config);
+  set_category_config(config: string | CategoryConfig) {
+    if (typeof config === "string")
+      this.category_config = new CategoryConfig(config);
+    else if (config instanceof CategoryConfig) this.category_config = config;
+    else throw new Error("Invalid category configuration");
     this.categorize();
   }
 

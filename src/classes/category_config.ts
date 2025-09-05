@@ -9,6 +9,8 @@ import type { Category, CategoryIngredient } from "../types";
  * e.g. `const categoryConfig = new CategoryConfig(<...>)`, or create it first and then pass
  * the category configuration string to the {@link CategoryConfig.parse | parse()} method.
  *
+ * The initialized `CategoryConfig` can then be fed to a {@link ShoppingList}
+ *
  * @example
  * ```typescript
  * import { CategoryConfig } from @tmlmt/cooklang-parser;

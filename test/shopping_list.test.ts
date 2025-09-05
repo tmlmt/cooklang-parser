@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ShoppingList } from "../src/classes/shopping_list";
+import { CategoryConfig } from "../src/classes/category_config";
 import type { CategorizedIngredients, Ingredient } from "../src/types";
 import { Recipe } from "../src/classes/recipe";
 
@@ -178,7 +179,7 @@ describe("ShoppingList", () => {
     ]);
   });
 
-  it("should parse at creation if an category config is provided", () => {
+  it("should parse at creation if a category config is provided as a string", () => {
     const shoppingList = new ShoppingList(`
 [Dairy]
 milk
@@ -188,6 +189,21 @@ butter
 flour
 sugar
     `);
+    expect(shoppingList.category_config).toBeDefined();
+    expect(shoppingList.category_config?.categories.length).toBe(2);
+  });
+
+  it("should parse at creation if a CategoryConfig", () => {
+    const categoryConfig = new CategoryConfig(`
+[Dairy]
+milk
+butter
+
+[Bakery]
+flour
+sugar
+    `);
+    const shoppingList = new ShoppingList(categoryConfig);
     expect(shoppingList.category_config).toBeDefined();
     expect(shoppingList.category_config?.categories.length).toBe(2);
   });
@@ -206,6 +222,13 @@ sugar
     shoppingList.set_category_config(config);
     expect(shoppingList.category_config).toBeDefined();
     expect(shoppingList.category_config?.categories.length).toBe(2);
+  });
+
+  it("should throw an error if an incorrect category config is provided", () => {
+    const shoppingList = new ShoppingList();
+    const config = 2;
+    // @ts-expect-error
+    expect(() => shoppingList.set_category_config(config)).toThrowError();
   });
 
   it("should categorize ingredients", () => {
