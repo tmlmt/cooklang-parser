@@ -5,7 +5,6 @@ import { Section } from "./classes/section";
 
 import type {
   Metadata,
-  MetadataExtract,
   Ingredient,
   FixedValue,
   Range,
@@ -32,7 +31,6 @@ export {
   ShoppingList,
   AisleConfig,
   Metadata,
-  MetadataExtract,
   Ingredient,
   FixedValue,
   Range,
