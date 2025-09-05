@@ -2,6 +2,10 @@
 
 A typescript library to parse and manipulate [cooklang](https://cooklang.org/) recipes.
 
+<picture><img src="https://badges.ws/maintenance/yes/2025" /></picture>
+<picture><img src="https://badges.ws/npm/dt/@tmlmt/cooklang-parser" /></picture>
+<picture><img src="https://badges.ws/npm/l/@tmlmt/cooklang-parser" /></picture>
+<picture><img src="https://badges.ws/github/release/tmlmt/cooklang-parser" /></picture>
 [<img src="https://badges.ws/badge/documentation-5672CD?icon=vitepress" />](https://cooklang-parser.tmlmt.com)
 
 ## Introduction
@@ -75,7 +79,3 @@ This project includes a test setup aimed at eventually ensuring reliable parsing
 You can run the tests yourself by cloning the repository and running `pnpm test`. To see the coverage report, run `pnpm test:coverage`.
 
 If you find any issue with your own examples of recipes, feel free to open an Issue and if you want to help fix it, to submit a Pull Request.
-
-## License
-
-MIT
