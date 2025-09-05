@@ -4,7 +4,7 @@ outline: deep
 
 # Guide: language extensions
 
-This parser library introduces multiple extensions of the original [cooklang language](/api/guide-cooklang-specs). Most of them are directly inspired by / in line with the extensions proposed by the official ([cooklang-rs](https://github.com/cooklang/cooklang-rs/blob/main/extensions.md)) Rust parser.
+This parser library introduces multiple extensions of the original [cooklang language](/guide-cooklang-specs). Most of them are directly inspired by / in line with the extensions proposed by the official ([cooklang-rs](https://github.com/cooklang/cooklang-rs/blob/main/extensions.md)) Rust parser.
 
 ## Modifiers
 

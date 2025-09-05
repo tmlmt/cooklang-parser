@@ -4,7 +4,7 @@ outline: deep
 
 # Guide: units and conversion
 
-When adding quantities of [referenced ingredients](/api/guide-extensions#modifiers) together for the ingredients list (i.e the [ingredients](/api/classes/Recipe.html#ingredients) properties of a `Recipe`), the parser tries its best to add apples to apples. 
+When adding quantities of [referenced ingredients](/guide-extensions#modifiers) together for the ingredients list (i.e the [ingredients](/api/classes/Recipe.html#ingredients) properties of a `Recipe`), the parser tries its best to add apples to apples. 
 
 - If the quantities are defined in two different units of the same type and system, the largest unit is retained and the other quantity is converted. Example: `1%kg` + `100%g` will become `1.1%kg`
 - If the quantities are defined in units of the same type but in different systems (e.g. volume and mass), they will be first converted to the metric unit
