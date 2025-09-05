@@ -1,5 +1,6 @@
 import { defineConfig } from "vitepress";
- // @ts-expect-error: linting before typedoc is generated will throw an error here
+ // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- avoiding error when developing the docs locally
+ // @ts-ignore: linting before typedoc is generated will throw an error here
 import typedocSidebar from "../api/typedoc-sidebar.json";
 
 // https://vitepress.dev/reference/site-config
@@ -17,7 +18,7 @@ export default defineConfig({
     sidebar: [
       {
         text: "API",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment no-undef
         items: typedocSidebar,
       },
       {
