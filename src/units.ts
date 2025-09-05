@@ -22,14 +22,14 @@ const units: UnitDefinition[] = [
     name: "g",
     type: "mass",
     system: "metric",
-    aliases: ["gram", "grams"],
+    aliases: ["gram", "grams", "grammes"],
     toBase: 1,
   },
   {
     name: "kg",
     type: "mass",
     system: "metric",
-    aliases: ["kilogram", "kilograms"],
+    aliases: ["kilogram", "kilograms", "kilogrammes", "kilos", "kilo"],
     toBase: 1000,
   },
   // Mass (Imperial)
@@ -53,7 +53,7 @@ const units: UnitDefinition[] = [
     name: "ml",
     type: "volume",
     system: "metric",
-    aliases: ["milliliter", "milliliters", "millilitre", "millilitres"],
+    aliases: ["milliliter", "milliliters", "millilitre", "millilitres", "cc"],
     toBase: 1,
   },
   {
@@ -120,7 +120,7 @@ const units: UnitDefinition[] = [
     name: "piece",
     type: "count",
     system: "metric",
-    aliases: ["pieces"],
+    aliases: ["pieces", "pc"],
     toBase: 1,
   },
 ];
