@@ -1,5 +1,41 @@
 # Changelog
 
+## v1.3.0
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.5...v1.3.0)
+
+#### ⚠️ Breaking Changes
+
+In order to use a more generic terms for categories of ingredients in a shopping list, the `AisleConfig` parser is renamed `CategoryConfig`. All associated types are also renamed accordingly (e.g. `Aisle` is now `Category`)
+
+This is considered part of arbitrary changes during the rapid development of v1 the parser and therefore does not trigger a bump to a new major version.
+
+### 🚀 Enhancements
+
+- **ShoppingList:** Allow category configuration to be provided either as a `string` or as a `CategoryConfig` ([0457f5f](https://github.com/tmlmt/cooklang-parser/commit/0457f5f))
+
+### 💅 Refactors
+
+- ⚠️ Rename 'Aisle' to more generic term 'Category' ([8976e62](https://github.com/tmlmt/cooklang-parser/commit/8976e62))
+
+### 📖 Documentation
+
+- Removed non-public MetadataExtract interface ([03ce27c](https://github.com/tmlmt/cooklang-parser/commit/03ce27c))
+- Improve classes description, add examples remove unnecessary `@see` tags ([6ade28c](https://github.com/tmlmt/cooklang-parser/commit/6ade28c))
+
+### 🏡 Chore
+
+- **README:** Update future plans ([956b8ea](https://github.com/tmlmt/cooklang-parser/commit/956b8ea))
+- **lint:** Check TSDoc syntax ([c51761d](https://github.com/tmlmt/cooklang-parser/commit/c51761d))
+- **typescript:** Downgrade expected error in vitepress config file to warning ([f521c13](https://github.com/tmlmt/cooklang-parser/commit/f521c13))
+- **parser_helpers:** Fix - missing after @param tags ([4bc4626](https://github.com/tmlmt/cooklang-parser/commit/4bc4626))
+- **README:** Add badges ([49658d1](https://github.com/tmlmt/cooklang-parser/commit/49658d1))
+- Lint ([f4d165f](https://github.com/tmlmt/cooklang-parser/commit/f4d165f))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.2.5
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.2.4...v1.2.5)
