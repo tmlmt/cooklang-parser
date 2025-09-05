@@ -227,7 +227,7 @@ sugar
   it("should throw an error if an incorrect category config is provided", () => {
     const shoppingList = new ShoppingList();
     const config = 2;
-    // @ts-expect-error
+    // @ts-expect-error testing a deliberate type error
     expect(() => shoppingList.set_category_config(config)).toThrowError();
   });
 

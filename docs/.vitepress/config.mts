@@ -18,7 +18,7 @@ export default defineConfig({
     sidebar: [
       {
         text: "API",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment no-undef
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         items: typedocSidebar,
       },
       {

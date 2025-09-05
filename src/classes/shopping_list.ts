@@ -13,7 +13,7 @@ import { addQuantities, type Quantity } from "../units";
  *
  * ## Usage
  *
- * - Create a new ShoppingList instance with an optional category configuration (see {@link ShoppingList.constructor | constructor})
+ * - Create a new ShoppingList instance with an optional category configuration (see {@link ShoppingList."constructor" | constructor})
  * - Add recipes, scaling them as needed (see {@link ShoppingList.add_recipe | add_recipe()})
  * - Categorize the ingredients (see {@link ShoppingList.categorize | categorize()})
  *
