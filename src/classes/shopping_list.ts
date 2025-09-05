@@ -27,8 +27,9 @@ import { addQuantities, type Quantity } from "../units";
  * const recipe1 = new Recipe(fs.readFileSync("./myrecipe.cook", "utf-8"));
  * const shoppingList = new ShoppingList();
  * shoppingList.set_category_config(categoryConfig);
+ * // Quantities are automatically calculated and ingredients categorized
+ * // when adding a recipe
  * shoppingList.add_recipe(recipe1);
- * shoppingList.categorize();
  * ```
  *
  * @category Classes
@@ -119,7 +120,8 @@ export class ShoppingList {
   }
 
   /**
-   * Adds a recipe to the shopping list.
+   * Adds a recipe to the shopping list, then automatically
+   * recalculates the quantities and recategorize the ingredients.
    * @param recipe - The recipe to add.
    * @param factor - The factor to scale the recipe by.
    */
@@ -130,7 +132,8 @@ export class ShoppingList {
   }
 
   /**
-   * Removes a recipe from the shopping list.
+   * Removes a recipe from the shopping list, then automatically
+   * recalculates the quantities and recategorize the ingredients.s
    * @param index - The index of the recipe to remove.
    */
   remove_recipe(index: number) {
