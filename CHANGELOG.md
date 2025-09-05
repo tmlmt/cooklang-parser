@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.4.1
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.0...v1.4.1)
+
+### 🩹 Fixes
+
+- **docs:** Dead links ([57fce2b](https://github.com/tmlmt/cooklang-parser/commit/57fce2b))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.4.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.3.0...v1.4.0)
