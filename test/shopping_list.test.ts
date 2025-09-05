@@ -178,7 +178,7 @@ describe("ShoppingList", () => {
     ]);
   });
 
-  it("should parse at creation if an aisle config is provided", () => {
+  it("should parse at creation if an category config is provided", () => {
     const shoppingList = new ShoppingList(`
 [Dairy]
 milk
@@ -188,11 +188,11 @@ butter
 flour
 sugar
     `);
-    expect(shoppingList.aisle_config).toBeDefined();
-    expect(shoppingList.aisle_config?.categories.length).toBe(2);
+    expect(shoppingList.category_config).toBeDefined();
+    expect(shoppingList.category_config?.categories.length).toBe(2);
   });
 
-  it("should set aisle config", () => {
+  it("should set category config", () => {
     const shoppingList = new ShoppingList();
     const config = `
 [Dairy]
@@ -203,9 +203,9 @@ butter
 flour
 sugar
     `;
-    shoppingList.set_aisle_config(config);
-    expect(shoppingList.aisle_config).toBeDefined();
-    expect(shoppingList.aisle_config?.categories.length).toBe(2);
+    shoppingList.set_category_config(config);
+    expect(shoppingList.category_config).toBeDefined();
+    expect(shoppingList.category_config?.categories.length).toBe(2);
   });
 
   it("should categorize ingredients", () => {
@@ -221,7 +221,7 @@ butter
 flour
 sugar
     `;
-    shoppingList.set_aisle_config(config);
+    shoppingList.set_category_config(config);
     shoppingList.categorize();
 
     // Sort ingredients within each category
@@ -330,7 +330,7 @@ sugar
     shoppingList.add_recipe(recipe2);
     const config = `[Bakery]
                     flour`;
-    shoppingList.set_aisle_config(config);
+    shoppingList.set_category_config(config);
     expect(shoppingList.categories?.Bakery).toEqual([
       {
         name: "flour",
@@ -353,7 +353,7 @@ sugar
     expect(() => shoppingList.remove_recipe(1)).toThrow("Index out of bounds");
   });
 
-  it('should categorize all ingredients as "other" if no aisle config is set', () => {
+  it('should categorize all ingredients as "other" if no category config is set', () => {
     const shoppingList = new ShoppingList();
     shoppingList.add_recipe(recipe1);
     shoppingList.categorize();

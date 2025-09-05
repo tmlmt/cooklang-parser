@@ -1,4 +1,4 @@
-import { AisleConfig } from "./aisle_config";
+import { CategoryConfig } from "./category_config";
 import { Recipe } from "./recipe";
 import type {
   Ingredient,
@@ -24,10 +24,10 @@ export class ShoppingList {
    */
   recipes: AddedRecipe[] = [];
   /**
-   * The aisle configuration for the shopping list.
-   * @see {@link AisleConfig}
+   * The category configuration for the shopping list.
+   * @see {@link CategoryConfig}
    */
-  aisle_config?: AisleConfig;
+  category_config?: CategoryConfig;
   /**
    * The categorized ingredients in the shopping list.
    * @see {@link CategorizedIngredients}
@@ -36,11 +36,11 @@ export class ShoppingList {
 
   /**
    * Creates a new ShoppingList instance.
-   * @param aisle_config_str - The aisle configuration to parse.
+   * @param category_config_str - The category configuration to parse.
    */
-  constructor(aisle_config_str?: string) {
-    if (aisle_config_str) {
-      this.set_aisle_config(aisle_config_str);
+  constructor(category_config_str?: string) {
+    if (category_config_str) {
+      this.set_category_config(category_config_str);
     }
   }
 
@@ -126,34 +126,34 @@ export class ShoppingList {
   }
 
   /**
-   * Sets the aisle configuration for the shopping list.
-   * @param config - The aisle configuration to parse.
+   * Sets the category configuration for the shopping list.
+   * @param config - The category configuration to parse.
    */
-  set_aisle_config(config: string) {
-    this.aisle_config = new AisleConfig(config);
+  set_category_config(config: string) {
+    this.category_config = new CategoryConfig(config);
     this.categorize();
   }
 
   /**
    * Categorizes the ingredients in the shopping list
-   * Will use the aisle config if any, otherwise all ingredients will be placed in the "other" category
+   * Will use the category config if any, otherwise all ingredients will be placed in the "other" category
    */
   categorize() {
-    if (!this.aisle_config) {
+    if (!this.category_config) {
       this.categories = { other: this.ingredients };
       return;
     }
 
     const categories: CategorizedIngredients = { other: [] };
-    for (const category of this.aisle_config.categories) {
+    for (const category of this.category_config.categories) {
       categories[category.name] = [];
     }
 
     for (const ingredient of this.ingredients) {
       let found = false;
-      for (const category of this.aisle_config.categories) {
-        for (const aisleIngredient of category.ingredients) {
-          if (aisleIngredient.aliases.includes(ingredient.name)) {
+      for (const category of this.category_config.categories) {
+        for (const categoryIngredient of category.ingredients) {
+          if (categoryIngredient.aliases.includes(ingredient.name)) {
             categories[category.name]!.push(ingredient);
             found = true;
             break;

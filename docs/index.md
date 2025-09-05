@@ -22,5 +22,5 @@ features:
   - title: Useful extensions
     details: Additional features to the original specs
   - title: Parsing, scaling and shopping
-    details: Classes to parse and scale recipes, as well as parse aisle configuration and create shopping lists
+    details: Classes to parse and scale recipes, as well as parse category configuration and create shopping lists
 ---

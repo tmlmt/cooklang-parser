@@ -30,7 +30,7 @@ The documentation is available at [https://cooklang-parser.tmlmt.com](https://co
     - Also work with referencing etc., e.g. `Mix @wheat flour{100%g} with additional @&wheat flour|flour{50%g}` enables to get 150g of wheat flour in the ingredients list, and let you display "Mix wheat flour (100 g) with additional flour (50 g)" in your recipe renderer.
 - **Recipe Scaling:** Scale recipes by a given factor.
 - **Shopping Lists:** Generate shopping lists from one or more recipes.
-- **Aisle Configuration:** Categorize shopping list ingredients based on a custom aisle configuration.
+- **Category Configuration:** Categorize shopping list ingredients based on a custom category configuration.
 - **Typescript:** Written in Typescript, providing type safety for all the data structures.
 
 ## Quick start
@@ -79,7 +79,7 @@ shoppingList.add_recipe(recipe2);
 console.log(shoppingList.ingredients);
 ```
 
-And you can categorize those ingredients according to an aisle configuration defined in the cooklang format:
+And you can categorize those ingredients according to a category configuration defined in the cooklang format:
 
 ```typescript
 const shoppingList = `
@@ -92,7 +92,7 @@ flour
 sugar
 `;
 
-shoppingList.set_aisle_config(aisleConfig);
+shoppingList.set_category_config(categoryConfig);
 shoppingList.categorize();
 
 console.log(shoppingList.categories);

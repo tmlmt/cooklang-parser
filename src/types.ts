@@ -305,10 +305,10 @@ export interface AddedRecipe {
 export type AddedIngredient = Pick<Ingredient, "name" | "quantity" | "unit">;
 
 /**
- * Represents an ingredient in an aisle.
+ * Represents an ingredient in a category.
  * @category Types
  */
-export interface AisleIngredient {
+export interface CategoryIngredient {
   /** The name of the ingredient. */
   name: string;
   /** The aliases of the ingredient. */
@@ -316,12 +316,12 @@ export interface AisleIngredient {
 }
 
 /**
- * Represents a category of aisles.
+ * Represents a category of ingredients.
  * @category Types
  */
-export interface AisleCategory {
+export interface Category {
   /** The name of the category. */
   name: string;
   /** The ingredients in the category. */
-  ingredients: AisleIngredient[];
+  ingredients: CategoryIngredient[];
 }

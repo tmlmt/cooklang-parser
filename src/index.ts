@@ -1,4 +1,4 @@
-import { AisleConfig } from "./classes/aisle_config";
+import { CategoryConfig } from "./classes/category_config";
 import { Recipe } from "./classes/recipe";
 import { ShoppingList } from "./classes/shopping_list";
 import { Section } from "./classes/section";
@@ -22,14 +22,14 @@ import type {
   Cookware,
   CategorizedIngredients,
   AddedRecipe,
-  AisleIngredient,
-  AisleCategory,
+  CategoryIngredient,
+  Category,
 } from "./types";
 
 export {
   Recipe,
   ShoppingList,
-  AisleConfig,
+  CategoryConfig,
   Metadata,
   Ingredient,
   FixedValue,
@@ -48,7 +48,7 @@ export {
   Cookware,
   CategorizedIngredients,
   AddedRecipe,
-  AisleIngredient,
-  AisleCategory,
+  CategoryIngredient,
+  Category,
   Section,
 };

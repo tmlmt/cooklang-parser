@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Recipe, ShoppingList, AisleConfig } from "../src/index";
+import { Recipe, ShoppingList, CategoryConfig } from "../src/index";
 
 describe("index", () => {
   it("should export Recipe", () => {
@@ -10,7 +10,7 @@ describe("index", () => {
     expect(ShoppingList).toBeDefined();
   });
 
-  it("should export AisleConfig", () => {
-    expect(AisleConfig).toBeDefined();
+  it("should export CategoryConfig", () => {
+    expect(CategoryConfig).toBeDefined();
   });
 });

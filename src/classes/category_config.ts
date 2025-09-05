@@ -1,19 +1,19 @@
-import type { AisleCategory, AisleIngredient } from "../types";
+import type { Category, CategoryIngredient } from "../types";
 
 /**
- * Represents the aisle configuration for a shopping list.
+ * Represents the category configuration for a shopping list.
  * @category Classes
  */
-export class AisleConfig {
+export class CategoryConfig {
   /**
-   * The categories of aisles.
-   * @see {@link AisleCategory}
+   * The list of categories with their ingredients.
+   * @see {@link Category}
    */
-  categories: AisleCategory[] = [];
+  categories: Category[] = [];
 
   /**
-   * Creates a new AisleConfig instance.
-   * @param config - The aisle configuration to parse.
+   * Creates a new CategoryConfig instance.
+   * @param config - The category configuration to parse.
    */
   constructor(config?: string) {
     if (config) {
@@ -22,11 +22,11 @@ export class AisleConfig {
   }
 
   /**
-   * Parses an aisle configuration from a string.
-   * @param config - The aisle configuration to parse.
+   * Parses a category configuration from a string.
+   * @param config - The category configuration to parse.
    */
   parse(config: string) {
-    let currentCategory: AisleCategory | null = null;
+    let currentCategory: Category | null = null;
     const categoryNames = new Set<string>();
     const ingredientNames = new Set<string>();
 
@@ -64,7 +64,7 @@ export class AisleConfig {
           ingredientNames.add(alias);
         }
 
-        const ingredient: AisleIngredient = {
+        const ingredient: CategoryIngredient = {
           name: aliases[0]!, // We know this exists because trimmedLine is not empty
           aliases: aliases,
         };

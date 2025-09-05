@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { AisleConfig } from "../src/classes/aisle_config";
+import { CategoryConfig } from "../src/classes/category_config";
 
-describe("parse_aisle_config", () => {
+describe("parse_category_config", () => {
   it("parses a simple config", () => {
     const config = `
             [produce]
@@ -12,7 +12,7 @@ describe("parse_aisle_config", () => {
             milk
             butter
         `;
-    const result = new AisleConfig(config);
+    const result = new CategoryConfig(config);
     expect(result).toEqual({
       categories: [
         {
@@ -39,7 +39,7 @@ describe("parse_aisle_config", () => {
             tuna|chicken of the sea
             beans
         `;
-    const result = new AisleConfig(config);
+    const result = new CategoryConfig(config);
     expect(result).toEqual({
       categories: [
         {
@@ -55,7 +55,7 @@ describe("parse_aisle_config", () => {
 
   it("handles an empty config", () => {
     const config = "";
-    const result = new AisleConfig(config);
+    const result = new CategoryConfig(config);
     expect(result).toEqual({ categories: [] });
   });
 
@@ -71,7 +71,7 @@ describe("parse_aisle_config", () => {
             milk
 
         `;
-    const result = new AisleConfig(config);
+    const result = new CategoryConfig(config);
     expect(result).toEqual({
       categories: [
         {
@@ -92,7 +92,7 @@ describe("parse_aisle_config", () => {
             [dairy]
             milk
         `;
-    const result = new AisleConfig(config);
+    const result = new CategoryConfig(config);
     expect(result).toEqual({
       categories: [
         {
@@ -112,7 +112,7 @@ describe("parse_aisle_config", () => {
             [produce]
             [produce]
         `;
-    expect(() => new AisleConfig(config)).toThrow(
+    expect(() => new CategoryConfig(config)).toThrow(
       "Duplicate category found: produce",
     );
   });
@@ -124,7 +124,7 @@ describe("parse_aisle_config", () => {
             [dairy]
             potatoes
         `;
-    expect(() => new AisleConfig(config)).toThrow(
+    expect(() => new CategoryConfig(config)).toThrow(
       "Duplicate ingredient/alias found: potatoes",
     );
   });
@@ -136,7 +136,7 @@ describe("parse_aisle_config", () => {
             [dairy]
             spud
         `;
-    expect(() => new AisleConfig(config)).toThrow(
+    expect(() => new CategoryConfig(config)).toThrow(
       "Duplicate ingredient/alias found: spud",
     );
   });
@@ -146,7 +146,7 @@ describe("parse_aisle_config", () => {
             potatoes
             [produce]
         `;
-    expect(() => new AisleConfig(config)).toThrow(
+    expect(() => new CategoryConfig(config)).toThrow(
       "Ingredient found without a category: potatoes",
     );
   });
