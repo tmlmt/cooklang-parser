@@ -3,6 +3,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import { includeIgnoreFile } from "@eslint/compat";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
+import tsdoc from "eslint-plugin-tsdoc";
 import { fileURLToPath } from "node:url";
 import globals from "globals";
 
@@ -25,6 +26,10 @@ export default defineConfig(
         },
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    plugins: { tsdoc },
+    rules: {
+      "tsdoc/syntax": "warn",
     },
   },
 );
