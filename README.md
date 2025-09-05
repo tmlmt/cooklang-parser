@@ -39,9 +39,11 @@ This library provides a set of tools to work with recipes written in the Cooklan
 
 ## Quick start
 
-Install the package with your favorite package manager e.g. `npm install @tmlmt/cooklang-parser`
+- Install the package with your favorite package manager, e.g.:
 
-To get started, you can use the `Recipe` class to parse a cooklang recipe:
+`npm install @tmlmt/cooklang-parser`
+
+- Use the `Recipe` class to parse a cooklang recipe:
 
 ```typescript
 import { Recipe } from "@tmlmt/cooklang-parser";
@@ -67,6 +69,8 @@ console.log(recipe.ingredients); // [{ name: "eggs", ...}, ...]
 console.log(recipe.cookware); // [{ name: "pan", ...}]
 console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined}]
 ```
+
+- Browse the [API Reference](https://cooklang-parser.tmlmt.com/api/) to discover all functionalities
 
 ## Future plans
 
