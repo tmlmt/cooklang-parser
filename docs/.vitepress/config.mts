@@ -10,12 +10,22 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: "Home", link: "/" },
+      { text: "Home", link: "/api/#quick-start" },
+      { text: "Guide", link: "/guide-cooklang-specs"},
       { text: "API", link: "/api/" },
       { text: "Examples", link: "/parsing-recipes-examples" },
     ],
 
     sidebar: [
+      {
+        text: "Guide",
+        items: [
+          { text: "Quick start", link: "/api/#quick-start" },
+          { text: "Cooklang specs", link: "/guide-cooklang-specs" },
+          { text: "Extensions", link: "/guide-extensions" }, 
+          { text: "Units and conversions", link: "/guide-units" }, 
+        ],
+      },
       {
         text: "API",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -24,9 +34,8 @@ export default defineConfig({
       {
         text: "Examples",
         items: [
-          { text: "Parsing recipes", link: "/parsing-recipes-examples" },
-          { text: "Scaling recipes", link: "/scaling-recipes-examples" }, 
-          { text: "Creating a shopping list", link: "/shopping-list-examples" },
+          { text: "Scaling recipes", link: "/examples-scaling-recipes" }, 
+          { text: "Creating a shopping list", link: "/examples-shopping-lists" },
         ],
       },
     ],

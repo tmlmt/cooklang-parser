@@ -2,6 +2,6 @@
 outline: deep
 ---
 
-# Parsing Recipes Examples
+# Examples: shopping lists
 
 TODO

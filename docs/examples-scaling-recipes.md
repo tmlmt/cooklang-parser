@@ -2,6 +2,6 @@
 outline: deep
 ---
 
-# Scaling Recipes Examples
+# Examples: scaling recipes
 
 TODO

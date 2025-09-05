@@ -10,11 +10,14 @@ hero:
       text: Quick Start
       link: /api/#quick-start
     - theme: alt
+      text: Guide
+      link: /guide-cooklang-specs
+    - theme: alt
       text: API Reference
       link: /api
     - theme: alt
       text: Examples
-      link: /parsing-recipes-examples.md
+      link: /example-big-recipe
 
 features:
   - title: Cooklang + Typescript
