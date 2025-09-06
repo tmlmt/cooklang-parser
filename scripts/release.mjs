@@ -102,7 +102,7 @@ async function main() {
     const continueAnswer = await askForConfirmation(
       "Apply file changes and continue with dry-run?",
     );
-    if (continueAnswer !== "y" && continueAnswer !== "yes") {
+    if (continueAnswer === "n" || continueAnswer === "N") {
       log.info("Dry-run aborted by user.");
       process.exit(0);
     }
@@ -179,12 +179,12 @@ async function main() {
   // 5. Ask to continue with commit and tag
   if (!DRY_RUN) {
     const answer = await askForConfirmation("Proceed with commit and tag?");
-    if (answer !== "y" && answer !== "yes") {
+    if (answer === "n" || answer === "N") {
       log.info("Release aborted by user.");
       const revertAnswer = await askForConfirmation(
         "Revert changes to package.json and CHANGELOG.md?",
       );
-      if (revertAnswer === "y" || revertAnswer === "yes") {
+      if (revertAnswer !== "n" && revertAnswer !== "N") {
         await run("git", ["checkout", "package.json", "CHANGELOG.md"]);
         log.success("Changes have been reverted.");
       }
@@ -208,12 +208,12 @@ async function main() {
   // 8. Ask to push
   if (!DRY_RUN) {
     const answer = await askForConfirmation("Push commit and tags to remote?");
-    if (answer !== "y" && answer !== "yes") {
+    if (answer === "n" || answer === "N") {
       log.info("Push aborted by user.");
       const revertAnswer = await askForConfirmation(
         "Revert local commit and tag?",
       );
-      if (revertAnswer === "y" || revertAnswer === "yes") {
+      if (revertAnswer !== "n" && revertAnswer !== "N") {
         log.info("Reverting local commit and tag...");
         await run("git", ["reset", "--soft", "HEAD~1"]);
         await run("git", ["tag", "-d", tag]);
