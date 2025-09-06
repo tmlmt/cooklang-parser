@@ -245,7 +245,6 @@ flour
 sugar
     `;
     shoppingList.set_category_config(config);
-    shoppingList.categorize();
 
     // Sort ingredients within each category
     for (const category in shoppingList.categories!) {
@@ -379,7 +378,6 @@ sugar
   it('should categorize all ingredients as "other" if no category config is set', () => {
     const shoppingList = new ShoppingList();
     shoppingList.add_recipe(recipe1);
-    shoppingList.categorize();
     expect(shoppingList.categories).toEqual({
       other: [
         {
