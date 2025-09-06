@@ -6,6 +6,7 @@ import { execa } from "execa";
 // --- Configuration ---
 const CHANGELOG_PATH = path.resolve(process.cwd(), "CHANGELOG.md");
 const DRY_RUN = process.argv.includes("--dry-run");
+const SKIP_BUILDTEST = process.argv.includes("--skip-buildtest");
 
 // --- Helper Functions ---
 const log = {
@@ -81,6 +82,21 @@ async function checkPrerequisites() {
   log.success("Prerequisites met.");
 }
 
+async function buildTest() {
+  log.info("Running tests and building documentation...");
+  try {
+    await run("pnpm", ["lint"]);
+    await run("pnpm", ["test"]);
+    await run("pnpm", ["docs:build"]);
+  } catch (error) {
+    log.error("Tests or documentation build failed.");
+    console.error(error);
+    process.exit(1);
+  }
+
+  log.success("Tests and documentation build completed successfully.");
+}
+
 // --- Main Script ---
 async function main() {
   log.info("Starting release process...");
@@ -89,6 +105,12 @@ async function main() {
   }
 
   await checkPrerequisites();
+  if (SKIP_BUILDTEST) {
+    log.info("Skipping build tests.");
+  } else {
+    log.info("Starting build tests.");
+    await buildTest();
+  }
 
   // 1. Run changelogen to bump version and update changelog
   log.info("Bumping version and generating changelog with changelogen...");
