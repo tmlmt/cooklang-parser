@@ -25,9 +25,6 @@ describe("scaleTo", () => {
     },
     { name: "milk" },
   ];
-  baseRecipe.cookware = [];
-  baseRecipe.timers = [];
-  baseRecipe.sections = [];
   baseRecipe.servings = 2;
 
   it("should scale up ingredient quantities", () => {
@@ -81,7 +78,6 @@ describe("scaleTo", () => {
 
   it("should throw an error if no initial servings information", () => {
     const recipeWithoutServings = new Recipe();
-    recipeWithoutServings.metadata = {};
     recipeWithoutServings.ingredients = [
       {
         name: "water",
@@ -89,9 +85,6 @@ describe("scaleTo", () => {
         unit: "l",
       },
     ];
-    recipeWithoutServings.cookware = [];
-    recipeWithoutServings.timers = [];
-    recipeWithoutServings.sections = [];
 
     expect(() => recipeWithoutServings.scaleTo(4)).toThrowError(
       "Error scaling recipe: no initial servings value set",
@@ -116,9 +109,6 @@ describe("scaleTo", () => {
         unit: "l",
       },
     ];
-    recipeWithNonNumericMeta.cookware = [];
-    recipeWithNonNumericMeta.timers = [];
-    recipeWithNonNumericMeta.sections = [];
     recipeWithNonNumericMeta.servings = 2;
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleTo(4);
@@ -156,9 +146,6 @@ describe("scaleBy", () => {
     },
     { name: "milk" },
   ];
-  baseRecipe.cookware = [];
-  baseRecipe.timers = [];
-  baseRecipe.sections = [];
   baseRecipe.servings = 2;
 
   it("should scale up ingredient quantities", () => {
@@ -220,9 +207,6 @@ describe("scaleBy", () => {
         unit: "l",
       },
     ];
-    recipeWithoutServings.cookware = [];
-    recipeWithoutServings.timers = [];
-    recipeWithoutServings.sections = [];
 
     expect(() => recipeWithoutServings.scaleBy(2)).toThrowError(
       "Error scaling recipe: no initial servings value set",
@@ -247,9 +231,6 @@ describe("scaleBy", () => {
         unit: "l",
       },
     ];
-    recipeWithNonNumericMeta.cookware = [];
-    recipeWithNonNumericMeta.timers = [];
-    recipeWithNonNumericMeta.sections = [];
     recipeWithNonNumericMeta.servings = 2;
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleBy(2);
