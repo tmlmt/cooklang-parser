@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.4.2
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.1...v1.4.2)
+
+### 🏡 Chore
+
+- **README:** remove details about extensions and refer to docs  ([43419c6](https://github.com/tmlmt/cooklang-parser/commit/43419c6))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.4.1
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.0...v1.4.1)
