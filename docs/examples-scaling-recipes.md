@@ -25,7 +25,7 @@ Use the [`scaleBy()`](/api/classes/Recipe.html#scaleby) method.
 
 ```typescript
 const recipe = Recipe(`...`)
-recipe.scaleBy(2)
+const scaledRecipe = recipe.scaleBy(2)
 ```
 
 All the ingredients with numerical quantities have their quantities multiplied by 2, and the metadata and `servings` value will also be multiplied by 2
@@ -36,9 +36,9 @@ Use the [`scaleTo()`](/api/classes/Recipe.html#scaleto) method.
 
 ```typescript
 const recipe = Recipe(`...`)
-recipe.scaleTo(4)
+const scaledRecipe = recipe.scaleTo(4)
 // In this case, this is equivalent to 
-// recipe.scaleBy(2)
+// const scaledRecipe = recipe.scaleBy(2)
 ```
 
 All the ingredients with numerical quantities have their quantities adjusted by a factor of 4/2 in this case, and the metadata and `servings` value will also be multiplied by the same factor.
