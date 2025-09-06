@@ -63,6 +63,11 @@ describe("simplifyFraction", () => {
     const result = simplifyFraction(0, 5);
     expect(result).toEqual({ type: "decimal", value: 0 });
   });
+
+  it("should handle cases where the numerator is < 1", () => {
+    const result = simplifyFraction(0.5, 2);
+    expect(result).toEqual({ type: "fraction", num: 1, den: 4 });
+  });
 });
 
 describe("addNumericValues", () => {
