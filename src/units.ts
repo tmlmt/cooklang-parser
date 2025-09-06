@@ -235,14 +235,24 @@ export function multiplyQuantityValue(
   factor: number,
 ): FixedValue | Range {
   if (value.type === "fixed") {
+    const newValue = multiplyNumericValue(
+      value.value as DecimalValue | FractionValue,
+      factor,
+    );
+    if (
+      factor === parseInt(factor.toString()) || // e.g. 2 === int
+      1 / factor === parseInt((1 / factor).toString()) // e.g. 0.25 => 4 === int
+    ) {
+      // Preserve fractions
+      return {
+        type: "fixed",
+        value: newValue,
+      };
+    }
+    // We might multiply with big decimal number so rounding into decimal value
     return {
       type: "fixed",
-      value: toRoundedDecimal(
-        multiplyNumericValue(
-          value.value as DecimalValue | FractionValue,
-          factor,
-        ),
-      ),
+      value: toRoundedDecimal(newValue),
     };
   }
 
