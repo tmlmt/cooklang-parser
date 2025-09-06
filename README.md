@@ -15,9 +15,9 @@ This library provides a set of tools to work with recipes written in the Cooklan
 ## Features
 
 - **Cooklang Compliant:** Fully compliant with the Cooklang specifications.
-- **Recipe Parsing:** Parse Cooklang recipes to extract metadata, ingredients, cookware, timers, and steps. 
-Several extensions on top of the original cooklang specifications 
-and [detailed in the docs](https://cooklang-parser.tmlmt.com/guide-extensions).
+- **Recipe Parsing:** Parse Cooklang recipes to extract metadata, ingredients, cookware, timers, and steps.
+  Several extensions on top of the original cooklang specifications
+  and [detailed in the docs](https://cooklang-parser.tmlmt.com/guide-extensions).
 - **Recipe Scaling:** Scale recipes by a given factor.
 - **Shopping Lists:** Generate shopping lists from one or more recipes.
 - **Category Configuration:** Categorize shopping list ingredients based on a custom category configuration.
@@ -60,12 +60,14 @@ console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined
 
 ## Future plans
 
-I plan to further develop features depending on the needs I will encounter in using this library in a practical application. The main item on the todo list is to improve the documentation with detailed explanation of the extensions, as well as examples.
+I plan to further develop features depending on the needs or bugs I will encounter in using this library in a practical application.
 
 ## Test coverage
 
 This project includes a test setup aimed at eventually ensuring reliable parsing/scaling of as many recipe use cases as possible.
 
 You can run the tests yourself by cloning the repository and running `pnpm test`. To see the coverage report, run `pnpm test:coverage`.
+
+## Contributing
 
 If you find any issue with your own examples of recipes, feel free to open an Issue and if you want to help fix it, to submit a Pull Request.
