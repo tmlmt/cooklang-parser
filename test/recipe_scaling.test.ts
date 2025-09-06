@@ -16,12 +16,16 @@ describe("scaleTo", () => {
     },
     {
       name: "sugar",
-      quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-      unit: "g",
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: "tsp",
     },
     {
       name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+      quantity: {
+        type: "range",
+        min: { type: "decimal", value: 2 },
+        max: { type: "decimal", value: 3 },
+      },
     },
     { name: "milk" },
   ];
@@ -36,11 +40,12 @@ describe("scaleTo", () => {
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 100 },
+      value: { type: "decimal", value: 1 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 4 },
+      type: "range",
+      min: { type: "decimal", value: 4 },
+      max: { type: "decimal", value: 6 },
     });
     expect(scaledRecipe.ingredients[3]!.quantity).toBeUndefined();
   });
@@ -54,11 +59,12 @@ describe("scaleTo", () => {
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 25 },
+      value: { type: "fraction", num: 1, den: 4 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 1 },
+      type: "range",
+      min: { type: "decimal", value: 1 },
+      max: { type: "decimal", value: 1.5 },
     });
   });
 
@@ -137,12 +143,16 @@ describe("scaleBy", () => {
     },
     {
       name: "sugar",
-      quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-      unit: "g",
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: "tsp",
     },
     {
       name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+      quantity: {
+        type: "range",
+        min: { type: "decimal", value: 2 },
+        max: { type: "decimal", value: 3 },
+      },
     },
     { name: "milk" },
   ];
@@ -157,11 +167,12 @@ describe("scaleBy", () => {
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 100 },
+      value: { type: "decimal", value: 1 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 4 },
+      type: "range",
+      min: { type: "decimal", value: 4 },
+      max: { type: "decimal", value: 6 },
     });
     expect(scaledRecipe.ingredients[3]!.quantity).toBeUndefined();
   });
@@ -175,11 +186,12 @@ describe("scaleBy", () => {
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 25 },
+      value: { type: "fraction", num: 1, den: 4 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 1 },
+      type: "range",
+      min: { type: "decimal", value: 1 },
+      max: { type: "decimal", value: 1.5 },
     });
   });
 
