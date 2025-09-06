@@ -6,7 +6,6 @@ import { Recipe } from "../src/classes/recipe";
 
 describe("ShoppingList", () => {
   const recipe1 = new Recipe();
-  recipe1.metadata = {};
   recipe1.ingredients = [
     {
       name: "flour",
@@ -34,13 +33,9 @@ describe("ShoppingList", () => {
     { name: "salt", hidden: true },
     { name: "spices" },
   ];
-  recipe1.cookware = [];
-  recipe1.timers = [];
-  recipe1.sections = [];
   recipe1.servings = 1;
 
   const recipe2 = new Recipe();
-  recipe2.metadata = {};
   recipe2.ingredients = [
     {
       name: "flour",
@@ -67,9 +62,6 @@ describe("ShoppingList", () => {
       unit: "pinch",
     },
   ];
-  recipe2.cookware = [];
-  recipe2.timers = [];
-  recipe2.sections = [];
 
   it("should add a recipe's ingredients", () => {
     const shoppingList = new ShoppingList();
