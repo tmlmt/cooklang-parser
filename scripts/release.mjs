@@ -46,7 +46,7 @@ async function askForConfirmation(question) {
     input: process.stdin,
     output: process.stdout,
   });
-  const answer = await rl.question(log.prompt(`${question} (y/N) `));
+  const answer = await rl.question(log.prompt(`${question} (Y/n) `));
   rl.close();
   return answer.toLowerCase().trim();
 }
