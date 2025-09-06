@@ -1,5 +1,42 @@
 # Changelog
 
+## v1.4.3
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.2...v1.4.3)
+
+### 🩹 Fixes
+
+- **docs:** ScaleBy and scaleTo actually return a new Recipe ([1ce6e58](https://github.com/tmlmt/cooklang-parser/commit/1ce6e58))
+- **scaling:** Preserve fractions when multipier is integer or inverse of one ([84ff940](https://github.com/tmlmt/cooklang-parser/commit/84ff940))
+
+### 📖 Documentation
+
+- Add details and examples to the guide about extensions ([7a8e27a](https://github.com/tmlmt/cooklang-parser/commit/7a8e27a))
+- Add explanation and examples for scaling recipes ([7daa10c](https://github.com/tmlmt/cooklang-parser/commit/7daa10c))
+- Add explanation and examples for shopping lists ([364bcfa](https://github.com/tmlmt/cooklang-parser/commit/364bcfa))
+- Add toc to extensions guide ([8c468eb](https://github.com/tmlmt/cooklang-parser/commit/8c468eb))
+
+### 🏡 Chore
+
+- **scripts:** Change default prompt answer to continuing the release process ([1ef7318](https://github.com/tmlmt/cooklang-parser/commit/1ef7318))
+- **test:** Remove unnecessary initialization of recipe properties in recipe_scaling tests ([3e05f31](https://github.com/tmlmt/cooklang-parser/commit/3e05f31))
+- **test:** Remove unnecessary categorize() calls ([5725e24](https://github.com/tmlmt/cooklang-parser/commit/5725e24))
+- **test:** Remove unnecessary initialization of shopping_list tests ([0048151](https://github.com/tmlmt/cooklang-parser/commit/0048151))
+
+### ✅ Tests
+
+- **simplifyFraction:** Add test when the numerator is < 1 ([9c71acd](https://github.com/tmlmt/cooklang-parser/commit/9c71acd))
+- **scaling:** Add check for fraction and range values ([0ced2da](https://github.com/tmlmt/cooklang-parser/commit/0ced2da))
+
+### 🤖 CI
+
+- **scripts:** Make yes as default answer to prompts for confirmation ([eabc017](https://github.com/tmlmt/cooklang-parser/commit/eabc017))
+- **release:** Check that lint, test and docs:build run without error before releasing ([d467a31](https://github.com/tmlmt/cooklang-parser/commit/d467a31))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.4.2
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.1...v1.4.2)
