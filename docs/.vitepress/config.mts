@@ -45,6 +45,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: "github", link: "https://github.com/tmlmt/cooklang-parser" },
+      { icon: "npm", link: "https://www.npmjs.com/package/@tmlmt/cooklang-parser" },
     ],
   },
 });
