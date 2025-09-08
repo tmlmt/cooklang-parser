@@ -18,25 +18,6 @@ import {
 } from "./units";
 
 /**
- * Finds an item in a list or adds it if not present, then returns its index.
- * @param list - The list to search in.
- * @param finder - A predicate to find the item.
- * @param creator - A function to create the item if not found.
- * @returns The index of the item in the list.
- */
-export function findOrPush<T>(
-  list: T[],
-  finder: (elem: T) => boolean,
-  creator: () => T,
-): number {
-  let index = list.findIndex(finder);
-  if (index === -1) {
-    index = list.push(creator()) - 1;
-  }
-  return index;
-}
-
-/**
  * Pushes a pending note to the section content if it's not empty.
  * @param section - The current section object.
  * @param note - The note content.

@@ -18,7 +18,6 @@ import {
   ingredientAliasRegex,
 } from "../regex";
 import {
-  findOrPush,
   flushPendingItems,
   flushPendingNote,
   findAndUpsertIngredient,
@@ -265,15 +264,7 @@ export class Recipe {
             duration,
             unit,
           };
-          const idxInList = findOrPush(
-            this.timers,
-            (t) =>
-              t.name === timerObj.name &&
-              t.duration === timerObj.duration &&
-              t.unit === timerObj.unit,
-            () => timerObj,
-          );
-          items.push({ type: "timer", value: idxInList });
+          items.push({ type: "timer", value: this.timers.push(timerObj) - 1 });
         }
 
         cursor = idx + match[0].length;

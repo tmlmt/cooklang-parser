@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from "vitest";
 import { Section as SectionObject } from "../src/classes/section";
 import type { Step, MetadataExtract, Cookware, Ingredient } from "../src/types";
 import {
-  findOrPush,
   flushPendingNote,
   flushPendingItems,
   parseSimpleMetaVar,
@@ -231,34 +230,6 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
       servings: 4,
     };
     expect(extractMetadata(content)).toEqual(expected);
-  });
-});
-
-describe("findOrPush", () => {
-  it("should add an item if it does not exist and return its index", () => {
-    const list = [{ id: 1, name: "one" }];
-    const creator = vi.fn(() => ({ id: 2, name: "two" }));
-
-    const index = findOrPush(list, (item) => item.name === "two", creator);
-
-    expect(index).toBe(1);
-    expect(list).toHaveLength(2);
-    expect(list[1]).toEqual({ id: 2, name: "two" });
-    expect(creator).toHaveBeenCalledTimes(1);
-  });
-
-  it("should find an existing item and return its index without adding", () => {
-    const list = [
-      { id: 1, name: "one" },
-      { id: 2, name: "two" },
-    ];
-    const creator = vi.fn(() => ({ id: 3, name: "three" }));
-
-    const index = findOrPush(list, (item) => item.name === "two", creator);
-
-    expect(index).toBe(1);
-    expect(list).toHaveLength(2);
-    expect(creator).not.toHaveBeenCalled();
   });
 });
 
