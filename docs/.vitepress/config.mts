@@ -10,10 +10,10 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: "Home", link: "/api/#quick-start" },
+      { text: "Home", link: "/" },
       { text: "Guide", link: "/guide-cooklang-specs"},
-      { text: "API", link: "/api/" },
-      { text: "Examples", link: "/parsing-recipes-examples" },
+      { text: "API", link: "/api/classes/Recipe" },
+      { text: "Examples", link: "/examples-scaling-recipes" },
     ],
 
     sidebar: [
