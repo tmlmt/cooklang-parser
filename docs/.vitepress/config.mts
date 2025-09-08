@@ -25,11 +25,13 @@ export default defineConfig({
           { text: "Extensions", link: "/guide-extensions" }, 
           { text: "Units and conversions", link: "/guide-units" }, 
         ],
+        collapsed: true
       },
       {
         text: "API",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         items: typedocSidebar,
+        collapsed: true
       },
       {
         text: "Examples",
@@ -37,6 +39,7 @@ export default defineConfig({
           { text: "Scaling recipes", link: "/examples-scaling-recipes" }, 
           { text: "Creating a shopping list", link: "/examples-shopping-lists" },
         ],
+        collapsed: true
       },
     ],
 

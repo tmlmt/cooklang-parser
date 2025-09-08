@@ -10,6 +10,9 @@
     "compactFolders": true,
     "excludeReferences": true
   },
+  "sidebar": {
+    "collapsed": false
+  },
   "sort": ["alphabetical"],
   "disableSources": true,
   "categorizeByGroup": false,
