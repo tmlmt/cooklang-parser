@@ -56,7 +56,7 @@ console.log(recipe.cookware); // [{ name: "pan", ...}]
 console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined}]
 ```
 
-- Browse the [API Reference](https://cooklang-parser.tmlmt.com/api/) to discover all functionalities
+- Browse the [API Reference](https://cooklang-parser.tmlmt.com/api/classes/Recipe) to discover all functionalities
 
 ## Future plans
 
