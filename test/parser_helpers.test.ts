@@ -8,6 +8,8 @@ import {
   parseSimpleMetaVar,
   parseScalingMetaVar,
   parseListMetaVar,
+  parseFixedValue,
+  parseQuantityInput,
   extractMetadata,
   findAndUpsertCookware,
   findAndUpsertIngredient,
@@ -370,6 +372,21 @@ describe("findAndUpsertIngredient", () => {
     expect(ingredients_noqtt[0]!.quantity).toBe(undefined);
   });
 
+  it("should insert new ingredient if referenced ingredient has a text quantity", () => {
+    const ingredients: Ingredient[] = [
+      {
+        name: "eggs",
+        quantity: { type: "fixed", value: { type: "text", value: "one" } },
+      },
+    ];
+    const newIngredient: Ingredient = {
+      name: "eggs",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+    };
+    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toBe(1);
+    expect(ingredients).toHaveLength(2);
+  });
+
   it("should adopt quantity of new ingredient if referenced one has none", () => {
     const ingredients: Ingredient[] = [{ name: "eggs" }];
     const newIngredient: Ingredient = {
@@ -400,5 +417,25 @@ describe("findAndUpsertIngredient", () => {
     ).toThrowError(
       "Referenced ingredient \"unreferenced-ingredient\" not found. A referenced ingredient must be declared before being referenced with '&'.",
     );
+  });
+});
+
+describe("parseFixedValue", () => {
+  it("parses non numerical value as text", () => {
+    expect(parseFixedValue("1-ish")).toEqual({ type: "text", value: "1-ish" });
+  });
+
+  it("parses fractions as such", () => {
+    expect(parseFixedValue("1/2")).toEqual({
+      type: "fraction",
+      num: 1,
+      den: 2,
+    });
+  });
+
+  it("parses decimal values as such", () => {
+    expect(parseFixedValue("1.5")).toEqual({ type: "decimal", value: 1.5 });
+    expect(parseFixedValue("0.1")).toEqual({ type: "decimal", value: 0.1 });
+    expect(parseFixedValue("1")).toEqual({ type: "decimal", value: 1 });
   });
 });

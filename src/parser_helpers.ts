@@ -156,7 +156,7 @@ export function findAndUpsertCookware(
 }
 
 // Parser when we know the input is either a number-like value
-const parseFixedValue = (
+export const parseFixedValue = (
   input_str: string,
 ): TextValue | DecimalValue | FractionValue => {
   if (!numberLikeRegex.test(input_str)) {
