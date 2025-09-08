@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { Section as SectionObject } from "../src/classes/section";
 import type { Step, MetadataExtract, Cookware, Ingredient } from "../src/types";
 import {
