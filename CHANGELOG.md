@@ -1,5 +1,40 @@
 # Changelog
 
+## v1.4.4
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.3...v1.4.4)
+
+### 🩹 Fixes
+
+- **docs:** Broken links in top-right corner menu ([20ae0ff](https://github.com/tmlmt/cooklang-parser/commit/20ae0ff))
+- Range quantities incorrectly parsed as text ([4799fcc](https://github.com/tmlmt/cooklang-parser/commit/4799fcc))
+
+### 💅 Refactors
+
+- Do not try to reuse previously added timer with same values and simply push new timers as they are defined ([ba46320](https://github.com/tmlmt/cooklang-parser/commit/ba46320))
+
+### 📖 Documentation
+
+- Make sidebar items collapsible ([e7f335c](https://github.com/tmlmt/cooklang-parser/commit/e7f335c))
+- Add link to npm package webpage ([b5a6b28](https://github.com/tmlmt/cooklang-parser/commit/b5a6b28))
+- Add link to personal homepage ([22b3d1a](https://github.com/tmlmt/cooklang-parser/commit/22b3d1a))
+- Add aria labels to social links ([6228aa6](https://github.com/tmlmt/cooklang-parser/commit/6228aa6))
+
+### 🏡 Chore
+
+- **README:** Update readme ([354e4ba](https://github.com/tmlmt/cooklang-parser/commit/354e4ba))
+- **README:** Make API link point to Recipe class doc ([3a912b9](https://github.com/tmlmt/cooklang-parser/commit/3a912b9))
+- Remove unused import ([aa9621d](https://github.com/tmlmt/cooklang-parser/commit/aa9621d))
+
+### ✅ Tests
+
+- **parser_helper:** Increase coverage ([10cc9cd](https://github.com/tmlmt/cooklang-parser/commit/10cc9cd))
+- **units:** Increase coverage ([18dc46f](https://github.com/tmlmt/cooklang-parser/commit/18dc46f))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.4.3
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.2...v1.4.3)
