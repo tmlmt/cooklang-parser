@@ -337,7 +337,7 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
   }
 
-  // Case 4: the two quantities do not have the same unit
+  // Case 4: the two quantities have different units of known type
   if (unit1Def && unit2Def) {
     // Case 4.1: different unit type => we can't add quantities
 
@@ -373,5 +373,6 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
     );
   }
 
+  // Case 5: the two quantities have different units of unknown type
   throw new IncompatibleUnitsError(q1.unit, q2.unit);
 }

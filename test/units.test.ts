@@ -141,6 +141,90 @@ describe("addQuantities", () => {
     });
   });
 
+  it("should also work when at least one value is a range", () => {
+    expect(
+      addQuantities(
+        {
+          value: {
+            type: "range",
+            min: { type: "decimal", value: 100 },
+            max: { type: "decimal", value: 200 },
+          },
+          unit: "g",
+        },
+        {
+          value: {
+            type: "range",
+            min: { type: "decimal", value: 10 },
+            max: { type: "decimal", value: 20 },
+          },
+          unit: "g",
+        },
+      ),
+    ).toEqual({
+      value: {
+        type: "range",
+        min: { type: "decimal", value: 110 },
+        max: { type: "decimal", value: 220 },
+      },
+      unit: "g",
+    });
+
+    expect(
+      addQuantities(
+        {
+          value: {
+            type: "fixed",
+            value: { type: "decimal", value: 100 },
+          },
+          unit: "g",
+        },
+        {
+          value: {
+            type: "range",
+            min: { type: "decimal", value: 10 },
+            max: { type: "decimal", value: 20 },
+          },
+          unit: "g",
+        },
+      ),
+    ).toEqual({
+      value: {
+        type: "range",
+        min: { type: "decimal", value: 110 },
+        max: { type: "decimal", value: 120 },
+      },
+      unit: "g",
+    });
+
+    expect(
+      addQuantities(
+        {
+          value: {
+            type: "range",
+            min: { type: "decimal", value: 10 },
+            max: { type: "decimal", value: 20 },
+          },
+          unit: "g",
+        },
+        {
+          value: {
+            type: "fixed",
+            value: { type: "decimal", value: 100 },
+          },
+          unit: "g",
+        },
+      ),
+    ).toEqual({
+      value: {
+        type: "range",
+        min: { type: "decimal", value: 110 },
+        max: { type: "decimal", value: 120 },
+      },
+      unit: "g",
+    });
+  });
+
   it("should add compatible metric units and convert to largest", () => {
     expect(
       addQuantities(
@@ -268,6 +352,18 @@ describe("addQuantities", () => {
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
           unit: "L",
+        },
+      ),
+    ).toThrow(IncompatibleUnitsError);
+    expect(() =>
+      addQuantities(
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          unit: "g",
+        },
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          unit: "bag",
         },
       ),
     ).toThrow(IncompatibleUnitsError);
