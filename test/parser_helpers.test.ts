@@ -439,3 +439,29 @@ describe("parseFixedValue", () => {
     expect(parseFixedValue("1")).toEqual({ type: "decimal", value: 1 });
   });
 });
+
+describe("parseQuantityInput", () => {
+  it("correctly parses ranges", () => {
+    expect(parseQuantityInput("1-2")).toEqual({
+      type: "range",
+      min: { type: "decimal", value: 1 },
+      max: { type: "decimal", value: 2 },
+    });
+    expect(parseQuantityInput("1/2-1")).toEqual({
+      type: "range",
+      min: { type: "fraction", num: 1, den: 2 },
+      max: { type: "decimal", value: 1 },
+    });
+  });
+
+  it("correctly parses fixed values", () => {
+    expect(parseQuantityInput("1")).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 1 },
+    });
+    expect(parseQuantityInput("1.2")).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 1.2 },
+    });
+  });
+});
