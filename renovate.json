@@ -1,6 +1,31 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ]
+    "config:js-app",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    "group:linters"
+  ],
+  "schedule": ["before 7am every weekday", "every weekend"],
+  "timezone": "Europe/Copenhagen",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["pin"],
+      "groupName": "pin"
+    },
+    {
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<=22"
+    },
+    {
+      "matchPackageNames": ["@vitest/**", "vitest"],
+      "groupName": "vitest and plugins"
+    },
+    {
+      "matchPackageNames": ["typedoc**"],
+      "groupName": "typedoc and plugins"
+    }
+  ],
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageAction": "bump"
 }
