@@ -180,7 +180,7 @@ export class Recipe {
           const name = (groups.mIngredientName || groups.sIngredientName)!;
           const quantityRaw =
             groups.mIngredientQuantity || groups.sIngredientQuantity;
-          const units = groups.mIngredientUnits || groups.sIngredientUnits;
+          const unit = groups.mIngredientUnit || groups.sIngredientUnit;
           const preparation =
             groups.mIngredientPreparation || groups.sIngredientPreparation;
           const modifier =
@@ -211,7 +211,7 @@ export class Recipe {
             {
               name: listName,
               quantity,
-              unit: units,
+              unit,
               optional,
               hidden,
               preparation,
@@ -224,7 +224,7 @@ export class Recipe {
             type: "ingredient",
             value: idxInList,
             itemQuantity: quantity,
-            itemUnit: units,
+            itemUnit: unit,
             displayName,
           };
 
@@ -253,9 +253,9 @@ export class Recipe {
           } as CookwareItem);
         } else if (groups.timerQuantity !== undefined) {
           const durationStr = groups.timerQuantity.trim();
-          const unit = (groups.timerUnits || "").trim();
+          const unit = (groups.timerUnit || "").trim();
           if (!unit) {
-            throw new Error("Timer missing units");
+            throw new Error("Timer missing unit");
           }
           const name = groups.timerName || undefined;
           const duration = parseQuantityInput(durationStr);

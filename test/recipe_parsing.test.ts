@@ -536,7 +536,7 @@ describe("parse function", () => {
 
   it("throws error for missing timer unit", () => {
     const badInput = "Cook for ~{15}";
-    expect(() => new Recipe(badInput)).toThrow(/Timer missing units/);
+    expect(() => new Recipe(badInput)).toThrow(/Timer missing unit/);
   });
 
   it("parses notes correctly", () => {
