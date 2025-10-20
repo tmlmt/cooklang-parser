@@ -21,22 +21,47 @@ export interface Metadata {
   /** The author of the recipe. */
   author?: string;
   /** The number of servings the recipe makes.
-   * Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
+   * Should be either a number or a string which starts with a number
+   * (which will be used for scaling) followed by a comma and then
+   * whatever you want.
    *
-   * Interchangeable with `yield` or `serves`. If multiple ones are defined, the latest one will be used for scaling */
-  servings?: string;
+   * Interchangeable with `yield` or `serves`. If multiple ones are defined,
+   * the prevailance order for the number which will used for scaling
+   * is `servings` > `yield` > `serves`.
+   *
+   * @example
+   * ```yaml
+   * servings: 4
+   * ```
+   *
+   * @example
+   * ```yaml
+   * servings: 2, a few
+   * ```
+   */
+  servings?: number | string;
   /** The yield of the recipe.
-   * Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
+   * Should be either a number or a string which starts with a number
+   * (which will be used for scaling) followed by a comma and then
+   * whatever you want.
    *
-   * Interchangeable with `servings` or `serves`. If multiple ones are defined, the latest one will be used for scaling
+   * Interchangeable with `servings` or `serves`. If multiple ones are defined,
+   * the prevailance order for the number which will used for scaling
+   * is `servings` > `yield` > `serves`. See {@link Metadata.servings | servings}
+   * for examples.
    */
-  yield?: string;
+  yield?: number | string;
   /** The number of people the recipe serves.
-   * Complex info can be given, as long as the first part before a comma has a numerical value, which will be used for scaling
+   * Should be either a number or a string which starts with a number
+   * (which will be used for scaling) followed by a comma and then
+   * whatever you want.
    *
-   * Interchangeable with `servings` or `yield`. If multiple ones are defined, the latest one will be used for scaling
+   * Interchangeable with `servings` or `yield`. If multiple ones are defined,
+   * the prevailance order for the number which will used for scaling
+   * is `servings` > `yield` > `serves`. See {@link Metadata.servings | servings}
+   * for examples.
    */
-  serves?: string;
+  serves?: number | string;
   /** The course of the recipe. */
   course?: string;
   /** The category of the recipe. */

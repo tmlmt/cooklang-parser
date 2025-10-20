@@ -66,6 +66,13 @@ Remove the cover, and cook for an additional ~{25%min}, until the sauce is bubbl
 Let the lasagna stand for ~{15%min} before slicing and serving.
 `;
 
+export const recipeWithComplexServings = `
+---
+servings: 2, a few
+---
+Pour @water{1%L}
+`;
+
 export const recipeToScale = `
 ---
 servings: 2

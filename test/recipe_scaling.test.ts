@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
-import { Step } from "../src/types";
 import { recipeToScale } from "./fixtures/recipes";
+import { recipeWithComplexServings } from "./fixtures/recipes";
 
 describe("scaleTo", () => {
   const baseRecipe = new Recipe(recipeToScale);
@@ -94,19 +94,8 @@ describe("scaleTo", () => {
     expect(baseRecipe).toEqual(originalRecipe);
   });
 
-  it("should handle non-numeric metadata", () => {
-    const recipeWithNonNumericMeta = new Recipe();
-    recipeWithNonNumericMeta.metadata = {
-      servings: "a few",
-    };
-    recipeWithNonNumericMeta.ingredients = [
-      {
-        name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
-      },
-    ];
-    recipeWithNonNumericMeta.servings = 2;
+  it("should handle complex scaling metadata", () => {
+    const recipeWithNonNumericMeta = new Recipe(recipeWithComplexServings);
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleTo(4);
     expect(scaledRecipe.ingredients.length).toBe(1);
@@ -115,7 +104,7 @@ describe("scaleTo", () => {
       value: { type: "decimal", value: 2 },
     });
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toBe("a few");
+    expect(scaledRecipe.metadata.servings).toBe("4");
   });
 });
 
@@ -195,19 +184,8 @@ describe("scaleBy", () => {
     expect(baseRecipe).toEqual(originalRecipe);
   });
 
-  it("should handle non-numeric metadata", () => {
-    const recipeWithNonNumericMeta = new Recipe();
-    recipeWithNonNumericMeta.metadata = {
-      servings: "a few",
-    };
-    recipeWithNonNumericMeta.ingredients = [
-      {
-        name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
-      },
-    ];
-    recipeWithNonNumericMeta.servings = 2;
+  it("should handle complex scaling metadata", () => {
+    const recipeWithNonNumericMeta = new Recipe(recipeWithComplexServings);
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(1);
@@ -216,6 +194,6 @@ describe("scaleBy", () => {
       value: { type: "decimal", value: 2 },
     });
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toBe("a few");
+    expect(scaledRecipe.metadata.servings).toBe("4");
   });
 });

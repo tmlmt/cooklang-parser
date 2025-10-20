@@ -6,6 +6,27 @@ export const metadataRegex = createRegex()
   .newline().literal("---")
   .dotAll().toRegExp();
 
+export const scalingMetaValueRegex = (varName: string): RegExp => createRegex()
+  .startAnchor()
+  .literal(varName)
+  .literal(":")
+  .anyOf("\\t ").zeroOrMore()
+  .startCaptureGroup()
+    .startCaptureGroup()
+      .notAnyOf(",\\n").oneOrMore()
+    .endGroup()
+    .startGroup()
+      .literal(",")
+      .whitespace().zeroOrMore()
+      .startCaptureGroup()
+        .anyCharacter().oneOrMore()
+      .endGroup()
+    .endGroup().optional()
+  .endGroup()
+  .endAnchor()
+  .multiline()
+  .toRegExp()
+
 const nonWordChar = "\\s@#~\\[\\]{(.,;:!?"
 
 const multiwordIngredient = createRegex()
