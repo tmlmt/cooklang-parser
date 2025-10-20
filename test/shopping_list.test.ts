@@ -3,65 +3,14 @@ import { ShoppingList } from "../src/classes/shopping_list";
 import { CategoryConfig } from "../src/classes/category_config";
 import type { CategorizedIngredients, Ingredient } from "../src/types";
 import { Recipe } from "../src/classes/recipe";
+import {
+  recipeForShoppingList1,
+  recipeForShoppingList2,
+} from "./fixtures/recipes";
 
 describe("ShoppingList", () => {
-  const recipe1 = new Recipe();
-  recipe1.ingredients = [
-    {
-      name: "flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-      unit: "g",
-    },
-    {
-      name: "sugar",
-      quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-      unit: "g",
-    },
-    {
-      name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
-    },
-    {
-      name: "milk",
-      quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-      unit: "ml",
-    },
-    {
-      name: "pepper",
-      quantity: { type: "fixed", value: { type: "text", value: "to taste" } },
-    },
-    { name: "salt", hidden: true },
-    { name: "spices" },
-  ];
-  recipe1.servings = 1;
-
-  const recipe2 = new Recipe();
-  recipe2.ingredients = [
-    {
-      name: "flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-      unit: "g",
-    },
-    {
-      name: "butter",
-      quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
-      unit: "g",
-    },
-    {
-      name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-    },
-    {
-      name: "pepper",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      unit: "tsp",
-    },
-    {
-      name: "spices",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      unit: "pinch",
-    },
-  ];
+  const recipe1 = new Recipe(recipeForShoppingList1);
+  const recipe2 = new Recipe(recipeForShoppingList2);
 
   it("should add a recipe's ingredients", () => {
     const shoppingList = new ShoppingList();

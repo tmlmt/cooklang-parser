@@ -12,7 +12,7 @@ export interface UnitDefinition {
 
 export interface Quantity {
   value: FixedValue | Range;
-  unit: string;
+  unit?: string;
 }
 
 // Base units: mass -> gram (g), volume -> milliliter (ml)
@@ -133,7 +133,7 @@ for (const unit of units) {
   }
 }
 
-export function normalizeUnit(unit: string): UnitDefinition | undefined {
+export function normalizeUnit(unit: string = ""): UnitDefinition | undefined {
   return unitMap.get(unit.toLowerCase().trim());
 }
 
@@ -215,8 +215,17 @@ export function addNumericValues(
     den2 = val2.den;
   }
 
-  // We only return a fraction where both input values are fractions themselves
-  if (val1.type === "fraction" && val2.type === "fraction") {
+  // Return 0 if both values are 0
+  if (num1 === 0 && num2 === 0) {
+    return { type: "decimal", value: 0 };
+  }
+
+  // We only return a fraction where both input values are fractions themselves or only one while the other is 0
+  if (
+    (val1.type === "fraction" && val2.type === "fraction") ||
+    (val1.type === "fraction" && val2.type === "decimal" && val2.value === 0) ||
+    (val2.type === "fraction" && val1.type === "decimal" && val1.value === 0)
+  ) {
     const commonDen = den1 * den2;
     const sumNum = num1 * den2 + num2 * den1;
     return simplifyFraction(sumNum, commonDen);
@@ -276,6 +285,17 @@ const convertQuantityValue = (
 };
 
 /**
+ * Get the default / neutral quantity which can be provided to addQuantity
+ * for it to return the other value as result
+ *
+ * @export
+ * @return 0 {FixedValue}
+ */
+export function getDefaultQuantityValue(): FixedValue {
+  return { type: "fixed", value: { type: "decimal", value: 0 } };
+}
+
+/**
  * Adds two quantities, returning the result in the most appropriate unit.
  */
 export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
@@ -296,7 +316,7 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
   const addQuantityValuesAndSetUnit = (
     val1: FixedValue | Range,
     val2: FixedValue | Range,
-    unit: string,
+    unit: string | undefined,
   ): Quantity => {
     if (val1.type === "fixed" && val2.type === "fixed") {
       const res = addNumericValues(
@@ -325,15 +345,25 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
   };
 
   // Case 2: one of the two values doesn't have a unit, we consider its value to be 0 and the unit to be that of the other one
-  if (q1.unit === "" && unit2Def) {
+  // If at least one of the two units is "", this preserves it versus setting the resulting unit as undefined
+  if (
+    (q1.unit === "" || q1.unit === undefined) &&
+    (q2.unit !== undefined || unit2Def)
+  ) {
     return addQuantityValuesAndSetUnit(v1, v2, q2.unit); // Prefer q2's unit
   }
-  if (q2.unit === "" && unit1Def) {
+  if (
+    (q2.unit === "" || q2.unit === undefined) &&
+    (q1.unit !== undefined || unit1Def)
+  ) {
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit); // Prefer q1's unit
   }
 
   // Case 3: the two quantities have the exact same unit
-  if (q1.unit.toLowerCase() === q2.unit.toLowerCase()) {
+  if (
+    (!q1.unit && !q2.unit) ||
+    (q1.unit && q2.unit && q1.unit.toLowerCase() === q2.unit.toLowerCase())
+  ) {
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
   }
 
@@ -374,5 +404,5 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
   }
 
   // Case 5: the two quantities have different units of unknown type
-  throw new IncompatibleUnitsError(q1.unit, q2.unit);
+  throw new IncompatibleUnitsError(q1.unit!, q2.unit!);
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   addQuantities,
+  getDefaultQuantityValue,
   normalizeUnit,
   simplifyFraction,
   addNumericValues,
@@ -392,6 +393,45 @@ describe("addQuantities", () => {
         max: { type: "decimal", value: 3 },
       },
       unit: "tsp",
+    });
+  });
+});
+
+describe("getDefaultQuantityValue + addQuantities", () => {
+  it("should preseve fractions", () => {
+    expect(
+      addQuantities(
+        { value: getDefaultQuantityValue() },
+        {
+          value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+          unit: "",
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: "",
+    });
+  });
+  it("should preseve ranges", () => {
+    expect(
+      addQuantities(
+        { value: getDefaultQuantityValue() },
+        {
+          value: {
+            type: "range",
+            min: { type: "decimal", value: 1 },
+            max: { type: "decimal", value: 2 },
+          },
+          unit: "",
+        },
+      ),
+    ).toEqual({
+      value: {
+        type: "range",
+        min: { type: "decimal", value: 1 },
+        max: { type: "decimal", value: 2 },
+      },
+      unit: "",
     });
   });
 });

@@ -12,6 +12,7 @@ import { Section as SectionObject } from "./classes/section";
 import type { Ingredient, Note, Step, Cookware } from "./types";
 import {
   addQuantities,
+  getDefaultQuantityValue,
   CannotAddTextValueError,
   IncompatibleUnitsError,
   Quantity,
@@ -83,10 +84,7 @@ export function findAndUpsertIngredient(
     const existingIngredient = ingredients[index]!;
     if (quantity !== undefined) {
       const currentQuantity: Quantity = {
-        value: existingIngredient.quantity ?? {
-          type: "fixed",
-          value: { type: "decimal", value: 0 },
-        },
+        value: existingIngredient.quantity ?? getDefaultQuantityValue(),
         unit: existingIngredient.unit ?? "",
       };
       const newQuantity = { value: quantity, unit: unit ?? "" };
@@ -95,6 +93,13 @@ export function findAndUpsertIngredient(
         const total = addQuantities(currentQuantity, newQuantity);
         existingIngredient.quantity = total.value;
         existingIngredient.unit = total.unit || undefined;
+        if (existingIngredient.quantityParts) {
+          existingIngredient.quantityParts.push(
+            ...newIngredient.quantityParts!,
+          );
+        } else {
+          existingIngredient.quantityParts = newIngredient.quantityParts;
+        }
       } catch (e) {
         if (
           e instanceof IncompatibleUnitsError ||

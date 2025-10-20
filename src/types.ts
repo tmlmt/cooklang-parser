@@ -1,4 +1,5 @@
 import type { Recipe } from "./classes/recipe";
+import type { Quantity } from "./units";
 
 /**
  * Represents the metadata of a recipe.
@@ -155,6 +156,14 @@ export interface Range {
 }
 
 /**
+ * Represents a contributor to an ingredient's total quantity
+ * @category Types
+ */
+export interface QuantityPart extends Quantity {
+  scalable: boolean;
+}
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -165,6 +174,8 @@ export interface Ingredient {
   quantity?: FixedValue | Range;
   /** The unit of the ingredient. */
   unit?: string;
+  /** The array of contributors to the ingredient's total quantity. */
+  quantityParts?: QuantityPart[];
   /** The preparation of the ingredient. */
   preparation?: string;
   /** Whether the ingredient is optional. */

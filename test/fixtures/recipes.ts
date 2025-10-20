@@ -65,3 +65,31 @@ Remove the cover, and cook for an additional ~{25%min}, until the sauce is bubbl
 
 Let the lasagna stand for ~{15%min} before slicing and serving.
 `;
+
+export const recipeToScale = `
+---
+servings: 2
+yield: 2
+serves: 2
+---
+
+Mix @flour{50%g} with some more @&flour{50%g}, @sugar{1/2%tsp}, @eggs{2-3} and @milk
+`;
+
+export const recipeForShoppingList1 = `
+---
+servings: 1
+---
+Mix @flour{100%g}, @sugar{50%g}, @eggs{2}, @milk{200%ml}
+
+Season with @pepper{to taste}, @-salt and @spices
+`;
+
+export const recipeForShoppingList2 = `
+---
+servings: 1
+---
+Mix @flour{50%g}, @butter{25%g} and @eggs{1}
+
+Add @pepper{1%tsp} and @spices{1%pinch}
+`;

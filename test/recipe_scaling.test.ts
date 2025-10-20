@@ -1,35 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
+import { Step } from "../src/types";
+import { recipeToScale } from "./fixtures/recipes";
 
 describe("scaleTo", () => {
-  const baseRecipe = new Recipe();
-  baseRecipe.metadata = {
-    servings: "2",
-    yield: "2",
-    serves: "2",
-  };
-  baseRecipe.ingredients = [
-    {
-      name: "flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-      unit: "g",
-    },
-    {
-      name: "sugar",
-      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
-      unit: "tsp",
-    },
-    {
-      name: "eggs",
-      quantity: {
-        type: "range",
-        min: { type: "decimal", value: 2 },
-        max: { type: "decimal", value: 3 },
-      },
-    },
-    { name: "milk" },
-  ];
-  baseRecipe.servings = 2;
+  const baseRecipe = new Recipe(recipeToScale);
 
   it("should scale up ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleTo(4);
@@ -82,6 +57,22 @@ describe("scaleTo", () => {
     expect(scaledRecipe.metadata.yield).toBe("4");
   });
 
+  it("should also scale individual quantity parts of referenced ingredients", () => {
+    const scaledRecipe = baseRecipe.scaleTo(4);
+    expect(scaledRecipe.ingredients[0]!.quantityParts).toEqual([
+      {
+        unit: "g",
+        value: { type: "fixed", value: { type: "decimal", value: 100 } },
+        scalable: true,
+      },
+      {
+        unit: "g",
+        value: { type: "fixed", value: { type: "decimal", value: 100 } },
+        scalable: true,
+      },
+    ]);
+  });
+
   it("should throw an error if no initial servings information", () => {
     const recipeWithoutServings = new Recipe();
     recipeWithoutServings.ingredients = [
@@ -129,34 +120,7 @@ describe("scaleTo", () => {
 });
 
 describe("scaleBy", () => {
-  const baseRecipe = new Recipe();
-  baseRecipe.metadata = {
-    serves: "2",
-    servings: "2",
-    yield: "2",
-  };
-  baseRecipe.ingredients = [
-    {
-      name: "flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-      unit: "g",
-    },
-    {
-      name: "sugar",
-      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
-      unit: "tsp",
-    },
-    {
-      name: "eggs",
-      quantity: {
-        type: "range",
-        min: { type: "decimal", value: 2 },
-        max: { type: "decimal", value: 3 },
-      },
-    },
-    { name: "milk" },
-  ];
-  baseRecipe.servings = 2;
+  const baseRecipe = new Recipe(recipeToScale);
 
   it("should scale up ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleBy(2);
