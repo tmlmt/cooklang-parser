@@ -7,7 +7,12 @@ import type {
   DecimalValue,
   FractionValue,
 } from "./types";
-import { metadataRegex, rangeRegex, numberLikeRegex } from "./regex";
+import {
+  metadataRegex,
+  rangeRegex,
+  numberLikeRegex,
+  scalingMetaValueRegex,
+} from "./regex";
 import { Section as SectionObject } from "./classes/section";
 import type { Ingredient, Note, Step, Cookware } from "./types";
 import {
@@ -192,9 +197,7 @@ export function parseScalingMetaVar(
   content: string,
   varName: string,
 ): [number, string] | undefined {
-  const varMatch = content.match(
-    new RegExp(`^${varName}:[\\t ]*(([^,\\n]*),? ?(?:.*)?)`, "m"),
-  );
+  const varMatch = content.match(scalingMetaValueRegex(varName));
   if (!varMatch) return undefined;
   if (isNaN(Number(varMatch[2]?.trim()))) {
     throw new Error("Scaling variables should be numbers");
@@ -293,7 +296,7 @@ export function extractMetadata(content: string): MetadataExtract {
   }
 
   // String metadata variables
-  for (const metaVar of ["servings", "yield", "serves"] as (keyof Pick<
+  for (const metaVar of ["serves", "yield", "servings"] as (keyof Pick<
     Metadata,
     "servings" | "yield" | "serves"
   >)[]) {

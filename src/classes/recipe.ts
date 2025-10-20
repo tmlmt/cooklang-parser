@@ -339,21 +339,21 @@ export class Recipe {
     newRecipe.servings = originalServings * factor;
 
     if (newRecipe.metadata.servings && this.metadata.servings) {
-      const servingsValue = parseFloat(this.metadata.servings);
+      const servingsValue = parseFloat(String(this.metadata.servings));
       if (!isNaN(servingsValue)) {
         newRecipe.metadata.servings = String(servingsValue * factor);
       }
     }
 
     if (newRecipe.metadata.yield && this.metadata.yield) {
-      const yieldValue = parseFloat(this.metadata.yield);
+      const yieldValue = parseFloat(String(this.metadata.yield));
       if (!isNaN(yieldValue)) {
         newRecipe.metadata.yield = String(yieldValue * factor);
       }
     }
 
     if (newRecipe.metadata.serves && this.metadata.serves) {
-      const servesValue = parseFloat(this.metadata.serves);
+      const servesValue = parseFloat(String(this.metadata.serves));
       if (!isNaN(servesValue)) {
         newRecipe.metadata.serves = String(servesValue * factor);
       }
