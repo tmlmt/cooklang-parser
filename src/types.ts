@@ -242,14 +242,14 @@ export interface TextItem {
 export interface IngredientItem {
   /** The type of the item. */
   type: "ingredient";
-  /** The value of the item. */
-  value: number;
-  /** The alias/name of the ingredient as it should be displayed in the preparation */
+  /** The index of this item i.e. of this ingredient, within the list of ingredients */
+  index: number;
+  /** Index of the ingredient quantity part corresponding to this item i.e. this occurence
+   * of the ingredient which may be referenced elsewhere. */
+  quantityPartIndex?: number;
+  /** The alias/name of the ingredient as it should be displayed in the preparation
+   * for this occurence */
   displayName: string;
-  /** Quantity specific to this step item for this ingredient which may also be referenced elsewhere */
-  itemQuantity?: FixedValue | Range;
-  /** Unit specific to this step item for this ingredient which may also be referenced elsewhere */
-  itemUnit?: string;
 }
 
 /**

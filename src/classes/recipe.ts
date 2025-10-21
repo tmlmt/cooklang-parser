@@ -214,7 +214,7 @@ export class Recipe {
             displayName = name;
           }
 
-          const idxInList = findAndUpsertIngredient(
+          const idxsInList = findAndUpsertIngredient(
             this.ingredients,
             {
               name: listName,
@@ -239,12 +239,12 @@ export class Recipe {
 
           const newItem: IngredientItem = {
             type: "ingredient",
-            value: idxInList,
-            itemQuantity: quantity,
-            itemUnit: unit,
+            index: idxsInList.ingredientIndex,
             displayName,
           };
-
+          if (idxsInList.quantityPartIndex !== undefined) {
+            newItem.quantityPartIndex = idxsInList.quantityPartIndex;
+          }
           items.push(newItem);
         } else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;

@@ -313,8 +313,17 @@ describe("findAndUpsertIngredient", () => {
     const newIngredient: Ingredient = {
       name: "eggs",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantityParts: [
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          scalable: true,
+        },
+      ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toBe(0);
+    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual({
+      ingredientIndex: 0,
+      quantityPartIndex: 0,
+    });
     expect(ingredients).toEqual([newIngredient]);
   });
 
@@ -323,13 +332,28 @@ describe("findAndUpsertIngredient", () => {
       {
         name: "eggs",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantityParts: [
+          {
+            value: { type: "fixed", value: { type: "decimal", value: 1 } },
+            scalable: true,
+          },
+        ],
       },
     ];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+      quantityParts: [
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+          scalable: true,
+        },
+      ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toBe(0);
+    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
+      ingredientIndex: 0,
+      quantityPartIndex: 1,
+    });
     expect(ingredients[0]!.quantity).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 3 },
@@ -339,7 +363,10 @@ describe("findAndUpsertIngredient", () => {
     const newIngredient_noqtt: Ingredient = { name: "salt" };
     expect(
       findAndUpsertIngredient(ingredients_noqtt, newIngredient_noqtt, true),
-    ).toBe(0);
+    ).toEqual({
+      ingredientIndex: 0,
+      quantityPartIndex: undefined,
+    });
     expect(ingredients_noqtt[0]!.quantity).toBe(undefined);
   });
 
@@ -348,13 +375,28 @@ describe("findAndUpsertIngredient", () => {
       {
         name: "eggs",
         quantity: { type: "fixed", value: { type: "text", value: "one" } },
+        quantityParts: [
+          {
+            value: { type: "fixed", value: { type: "text", value: "one" } },
+            scalable: true,
+          },
+        ],
       },
     ];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantityParts: [
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          scalable: true,
+        },
+      ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toBe(1);
+    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
+      ingredientIndex: 1,
+      quantityPartIndex: 0,
+    });
     expect(ingredients).toHaveLength(2);
   });
 
@@ -363,8 +405,17 @@ describe("findAndUpsertIngredient", () => {
     const newIngredient: Ingredient = {
       name: "eggs",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantityParts: [
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          scalable: true,
+        },
+      ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toBe(0);
+    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
+      ingredientIndex: 0,
+      quantityPartIndex: 0,
+    });
     expect(ingredients[0]?.quantity).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 1 },
@@ -376,12 +427,25 @@ describe("findAndUpsertIngredient", () => {
       {
         name: "eggs",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantityParts: [
+          {
+            value: { type: "fixed", value: { type: "decimal", value: 1 } },
+            scalable: true,
+          },
+        ],
       },
     ];
     const newIngredient: Ingredient = {
       name: "unreferenced-ingredient",
       quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
       unit: "g",
+      quantityParts: [
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          unit: "g",
+          scalable: true,
+        },
+      ],
     };
     expect(() =>
       findAndUpsertIngredient(ingredients, newIngredient, true),

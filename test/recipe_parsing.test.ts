@@ -255,16 +255,9 @@ describe("parse function", () => {
             },
             {
               displayName: "flour",
-              itemQuantity: {
-                type: "fixed",
-                value: {
-                  type: "decimal",
-                  value: 100,
-                },
-              },
-              itemUnit: "g",
+              quantityPartIndex: 0,
               type: "ingredient",
-              value: 0,
+              index: 0,
             },
             {
               type: "text",
@@ -272,16 +265,9 @@ describe("parse function", () => {
             },
             {
               displayName: "water",
-              itemQuantity: {
-                type: "fixed",
-                value: {
-                  type: "decimal",
-                  value: 300,
-                },
-              },
-              itemUnit: "mL",
+              quantityPartIndex: 0,
               type: "ingredient",
-              value: 1,
+              index: 1,
             },
             {
               type: "text",
@@ -293,16 +279,9 @@ describe("parse function", () => {
             },
             {
               displayName: "flour",
-              itemQuantity: {
-                type: "fixed",
-                value: {
-                  type: "decimal",
-                  value: 50,
-                },
-              },
-              itemUnit: "g",
+              quantityPartIndex: 1,
               type: "ingredient",
-              value: 0,
+              index: 0,
             },
           ],
         },
@@ -366,12 +345,8 @@ describe("parse function", () => {
             {
               type: "ingredient",
               displayName: "flour",
-              value: 0,
-              itemQuantity: {
-                type: "fixed",
-                value: { type: "decimal", value: 100 },
-              },
-              itemUnit: "g",
+              index: 0,
+              quantityPartIndex: 0,
             },
             {
               type: "text",
@@ -382,14 +357,10 @@ describe("parse function", () => {
               value: "        Then add some more ",
             },
             {
-              itemQuantity: {
-                type: "fixed",
-                value: { type: "decimal", value: 50 },
-              },
-              itemUnit: "g",
+              quantityPartIndex: 1,
               type: "ingredient",
               displayName: "flour",
-              value: 0,
+              index: 0,
             },
             {
               type: "text",
@@ -493,34 +464,20 @@ describe("parse function", () => {
               value: "Mix ",
             },
             {
-              itemQuantity: {
-                type: "fixed",
-                value: {
-                  type: "decimal",
-                  value: 1,
-                },
-              },
-              itemUnit: undefined,
+              quantityPartIndex: 0,
               type: "ingredient",
               displayName: "eggs",
-              value: 0,
+              index: 0,
             },
             {
               type: "text",
               value: " and ",
             },
             {
-              itemQuantity: {
-                type: "fixed",
-                value: {
-                  type: "decimal",
-                  value: 1,
-                },
-              },
-              itemUnit: undefined,
+              quantityPartIndex: 1,
               type: "ingredient",
               displayName: "eggs",
-              value: 0,
+              index: 0,
             },
           ],
         },
