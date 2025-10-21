@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
-import { recipeToScale } from "./fixtures/recipes";
+import {
+  recipeToScale,
+  recipeToScaleSomeFixedQuantities,
+} from "./fixtures/recipes";
 import { recipeWithComplexServings } from "./fixtures/recipes";
 
 describe("scaleTo", () => {
@@ -195,5 +198,18 @@ describe("scaleBy", () => {
     });
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("4");
+  });
+
+  it("should not scale fixed quantities", () => {
+    const recipe = new Recipe(recipeToScaleSomeFixedQuantities);
+    const scaledRecipe = recipe.scaleBy(2);
+    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 100 },
+    });
+    expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 10 },
+    });
   });
 });

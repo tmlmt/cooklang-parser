@@ -121,6 +121,12 @@ describe("addNumericValues", () => {
       den: 3,
     });
   });
+
+  it("should return 0 if both values are 0", () => {
+    const val1: DecimalValue = { type: "decimal", value: 0 };
+    const val2: DecimalValue = { type: "decimal", value: 0 };
+    expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 0 });
+  });
 });
 
 describe("addQuantities", () => {
@@ -340,6 +346,38 @@ describe("addQuantities", () => {
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 101 } },
       unit: "g",
+    });
+  });
+
+  it("should simply add two quantities without unit or with empty string unit", () => {
+    // Empty string unit
+    expect(
+      addQuantities(
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          unit: "",
+        },
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+          unit: "",
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "decimal", value: 3 } },
+      unit: "",
+    });
+    // No unit
+    expect(
+      addQuantities(
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        },
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "decimal", value: 3 } },
     });
   });
 

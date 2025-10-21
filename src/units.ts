@@ -346,16 +346,10 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
 
   // Case 2: one of the two values doesn't have a unit, we consider its value to be 0 and the unit to be that of the other one
   // If at least one of the two units is "", this preserves it versus setting the resulting unit as undefined
-  if (
-    (q1.unit === "" || q1.unit === undefined) &&
-    (q2.unit !== undefined || unit2Def)
-  ) {
+  if ((q1.unit === "" || q1.unit === undefined) && q2.unit !== undefined) {
     return addQuantityValuesAndSetUnit(v1, v2, q2.unit); // Prefer q2's unit
   }
-  if (
-    (q2.unit === "" || q2.unit === undefined) &&
-    (q1.unit !== undefined || unit1Def)
-  ) {
+  if ((q2.unit === "" || q2.unit === undefined) && q1.unit !== undefined) {
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit); // Prefer q1's unit
   }
 

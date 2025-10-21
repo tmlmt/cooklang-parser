@@ -83,6 +83,13 @@ serves: 2
 Mix @flour{50%g} with some more @&flour{50%g}, @sugar{1/2%tsp}, @eggs{2-3} and @milk
 `;
 
+export const recipeToScaleSomeFixedQuantities = `
+---
+servings: 1
+---
+
+Mix @flour{50%g} with the fixed magic quantity of @butter{=10%g}`;
+
 export const recipeForShoppingList1 = `
 ---
 servings: 1
