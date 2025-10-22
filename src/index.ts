@@ -24,6 +24,7 @@ import type {
   AddedRecipe,
   CategoryIngredient,
   Category,
+  QuantityPart,
 } from "./types";
 
 export {
@@ -51,4 +52,5 @@ export {
   CategoryIngredient,
   Category,
   Section,
+  QuantityPart,
 };

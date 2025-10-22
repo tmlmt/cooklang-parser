@@ -185,6 +185,9 @@ export interface Range {
  * @category Types
  */
 export interface QuantityPart extends Quantity {
+  /** - If _true_, the quantity will scale
+   * - If _false_, the quantity is fixed
+   */
   scalable: boolean;
 }
 
@@ -242,10 +245,10 @@ export interface TextItem {
 export interface IngredientItem {
   /** The type of the item. */
   type: "ingredient";
-  /** The index of this item i.e. of this ingredient, within the list of ingredients */
+  /** The index of the ingredient, within the {@link Recipe.ingredients | list of ingredients} */
   index: number;
-  /** Index of the ingredient quantity part corresponding to this item i.e. this occurence
-   * of the ingredient which may be referenced elsewhere. */
+  /** Index of the quantity part corresponding to this item / this occurence
+   * of the ingredient, which may be referenced elsewhere. */
   quantityPartIndex?: number;
   /** The alias/name of the ingredient as it should be displayed in the preparation
    * for this occurence */
