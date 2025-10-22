@@ -295,6 +295,55 @@ export function getDefaultQuantityValue(): FixedValue {
 }
 
 /**
+ * Adds two quantity values together.
+ *
+ * - Adding two {@link FixedValue}s returns a new {@link FixedValue}.
+ * - Adding a {@link Range} to any value returns a {@link Range}.
+ *
+ * @param v1 - The first quantity value.
+ * @param v2 - The second quantity value.
+ * @returns A new quantity value representing the sum.
+ */
+export function addQuantityValues(v1: FixedValue, v2: FixedValue): FixedValue;
+export function addQuantityValues(
+  v1: FixedValue | Range,
+  v2: FixedValue | Range,
+): Range;
+
+export function addQuantityValues(
+  v1: FixedValue | Range,
+  v2: FixedValue | Range,
+): FixedValue | Range {
+  if (
+    (v1.type === "fixed" && v1.value.type === "text") ||
+    (v2.type === "fixed" && v2.value.type === "text")
+  ) {
+    throw new CannotAddTextValueError();
+  }
+
+  if (v1.type === "fixed" && v2.type === "fixed") {
+    const res = addNumericValues(
+      v1.value as DecimalValue | FractionValue,
+      v2.value as DecimalValue | FractionValue,
+    );
+    return { type: "fixed", value: res };
+  }
+  const r1 =
+    v1.type === "range" ? v1 : { type: "range", min: v1.value, max: v1.value };
+  const r2 =
+    v2.type === "range" ? v2 : { type: "range", min: v2.value, max: v2.value };
+  const newMin = addNumericValues(
+    r1.min as DecimalValue | FractionValue,
+    r2.min as DecimalValue | FractionValue,
+  );
+  const newMax = addNumericValues(
+    r1.max as DecimalValue | FractionValue,
+    r2.max as DecimalValue | FractionValue,
+  );
+  return { type: "range", min: newMin, max: newMax };
+}
+
+/**
  * Adds two quantities, returning the result in the most appropriate unit.
  */
 export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
@@ -316,32 +365,7 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
     val1: FixedValue | Range,
     val2: FixedValue | Range,
     unit: string | undefined,
-  ): Quantity => {
-    if (val1.type === "fixed" && val2.type === "fixed") {
-      const res = addNumericValues(
-        val1.value as DecimalValue | FractionValue,
-        val2.value as DecimalValue | FractionValue,
-      );
-      return { value: { type: "fixed", value: res }, unit };
-    }
-    const r1 =
-      val1.type === "range"
-        ? val1
-        : { type: "range", min: val1.value, max: val1.value };
-    const r2 =
-      val2.type === "range"
-        ? val2
-        : { type: "range", min: val2.value, max: val2.value };
-    const newMin = addNumericValues(
-      r1.min as DecimalValue | FractionValue,
-      r2.min as DecimalValue | FractionValue,
-    );
-    const newMax = addNumericValues(
-      r1.max as DecimalValue | FractionValue,
-      r2.max as DecimalValue | FractionValue,
-    );
-    return { value: { type: "range", min: newMin, max: newMax }, unit };
-  };
+  ): Quantity => ({ value: addQuantityValues(val1, val2), unit });
 
   // Case 2: one of the two values doesn't have a unit, we preserve its value and consider its unit to be that of the other one
   // If at least one of the two units is "", this preserves it versus setting the resulting unit as undefined

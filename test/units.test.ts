@@ -7,6 +7,7 @@ import {
   addNumericValues,
   CannotAddTextValueError,
   IncompatibleUnitsError,
+  addQuantityValues,
 } from "../src/units";
 import type { DecimalValue, FractionValue } from "../src/types";
 
@@ -126,6 +127,67 @@ describe("addNumericValues", () => {
     const val1: DecimalValue = { type: "decimal", value: 0 };
     const val2: DecimalValue = { type: "decimal", value: 0 };
     expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 0 });
+  });
+});
+
+describe("addQuantityValues", () => {
+  it("should add two fixed numerical values", () => {
+    expect(
+      addQuantityValues(
+        { type: "fixed", value: { type: "decimal", value: 1 } },
+        { type: "fixed", value: { type: "decimal", value: 2 } },
+      ),
+    ).toEqual({ type: "fixed", value: { type: "decimal", value: 3 } });
+  });
+
+  it("should add two range values", () => {
+    expect(
+      addQuantityValues(
+        {
+          type: "range",
+          min: { type: "decimal", value: 1 },
+          max: { type: "decimal", value: 2 },
+        },
+        {
+          type: "range",
+          min: { type: "decimal", value: 3 },
+          max: { type: "decimal", value: 4 },
+        },
+      ),
+    ).toEqual({
+      type: "range",
+      min: { type: "decimal", value: 4 },
+      max: { type: "decimal", value: 6 },
+    });
+  });
+
+  it("should add a fixed and a range value", () => {
+    expect(
+      addQuantityValues(
+        { type: "fixed", value: { type: "decimal", value: 1 } },
+        {
+          type: "range",
+          min: { type: "decimal", value: 3 },
+          max: { type: "decimal", value: 4 },
+        },
+      ),
+    ).toEqual({
+      type: "range",
+      min: { type: "decimal", value: 4 },
+      max: { type: "decimal", value: 5 },
+    });
+  });
+
+  it("should throw an error if one of the value is a text value", () => {
+    expect(() =>
+      addQuantityValues(
+        { type: "fixed", value: { type: "text", value: "to taste" } },
+        {
+          type: "fixed",
+          value: { type: "decimal", value: 1 },
+        },
+      ),
+    ).toThrow(CannotAddTextValueError);
   });
 });
 
