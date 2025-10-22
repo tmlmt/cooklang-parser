@@ -18,6 +18,12 @@ Below are a few details about some behavioral aspects.
 { type: "fixed", value: {num: 1, den: 2, type: "fraction"}}
 ```
 
+###  Fixed quantities
+
+Prefixing an ingredient's quantity with `=` will prevent it from scaling. For example, when writing `@salt{1%pinch}`, salt will always stay at 1 pinch regardless of serving size. 
+
+This does not work with cookware or timers which do not scale anyway.
+
 ## Metadata
 
 Only metadata items of the [canonical metadata list](https://cooklang.org/docs/spec/#canonical-metadata) are parsed. Others are ignored. 
