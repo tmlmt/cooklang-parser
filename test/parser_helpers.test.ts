@@ -299,6 +299,39 @@ describe("findAndUpsertCookware", () => {
     expect(cookware.length).toBe(1);
   });
 
+  it("should add quantities of referenced cookware", () => {
+    const cookware: Cookware[] = [
+      {
+        name: "oven",
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      },
+    ];
+    const newCookware: Cookware = {
+      name: "oven",
+      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+    };
+    findAndUpsertCookware(cookware, newCookware, true);
+    expect(cookware[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 3 },
+    });
+  });
+
+  it("should insert a new cookware if the referenced one has a text quantity", () => {
+    const cookware: Cookware[] = [
+      {
+        name: "oven",
+        quantity: { type: "fixed", value: { type: "text", value: "one" } },
+      },
+    ];
+    const newCookware: Cookware = {
+      name: "oven",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+    };
+    findAndUpsertCookware(cookware, newCookware, true);
+    expect(cookware.length).toEqual(2);
+  });
+
   it("should throw an error if a reference cookware does not exist", () => {
     const newCookware: Cookware = { name: "unreferenced-cookware" };
     expect(() => findAndUpsertCookware([], newCookware, true)).toThrowError(

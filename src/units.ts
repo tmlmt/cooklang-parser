@@ -314,6 +314,13 @@ export function addQuantityValues(
   v1: FixedValue | Range,
   v2: FixedValue | Range,
 ): FixedValue | Range {
+  if (
+    (v1.type === "fixed" && v1.value.type === "text") ||
+    (v2.type === "fixed" && v2.value.type === "text")
+  ) {
+    throw new CannotAddTextValueError();
+  }
+
   if (v1.type === "fixed" && v2.type === "fixed") {
     const res = addNumericValues(
       v1.value as DecimalValue | FractionValue,

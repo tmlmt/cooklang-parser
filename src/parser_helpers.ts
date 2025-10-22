@@ -21,6 +21,7 @@ import {
   CannotAddTextValueError,
   IncompatibleUnitsError,
   Quantity,
+  addQuantityValues,
 } from "./units";
 
 /**
@@ -141,7 +142,7 @@ export function findAndUpsertCookware(
   newCookware: Cookware,
   isReference: boolean,
 ): number {
-  const { name } = newCookware;
+  const { name, quantity } = newCookware;
 
   if (isReference) {
     const index = cookware.findIndex(
@@ -152,6 +153,25 @@ export function findAndUpsertCookware(
       throw new Error(
         `Referenced cookware "${name}" not found. A referenced cookware must be declared before being referenced with '&'.`,
       );
+    }
+
+    if (quantity !== undefined) {
+      if (!cookware[index]!.quantity) {
+        cookware[index]!.quantity = quantity;
+      } else {
+        try {
+          cookware[index]!.quantity = addQuantityValues(
+            cookware[index]!.quantity,
+            quantity,
+          );
+        } catch (e) {
+          if (e instanceof CannotAddTextValueError) {
+            return cookware.push(newCookware) - 1;
+          }
+        }
+      }
+    } else {
+      cookware[index]!.quantity = quantity;
     }
 
     return index;
