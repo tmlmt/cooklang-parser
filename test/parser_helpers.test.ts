@@ -300,7 +300,7 @@ describe("findAndUpsertCookware", () => {
     };
     expect(findAndUpsertCookware(cookware, newCookware, true)).toBe(0);
     expect(cookware.length).toBe(1);
-    expect(cookware[0].quantity).toEqual({
+    expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 1 },
     });
