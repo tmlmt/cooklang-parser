@@ -1,4 +1,5 @@
 import type { Recipe } from "./classes/recipe";
+import type { Quantity } from "./units";
 
 /**
  * Represents the metadata of a recipe.
@@ -26,7 +27,7 @@ export interface Metadata {
    *
    * Interchangeable with `yield` or `serves`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
-   * is `servings` > `yield` > `serves`.
+   * is `servings` \> `yield` \> `serves`.
    *
    * @example
    * ```yaml
@@ -46,7 +47,7 @@ export interface Metadata {
    *
    * Interchangeable with `servings` or `serves`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
-   * is `servings` > `yield` > `serves`. See {@link Metadata.servings | servings}
+   * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
    * for examples.
    */
   yield?: number | string;
@@ -57,7 +58,7 @@ export interface Metadata {
    *
    * Interchangeable with `servings` or `yield`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
-   * is `servings` > `yield` > `serves`. See {@link Metadata.servings | servings}
+   * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
    * for examples.
    */
   serves?: number | string;
@@ -180,6 +181,17 @@ export interface Range {
 }
 
 /**
+ * Represents a contributor to an ingredient's total quantity
+ * @category Types
+ */
+export interface QuantityPart extends Quantity {
+  /** - If _true_, the quantity will scale
+   * - If _false_, the quantity is fixed
+   */
+  scalable: boolean;
+}
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -190,6 +202,8 @@ export interface Ingredient {
   quantity?: FixedValue | Range;
   /** The unit of the ingredient. */
   unit?: string;
+  /** The array of contributors to the ingredient's total quantity. */
+  quantityParts?: QuantityPart[];
   /** The preparation of the ingredient. */
   preparation?: string;
   /** Whether the ingredient is optional. */
@@ -231,14 +245,14 @@ export interface TextItem {
 export interface IngredientItem {
   /** The type of the item. */
   type: "ingredient";
-  /** The value of the item. */
-  value: number;
-  /** The alias/name of the ingredient as it should be displayed in the preparation */
+  /** The index of the ingredient, within the {@link Recipe.ingredients | list of ingredients} */
+  index: number;
+  /** Index of the quantity part corresponding to this item / this occurence
+   * of the ingredient, which may be referenced elsewhere. */
+  quantityPartIndex?: number;
+  /** The alias/name of the ingredient as it should be displayed in the preparation
+   * for this occurence */
   displayName: string;
-  /** Quantity specific to this step item for this ingredient which may also be referenced elsewhere */
-  itemQuantity?: FixedValue | Range;
-  /** Unit specific to this step item for this ingredient which may also be referenced elsewhere */
-  itemUnit?: string;
 }
 
 /**

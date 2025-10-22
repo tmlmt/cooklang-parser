@@ -17,6 +17,7 @@ import { Section as SectionObject } from "./classes/section";
 import type { Ingredient, Note, Step, Cookware } from "./types";
 import {
   addQuantities,
+  getDefaultQuantityValue,
   CannotAddTextValueError,
   IncompatibleUnitsError,
   Quantity,
@@ -64,57 +65,75 @@ export function flushPendingItems(
  * @param newIngredient - The ingredient to find or add.
  * @param isReference - Whether this is a reference ingredient (`&` modifier).
  * @returns The index of the ingredient in the list.
+ * @returns An object containing the index of the ingredient and its quantity part in the list.
  */
 export function findAndUpsertIngredient(
   ingredients: Ingredient[],
   newIngredient: Ingredient,
   isReference: boolean,
-): number {
+): {
+  ingredientIndex: number;
+  quantityPartIndex: number | undefined;
+} {
   const { name, quantity, unit } = newIngredient;
 
   // New ingredient
   if (isReference) {
-    const index = ingredients.findIndex(
+    const indexFind = ingredients.findIndex(
       (i) => i.name.toLowerCase() === name.toLowerCase(),
     );
 
-    if (index === -1) {
+    if (indexFind === -1) {
       throw new Error(
         `Referenced ingredient "${name}" not found. A referenced ingredient must be declared before being referenced with '&'.`,
       );
     }
 
     // Ingredient already exists, update it
-    const existingIngredient = ingredients[index]!;
+    const existingIngredient = ingredients[indexFind]!;
+    let quantityPartIndex = undefined;
     if (quantity !== undefined) {
       const currentQuantity: Quantity = {
-        value: existingIngredient.quantity ?? {
-          type: "fixed",
-          value: { type: "decimal", value: 0 },
-        },
+        value: existingIngredient.quantity ?? getDefaultQuantityValue(),
         unit: existingIngredient.unit ?? "",
       };
       const newQuantity = { value: quantity, unit: unit ?? "" };
-
       try {
         const total = addQuantities(currentQuantity, newQuantity);
         existingIngredient.quantity = total.value;
         existingIngredient.unit = total.unit || undefined;
+        if (existingIngredient.quantityParts) {
+          existingIngredient.quantityParts.push(
+            ...newIngredient.quantityParts!,
+          );
+        } else {
+          existingIngredient.quantityParts = newIngredient.quantityParts;
+        }
+        quantityPartIndex = existingIngredient.quantityParts!.length - 1;
       } catch (e) {
         if (
           e instanceof IncompatibleUnitsError ||
           e instanceof CannotAddTextValueError
         ) {
           // Addition not possible, so add as a new ingredient.
-          return ingredients.push(newIngredient) - 1;
+          return {
+            ingredientIndex: ingredients.push(newIngredient) - 1,
+            quantityPartIndex: 0,
+          };
         }
       }
     }
-    return index;
+    return {
+      ingredientIndex: indexFind,
+      quantityPartIndex,
+    };
   }
 
   // Not a reference, so add as a new ingredient.
-  return ingredients.push(newIngredient) - 1;
+  return {
+    ingredientIndex: ingredients.push(newIngredient) - 1,
+    quantityPartIndex: 0,
+  };
 }
 
 export function findAndUpsertCookware(

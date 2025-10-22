@@ -25,7 +25,12 @@ import {
   parseQuantityInput,
   extractMetadata,
 } from "../parser_helpers";
-import { multiplyQuantityValue } from "../units";
+import {
+  addQuantities,
+  getDefaultQuantityValue,
+  multiplyQuantityValue,
+  type Quantity,
+} from "../units";
 
 /**
  * Recipe parser.
@@ -178,6 +183,9 @@ export class Recipe {
 
         if (groups.mIngredientName || groups.sIngredientName) {
           const name = (groups.mIngredientName || groups.sIngredientName)!;
+          const scalableQuantity =
+            (groups.mIngredientQuantityModifier ||
+              groups.sIngredientQuantityModifier) !== "=";
           const quantityRaw =
             groups.mIngredientQuantity || groups.sIngredientQuantity;
           const unit = groups.mIngredientUnit || groups.sIngredientUnit;
@@ -206,11 +214,20 @@ export class Recipe {
             displayName = name;
           }
 
-          const idxInList = findAndUpsertIngredient(
+          const idxsInList = findAndUpsertIngredient(
             this.ingredients,
             {
               name: listName,
               quantity,
+              quantityParts: quantity
+                ? [
+                    {
+                      value: quantity,
+                      unit,
+                      scalable: scalableQuantity,
+                    },
+                  ]
+                : undefined,
               unit,
               optional,
               hidden,
@@ -222,12 +239,12 @@ export class Recipe {
 
           const newItem: IngredientItem = {
             type: "ingredient",
-            value: idxInList,
-            itemQuantity: quantity,
-            itemUnit: unit,
+            index: idxsInList.ingredientIndex,
             displayName,
           };
-
+          if (idxsInList.quantityPartIndex !== undefined) {
+            newItem.quantityPartIndex = idxsInList.quantityPartIndex;
+          }
           items.push(newItem);
         } else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;
@@ -320,17 +337,38 @@ export class Recipe {
 
     newRecipe.ingredients = newRecipe.ingredients
       .map((ingredient) => {
-        if (
-          ingredient.quantity &&
-          !(
-            ingredient.quantity.type === "fixed" &&
-            ingredient.quantity.value.type === "text"
-          )
-        ) {
-          ingredient.quantity = multiplyQuantityValue(
-            ingredient.quantity,
-            factor,
+        // Scale first individual parts of total quantity depending on whether they are scalable or not
+        if (ingredient.quantityParts) {
+          ingredient.quantityParts = ingredient.quantityParts.map(
+            (quantityPart) => {
+              if (
+                quantityPart.value.type === "fixed" &&
+                quantityPart.value.value.type === "text"
+              ) {
+                return quantityPart;
+              }
+              return {
+                ...quantityPart,
+                value: multiplyQuantityValue(
+                  quantityPart.value,
+                  quantityPart.scalable ? factor : 1,
+                ),
+              };
+            },
           );
+          // Recalculate total quantity from quantity parts
+          if (ingredient.quantityParts.length === 1) {
+            ingredient.quantity = ingredient.quantityParts[0]!.value;
+            ingredient.unit = ingredient.quantityParts[0]!.unit;
+          } else {
+            const totalQuantity = ingredient.quantityParts.reduce(
+              (acc, val) =>
+                addQuantities(acc, { value: val.value, unit: val.unit }),
+              { value: getDefaultQuantityValue() } as Quantity,
+            );
+            ingredient.quantity = totalQuantity.value;
+            ingredient.unit = totalQuantity.unit;
+          }
         }
         return ingredient;
       })

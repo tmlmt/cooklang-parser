@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   addQuantities,
+  getDefaultQuantityValue,
   normalizeUnit,
   simplifyFraction,
   addNumericValues,
@@ -119,6 +120,12 @@ describe("addNumericValues", () => {
       num: 1,
       den: 3,
     });
+  });
+
+  it("should return 0 if both values are 0", () => {
+    const val1: DecimalValue = { type: "decimal", value: 0 };
+    const val2: DecimalValue = { type: "decimal", value: 0 };
+    expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 0 });
   });
 });
 
@@ -342,6 +349,38 @@ describe("addQuantities", () => {
     });
   });
 
+  it("should simply add two quantities without unit or with empty string unit", () => {
+    // Empty string unit
+    expect(
+      addQuantities(
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          unit: "",
+        },
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+          unit: "",
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "decimal", value: 3 } },
+      unit: "",
+    });
+    // No unit
+    expect(
+      addQuantities(
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        },
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "decimal", value: 3 } },
+    });
+  });
+
   it("should throw error if trying to add incompatible units", () => {
     expect(() =>
       addQuantities(
@@ -392,6 +431,45 @@ describe("addQuantities", () => {
         max: { type: "decimal", value: 3 },
       },
       unit: "tsp",
+    });
+  });
+});
+
+describe("getDefaultQuantityValue + addQuantities", () => {
+  it("should preseve fractions", () => {
+    expect(
+      addQuantities(
+        { value: getDefaultQuantityValue() },
+        {
+          value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+          unit: "",
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: "",
+    });
+  });
+  it("should preseve ranges", () => {
+    expect(
+      addQuantities(
+        { value: getDefaultQuantityValue() },
+        {
+          value: {
+            type: "range",
+            min: { type: "decimal", value: 1 },
+            max: { type: "decimal", value: 2 },
+          },
+          unit: "",
+        },
+      ),
+    ).toEqual({
+      value: {
+        type: "range",
+        min: { type: "decimal", value: 1 },
+        max: { type: "decimal", value: 2 },
+      },
+      unit: "",
     });
   });
 });
