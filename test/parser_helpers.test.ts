@@ -294,9 +294,16 @@ describe("findAndUpsertCookware", () => {
 
   it("should correctly add a referenced cookware", () => {
     const cookware: Cookware[] = [{ name: "oven" }];
-    const newCookware: Cookware = { name: "oven" };
+    const newCookware: Cookware = {
+      name: "oven",
+      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+    };
     expect(findAndUpsertCookware(cookware, newCookware, true)).toBe(0);
     expect(cookware.length).toBe(1);
+    expect(cookware[0].quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 1 },
+    });
   });
 
   it("should add quantities of referenced cookware", () => {
