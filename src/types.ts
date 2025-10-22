@@ -27,7 +27,7 @@ export interface Metadata {
    *
    * Interchangeable with `yield` or `serves`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
-   * is `servings` > `yield` > `serves`.
+   * is `servings` \> `yield` \> `serves`.
    *
    * @example
    * ```yaml
@@ -47,7 +47,7 @@ export interface Metadata {
    *
    * Interchangeable with `servings` or `serves`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
-   * is `servings` > `yield` > `serves`. See {@link Metadata.servings | servings}
+   * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
    * for examples.
    */
   yield?: number | string;
@@ -58,7 +58,7 @@ export interface Metadata {
    *
    * Interchangeable with `servings` or `yield`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
-   * is `servings` > `yield` > `serves`. See {@link Metadata.servings | servings}
+   * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
    * for examples.
    */
   serves?: number | string;

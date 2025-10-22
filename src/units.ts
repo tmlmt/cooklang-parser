@@ -288,8 +288,7 @@ const convertQuantityValue = (
  * Get the default / neutral quantity which can be provided to addQuantity
  * for it to return the other value as result
  *
- * @export
- * @return 0 {FixedValue}
+ * @return zero
  */
 export function getDefaultQuantityValue(): FixedValue {
   return { type: "fixed", value: { type: "decimal", value: 0 } };

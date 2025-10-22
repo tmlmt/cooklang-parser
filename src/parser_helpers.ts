@@ -76,7 +76,6 @@ export function findAndUpsertIngredient(
   quantityPartIndex: number | undefined;
 } {
   const { name, quantity, unit } = newIngredient;
-  let indexes = { ingredientIndex: -1, quantityPartIndex: -1 };
 
   // New ingredient
   if (isReference) {
