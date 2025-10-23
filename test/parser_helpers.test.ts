@@ -138,13 +138,26 @@ Recipe
 servings: 2
 ---
     `;
-    const expected: MetadataExtract = {
+    const expected_canonical: MetadataExtract = {
       metadata: {
         servings: "2",
       },
       servings: 2,
     };
-    expect(extractMetadata(content_canonical)).toEqual(expected);
+    expect(extractMetadata(content_canonical)).toEqual(expected_canonical);
+
+    const content_complex = `
+---
+servings: 2, a couple
+---
+    `;
+    const expected_complex: MetadataExtract = {
+      metadata: {
+        servings: "2, a couple",
+      },
+      servings: 2,
+    };
+    expect(extractMetadata(content_complex)).toEqual(expected_complex);
   });
 
   it("should extract list metadata fields in both styles correctly", () => {

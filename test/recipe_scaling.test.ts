@@ -107,7 +107,7 @@ describe("scaleTo", () => {
       value: { type: "decimal", value: 2 },
     });
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toBe("4");
+    expect(scaledRecipe.metadata.servings).toBe("2, a few");
   });
 });
 
@@ -187,7 +187,7 @@ describe("scaleBy", () => {
     expect(baseRecipe).toEqual(originalRecipe);
   });
 
-  it("should handle complex scaling metadata", () => {
+  it("should scale complex metadata", () => {
     const recipeWithNonNumericMeta = new Recipe(recipeWithComplexServings);
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleBy(2);
@@ -197,7 +197,22 @@ describe("scaleBy", () => {
       value: { type: "decimal", value: 2 },
     });
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toBe("4");
+    expect(scaledRecipe.metadata.servings).toBe("2, a few");
+  });
+
+  it("should not scale non numeric scaling metadata", () => {
+    const recipe = new Recipe(`
+---
+servings: 2, some
+yield: 2, some
+serves: 2, some
+---
+`);
+    const scaledRecipe = recipe.scaleBy(2);
+    expect(scaledRecipe.servings).toBe(4);
+    expect(scaledRecipe.metadata.servings).toBe("2, some");
+    expect(scaledRecipe.metadata.yield).toBe("2, some");
+    expect(scaledRecipe.metadata.serves).toBe("2, some");
   });
 
   it("should not scale fixed quantities", () => {

@@ -16,6 +16,7 @@ import {
   blockCommentRegex,
   metadataRegex,
   ingredientAliasRegex,
+  floatRegex,
 } from "../regex";
 import {
   flushPendingItems,
@@ -383,22 +384,34 @@ export class Recipe {
     newRecipe.servings = originalServings * factor;
 
     if (newRecipe.metadata.servings && this.metadata.servings) {
-      const servingsValue = parseFloat(String(this.metadata.servings));
-      if (!isNaN(servingsValue)) {
+      if (
+        floatRegex.test(String(this.metadata.servings).replace(",", ".").trim())
+      ) {
+        const servingsValue = parseFloat(
+          String(this.metadata.servings).replace(",", "."),
+        );
         newRecipe.metadata.servings = String(servingsValue * factor);
       }
     }
 
     if (newRecipe.metadata.yield && this.metadata.yield) {
-      const yieldValue = parseFloat(String(this.metadata.yield));
-      if (!isNaN(yieldValue)) {
+      if (
+        floatRegex.test(String(this.metadata.yield).replace(",", ".").trim())
+      ) {
+        const yieldValue = parseFloat(
+          String(this.metadata.yield).replace(",", "."),
+        );
         newRecipe.metadata.yield = String(yieldValue * factor);
       }
     }
 
     if (newRecipe.metadata.serves && this.metadata.serves) {
-      const servesValue = parseFloat(String(this.metadata.serves));
-      if (!isNaN(servesValue)) {
+      if (
+        floatRegex.test(String(this.metadata.serves).replace(",", ".").trim())
+      ) {
+        const servesValue = parseFloat(
+          String(this.metadata.serves).replace(",", "."),
+        );
         newRecipe.metadata.serves = String(servesValue * factor);
       }
     }
