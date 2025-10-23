@@ -234,7 +234,7 @@ export interface Timer {
 export interface TextItem {
   /** The type of the item. */
   type: "text";
-  /** The value of the item. */
+  /** The content of the text item. */
   value: string;
 }
 
@@ -262,10 +262,11 @@ export interface IngredientItem {
 export interface CookwareItem {
   /** The type of the item. */
   type: "cookware";
-  /** The value of the item. */
-  value: number;
-  /** Quantity specific to this step item for this cookware which may also be referenced elsewhere */
-  itemQuantity?: FixedValue | Range;
+  /** The index of the cookware, within the {@link Recipe.cookware | list of cookware} */
+  index: number;
+  /** Index of the quantity part corresponding to this item / this occurence
+   * of the cookware, which may be referenced elsewhere. */
+  quantityPartIndex?: number;
 }
 
 /**
@@ -314,6 +315,8 @@ export interface Cookware {
   name: string;
   /** The quantity of cookware */
   quantity?: FixedValue | Range;
+  /** The array of contributors to the cookware's total quantity. */
+  quantityParts?: (FixedValue | Range)[];
   /** Whether the cookware is optional. */
   optional?: boolean;
   /** Whether the cookware is hidden. */
