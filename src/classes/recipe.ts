@@ -258,15 +258,21 @@ export class Recipe {
             ? parseQuantityInput(quantityRaw)
             : undefined;
 
-          const idxInList = findAndUpsertCookware(
+          const idxsInList = findAndUpsertCookware(
             this.cookware,
-            { name, quantity, optional, hidden },
+            {
+              name,
+              quantity,
+              quantityParts: quantity ? [quantity] : undefined,
+              optional,
+              hidden,
+            },
             reference,
           );
           items.push({
             type: "cookware",
-            value: idxInList,
-            itemQuantity: quantity,
+            index: idxsInList.cookwareIndex,
+            quantityPartIndex: idxsInList.quantityPartIndex,
           } as CookwareItem);
         } else if (groups.timerQuantity !== undefined) {
           const durationStr = groups.timerQuantity.trim();

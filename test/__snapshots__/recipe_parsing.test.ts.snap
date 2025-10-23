@@ -21,15 +21,9 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " into a ",
           },
           {
-            "itemQuantity": {
-              "type": "fixed",
-              "value": {
-                "type": "decimal",
-                "value": 1,
-              },
-            },
+            "index": 0,
+            "quantityPartIndex": 0,
             "type": "cookware",
-            "value": 0,
           },
           {
             "type": "text",
@@ -75,9 +69,9 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " in a ",
           },
           {
-            "itemQuantity": undefined,
+            "index": 1,
+            "quantityPartIndex": undefined,
             "type": "cookware",
-            "value": 1,
           },
           {
             "type": "text",
@@ -126,30 +120,35 @@ Recipe {
       "name": "Dutch oven",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "small bowl",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "13×9-inch baking dish",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "rubber spatula",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "icing spatula",
       "optional": true,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
   ],
   "ingredients": [
@@ -737,9 +736,9 @@ Recipe {
               "value": "Meanwhile, heat a ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 0,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 0,
             },
             {
               "type": "text",
@@ -941,9 +940,9 @@ Recipe {
               "value": "In a ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 1,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 1,
             },
             {
               "type": "text",
@@ -1046,27 +1045,27 @@ Recipe {
               "value": "Spoon 2 cups meat sauce into an ungreased ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 2,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 2,
             },
             {
               "type": "text",
               "value": ", spreading it out to cover the entire dish. Layer three noodles onto the sauce. Add one-third of the ricotta mixture, spreading it over the noodles with a ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 3,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 3,
             },
             {
               "type": "text",
               "value": " or an ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 4,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 4,
             },
             {
               "type": "text",

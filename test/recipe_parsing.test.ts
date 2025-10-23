@@ -636,6 +636,9 @@ describe("parse function", () => {
         hidden: false,
         name: "bowl",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantityParts: [
+          { type: "fixed", value: { type: "decimal", value: 1 } },
+        ],
         optional: false,
       });
       expect(result.cookware[1]).toEqual({

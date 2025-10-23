@@ -141,7 +141,10 @@ export function findAndUpsertCookware(
   cookware: Cookware[],
   newCookware: Cookware,
   isReference: boolean,
-): number {
+): {
+  cookwareIndex: number;
+  quantityPartIndex: number | undefined;
+} {
   const { name, quantity } = newCookware;
 
   if (isReference) {
@@ -155,29 +158,47 @@ export function findAndUpsertCookware(
       );
     }
 
+    let quantityPartIndex = undefined;
     if (quantity !== undefined) {
       if (!cookware[index]!.quantity) {
         cookware[index]!.quantity = quantity;
+        cookware[index]!.quantityParts = newCookware.quantityParts;
+        quantityPartIndex = 0;
       } else {
         try {
           cookware[index]!.quantity = addQuantityValues(
             cookware[index]!.quantity,
             quantity,
           );
+          if (!cookware[index]!.quantityParts) {
+            cookware[index]!.quantityParts = newCookware.quantityParts;
+            quantityPartIndex = 0;
+          } else {
+            quantityPartIndex =
+              cookware[index]!.quantityParts.push(
+                ...newCookware.quantityParts!,
+              ) - 1;
+          }
         } catch (e) {
           if (e instanceof CannotAddTextValueError) {
-            return cookware.push(newCookware) - 1;
+            return {
+              cookwareIndex: cookware.push(newCookware) - 1,
+              quantityPartIndex: 0,
+            };
           }
         }
       }
-    } else {
-      cookware[index]!.quantity = quantity;
     }
-
-    return index;
+    return {
+      cookwareIndex: index,
+      quantityPartIndex,
+    };
   }
 
-  return cookware.push(newCookware) - 1;
+  return {
+    cookwareIndex: cookware.push(newCookware) - 1,
+    quantityPartIndex: quantity ? 0 : undefined,
+  };
 }
 
 // Parser when we know the input is either a number-like value
