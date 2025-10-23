@@ -138,13 +138,26 @@ Recipe
 servings: 2
 ---
     `;
-    const expected: MetadataExtract = {
+    const expected_canonical: MetadataExtract = {
       metadata: {
         servings: "2",
       },
       servings: 2,
     };
-    expect(extractMetadata(content_canonical)).toEqual(expected);
+    expect(extractMetadata(content_canonical)).toEqual(expected_canonical);
+
+    const content_complex = `
+---
+servings: 2, a couple
+---
+    `;
+    const expected_complex: MetadataExtract = {
+      metadata: {
+        servings: "2, a couple",
+      },
+      servings: 2,
+    };
+    expect(extractMetadata(content_complex)).toEqual(expected_complex);
   });
 
   it("should extract list metadata fields in both styles correctly", () => {
@@ -288,7 +301,10 @@ describe("findAndUpsertCookware", () => {
   it("should correctly add a non-referenced cookware", () => {
     const cookware: Cookware[] = [{ name: "oven" }];
     const newCookware: Cookware = { name: "pan" };
-    expect(findAndUpsertCookware(cookware, newCookware, false)).toBe(1);
+    expect(findAndUpsertCookware(cookware, newCookware, false)).toEqual({
+      cookwareIndex: 1,
+      quantityPartIndex: undefined,
+    });
     expect(cookware.length).toEqual(2);
   });
 
@@ -297,13 +313,23 @@ describe("findAndUpsertCookware", () => {
     const newCookware: Cookware = {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantityParts: [{ type: "fixed", value: { type: "decimal", value: 1 } }],
     };
-    expect(findAndUpsertCookware(cookware, newCookware, true)).toBe(0);
+    expect(findAndUpsertCookware(cookware, newCookware, true)).toEqual({
+      cookwareIndex: 0,
+      quantityPartIndex: 0,
+    });
     expect(cookware.length).toBe(1);
     expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 1 },
     });
+    expect(cookware[0]!.quantityParts).toEqual([
+      {
+        type: "fixed",
+        value: { type: "decimal", value: 1 },
+      },
+    ]);
   });
 
   it("should add quantities of referenced cookware", () => {

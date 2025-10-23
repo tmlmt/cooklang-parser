@@ -21,15 +21,9 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " into a ",
           },
           {
-            "itemQuantity": {
-              "type": "fixed",
-              "value": {
-                "type": "decimal",
-                "value": 1,
-              },
-            },
+            "index": 0,
+            "quantityPartIndex": 0,
             "type": "cookware",
-            "value": 0,
           },
           {
             "type": "text",
@@ -75,9 +69,9 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": " in a ",
           },
           {
-            "itemQuantity": undefined,
+            "index": 1,
+            "quantityPartIndex": undefined,
             "type": "cookware",
-            "value": 1,
           },
           {
             "type": "text",
@@ -93,8 +87,8 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Cook for ",
           },
           {
+            "index": 0,
             "type": "timer",
-            "value": 0,
           },
           {
             "type": "text",
@@ -126,30 +120,35 @@ Recipe {
       "name": "Dutch oven",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "small bowl",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "13×9-inch baking dish",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "rubber spatula",
       "optional": false,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
     {
       "hidden": false,
       "name": "icing spatula",
       "optional": true,
       "quantity": undefined,
+      "quantityParts": undefined,
     },
   ],
   "ingredients": [
@@ -737,9 +736,9 @@ Recipe {
               "value": "Meanwhile, heat a ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 0,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 0,
             },
             {
               "type": "text",
@@ -776,8 +775,8 @@ Recipe {
               "value": ". Cook for ",
             },
             {
+              "index": 0,
               "type": "timer",
-              "value": 0,
             },
             {
               "type": "text",
@@ -794,8 +793,8 @@ Recipe {
               "value": ", and cook for ",
             },
             {
+              "index": 1,
               "type": "timer",
-              "value": 1,
             },
             {
               "type": "text",
@@ -919,8 +918,8 @@ Recipe {
               "value": "Bring the mixture to a boil. Reduce the heat to a simmer. Cook, uncovered, for ",
             },
             {
+              "index": 2,
               "type": "timer",
-              "value": 2,
             },
             {
               "type": "text",
@@ -941,9 +940,9 @@ Recipe {
               "value": "In a ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 1,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 1,
             },
             {
               "type": "text",
@@ -1046,27 +1045,27 @@ Recipe {
               "value": "Spoon 2 cups meat sauce into an ungreased ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 2,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 2,
             },
             {
               "type": "text",
               "value": ", spreading it out to cover the entire dish. Layer three noodles onto the sauce. Add one-third of the ricotta mixture, spreading it over the noodles with a ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 3,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 3,
             },
             {
               "type": "text",
               "value": " or an ",
             },
             {
-              "itemQuantity": undefined,
+              "index": 4,
+              "quantityPartIndex": undefined,
               "type": "cookware",
-              "value": 4,
             },
             {
               "type": "text",
@@ -1096,8 +1095,8 @@ Recipe {
               "value": "Cover the baking dish, and bake for ",
             },
             {
+              "index": 3,
               "type": "timer",
-              "value": 3,
             },
             {
               "type": "text",
@@ -1113,8 +1112,8 @@ Recipe {
               "value": "Remove the cover, and cook for an additional ",
             },
             {
+              "index": 4,
               "type": "timer",
-              "value": 4,
             },
             {
               "type": "text",
@@ -1130,8 +1129,8 @@ Recipe {
               "value": "Let the lasagna stand for ",
             },
             {
+              "index": 5,
               "type": "timer",
-              "value": 5,
             },
             {
               "type": "text",

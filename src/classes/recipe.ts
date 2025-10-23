@@ -16,6 +16,7 @@ import {
   blockCommentRegex,
   metadataRegex,
   ingredientAliasRegex,
+  floatRegex,
 } from "../regex";
 import {
   flushPendingItems,
@@ -258,15 +259,21 @@ export class Recipe {
             ? parseQuantityInput(quantityRaw)
             : undefined;
 
-          const idxInList = findAndUpsertCookware(
+          const idxsInList = findAndUpsertCookware(
             this.cookware,
-            { name, quantity, optional, hidden },
+            {
+              name,
+              quantity,
+              quantityParts: quantity ? [quantity] : undefined,
+              optional,
+              hidden,
+            },
             reference,
           );
           items.push({
             type: "cookware",
-            value: idxInList,
-            itemQuantity: quantity,
+            index: idxsInList.cookwareIndex,
+            quantityPartIndex: idxsInList.quantityPartIndex,
           } as CookwareItem);
         } else if (groups.timerQuantity !== undefined) {
           const durationStr = groups.timerQuantity.trim();
@@ -281,7 +288,7 @@ export class Recipe {
             duration,
             unit,
           };
-          items.push({ type: "timer", value: this.timers.push(timerObj) - 1 });
+          items.push({ type: "timer", index: this.timers.push(timerObj) - 1 });
         }
 
         cursor = idx + match[0].length;
@@ -377,22 +384,34 @@ export class Recipe {
     newRecipe.servings = originalServings * factor;
 
     if (newRecipe.metadata.servings && this.metadata.servings) {
-      const servingsValue = parseFloat(String(this.metadata.servings));
-      if (!isNaN(servingsValue)) {
+      if (
+        floatRegex.test(String(this.metadata.servings).replace(",", ".").trim())
+      ) {
+        const servingsValue = parseFloat(
+          String(this.metadata.servings).replace(",", "."),
+        );
         newRecipe.metadata.servings = String(servingsValue * factor);
       }
     }
 
     if (newRecipe.metadata.yield && this.metadata.yield) {
-      const yieldValue = parseFloat(String(this.metadata.yield));
-      if (!isNaN(yieldValue)) {
+      if (
+        floatRegex.test(String(this.metadata.yield).replace(",", ".").trim())
+      ) {
+        const yieldValue = parseFloat(
+          String(this.metadata.yield).replace(",", "."),
+        );
         newRecipe.metadata.yield = String(yieldValue * factor);
       }
     }
 
     if (newRecipe.metadata.serves && this.metadata.serves) {
-      const servesValue = parseFloat(String(this.metadata.serves));
-      if (!isNaN(servesValue)) {
+      if (
+        floatRegex.test(String(this.metadata.serves).replace(",", ".").trim())
+      ) {
+        const servesValue = parseFloat(
+          String(this.metadata.serves).replace(",", "."),
+        );
         newRecipe.metadata.serves = String(servesValue * factor);
       }
     }
