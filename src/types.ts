@@ -276,8 +276,8 @@ export interface CookwareItem {
 export interface TimerItem {
   /** The type of the item. */
   type: "timer";
-  /** The value of the item. */
-  value: number;
+  /** The index of the timer, within the {@link Recipe.timers | list of timers} */
+  index: number;
 }
 
 /**

@@ -287,7 +287,7 @@ export class Recipe {
             duration,
             unit,
           };
-          items.push({ type: "timer", value: this.timers.push(timerObj) - 1 });
+          items.push({ type: "timer", index: this.timers.push(timerObj) - 1 });
         }
 
         cursor = idx + match[0].length;

@@ -87,8 +87,8 @@ exports[`parse function > extracts steps correctly 1`] = `
             "value": "Cook for ",
           },
           {
+            "index": 0,
             "type": "timer",
-            "value": 0,
           },
           {
             "type": "text",
@@ -775,8 +775,8 @@ Recipe {
               "value": ". Cook for ",
             },
             {
+              "index": 0,
               "type": "timer",
-              "value": 0,
             },
             {
               "type": "text",
@@ -793,8 +793,8 @@ Recipe {
               "value": ", and cook for ",
             },
             {
+              "index": 1,
               "type": "timer",
-              "value": 1,
             },
             {
               "type": "text",
@@ -918,8 +918,8 @@ Recipe {
               "value": "Bring the mixture to a boil. Reduce the heat to a simmer. Cook, uncovered, for ",
             },
             {
+              "index": 2,
               "type": "timer",
-              "value": 2,
             },
             {
               "type": "text",
@@ -1095,8 +1095,8 @@ Recipe {
               "value": "Cover the baking dish, and bake for ",
             },
             {
+              "index": 3,
               "type": "timer",
-              "value": 3,
             },
             {
               "type": "text",
@@ -1112,8 +1112,8 @@ Recipe {
               "value": "Remove the cover, and cook for an additional ",
             },
             {
+              "index": 4,
               "type": "timer",
-              "value": 4,
             },
             {
               "type": "text",
@@ -1129,8 +1129,8 @@ Recipe {
               "value": "Let the lasagna stand for ",
             },
             {
+              "index": 5,
               "type": "timer",
-              "value": 5,
             },
             {
               "type": "text",
