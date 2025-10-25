@@ -67,7 +67,7 @@ export class ShoppingList {
     for (const { recipe, factor } of this.recipes) {
       const scaledRecipe = factor === 1 ? recipe : recipe.scaleBy(factor);
       for (const ingredient of scaledRecipe.ingredients) {
-        if (ingredient.hidden) {
+        if (ingredient.flags && ingredient.flags.includes("hidden")) {
           continue;
         }
 

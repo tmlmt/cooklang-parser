@@ -83,6 +83,7 @@ describe("scaleTo", () => {
         name: "water",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
         unit: "l",
+        flags: [],
       },
     ];
 
@@ -173,6 +174,7 @@ describe("scaleBy", () => {
         name: "water",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
         unit: "l",
+        flags: [],
       },
     ];
 

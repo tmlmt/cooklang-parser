@@ -8,6 +8,8 @@ import type {
   Cookware,
   MetadataExtract,
   CookwareItem,
+  IngredientFlag,
+  CookwareFlag,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -192,12 +194,20 @@ export class Recipe {
           const unit = groups.mIngredientUnit || groups.sIngredientUnit;
           const preparation =
             groups.mIngredientPreparation || groups.sIngredientPreparation;
-          const modifier =
-            groups.mIngredientModifier || groups.sIngredientModifier;
-          const optional = modifier === "?";
-          const hidden = modifier === "-";
-          const reference = modifier === "&";
-          const isRecipe = modifier === "@";
+          const modifiers =
+            groups.mIngredientModifiers || groups.sIngredientModifiers;
+          const reference = modifiers !== undefined && modifiers.includes("&");
+          const flags: IngredientFlag[] = [];
+          if (modifiers !== undefined && modifiers.includes("?")) {
+            flags.push("optional");
+          }
+          if (modifiers !== undefined && modifiers.includes("-")) {
+            flags.push("hidden");
+          }
+          if (modifiers !== undefined && modifiers.includes("@")) {
+            flags.push("recipe");
+          }
+
           const quantity = quantityRaw
             ? parseQuantityInput(quantityRaw)
             : undefined;
@@ -230,10 +240,8 @@ export class Recipe {
                   ]
                 : undefined,
               unit,
-              optional,
-              hidden,
               preparation,
-              isRecipe,
+              flags,
             },
             reference,
           );
@@ -249,12 +257,18 @@ export class Recipe {
           items.push(newItem);
         } else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;
-          const modifier = groups.mCookwareModifier || groups.sCookwareModifier;
+          const modifiers =
+            groups.mCookwareModifiers || groups.sCookwareModifiers;
           const quantityRaw =
             groups.mCookwareQuantity || groups.sCookwareQuantity;
-          const optional = modifier === "?";
-          const hidden = modifier === "-";
-          const reference = modifier === "&";
+          const reference = modifiers !== undefined && modifiers.includes("&");
+          const flags: CookwareFlag[] = [];
+          if (modifiers !== undefined && modifiers.includes("?")) {
+            flags.push("optional");
+          }
+          if (modifiers !== undefined && modifiers.includes("-")) {
+            flags.push("hidden");
+          }
           const quantity = quantityRaw
             ? parseQuantityInput(quantityRaw)
             : undefined;
@@ -265,8 +279,7 @@ export class Recipe {
               name,
               quantity,
               quantityParts: quantity ? [quantity] : undefined,
-              optional,
-              hidden,
+              flags,
             },
             reference,
           );

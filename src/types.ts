@@ -192,6 +192,12 @@ export interface QuantityPart extends Quantity {
 }
 
 /**
+ * Represents a possible state modifier or other flag for an ingredient in a recipe
+ * @category Types
+ */
+export type IngredientFlag = "optional" | "hidden" | "recipe";
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -206,12 +212,8 @@ export interface Ingredient {
   quantityParts?: QuantityPart[];
   /** The preparation of the ingredient. */
   preparation?: string;
-  /** Whether the ingredient is optional. */
-  optional?: boolean;
-  /** Whether the ingredient is hidden. */
-  hidden?: boolean;
-  /** Whether the ingredient is a recipe. */
-  isRecipe?: boolean;
+  /** A list of potential state modifiers or other flags for the ingredient */
+  flags?: IngredientFlag[];
 }
 
 /**
@@ -307,6 +309,12 @@ export interface Note {
 }
 
 /**
+ * Represents a possible state modifier or other flag for cookware used in a recipe
+ * @category Types
+ */
+export type CookwareFlag = "optional" | "hidden";
+
+/**
  * Represents a piece of cookware in a recipe.
  * @category Types
  */
@@ -317,10 +325,8 @@ export interface Cookware {
   quantity?: FixedValue | Range;
   /** The array of contributors to the cookware's total quantity. */
   quantityParts?: (FixedValue | Range)[];
-  /** Whether the cookware is optional. */
-  optional?: boolean;
-  /** Whether the cookware is hidden. */
-  hidden?: boolean;
+  /** A list of potential state modifiers or other flags for the cookware */
+  flags: CookwareFlag[];
 }
 
 /**

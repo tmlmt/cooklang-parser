@@ -116,47 +116,42 @@ exports[`parse function > parses complex recipes correctly 1`] = `
 Recipe {
   "cookware": [
     {
-      "hidden": false,
+      "flags": [],
       "name": "Dutch oven",
-      "optional": false,
       "quantity": undefined,
       "quantityParts": undefined,
     },
     {
-      "hidden": false,
+      "flags": [],
       "name": "small bowl",
-      "optional": false,
       "quantity": undefined,
       "quantityParts": undefined,
     },
     {
-      "hidden": false,
+      "flags": [],
       "name": "13×9-inch baking dish",
-      "optional": false,
       "quantity": undefined,
       "quantityParts": undefined,
     },
     {
-      "hidden": false,
+      "flags": [],
       "name": "rubber spatula",
-      "optional": false,
       "quantity": undefined,
       "quantityParts": undefined,
     },
     {
-      "hidden": false,
+      "flags": [
+        "optional",
+      ],
       "name": "icing spatula",
-      "optional": true,
       "quantity": undefined,
       "quantityParts": undefined,
     },
   ],
   "ingredients": [
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "lasagne noodles",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -181,10 +176,8 @@ Recipe {
       "unit": undefined,
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "bulk Italian sausage",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -209,10 +202,8 @@ Recipe {
       "unit": "lb",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "ground beef",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -239,10 +230,8 @@ Recipe {
       "unit": "lb",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "onion",
-      "optional": false,
       "preparation": "medium, diced",
       "quantity": {
         "type": "fixed",
@@ -267,10 +256,8 @@ Recipe {
       "unit": undefined,
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "garlic",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -295,10 +282,8 @@ Recipe {
       "unit": "cloves",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "crushed tomatoes",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -323,10 +308,8 @@ Recipe {
       "unit": "cans",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "tomato paste",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -351,10 +334,8 @@ Recipe {
       "unit": "cans",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "water",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -381,10 +362,8 @@ Recipe {
       "unit": "cup",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "sugar",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -409,10 +388,8 @@ Recipe {
       "unit": "tbsp",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "fresh parsley",
-      "optional": false,
       "preparation": "minced, divided",
       "quantity": {
         "type": "fixed",
@@ -449,10 +426,8 @@ Recipe {
       "unit": "l",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "dried basil",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -477,10 +452,8 @@ Recipe {
       "unit": "tsp",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "fennel seed",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -507,10 +480,8 @@ Recipe {
       "unit": "tsp",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "salt",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -549,10 +520,8 @@ Recipe {
       "unit": "tsp",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "pepper",
-      "optional": false,
       "preparation": "coarsely ground",
       "quantity": {
         "type": "fixed",
@@ -579,10 +548,8 @@ Recipe {
       "unit": "tsp",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "egg",
-      "optional": false,
       "preparation": "large, lightly beaten",
       "quantity": {
         "type": "fixed",
@@ -607,10 +574,8 @@ Recipe {
       "unit": undefined,
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "ricotta cheese",
-      "optional": false,
       "preparation": undefined,
       "quantity": {
         "type": "fixed",
@@ -635,10 +600,8 @@ Recipe {
       "unit": "carton",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "mozzarella",
-      "optional": false,
       "preparation": "shredded",
       "quantity": {
         "type": "fixed",
@@ -663,10 +626,8 @@ Recipe {
       "unit": "cups",
     },
     {
-      "hidden": false,
-      "isRecipe": false,
+      "flags": [],
       "name": "Parmesan",
-      "optional": false,
       "preparation": "grated",
       "quantity": {
         "type": "fixed",

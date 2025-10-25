@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
 import { simpleRecipe, complexRecipe } from "./fixtures/recipes";
+import { ReferencedItemCannotBeRedefinedError } from "../src/errors";
 
 describe("parse function", () => {
   it("parses basic metadata correctly", () => {
@@ -16,8 +17,7 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "eggs",
-          optional: false,
-          hidden: false,
+          flags: [],
           quantity: {
             type: "fixed",
             value: { type: "decimal", value: 3 },
@@ -34,23 +34,18 @@ describe("parse function", () => {
           ],
           unit: undefined,
           preparation: undefined,
-          isRecipe: false,
         },
         {
           name: "flour",
-          optional: false,
-          hidden: false,
+          flags: [],
           quantity: undefined,
           unit: undefined,
           quantityParts: undefined,
           preparation: undefined,
-          isRecipe: false,
         },
         {
           name: "coarse salt",
-          hidden: false,
-          isRecipe: false,
-          optional: false,
+          flags: [],
           preparation: undefined,
           quantity: undefined,
           unit: undefined,
@@ -58,8 +53,7 @@ describe("parse function", () => {
         },
         {
           name: "butter",
-          optional: false,
-          hidden: false,
+          flags: [],
           quantity: {
             type: "fixed",
             value: { type: "decimal", value: 50 },
@@ -76,7 +70,6 @@ describe("parse function", () => {
             },
           ],
           preparation: undefined,
-          isRecipe: false,
         },
       ]);
     });
@@ -103,18 +96,14 @@ describe("parse function", () => {
         ],
         unit: undefined,
         preparation: undefined,
-        optional: false,
-        hidden: false,
-        isRecipe: true,
+        flags: ["recipe"],
       });
       expect(result.ingredients[1]).toEqual({
         name: "toppings",
         quantity: undefined,
         unit: undefined,
         preparation: undefined,
-        optional: false,
-        hidden: false,
-        isRecipe: true,
+        flags: ["recipe"],
       });
     });
 
@@ -140,9 +129,7 @@ describe("parse function", () => {
         ],
         unit: "g",
         preparation: "sifted",
-        optional: false,
-        hidden: false,
-        isRecipe: false,
+        flags: [],
       });
       expect(result.ingredients[1]).toEqual({
         name: "eggs",
@@ -159,13 +146,11 @@ describe("parse function", () => {
           },
         ],
         preparation: "large, beaten",
-        optional: false,
-        hidden: false,
-        isRecipe: false,
+        flags: [],
       });
     });
 
-    it("parses hidden and optional ingredients", () => {
+    it("parses hidden or optional ingredients", () => {
       const recipe = `
       Add some @-salt{}.
       And maybe some @?pepper{}.
@@ -174,22 +159,34 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0]).toEqual({
         name: "salt",
-        hidden: true,
-        optional: false,
+        flags: ["hidden"],
         quantity: undefined,
         quantityParts: undefined,
         unit: undefined,
         preparation: undefined,
-        isRecipe: false,
       });
       expect(result.ingredients[1]).toEqual({
         name: "pepper",
-        hidden: false,
-        optional: true,
+        flags: ["optional"],
         quantity: undefined,
         unit: undefined,
         preparation: undefined,
-        isRecipe: false,
+      });
+    });
+
+    it("parses hidden and optional ingredients", () => {
+      const recipe = `
+      Potentially add some @-?salt{}.
+    `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      expect(result.ingredients[0]).toEqual({
+        name: "salt",
+        flags: ["optional", "hidden"],
+        quantity: undefined,
+        quantityParts: undefined,
+        unit: undefined,
+        preparation: undefined,
       });
     });
 
@@ -220,9 +217,7 @@ describe("parse function", () => {
             },
           ],
           unit: "g",
-          hidden: false,
-          optional: false,
-          isRecipe: false,
+          flags: [],
           preparation: undefined,
         },
         {
@@ -239,9 +234,7 @@ describe("parse function", () => {
               scalable: true,
             },
           ],
-          hidden: false,
-          optional: false,
-          isRecipe: false,
+          flags: [],
           preparation: undefined,
         },
       ]);
@@ -319,10 +312,8 @@ describe("parse function", () => {
           },
         ],
         unit: "g",
-        optional: false,
-        hidden: false,
         preparation: undefined,
-        isRecipe: false,
+        flags: [],
       });
     });
 
@@ -392,10 +383,8 @@ describe("parse function", () => {
             scalable: true,
           },
         ],
-        optional: false,
-        hidden: false,
+        flags: [],
         preparation: undefined,
-        isRecipe: false,
       });
       expect(result.ingredients[1]).toEqual({
         name: "flour",
@@ -411,10 +400,8 @@ describe("parse function", () => {
             scalable: true,
           },
         ],
-        optional: false,
-        hidden: false,
+        flags: [],
         preparation: undefined,
-        isRecipe: false,
       });
     });
 
@@ -422,10 +409,8 @@ describe("parse function", () => {
       const result = new Recipe(`Mix @eggs{1}(boiled) and @&eggs{1}(poached)`);
       expect(result.ingredients).toEqual([
         {
-          hidden: false,
-          isRecipe: false,
           name: "eggs",
-          optional: false,
+          flags: [],
           preparation: "boiled",
           quantity: {
             type: "fixed",
@@ -513,10 +498,8 @@ describe("parse function", () => {
             scalable: true,
           },
         ],
-        optional: false,
-        hidden: false,
+        flags: [],
         preparation: undefined,
-        isRecipe: false,
       });
     });
 
@@ -549,10 +532,8 @@ describe("parse function", () => {
             scalable: true,
           },
         ],
-        optional: false,
-        hidden: false,
+        flags: [],
         preparation: undefined,
-        isRecipe: false,
       });
     });
 
@@ -580,6 +561,13 @@ describe("parse function", () => {
       );
     });
 
+    it("should throw an error if referenced ingredient does not have the same flags", () => {
+      const recipe = `Add @flour{100%g} and more @&-flour{100%g}.`;
+      expect(() => new Recipe(recipe)).toThrowError(
+        ReferencedItemCannotBeRedefinedError,
+      );
+    });
+
     it("adds a referenced ingredient as a new ingredient when units are incompatible", () => {
       const recipe = `
         Add @water{1%l}.
@@ -601,9 +589,7 @@ describe("parse function", () => {
             scalable: true,
           },
         ],
-        hidden: false,
-        isRecipe: false,
-        optional: false,
+        flags: [],
         preparation: undefined,
       });
       expect(result.ingredients[1]).toEqual({
@@ -620,9 +606,7 @@ describe("parse function", () => {
             scalable: true,
           },
         ],
-        hidden: false,
-        isRecipe: false,
-        optional: false,
+        flags: [],
         preparation: undefined,
       });
     });
@@ -633,19 +617,39 @@ describe("parse function", () => {
       const result = new Recipe(simpleRecipe);
       expect(result.cookware.length).toBe(2);
       expect(result.cookware[0]).toEqual({
-        hidden: false,
         name: "bowl",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
         quantityParts: [
           { type: "fixed", value: { type: "decimal", value: 1 } },
         ],
-        optional: false,
+        flags: [],
       });
       expect(result.cookware[1]).toEqual({
-        hidden: false,
         name: "pan",
-        optional: false,
+        flags: [],
       });
+    });
+
+    it("should correctly track and sum quantities of referenced cookware", () => {
+      const recipe = `
+        Use #bowl{1} and again #&bowl{2}
+      `;
+      const result = new Recipe(recipe);
+      expect(result.cookware).toHaveLength(1);
+      expect(result.cookware[0]!.quantity).toEqual({
+        type: "fixed",
+        value: { type: "decimal", value: 3 },
+      });
+      expect(result.cookware[0]!.quantityParts).toEqual([
+        {
+          type: "fixed",
+          value: { type: "decimal", value: 1 },
+        },
+        {
+          type: "fixed",
+          value: { type: "decimal", value: 2 },
+        },
+      ]);
     });
 
     it("should correctly handle modifiers for cookware", () => {
@@ -656,19 +660,23 @@ describe("parse function", () => {
       expect(result.cookware).toHaveLength(3);
       expect(result.cookware[0]).toEqual({
         name: "oven",
-        optional: false,
-        hidden: false,
+        flags: [],
       });
       expect(result.cookware[1]).toEqual({
         name: "pan",
-        optional: true,
-        hidden: false,
+        flags: ["optional"],
       });
       expect(result.cookware[2]).toEqual({
         name: "stove",
-        optional: false,
-        hidden: true,
+        flags: ["hidden"],
       });
+    });
+
+    it("should throw an error if referenced cookware does not have the same flags", () => {
+      const recipe = `Potentially use an #oven once, and potentially the same #&?oven again`;
+      expect(() => new Recipe(recipe)).toThrowError(
+        ReferencedItemCannotBeRedefinedError,
+      );
     });
   });
 
