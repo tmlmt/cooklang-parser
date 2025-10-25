@@ -299,8 +299,8 @@ describe("flushPendingItems", () => {
 
 describe("findAndUpsertCookware", () => {
   it("should correctly add a non-referenced cookware", () => {
-    const cookware: Cookware[] = [{ name: "oven" }];
-    const newCookware: Cookware = { name: "pan" };
+    const cookware: Cookware[] = [{ name: "oven", flags: [] }];
+    const newCookware: Cookware = { name: "pan", flags: [] };
     expect(findAndUpsertCookware(cookware, newCookware, false)).toEqual({
       cookwareIndex: 1,
       quantityPartIndex: undefined,
@@ -309,11 +309,12 @@ describe("findAndUpsertCookware", () => {
   });
 
   it("should correctly add a referenced cookware", () => {
-    const cookware: Cookware[] = [{ name: "oven" }];
+    const cookware: Cookware[] = [{ name: "oven", flags: [] }];
     const newCookware: Cookware = {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
       quantityParts: [{ type: "fixed", value: { type: "decimal", value: 1 } }],
+      flags: [],
     };
     expect(findAndUpsertCookware(cookware, newCookware, true)).toEqual({
       cookwareIndex: 0,
@@ -337,11 +338,13 @@ describe("findAndUpsertCookware", () => {
       {
         name: "oven",
         quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        flags: [],
       },
     ];
     const newCookware: Cookware = {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+      flags: [],
     };
     findAndUpsertCookware(cookware, newCookware, true);
     expect(cookware[0]!.quantity).toEqual({
@@ -355,18 +358,20 @@ describe("findAndUpsertCookware", () => {
       {
         name: "oven",
         quantity: { type: "fixed", value: { type: "text", value: "one" } },
+        flags: [],
       },
     ];
     const newCookware: Cookware = {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      flags: [],
     };
     findAndUpsertCookware(cookware, newCookware, true);
     expect(cookware.length).toEqual(2);
   });
 
   it("should throw an error if a reference cookware does not exist", () => {
-    const newCookware: Cookware = { name: "unreferenced-cookware" };
+    const newCookware: Cookware = { name: "unreferenced-cookware", flags: [] };
     expect(() => findAndUpsertCookware([], newCookware, true)).toThrowError(
       "Referenced cookware \"unreferenced-cookware\" not found. A referenced cookware must be declared before being referenced with '&'.",
     );
@@ -385,6 +390,7 @@ describe("findAndUpsertIngredient", () => {
           scalable: true,
         },
       ],
+      flags: [],
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual({
       ingredientIndex: 0,
@@ -404,6 +410,7 @@ describe("findAndUpsertIngredient", () => {
             scalable: true,
           },
         ],
+        flags: [],
       },
     ];
     const newIngredient: Ingredient = {
@@ -415,6 +422,7 @@ describe("findAndUpsertIngredient", () => {
           scalable: true,
         },
       ],
+      flags: [],
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
       ingredientIndex: 0,
@@ -425,8 +433,8 @@ describe("findAndUpsertIngredient", () => {
       value: { type: "decimal", value: 3 },
     });
 
-    const ingredients_noqtt: Ingredient[] = [{ name: "salt" }];
-    const newIngredient_noqtt: Ingredient = { name: "salt" };
+    const ingredients_noqtt: Ingredient[] = [{ name: "salt", flags: [] }];
+    const newIngredient_noqtt: Ingredient = { name: "salt", flags: [] };
     expect(
       findAndUpsertIngredient(ingredients_noqtt, newIngredient_noqtt, true),
     ).toEqual({
@@ -447,6 +455,7 @@ describe("findAndUpsertIngredient", () => {
             scalable: true,
           },
         ],
+        flags: [],
       },
     ];
     const newIngredient: Ingredient = {
@@ -458,6 +467,7 @@ describe("findAndUpsertIngredient", () => {
           scalable: true,
         },
       ],
+      flags: [],
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
       ingredientIndex: 1,
@@ -467,7 +477,7 @@ describe("findAndUpsertIngredient", () => {
   });
 
   it("should adopt quantity of new ingredient if referenced one has none", () => {
-    const ingredients: Ingredient[] = [{ name: "eggs" }];
+    const ingredients: Ingredient[] = [{ name: "eggs", flags: [] }];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
@@ -477,6 +487,7 @@ describe("findAndUpsertIngredient", () => {
           scalable: true,
         },
       ],
+      flags: [],
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
       ingredientIndex: 0,
@@ -499,6 +510,7 @@ describe("findAndUpsertIngredient", () => {
             scalable: true,
           },
         ],
+        flags: [],
       },
     ];
     const newIngredient: Ingredient = {
@@ -512,6 +524,7 @@ describe("findAndUpsertIngredient", () => {
           scalable: true,
         },
       ],
+      flags: [],
     };
     expect(() =>
       findAndUpsertIngredient(ingredients, newIngredient, true),

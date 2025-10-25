@@ -23,6 +23,7 @@ import {
   Quantity,
   addQuantityValues,
 } from "./units";
+import { ReferencedItemCannotBeRedefinedError } from "./errors";
 
 /**
  * Pushes a pending note to the section content if it's not empty.
@@ -92,6 +93,18 @@ export function findAndUpsertIngredient(
 
     // Ingredient already exists, update it
     const existingIngredient = ingredients[indexFind]!;
+
+    // Checking whether any provided flags are the same as the original ingredient
+    for (const flag of newIngredient.flags!) {
+      if (!existingIngredient.flags!.includes(flag)) {
+        throw new ReferencedItemCannotBeRedefinedError(
+          "ingredient",
+          existingIngredient.name,
+          flag,
+        );
+      }
+    }
+
     let quantityPartIndex = undefined;
     if (quantity !== undefined) {
       const currentQuantity: Quantity = {
@@ -158,24 +171,37 @@ export function findAndUpsertCookware(
       );
     }
 
+    const existingCookware = cookware[index]!;
+
+    // Checking whether any provided flags are the same as the original cookware
+    for (const flag of newCookware.flags) {
+      if (!existingCookware.flags.includes(flag)) {
+        throw new ReferencedItemCannotBeRedefinedError(
+          "cookware",
+          existingCookware.name,
+          flag,
+        );
+      }
+    }
+
     let quantityPartIndex = undefined;
     if (quantity !== undefined) {
-      if (!cookware[index]!.quantity) {
-        cookware[index]!.quantity = quantity;
-        cookware[index]!.quantityParts = newCookware.quantityParts;
+      if (!existingCookware.quantity) {
+        existingCookware.quantity = quantity;
+        existingCookware.quantityParts = newCookware.quantityParts;
         quantityPartIndex = 0;
       } else {
         try {
-          cookware[index]!.quantity = addQuantityValues(
-            cookware[index]!.quantity,
+          existingCookware.quantity = addQuantityValues(
+            existingCookware.quantity,
             quantity,
           );
-          if (!cookware[index]!.quantityParts) {
-            cookware[index]!.quantityParts = newCookware.quantityParts;
+          if (!existingCookware.quantityParts) {
+            existingCookware.quantityParts = newCookware.quantityParts;
             quantityPartIndex = 0;
           } else {
             quantityPartIndex =
-              cookware[index]!.quantityParts.push(
+              existingCookware.quantityParts.push(
                 ...newCookware.quantityParts!,
               ) - 1;
           }
