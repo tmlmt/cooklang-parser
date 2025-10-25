@@ -12,7 +12,7 @@ List of extensions:
 
 ## Modifiers
 
-A prefix can be added before the ingredient name (`@<modifier>name{}`) to add metadata to a specific ingredient.
+One of more prefixes can be added before the ingredient name (`@<modifiers>name{}`) to add metadata to a specific ingredient.
 
 ### `&`: reference to an existing ingredient
 
@@ -24,17 +24,32 @@ Use case: `Add @water{1%L} first, and than again @&water{100%mL}` will create on
 
 Also work with Cookware
 
+A ingredient reference can optionally include the same flags as the ones in the referenced original ingredient definition, but it cannot contain new flags: 
+
+::: info Good use of extra modifiers to a referenced ingredient
+```
+Add optionally @?salt{1%pinch} or if you feel generous, @&?salt{1%pinch} extra
+Add @pepper{1%pinch} and potentially @?pepper{1%tsp} extra
+```
+:::
+
+::: danger Incorrect use of modifiers to a referenced ingredient
+```
+Add @pepper{1%pinch} and potentially @&?pepper{1%tsp} extra
+```
+:::
+
 ### `@`: reference to another recipe
 
 Use case: `Add @@tomato sauce{}` 
 
-The ingredient's [`isRecipe`](/api/interfaces/Ingredient.html#isRecipe) property will be set to true
+`"recipe"` will be added to the ingredient's [`flags`](/api/interfaces/Ingredient.html#flags) property.
 
 ### `-`: hidden ingredient
 
 Use case: `Add a bit of @-salt`
 
-The ingredient's [`hidden`](/api/interfaces/Ingredient.html#hidden) property will be set to `true`, which can be used later on in your renderer to hide the ingredient from the ingredients list 
+`"hidden"` will be added to the ingredient's [`flags`](/api/interfaces/Ingredient.html#flags) property. This can be used later on in your renderer to hide the ingredient from the ingredients list 
 
 Also works with Cookware.
 
@@ -42,7 +57,7 @@ Also works with Cookware.
 
 Use case: `You can also add @?parmesan{some}`
 
-The ingredient's [`optional`](/api/interfaces/Ingredient.html#optional) property will be set to `true`, which can be used later on in your renderer to indicate however you want that the ingredient is optional.
+`"optional"` will be added to the ingredient's [`flags`](/api/interfaces/Ingredient.html#flags) property. This can be used later on in your renderer to indicate however you want that the ingredient is optional.
 
 Also works with Cookware.
 
@@ -101,10 +116,9 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
     {
       name: "wheat flour",
       quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+      quantityParts: [{ value: { type: "fixed", value: { type: "decimal", value: 100 } }, unit: "g", scalable: true},{ value: { type: "fixed", value: { type: "decimal", value: 50 } }, unit: "g", scalable: true}]
       unit: "g",
-      optional: false,
-      hidden: false,
-      isRecipe: false,
+      flags: []
     },
   ],
   sections: [
@@ -117,23 +131,15 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
             { type: "text", value: "Mix " },
             {
               type: "ingredient",
-              value: 0,
-              itemQuantity: {
-                type: "fixed",
-                value: { type: "decimal", value: 100 },
-              },
-              itemUnit: "g",
+              index: 0,
+              quantityPartIndex: 0
               displayName: "wheat flour",
             },
             { type: "text", value: " with additional " },
             {
               type: "ingredient",
-              value: 0,
-              itemQuantity: {
-                type: "fixed",
-                value: { type: "decimal", value: 50 },
-              },
-              itemUnit: "g",
+              index: 0,
+              quantityPartIndex: 1,
               displayName: "flour",
             },
           ],
