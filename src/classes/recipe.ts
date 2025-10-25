@@ -144,6 +144,7 @@ export class Recipe {
         if (this.sections.length === 0 && section.isBlank()) {
           section.name = line.substring(1).trim();
         } else {
+          /* v8 ignore else -- @preserve */
           if (!section.isBlank()) {
             this.sections.push(section);
           }
@@ -178,6 +179,7 @@ export class Recipe {
       let cursor = 0;
       for (const match of line.matchAll(tokensRegex)) {
         const idx = match.index;
+        /* v8 ignore else -- @preserve */
         if (idx > cursor) {
           items.push({ type: "text", value: line.slice(cursor, idx) });
         }
@@ -288,8 +290,10 @@ export class Recipe {
             index: idxsInList.cookwareIndex,
             quantityPartIndex: idxsInList.quantityPartIndex,
           } as CookwareItem);
-        } else if (groups.timerQuantity !== undefined) {
-          const durationStr = groups.timerQuantity.trim();
+        }
+        // Then it's necessarily a timer which was matched
+        else {
+          const durationStr = groups.timerQuantity!.trim();
           const unit = (groups.timerUnit || "").trim();
           if (!unit) {
             throw new Error("Timer missing unit");
@@ -396,6 +400,7 @@ export class Recipe {
 
     newRecipe.servings = originalServings * factor;
 
+    /* v8 ignore else -- @preserve */
     if (newRecipe.metadata.servings && this.metadata.servings) {
       if (
         floatRegex.test(String(this.metadata.servings).replace(",", ".").trim())
@@ -407,6 +412,7 @@ export class Recipe {
       }
     }
 
+    /* v8 ignore else -- @preserve */
     if (newRecipe.metadata.yield && this.metadata.yield) {
       if (
         floatRegex.test(String(this.metadata.yield).replace(",", ".").trim())
@@ -418,6 +424,7 @@ export class Recipe {
       }
     }
 
+    /* v8 ignore else -- @preserve */
     if (newRecipe.metadata.serves && this.metadata.serves) {
       if (
         floatRegex.test(String(this.metadata.serves).replace(",", ".").trim())

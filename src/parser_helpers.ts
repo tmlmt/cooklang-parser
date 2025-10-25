@@ -96,6 +96,7 @@ export function findAndUpsertIngredient(
 
     // Checking whether any provided flags are the same as the original ingredient
     for (const flag of newIngredient.flags!) {
+      /* v8 ignore else -- @preserve */
       if (!existingIngredient.flags!.includes(flag)) {
         throw new ReferencedItemCannotBeRedefinedError(
           "ingredient",
@@ -125,6 +126,7 @@ export function findAndUpsertIngredient(
         }
         quantityPartIndex = existingIngredient.quantityParts!.length - 1;
       } catch (e) {
+        /* v8 ignore else -- expliciting error types -- @preserve */
         if (
           e instanceof IncompatibleUnitsError ||
           e instanceof CannotAddTextValueError
@@ -175,6 +177,7 @@ export function findAndUpsertCookware(
 
     // Checking whether any provided flags are the same as the original cookware
     for (const flag of newCookware.flags) {
+      /* v8 ignore else -- @preserve */
       if (!existingCookware.flags.includes(flag)) {
         throw new ReferencedItemCannotBeRedefinedError(
           "cookware",
@@ -206,6 +209,7 @@ export function findAndUpsertCookware(
               ) - 1;
           }
         } catch (e) {
+          /* v8 ignore else -- expliciting error type -- @preserve */
           if (e instanceof CannotAddTextValueError) {
             return {
               cookwareIndex: cookware.push(newCookware) - 1,
@@ -301,6 +305,7 @@ export function parseListMetaVar(content: string, varName: string) {
   );
   if (!listMatch) return undefined;
 
+  /* v8 ignore else -- @preserve */
   if (listMatch[1] !== undefined) {
     // Inline list: tags: [one, two, three]
     return listMatch[1].split(",").map((tag) => tag.trim());

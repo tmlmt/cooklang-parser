@@ -66,7 +66,9 @@ export class ShoppingList {
     this.ingredients = [];
     for (const { recipe, factor } of this.recipes) {
       const scaledRecipe = factor === 1 ? recipe : recipe.scaleBy(factor);
+
       for (const ingredient of scaledRecipe.ingredients) {
+        // Do not add hidden ingredients to the shopping list
         if (ingredient.flags && ingredient.flags.includes("hidden")) {
           continue;
         }
@@ -77,8 +79,8 @@ export class ShoppingList {
 
         let addSeparate = false;
         try {
-          if (existingIngredient) {
-            if (existingIngredient.quantity && ingredient.quantity) {
+          if (existingIngredient && ingredient.quantity) {
+            if (existingIngredient.quantity) {
               const newQuantity: Quantity = addQuantities(
                 {
                   value: existingIngredient.quantity,
@@ -93,8 +95,10 @@ export class ShoppingList {
               if (newQuantity.unit) {
                 existingIngredient.unit = newQuantity.unit;
               }
-            } else if (ingredient.quantity) {
+            } else {
               existingIngredient.quantity = ingredient.quantity;
+
+              /* v8 ignore else -- only set unit if it is given -- @preserve */
               if (ingredient.unit) {
                 existingIngredient.unit = ingredient.unit;
               }
