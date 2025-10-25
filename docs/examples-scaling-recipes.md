@@ -41,4 +41,4 @@ const scaledRecipe = recipe.scaleTo(4)
 // const scaledRecipe = recipe.scaleBy(2)
 ```
 
-All the ingredients with numerical quantities have their quantities adjusted by a factor of 4/2 in this case, and the metadata and `servings` value will also be multiplied by the same factor.
+All the ingredients with scalable numerical quantities have their quantities adjusted by a factor of 4/2 in this case, and the scaling metadata (if expressed as numbers) and `servings` property value will also be multiplied by the same factor.
