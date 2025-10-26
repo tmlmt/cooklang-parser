@@ -62,7 +62,6 @@ console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined
 
 I plan to further develop features depending on the needs or bugs I will encounter in using this library in a practical application. Current backlog is as follows:
 
-- Fixing non-compliance with spec for recipe referencing by path
 - Pantry parsing and basic functions (e.g. take pantry into account when creating a shopping list)
 
 ## Test coverage
