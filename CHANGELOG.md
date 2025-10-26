@@ -1,5 +1,60 @@
 # Changelog
 
+## v2.0.0
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.4...v2.0.0)
+
+### 🚀 Enhancements
+
+- **spec:** ⚠️ Fixed quantities ([#30](https://github.com/tmlmt/cooklang-parser/pull/30))
+- ⚠️ Allow multiple flags for ingredients and cookware ([#36](https://github.com/tmlmt/cooklang-parser/pull/36))
+- Referencing other recipes as per spec ([4923725](https://github.com/tmlmt/cooklang-parser/commit/4923725))
+
+### 🩹 Fixes
+
+- Test for complex scaling metadata and improve associated docs ([4f51f62](https://github.com/tmlmt/cooklang-parser/commit/4f51f62))
+- **build:** Correctly setup pinned version of pnpm in proto ([8d4bbc3](https://github.com/tmlmt/cooklang-parser/commit/8d4bbc3))
+- Quantities of referenced cookware are not added up ([#31](https://github.com/tmlmt/cooklang-parser/pull/31))
+- Non numeric scaling metadata scales due to parseFloat capturing a number ([e956df2](https://github.com/tmlmt/cooklang-parser/commit/e956df2))
+
+### 💅 Refactors
+
+- ⚠️ Use indexes for cookware quantities and quantity parts ([#34](https://github.com/tmlmt/cooklang-parser/pull/34))
+
+### 📖 Documentation
+
+- **guide-extensions:** Adjust to latest API changes ([d1fc4f9](https://github.com/tmlmt/cooklang-parser/commit/d1fc4f9))
+- **scaling:** Clarify which quantities are scaled ([7aab5ad](https://github.com/tmlmt/cooklang-parser/commit/7aab5ad))
+- Expose IngredientFlag, IngredientExtras and CookwareFlag in the API reference ([0af8175](https://github.com/tmlmt/cooklang-parser/commit/0af8175))
+
+### 📦 Build
+
+- Bump pnpm to v10.19.0 ([b6ac5e3](https://github.com/tmlmt/cooklang-parser/commit/b6ac5e3))
+
+### 🏡 Chore
+
+- Configure Renovate ([#12](https://github.com/tmlmt/cooklang-parser/pull/12))
+
+### ✅ Tests
+
+- Maximize coverage by ignoring else path when irrelevant ([f99b59c](https://github.com/tmlmt/cooklang-parser/commit/f99b59c))
+
+### 🎨 Styles
+
+- Do not refer to single unit as units in the plural ([a7a2c6d](https://github.com/tmlmt/cooklang-parser/commit/a7a2c6d))
+- **TimerItem:** ⚠️ Rename `value` property to `index` ([be4ff38](https://github.com/tmlmt/cooklang-parser/commit/be4ff38))
+
+#### ⚠️ Breaking Changes
+
+- **Ingredient**: `hidden`, `optional` and `recipe` are now grouped into the `flags` ingredients array property instead of being ingredients individual boolean properties
+- **CookwareItem**: `value` is renamed into `index` and the item specific quantity of cookware is now an index `quantityPartIndex` referring to the array of quantity parts added to the overall cookware list.
+- **IngredientItem**: specific quantities are no longer included in whole, but referred to by a new index in property `quantityPartIndex` and are stored within the recipes ingredient list; the property containing the ingredient index is also renamed from `value` to `index`. See the updated API docs for the details.
+- **TimerItem:** `value` property renamed into `index`
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v1.4.4
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.3...v1.4.4)
@@ -78,7 +133,7 @@
 
 ### 🏡 Chore
 
-- **README:** remove details about extensions and refer to docs  ([43419c6](https://github.com/tmlmt/cooklang-parser/commit/43419c6))
+- **README:** remove details about extensions and refer to docs ([43419c6](https://github.com/tmlmt/cooklang-parser/commit/43419c6))
 
 ### ❤️ Contributors
 
