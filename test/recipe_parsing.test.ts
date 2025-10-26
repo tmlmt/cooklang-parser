@@ -74,36 +74,111 @@ describe("parse function", () => {
       ]);
     });
 
-    it("parses ingredients that are other recipes", () => {
-      const recipe = `
-      Defrost @@pizza dough{1} and form it into a nice disc
-      And @@toppings on top
-    `;
-      const result = new Recipe(recipe);
-      expect(result.ingredients).toHaveLength(2);
-      expect(result.ingredients[0]).toEqual({
-        name: "pizza dough",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 1 },
+    describe("parses ingredients that are other recipes", () => {
+      it("parses a recipe in the same directory as the current recipe", () => {
+        const recipe1 = `
+          Defrost @@pizza dough{1} and form it into a nice disc
+          And @@toppings on top
+        `;
+        const result1 = new Recipe(recipe1);
+
+        const expected_dough = {
+          name: "pizza dough",
+          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantityParts: [
+            {
+              value: {
+                type: "fixed",
+                value: { type: "decimal", value: 1 },
+              },
+              unit: undefined,
+              scalable: true,
             },
-            unit: undefined,
-            scalable: true,
+          ],
+          unit: undefined,
+          preparation: undefined,
+          flags: ["recipe"],
+          extras: {
+            path: "pizza dough.cook",
           },
-        ],
-        unit: undefined,
-        preparation: undefined,
-        flags: ["recipe"],
+        };
+        const expected_toppings = {
+          name: "toppings",
+          quantity: undefined,
+          unit: undefined,
+          preparation: undefined,
+          flags: ["recipe"],
+          extras: {
+            path: "toppings.cook",
+          },
+        };
+
+        expect(result1.ingredients).toHaveLength(2);
+        expect(result1.ingredients[0]).toEqual(expected_dough);
+        expect(result1.ingredients[1]).toEqual(expected_toppings);
+
+        const recipe2 = `
+          Defrost @./pizza dough{1} and form it into a nice disc
+          And @./toppings on top
+        `;
+        const result2 = new Recipe(recipe2);
+
+        expect(result2.ingredients).toHaveLength(2);
+        expect(result2.ingredients[0]).toEqual(expected_dough);
+        expect(result2.ingredients[1]).toEqual(expected_toppings);
       });
-      expect(result.ingredients[1]).toEqual({
-        name: "toppings",
-        quantity: undefined,
-        unit: undefined,
-        preparation: undefined,
-        flags: ["recipe"],
+
+      it("parses a recipe in a different relative directory", () => {
+        const recipe1 = `
+          Defrost @@some essentials/my.doughs/pizza dough{1} and form it into a nice disc
+          And @@../some-essentials/toppings on top
+        `;
+        const result1 = new Recipe(recipe1);
+
+        const expected_dough = {
+          name: "pizza dough",
+          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantityParts: [
+            {
+              value: {
+                type: "fixed",
+                value: { type: "decimal", value: 1 },
+              },
+              unit: undefined,
+              scalable: true,
+            },
+          ],
+          unit: undefined,
+          preparation: undefined,
+          flags: ["recipe"],
+          extras: {
+            path: "some essentials/my.doughs/pizza dough.cook",
+          },
+        };
+        const expected_toppings = {
+          name: "toppings",
+          quantity: undefined,
+          unit: undefined,
+          preparation: undefined,
+          flags: ["recipe"],
+          extras: {
+            path: "../some-essentials/toppings.cook",
+          },
+        };
+
+        expect(result1.ingredients).toHaveLength(2);
+        expect(result1.ingredients[0]).toEqual(expected_dough);
+        expect(result1.ingredients[1]).toEqual(expected_toppings);
+
+        const recipe2 = `
+          Defrost @./some essentials/my.doughs/pizza dough{1} and form it into a nice disc
+          And @./../some-essentials/toppings{} on top
+        `;
+        const result2 = new Recipe(recipe2);
+
+        expect(result2.ingredients).toHaveLength(2);
+        expect(result2.ingredients[0]).toEqual(expected_dough);
+        expect(result2.ingredients[1]).toEqual(expected_toppings);
       });
     });
 

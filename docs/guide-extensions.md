@@ -43,7 +43,7 @@ Add @pepper{1%pinch} and potentially @&?pepper{1%tsp} extra
 
 Use case: `Add @@tomato sauce{}` 
 
-`"recipe"` will be added to the ingredient's [`flags`](/api/interfaces/Ingredient.html#flags) property.
+Rather than an extension, this modifier is rather an alias to the `./` prefix of the cooklang spec, and the behavior is exactly [the same as for the latter](guide-cooklang-specs.html#referencing-other-recipes). 
 
 ### `-`: hidden ingredient
 

@@ -1,6 +1,7 @@
 import type {
   Metadata,
   Ingredient,
+  IngredientExtras,
   IngredientItem,
   Timer,
   Step,
@@ -187,7 +188,7 @@ export class Recipe {
         const groups = match.groups!;
 
         if (groups.mIngredientName || groups.sIngredientName) {
-          const name = (groups.mIngredientName || groups.sIngredientName)!;
+          let name = (groups.mIngredientName || groups.sIngredientName)!;
           const scalableQuantity =
             (groups.mIngredientQuantityModifier ||
               groups.sIngredientQuantityModifier) !== "=";
@@ -206,8 +207,19 @@ export class Recipe {
           if (modifiers !== undefined && modifiers.includes("-")) {
             flags.push("hidden");
           }
-          if (modifiers !== undefined && modifiers.includes("@")) {
+          if (
+            (modifiers !== undefined && modifiers.includes("@")) ||
+            groups.mIngredientRecipeAnchor ||
+            groups.sIngredientRecipeAnchor
+          ) {
             flags.push("recipe");
+          }
+
+          let extras: IngredientExtras | undefined = undefined;
+          // If the ingredient is a recipe, we need to extract the name from the path given
+          if (flags.includes("recipe")) {
+            extras = { path: `${name}.cook` };
+            name = name.substring(name.lastIndexOf("/") + 1);
           }
 
           const quantity = quantityRaw
@@ -227,24 +239,30 @@ export class Recipe {
             displayName = name;
           }
 
+          const newIngredient: Ingredient = {
+            name: listName,
+            quantity,
+            quantityParts: quantity
+              ? [
+                  {
+                    value: quantity,
+                    unit,
+                    scalable: scalableQuantity,
+                  },
+                ]
+              : undefined,
+            unit,
+            preparation,
+            flags,
+          };
+
+          if (extras) {
+            newIngredient.extras = extras;
+          }
+
           const idxsInList = findAndUpsertIngredient(
             this.ingredients,
-            {
-              name: listName,
-              quantity,
-              quantityParts: quantity
-                ? [
-                    {
-                      value: quantity,
-                      unit,
-                      scalable: scalableQuantity,
-                    },
-                  ]
-                : undefined,
-              unit,
-              preparation,
-              flags,
-            },
+            newIngredient,
             reference,
           );
 

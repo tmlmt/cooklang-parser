@@ -198,6 +198,27 @@ export interface QuantityPart extends Quantity {
 export type IngredientFlag = "optional" | "hidden" | "recipe";
 
 /**
+ * Represents the collection of possible additional metadata for an ingredient in a recipe
+ * @category Types
+ */
+export interface IngredientExtras {
+  /**
+   * The path of the ingredient-recipe, relative to the present recipe
+   * Used if: the ingredient is a recipe
+   *
+   * @example
+   * ```cooklang
+   * Take @./essentials/doughs/pizza dough{1} out of the freezer and let it unfreeze overnight
+   * ```
+   * Would lead to:
+   * ```yaml
+   * path: 'essentials/doughts/pizza dough.cook'
+   * ```
+   */
+  path: string;
+}
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -214,6 +235,8 @@ export interface Ingredient {
   preparation?: string;
   /** A list of potential state modifiers or other flags for the ingredient */
   flags?: IngredientFlag[];
+  /** The collection of potential additional metadata for the ingredient */
+  extras?: IngredientExtras;
 }
 
 /**
