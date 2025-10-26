@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.1
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.0.0...v2.0.1)
+
+This release is due to a version conflict caused by the faulty release of v1.2.0 a couple of month ago which was accidentally published as 2.0.0 on npm
+
+The opportunity was taken to update all dependencies to their latest patch versions.
+
 ## v2.0.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v1.4.4...v2.0.0)
