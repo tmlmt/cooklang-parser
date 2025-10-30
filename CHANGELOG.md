@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.0.2
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.0.1...v2.0.2)
+
+### 🩹 Fixes
+
+- Non-quantified ingredients parsed with a quantityPartIndex of 0 ([0c59df1](https://github.com/tmlmt/cooklang-parser/commit/0c59df1))
+
+### 🏡 Chore
+
+- **README:** Update future plans ([4d1d229](https://github.com/tmlmt/cooklang-parser/commit/4d1d229))
+
+### ❤️ Contributors
+
+- Thomas Lamant <tom@tmlmt.com>
+
 ## v2.0.1
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.0.0...v2.0.1)
