@@ -96,8 +96,9 @@ describe("ShoppingList", () => {
       ]);
     });
 
-    it("should scale recipe ingredients", () => {
+    it("should scale recipe ingredients (deprecated signature)", () => {
       const shoppingList = new ShoppingList();
+      // TODO: Deprecated, to remove in v3
       shoppingList.add_recipe(recipe1, 2);
       expect(shoppingList.ingredients).toEqual([
         {
@@ -117,6 +118,74 @@ describe("ShoppingList", () => {
         {
           name: "milk",
           quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
+          unit: "ml",
+        },
+        {
+          name: "pepper",
+          quantity: {
+            type: "fixed",
+            value: { type: "text", value: "to taste" },
+          },
+        },
+        { name: "spices" },
+      ]);
+    });
+
+    it("should scale recipe ingredients (using factor)", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.add_recipe(recipe1, { factor: 2 });
+      expect(shoppingList.ingredients).toEqual([
+        {
+          name: "flour",
+          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          unit: "g",
+        },
+        {
+          name: "sugar",
+          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+          unit: "g",
+        },
+        {
+          name: "eggs",
+          quantity: { type: "fixed", value: { type: "decimal", value: 4 } },
+        },
+        {
+          name: "milk",
+          quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
+          unit: "ml",
+        },
+        {
+          name: "pepper",
+          quantity: {
+            type: "fixed",
+            value: { type: "text", value: "to taste" },
+          },
+        },
+        { name: "spices" },
+      ]);
+    });
+
+    it("should scale recipe ingredients (using servings)", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.add_recipe(recipe1, { servings: 3 });
+      expect(shoppingList.ingredients).toEqual([
+        {
+          name: "flour",
+          quantity: { type: "fixed", value: { type: "decimal", value: 300 } },
+          unit: "g",
+        },
+        {
+          name: "sugar",
+          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+          unit: "g",
+        },
+        {
+          name: "eggs",
+          quantity: { type: "fixed", value: { type: "decimal", value: 6 } },
+        },
+        {
+          name: "milk",
+          quantity: { type: "fixed", value: { type: "decimal", value: 600 } },
           unit: "ml",
         },
         {

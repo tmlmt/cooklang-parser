@@ -64,8 +64,14 @@ export class ShoppingList {
 
   private calculate_ingredients() {
     this.ingredients = [];
-    for (const { recipe, factor } of this.recipes) {
-      const scaledRecipe = factor === 1 ? recipe : recipe.scaleBy(factor);
+    for (const addedRecipe of this.recipes) {
+      let scaledRecipe: Recipe;
+      if ("factor" in addedRecipe) {
+        const { recipe, factor } = addedRecipe;
+        scaledRecipe = factor === 1 ? recipe : recipe.scaleBy(factor);
+      } else {
+        scaledRecipe = addedRecipe.recipe.scaleTo(addedRecipe.servings);
+      }
 
       for (const ingredient of scaledRecipe.ingredients) {
         // Do not add hidden ingredients to the shopping list
@@ -127,10 +133,33 @@ export class ShoppingList {
    * Adds a recipe to the shopping list, then automatically
    * recalculates the quantities and recategorize the ingredients.
    * @param recipe - The recipe to add.
-   * @param factor - The factor to scale the recipe by.
+   * @param scaling - The scaling option for the recipe. Can be either a factor or a number of servings
    */
-  add_recipe(recipe: Recipe, factor: number = 1) {
-    this.recipes.push({ recipe, factor });
+  add_recipe(
+    recipe: Recipe,
+    scaling?: { factor: number } | { servings: number },
+  ): void;
+  /**
+   * Adds a recipe to the shopping list, then automatically
+   * recalculates the quantities and recategorize the ingredients.
+   * @param recipe - The recipe to add.
+   * @param factor - The factor to scale the recipe by.
+   * @deprecated since v2.0.3. Use the other call signature with `scaling` instead. Will be removed in v3
+   */
+  add_recipe(recipe: Recipe, factor?: number): void;
+  add_recipe(
+    recipe: Recipe,
+    scaling?: { factor: number } | { servings: number } | number,
+  ): void {
+    if (typeof scaling === "number" || scaling === undefined) {
+      this.recipes.push({ recipe, factor: scaling ?? 1 });
+    } else {
+      if ("factor" in scaling) {
+        this.recipes.push({ recipe, factor: scaling.factor });
+      } else {
+        this.recipes.push({ recipe, servings: scaling.servings });
+      }
+    }
     this.calculate_ingredients();
     this.categorize();
   }
