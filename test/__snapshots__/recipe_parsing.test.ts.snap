@@ -32,7 +32,6 @@ exports[`parse function > extracts steps correctly 1`] = `
           {
             "displayName": "flour",
             "index": 1,
-            "quantityPartIndex": 0,
             "type": "ingredient",
           },
           {
@@ -42,7 +41,6 @@ exports[`parse function > extracts steps correctly 1`] = `
           {
             "displayName": "coarse salt",
             "index": 2,
-            "quantityPartIndex": 0,
             "type": "ingredient",
           },
           {

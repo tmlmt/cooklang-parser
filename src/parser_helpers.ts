@@ -148,7 +148,7 @@ export function findAndUpsertIngredient(
   // Not a reference, so add as a new ingredient.
   return {
     ingredientIndex: ingredients.push(newIngredient) - 1,
-    quantityPartIndex: 0,
+    quantityPartIndex: newIngredient.quantity ? 0 : undefined,
   };
 }
 

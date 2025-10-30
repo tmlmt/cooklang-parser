@@ -399,6 +399,22 @@ describe("findAndUpsertIngredient", () => {
     expect(ingredients).toEqual([newIngredient]);
   });
 
+  it("should not return a quantityPartIndex for a non-quantified ingredient", () => {
+    const ingredients: Ingredient[] = [];
+    const newIngredient: Ingredient = {
+      name: "flour",
+      flags: [],
+      quantity: undefined,
+      unit: undefined,
+      quantityParts: undefined,
+      preparation: undefined,
+    };
+    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual({
+      ingredientIndex: 0,
+      quantityPartIndex: undefined,
+    });
+  });
+
   it("should correctly add a referenced ingredient", () => {
     const ingredients: Ingredient[] = [
       {
