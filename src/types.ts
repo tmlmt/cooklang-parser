@@ -361,15 +361,32 @@ export interface CategorizedIngredients {
 }
 
 /**
+ * Represents a recipe together with a scaling factor
+ * @category Types
+ */
+export interface RecipeWithFactor {
+  /** The recipe that was added. */
+  recipe: Recipe;
+  /** The factor the recipe is scaled by. */
+  factor: number;
+}
+
+/**
+ * Represents a recipe together with a servings value for scaling
+ * @category Types
+ */
+export interface RecipeWithServings {
+  /** The recipe that was added. */
+  recipe: Recipe;
+  /** The servings the recipe is scaled to */
+  servings: number;
+}
+
+/**
  * Represents a recipe that has been added to a shopping list.
  * @category Types
  */
-export interface AddedRecipe {
-  /** The recipe that was added. */
-  recipe: Recipe;
-  /** The factor the recipe was scaled by. */
-  factor: number;
-}
+export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
 
 /**
  * Represents an ingredient that has been added to a shopping list
