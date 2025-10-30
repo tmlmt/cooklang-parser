@@ -1,5 +1,25 @@
 # Changelog
 
+## v2.1.0
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.0.2...v2.1.0)
+
+### 🚀 Enhancements
+
+- **ShoppingList:** Add a recipe with either a factor or a number of servings for scaling ([#45](https://github.com/tmlmt/cooklang-parser/pull/45))
+
+### 🕰️ Deprecations
+
+- **ShoppingList:** the call signature `add_recipe(recipe: Recipe, factor?: number)` is now deprecated and will be removed in v3. Use `add_recipe(recipe: Recipe, scaling?: { factor: number } | { servings: number })` instead.
+
+### 🤖 CI
+
+- **release:** Re-extract possibly edited changelog for use in release notes ([4468cf9](https://github.com/tmlmt/cooklang-parser/commit/4468cf9))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.0.2
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.0.1...v2.0.2)
