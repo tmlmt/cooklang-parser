@@ -147,41 +147,48 @@ async function main() {
 
   // 3. Extract release notes from CHANGELOG.md
   log.info("Extracting release notes from CHANGELOG.md...");
-  const changelog = fs.readFileSync(CHANGELOG_PATH, "utf-8");
-  const lines = changelog.split("\n");
 
-  const versionHeader = `## ${tag}`;
-  const startIndex = lines.findIndex((line) => line.startsWith(versionHeader));
+  function extractReleaseNotes() {
+    const changelog = fs.readFileSync(CHANGELOG_PATH, "utf-8");
+    const lines = changelog.split("\n");
 
-  if (startIndex === -1) {
-    log.error(
-      `Could not find release notes for version ${tag} in CHANGELOG.md.`,
+    const versionHeader = `## ${tag}`;
+    const startIndex = lines.findIndex((line) =>
+      line.startsWith(versionHeader),
     );
-    process.exit(1);
-  }
 
-  // Find the end of the section for the current version
-  let endIndex = lines.findIndex(
-    (line, index) => index > startIndex && line.startsWith("## v"),
-  );
-  if (endIndex === -1) {
-    endIndex = lines.length;
-  }
+    if (startIndex === -1) {
+      log.error(
+        `Could not find release notes for version ${tag} in CHANGELOG.md.`,
+      );
+      process.exit(1);
+    }
 
-  // Find the '[compare changes]' link to start the notes from there
-  const sectionLines = lines.slice(startIndex, endIndex);
-  const notesStartIndex = sectionLines.findIndex((line) =>
-    line.startsWith("[compare changes]"),
-  );
-
-  if (notesStartIndex === -1) {
-    log.error(
-      `Could not find '[compare changes]' link for version ${tag} in CHANGELOG.md.`,
+    // Find the end of the section for the current version
+    let endIndex = lines.findIndex(
+      (line, index) => index > startIndex && line.startsWith("## v"),
     );
-    process.exit(1);
+    if (endIndex === -1) {
+      endIndex = lines.length;
+    }
+
+    // Find the '[compare changes]' link to start the notes from there
+    const sectionLines = lines.slice(startIndex, endIndex);
+    const notesStartIndex = sectionLines.findIndex((line) =>
+      line.startsWith("[compare changes]"),
+    );
+
+    if (notesStartIndex === -1) {
+      log.error(
+        `Could not find '[compare changes]' link for version ${tag} in CHANGELOG.md.`,
+      );
+      process.exit(1);
+    }
+
+    return sectionLines.slice(notesStartIndex).join("\n").trim();
   }
 
-  const releaseNotes = sectionLines.slice(notesStartIndex).join("\n").trim();
+  let releaseNotes = extractReleaseNotes();
 
   if (!releaseNotes) {
     log.error("Extracted release notes are empty.");
@@ -258,6 +265,8 @@ async function main() {
 
   // 10. Create a GitHub release
   log.info("Creating GitHub release...");
+  // Re-extract the changelog, which may have been edited in the review step
+  releaseNotes = extractReleaseNotes();
   await run("gh", [
     "release",
     "create",
