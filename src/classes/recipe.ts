@@ -245,7 +245,7 @@ export class Recipe {
             quantityParts: quantity
               ? [
                   {
-                    value: quantity,
+                    quantity,
                     unit,
                     scalable: scalableQuantity,
                   },
@@ -384,15 +384,15 @@ export class Recipe {
           ingredient.quantityParts = ingredient.quantityParts.map(
             (quantityPart) => {
               if (
-                quantityPart.value.type === "fixed" &&
-                quantityPart.value.value.type === "text"
+                quantityPart.quantity.type === "fixed" &&
+                quantityPart.quantity.amount.type === "text"
               ) {
                 return quantityPart;
               }
               return {
                 ...quantityPart,
-                value: multiplyQuantityValue(
-                  quantityPart.value,
+                quantity: multiplyQuantityValue(
+                  quantityPart.quantity,
                   quantityPart.scalable ? factor : 1,
                 ),
               };
@@ -400,15 +400,15 @@ export class Recipe {
           );
           // Recalculate total quantity from quantity parts
           if (ingredient.quantityParts.length === 1) {
-            ingredient.quantity = ingredient.quantityParts[0]!.value;
+            ingredient.quantity = ingredient.quantityParts[0]!.quantity;
             ingredient.unit = ingredient.quantityParts[0]!.unit;
           } else {
             const totalQuantity = ingredient.quantityParts.reduce(
               (acc, val) =>
-                addQuantities(acc, { value: val.value, unit: val.unit }),
-              { value: getDefaultQuantityValue() } as Quantity,
+                addQuantities(acc, { quantity: val.quantity, unit: val.unit }),
+              { quantity: getDefaultQuantityValue() } as Quantity,
             );
-            ingredient.quantity = totalQuantity.value;
+            ingredient.quantity = totalQuantity.quantity;
             ingredient.unit = totalQuantity.unit;
           }
         }

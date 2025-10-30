@@ -1,7 +1,7 @@
 import type {
   MetadataExtract,
   Metadata,
-  FixedValue,
+  FixedAmount,
   Range,
   TextValue,
   DecimalValue,
@@ -109,13 +109,13 @@ export function findAndUpsertIngredient(
     let quantityPartIndex = undefined;
     if (quantity !== undefined) {
       const currentQuantity: Quantity = {
-        value: existingIngredient.quantity ?? getDefaultQuantityValue(),
+        quantity: existingIngredient.quantity ?? getDefaultQuantityValue(),
         unit: existingIngredient.unit ?? "",
       };
-      const newQuantity = { value: quantity, unit: unit ?? "" };
+      const newQuantity = { quantity, unit: unit ?? "" };
       try {
         const total = addQuantities(currentQuantity, newQuantity);
-        existingIngredient.quantity = total.value;
+        existingIngredient.quantity = total.quantity;
         existingIngredient.unit = total.unit || undefined;
         if (existingIngredient.quantityParts) {
           existingIngredient.quantityParts.push(
@@ -232,7 +232,7 @@ export function findAndUpsertCookware(
 }
 
 // Parser when we know the input is either a number-like value
-export const parseFixedValue = (
+export const parseFixedAmount = (
   input_str: string,
 ): TextValue | DecimalValue | FractionValue => {
   if (!numberLikeRegex.test(input_str)) {
@@ -256,22 +256,22 @@ export const parseFixedValue = (
   return { type: "decimal", value: Number(s) };
 };
 
-export function parseQuantityInput(input_str: string): FixedValue | Range {
+export function parseQuantityInput(input_str: string): FixedAmount | Range {
   const clean_str = String(input_str).trim();
 
   if (rangeRegex.test(clean_str)) {
     const range_parts = clean_str.split("-");
     // As we've tested for it, we know that we have Number-like Quantities to parse
-    const min = parseFixedValue(range_parts[0]!.trim()) as
+    const min = parseFixedAmount(range_parts[0]!.trim()) as
       | DecimalValue
       | FractionValue;
-    const max = parseFixedValue(range_parts[1]!.trim()) as
+    const max = parseFixedAmount(range_parts[1]!.trim()) as
       | DecimalValue
       | FractionValue;
     return { type: "range", min, max };
   }
 
-  return { type: "fixed", value: parseFixedValue(clean_str) };
+  return { type: "fixed", amount: parseFixedAmount(clean_str) };
 }
 
 export function parseSimpleMetaVar(content: string, varName: string) {

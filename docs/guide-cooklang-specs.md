@@ -15,7 +15,7 @@ Below are a few details about some behavioral aspects.
 - Fractions as quantities will be preserved. For instance, `@water{1/2%L}` will be have its quantity parsed as:
 
 ```json
-{ type: "fixed", value: {num: 1, den: 2, type: "fraction"}}
+{ type: "fixed", amount: {num: 1, den: 2, type: "fraction"}}
 ```
 
 ###  Fixed quantities
@@ -37,9 +37,9 @@ The above example would therefore result in the following [`Ingredient`](/api/in
 ```ts
 { 
   name: "Hollandaise",
-  quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+  quantity: { type: "fixed", amount: { type: "decimal", value: 150 } },
   unit: "g",
-  quantityParts: [value: { type: "fixed", value: { type: "decimal", value: 150 } }, unit: "g", scalable: true]
+  quantityParts: [value: { type: "fixed", amount: { type: "decimal", value: 150 } }, unit: "g", scalable: true]
   flags: ["recipe"],
   extras: { path: "sauces/Hollandaise.cook" }
 }

@@ -165,9 +165,9 @@ export interface FractionValue {
  * This can be a text, decimal, or fraction.
  * @category Types
  */
-export interface FixedValue {
+export interface FixedAmount {
   type: "fixed";
-  value: TextValue | DecimalValue | FractionValue;
+  amount: TextValue | DecimalValue | FractionValue;
 }
 
 /**
@@ -226,7 +226,7 @@ export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
   /** The quantity of the ingredient. */
-  quantity?: FixedValue | Range;
+  quantity?: FixedAmount | Range;
   /** The unit of the ingredient. */
   unit?: string;
   /** The array of contributors to the ingredient's total quantity. */
@@ -247,7 +247,7 @@ export interface Timer {
   /** The name of the timer. */
   name?: string;
   /** The duration of the timer. */
-  duration: FixedValue | Range;
+  duration: FixedAmount | Range;
   /** The unit of the timer. */
   unit: string;
 }
@@ -345,9 +345,9 @@ export interface Cookware {
   /** The name of the cookware. */
   name: string;
   /** The quantity of cookware */
-  quantity?: FixedValue | Range;
+  quantity?: FixedAmount | Range;
   /** The array of contributors to the cookware's total quantity. */
-  quantityParts?: (FixedValue | Range)[];
+  quantityParts?: (FixedAmount | Range)[];
   /** A list of potential state modifiers or other flags for the cookware */
   flags: CookwareFlag[];
 }

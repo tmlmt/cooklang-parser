@@ -154,23 +154,23 @@ Recipe {
       "name": "lasagne noodles",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 9,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": undefined,
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 9,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": undefined,
         },
       ],
       "unit": undefined,
@@ -180,23 +180,23 @@ Recipe {
       "name": "bulk Italian sausage",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 1.2,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "lb",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 1.2,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "lb",
         },
       ],
       "unit": "lb",
@@ -206,25 +206,25 @@ Recipe {
       "name": "ground beef",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "den": 4,
           "num": 3,
           "type": "fraction",
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "lb",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 4,
               "num": 3,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "lb",
         },
       ],
       "unit": "lb",
@@ -234,23 +234,23 @@ Recipe {
       "name": "onion",
       "preparation": "medium, diced",
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 1,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": undefined,
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 1,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": undefined,
         },
       ],
       "unit": undefined,
@@ -260,23 +260,23 @@ Recipe {
       "name": "garlic",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 3,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "cloves",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 3,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cloves",
         },
       ],
       "unit": "cloves",
@@ -286,23 +286,23 @@ Recipe {
       "name": "crushed tomatoes",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 2,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "cans",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 2,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cans",
         },
       ],
       "unit": "cans",
@@ -312,23 +312,23 @@ Recipe {
       "name": "tomato paste",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 2,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "cans",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 2,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cans",
         },
       ],
       "unit": "cans",
@@ -338,25 +338,25 @@ Recipe {
       "name": "water",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "den": 3,
           "num": 2,
           "type": "fraction",
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "cup",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 3,
               "num": 2,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cup",
         },
       ],
       "unit": "cup",
@@ -366,23 +366,23 @@ Recipe {
       "name": "sugar",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 2,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "tbsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 2,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "tbsp",
         },
       ],
       "unit": "tbsp",
@@ -392,35 +392,35 @@ Recipe {
       "name": "fresh parsley",
       "preparation": "minced, divided",
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 0.09,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "tbsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 3,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "tbsp",
         },
         {
-          "scalable": true,
-          "unit": "cup",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 4,
               "num": 1,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cup",
         },
       ],
       "unit": "l",
@@ -430,23 +430,23 @@ Recipe {
       "name": "dried basil",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 2,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "tsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 2,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "tsp",
         },
       ],
       "unit": "tsp",
@@ -456,25 +456,25 @@ Recipe {
       "name": "fennel seed",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "den": 4,
           "num": 3,
           "type": "fraction",
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "tsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 4,
               "num": 3,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "tsp",
         },
       ],
       "unit": "tsp",
@@ -484,37 +484,37 @@ Recipe {
       "name": "salt",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "den": 4,
           "num": 3,
           "type": "fraction",
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "tsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 2,
               "num": 1,
               "type": "fraction",
             },
+            "type": "fixed",
           },
-        },
-        {
           "scalable": true,
           "unit": "tsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+        },
+        {
+          "quantity": {
+            "amount": {
               "den": 4,
               "num": 1,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "tsp",
         },
       ],
       "unit": "tsp",
@@ -524,25 +524,25 @@ Recipe {
       "name": "pepper",
       "preparation": "coarsely ground",
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "den": 4,
           "num": 1,
           "type": "fraction",
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "tsp",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 4,
               "num": 1,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "tsp",
         },
       ],
       "unit": "tsp",
@@ -552,23 +552,23 @@ Recipe {
       "name": "egg",
       "preparation": "large, lightly beaten",
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 1,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": undefined,
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 1,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": undefined,
         },
       ],
       "unit": undefined,
@@ -578,23 +578,23 @@ Recipe {
       "name": "ricotta cheese",
       "preparation": undefined,
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 1,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "carton",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 1,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "carton",
         },
       ],
       "unit": "carton",
@@ -604,23 +604,23 @@ Recipe {
       "name": "mozzarella",
       "preparation": "shredded",
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 4,
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "cups",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "type": "decimal",
               "value": 4,
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cups",
         },
       ],
       "unit": "cups",
@@ -630,25 +630,25 @@ Recipe {
       "name": "Parmesan",
       "preparation": "grated",
       "quantity": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "den": 4,
           "num": 3,
           "type": "fraction",
         },
+        "type": "fixed",
       },
       "quantityParts": [
         {
-          "scalable": true,
-          "unit": "cup",
-          "value": {
-            "type": "fixed",
-            "value": {
+          "quantity": {
+            "amount": {
               "den": 4,
               "num": 3,
               "type": "fraction",
             },
+            "type": "fixed",
           },
+          "scalable": true,
+          "unit": "cup",
         },
       ],
       "unit": "cup",
@@ -1108,66 +1108,66 @@ Recipe {
   "timers": [
     {
       "duration": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 10,
         },
+        "type": "fixed",
       },
       "name": undefined,
       "unit": "minutes",
     },
     {
       "duration": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 1,
         },
+        "type": "fixed",
       },
       "name": undefined,
       "unit": "min",
     },
     {
       "duration": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 30,
         },
+        "type": "fixed",
       },
       "name": undefined,
       "unit": "min",
     },
     {
       "duration": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 25,
         },
+        "type": "fixed",
       },
       "name": undefined,
       "unit": "min",
     },
     {
       "duration": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 25,
         },
+        "type": "fixed",
       },
       "name": undefined,
       "unit": "min",
     },
     {
       "duration": {
-        "type": "fixed",
-        "value": {
+        "amount": {
           "type": "decimal",
           "value": 15,
         },
+        "type": "fixed",
       },
       "name": undefined,
       "unit": "min",

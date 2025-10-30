@@ -14,11 +14,11 @@ describe("scaleTo", () => {
     expect(scaledRecipe.ingredients.length).toBe(4);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 200 },
+      amount: { type: "decimal", value: 200 },
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 1 },
+      amount: { type: "decimal", value: 1 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
       type: "range",
@@ -33,11 +33,11 @@ describe("scaleTo", () => {
     expect(scaledRecipe.ingredients.length).toBe(4);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 50 },
+      amount: { type: "decimal", value: 50 },
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "fraction", num: 1, den: 4 },
+      amount: { type: "fraction", num: 1, den: 4 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
       type: "range",
@@ -65,12 +65,12 @@ describe("scaleTo", () => {
     expect(scaledRecipe.ingredients[0]!.quantityParts).toEqual([
       {
         unit: "g",
-        value: { type: "fixed", value: { type: "decimal", value: 100 } },
+        quantity: { type: "fixed", amount: { type: "decimal", value: 100 } },
         scalable: true,
       },
       {
         unit: "g",
-        value: { type: "fixed", value: { type: "decimal", value: 100 } },
+        quantity: { type: "fixed", amount: { type: "decimal", value: 100 } },
         scalable: true,
       },
     ]);
@@ -81,7 +81,7 @@ describe("scaleTo", () => {
     recipeWithoutServings.ingredients = [
       {
         name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantity: { type: "fixed", amount: { type: "decimal", value: 1 } },
         unit: "l",
         flags: [],
       },
@@ -105,7 +105,7 @@ describe("scaleTo", () => {
     expect(scaledRecipe.ingredients.length).toBe(1);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 2 },
+      amount: { type: "decimal", value: 2 },
     });
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
@@ -120,11 +120,11 @@ describe("scaleBy", () => {
     expect(scaledRecipe.ingredients.length).toBe(4);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 200 },
+      amount: { type: "decimal", value: 200 },
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 1 },
+      amount: { type: "decimal", value: 1 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
       type: "range",
@@ -139,11 +139,11 @@ describe("scaleBy", () => {
     expect(scaledRecipe.ingredients.length).toBe(4);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 50 },
+      amount: { type: "decimal", value: 50 },
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "fraction", num: 1, den: 4 },
+      amount: { type: "fraction", num: 1, den: 4 },
     });
     expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
       type: "range",
@@ -172,7 +172,7 @@ describe("scaleBy", () => {
     recipeWithoutServings.ingredients = [
       {
         name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantity: { type: "fixed", amount: { type: "decimal", value: 1 } },
         unit: "l",
         flags: [],
       },
@@ -196,7 +196,7 @@ describe("scaleBy", () => {
     expect(scaledRecipe.ingredients.length).toBe(1);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 2 },
+      amount: { type: "decimal", value: 2 },
     });
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
@@ -222,11 +222,11 @@ serves: 2, some
     const scaledRecipe = recipe.scaleBy(2);
     expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 100 },
+      amount: { type: "decimal", value: 100 },
     });
     expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 10 },
+      amount: { type: "decimal", value: 10 },
     });
   });
 });

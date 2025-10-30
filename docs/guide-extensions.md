@@ -65,7 +65,7 @@ Also works with Cookware.
    
 Usage: `@salt{1-2%pinches}`
 
-The ingredient's quantity will be of type [Range](/api/interfaces/Range) instead of [Fixed Value](/api/interfaces/FixedValue):
+The ingredient's quantity will be of type [Range](/api/interfaces/Range) instead of [Fixed Value](/api/interfaces/FixedAmount):
 
 ```json
 {
@@ -115,8 +115,8 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
   ingredients: [
     {
       name: "wheat flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-      quantityParts: [{ value: { type: "fixed", value: { type: "decimal", value: 100 } }, unit: "g", scalable: true},{ value: { type: "fixed", value: { type: "decimal", value: 50 } }, unit: "g", scalable: true}]
+      quantity: { type: "fixed", amount: { type: "decimal", value: 150 } },
+      quantityParts: [{ value: { type: "fixed", amount: { type: "decimal", value: 100 } }, unit: "g", scalable: true},{ value: { type: "fixed", amount: { type: "decimal", value: 50 } }, unit: "g", scalable: true}]
       unit: "g",
       flags: []
     },

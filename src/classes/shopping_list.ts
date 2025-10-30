@@ -83,15 +83,15 @@ export class ShoppingList {
             if (existingIngredient.quantity) {
               const newQuantity: Quantity = addQuantities(
                 {
-                  value: existingIngredient.quantity,
+                  quantity: existingIngredient.quantity,
                   unit: existingIngredient.unit ?? "",
                 },
                 {
-                  value: ingredient.quantity,
+                  quantity: ingredient.quantity,
                   unit: ingredient.unit ?? "",
                 },
               );
-              existingIngredient.quantity = newQuantity.value;
+              existingIngredient.quantity = newQuantity.quantity;
               if (newQuantity.unit) {
                 existingIngredient.unit = newQuantity.unit;
               }
