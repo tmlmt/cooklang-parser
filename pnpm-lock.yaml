@@ -14,11 +14,8 @@ importers:
   .:
     dependencies:
       big.js:
-        specifier: ^7.0.1
+        specifier: 7.0.1
         version: 7.0.1
-      exactnumber:
-        specifier: ^2.0.1
-        version: 2.0.1
     devDependencies:
       '@eslint/compat':
         specifier: 1.4.1
@@ -30,7 +27,7 @@ importers:
         specifier: 1.2.43
         version: 1.2.43
       '@types/big.js':
-        specifier: ^6.2.2
+        specifier: 6.2.2
         version: 6.2.2
       '@types/node':
         specifier: 22.18.13
@@ -1129,9 +1126,6 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
-
-  exactnumber@2.0.1:
-    resolution: {integrity: sha512-HHATdpfY/5p/tYvWx0hykuRVthAHPlin+1KdZs2oJLkB6OqehaTkqbFrTA6bGy+QuzF1PyhCs5K86DMkX3CIPA==}
 
   execa@9.6.0:
     resolution: {integrity: sha512-jpWzZ1ZhwUmeWRhS7Qv3mhpOhLfwI+uAX4e5fOcXqwMR7EcJ0pj2kV1CVzHVMX/LphnKWD3LObjZCoJ71lKpHw==}
@@ -3034,8 +3028,6 @@ snapshots:
       '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
-
-  exactnumber@2.0.1: {}
 
   execa@9.6.0:
     dependencies:
