@@ -41,6 +41,7 @@
     "@eslint/compat": "1.4.1",
     "@eslint/js": "9.38.0",
     "@iconify-json/material-symbols": "1.2.43",
+    "@types/big.js": "^6.2.2",
     "@types/node": "22.18.13",
     "@vitest/coverage-v8": "4.0.5",
     "@vitest/ui": "4.0.5",
@@ -77,5 +78,9 @@
     "cooking",
     "recipes"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "big.js": "^7.0.1",
+    "exactnumber": "^2.0.1"
+  }
 }

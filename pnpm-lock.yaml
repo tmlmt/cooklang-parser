@@ -12,6 +12,13 @@ patchedDependencies:
 importers:
 
   .:
+    dependencies:
+      big.js:
+        specifier: ^7.0.1
+        version: 7.0.1
+      exactnumber:
+        specifier: ^2.0.1
+        version: 2.0.1
     devDependencies:
       '@eslint/compat':
         specifier: 1.4.1
@@ -22,6 +29,9 @@ importers:
       '@iconify-json/material-symbols':
         specifier: 1.2.43
         version: 1.2.43
+      '@types/big.js':
+        specifier: ^6.2.2
+        version: 6.2.2
       '@types/node':
         specifier: 22.18.13
         version: 22.18.13
@@ -636,6 +646,9 @@ packages:
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
+  '@types/big.js@6.2.2':
+    resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
+
   '@types/chai@5.2.2':
     resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
 
@@ -921,6 +934,9 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
+  big.js@7.0.1:
+    resolution: {integrity: sha512-iFgV784tD8kq4ccF1xtNMZnXeZzVuXWWM+ERFzKQjv+A5G9HC8CY3DuV45vgzFFcW+u2tIvmF95+AzWgs6BjCg==}
+
   birpc@2.5.0:
     resolution: {integrity: sha512-VSWO/W6nNQdyP520F1mhf+Lc2f8pjGQOtoHHm7Ze8Go1kX7akpVIrtTa0fn+HB0QJEDVacl6aO08YE0PgXfdnQ==}
 
@@ -1113,6 +1129,9 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
+
+  exactnumber@2.0.1:
+    resolution: {integrity: sha512-HHATdpfY/5p/tYvWx0hykuRVthAHPlin+1KdZs2oJLkB6OqehaTkqbFrTA6bGy+QuzF1PyhCs5K86DMkX3CIPA==}
 
   execa@9.6.0:
     resolution: {integrity: sha512-jpWzZ1ZhwUmeWRhS7Qv3mhpOhLfwI+uAX4e5fOcXqwMR7EcJ0pj2kV1CVzHVMX/LphnKWD3LObjZCoJ71lKpHw==}
@@ -2467,6 +2486,8 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
+  '@types/big.js@6.2.2': {}
+
   '@types/chai@5.2.2':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -2805,6 +2826,8 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
+  big.js@7.0.1: {}
+
   birpc@2.5.0: {}
 
   brace-expansion@1.1.12:
@@ -3011,6 +3034,8 @@ snapshots:
       '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
+
+  exactnumber@2.0.1: {}
 
   execa@9.6.0:
     dependencies:

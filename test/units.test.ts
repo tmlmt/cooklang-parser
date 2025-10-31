@@ -8,8 +8,10 @@ import {
   CannotAddTextValueError,
   IncompatibleUnitsError,
   addQuantityValues,
+  multiplyNumericValue,
+  multiplyQuantityValue,
 } from "../src/units";
-import type { DecimalValue, FractionValue } from "../src/types";
+import type { DecimalValue, FixedValue, FractionValue } from "../src/types";
 
 describe("normalizeUnit", () => {
   it("should normalize various unit strings to a canonical definition", () => {
@@ -77,6 +79,15 @@ describe("addNumericValues", () => {
     const val1: DecimalValue = { type: "decimal", value: 1.5 };
     const val2: DecimalValue = { type: "decimal", value: 2.5 };
     expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 4 });
+  });
+
+  it("should add two big decimal values", () => {
+    const val1: DecimalValue = { type: "decimal", value: 1.1 };
+    const val2: DecimalValue = { type: "decimal", value: 1.3 };
+    expect(addNumericValues(val1, val2)).toEqual({
+      type: "decimal",
+      value: 2.4,
+    });
   });
 
   it("should add two fraction values", () => {
@@ -207,6 +218,24 @@ describe("addQuantities", () => {
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 300 } },
       unit: "g",
+    });
+  });
+
+  it("should add big decimal numbers correctly", () => {
+    expect(
+      addQuantities(
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1.1 } },
+          unit: "kg",
+        },
+        {
+          value: { type: "fixed", value: { type: "decimal", value: 1.3 } },
+          unit: "kg",
+        },
+      ),
+    ).toEqual({
+      value: { type: "fixed", value: { type: "decimal", value: 2.4 } },
+      unit: "kg",
     });
   });
 
@@ -532,6 +561,29 @@ describe("getDefaultQuantityValue + addQuantities", () => {
         max: { type: "decimal", value: 2 },
       },
       unit: "",
+    });
+  });
+});
+
+describe("multiplyNumericValue", () => {
+  it("should multiply a decimal value", () => {
+    const val: DecimalValue = { type: "decimal", value: 1.2 };
+    expect(multiplyNumericValue(val, 3)).toEqual({
+      type: "decimal",
+      value: 3.6,
+    });
+  });
+});
+
+describe("multiplyQuantityValue", () => {
+  it("should multiply a decimal value", () => {
+    const val: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", value: 1.2 },
+    };
+    expect(multiplyQuantityValue(val, 3)).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 3.6 },
     });
   });
 });
