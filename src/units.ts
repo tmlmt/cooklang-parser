@@ -1,4 +1,5 @@
 import type { FixedValue, Range, DecimalValue, FractionValue } from "./types";
+import Big from "big.js";
 export type UnitType = "mass" | "volume" | "count";
 export type UnitSystem = "metric" | "imperial";
 
@@ -185,9 +186,9 @@ export function multiplyNumericValue(
   factor: number,
 ): DecimalValue | FractionValue {
   if (v.type === "decimal") {
-    return { type: "decimal", value: v.value * factor };
+    return { type: "decimal", value: Big(v.value).times(factor).toNumber() };
   }
-  return simplifyFraction(v.num * factor, v.den);
+  return simplifyFraction(Big(v.num).times(factor).toNumber(), v.den);
 }
 
 export function addNumericValues(
@@ -230,7 +231,10 @@ export function addNumericValues(
     const sumNum = num1 * den2 + num2 * den1;
     return simplifyFraction(sumNum, commonDen);
   } else {
-    return { type: "decimal", value: num1 / den1 + num2 / den2 };
+    return {
+      type: "decimal",
+      value: Big(num1).div(den1).add(Big(num2).div(den2)).toNumber(),
+    };
   }
 }
 
@@ -267,8 +271,8 @@ export function multiplyQuantityValue(
 
   return {
     type: "range",
-    min: toRoundedDecimal(multiplyNumericValue(value.min, factor)),
-    max: toRoundedDecimal(multiplyNumericValue(value.max, factor)),
+    min: multiplyNumericValue(value.min, factor),
+    max: multiplyNumericValue(value.max, factor),
   };
 }
 
