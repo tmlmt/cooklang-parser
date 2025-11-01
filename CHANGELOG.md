@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.1.1
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.0...v2.1.1)
+
+This version fixes a bug where the addition or multiplication of certain floating-point numbers led to inaccurate results e.g. 1.1 + 1.3 = 2.4000000000000004
+
+### 🩹 Fixes
+
+- Addition and multiplication of floating-point quantities ([#49](https://github.com/tmlmt/cooklang-parser/pull/49))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.0.2...v2.1.0)
