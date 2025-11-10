@@ -58,6 +58,20 @@ const units: UnitDefinition[] = [
     toBase: 1,
   },
   {
+    name: "cl",
+    type: "volume",
+    system: "metric",
+    aliases: ["centiliter", "centiliters", "centilitre", "centilitres"],
+    toBase: 10,
+  },
+  {
+    name: "dl",
+    type: "volume",
+    system: "metric",
+    aliases: ["deciliter", "deciliters", "decilitre", "decilitres"],
+    toBase: 100,
+  },
+  {
     name: "l",
     type: "volume",
     system: "metric",
