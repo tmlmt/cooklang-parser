@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.1.2
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.1...v2.1.2)
+
+### 🩹 Fixes
+
+- **units:** Add centiliters and deciliters ([3ad9c5f](https://github.com/tmlmt/cooklang-parser/commit/3ad9c5f))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.1
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.0...v2.1.1)
