@@ -19,6 +19,8 @@ The following table of units and aliases is taken into account:
 | oz     | mass   | imperial | ounce, ounces                                        | 28.3495 |
 | lb     | mass   | imperial | pound, pounds                                        | 453.592 |
 | ml     | volume | metric   | milliliter, milliliters, millilitre, millilitres, cc | 1       |
+| cl     | volume | metric   | centiliter, centiliters, centilitre, centilitres     | 10      |
+| dl     | volume | metric   | deciliter, deciliters, decilitre, decilitres         | 100     |
 | l      | volume | metric   | liter, liters, litre, litres                         | 1000    |
 | tsp    | volume | metric   | teaspoon, teaspoons                                  | 5       |
 | tbsp   | volume | metric   | tablespoon, tablespoons,                             | 15      |
