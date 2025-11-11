@@ -444,6 +444,8 @@ export interface ProductSelection {
   product: ProductOption;
   /** The quantity of the selected product */
   quantity: number;
+  /** The total price for this selected product */
+  totalPrice: number;
 }
 
 export type CartContent = ProductSelection[];

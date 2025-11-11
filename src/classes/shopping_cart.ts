@@ -122,26 +122,30 @@ export class ShoppingCart {
     if (normalizedOptions.length == 1) {
       // FixedValue
       if (normalizedIngredient.quantity.type === "fixed") {
+        const resQuantity = Math.ceil(
+          getNumericValue(normalizedIngredient.quantity.value) /
+            getNumericValue(normalizedOptions[0]!.size.value),
+        );
         return [
           {
             product: options[0]!,
-            quantity: Math.ceil(
-              getNumericValue(normalizedIngredient.quantity.value) /
-                getNumericValue(normalizedOptions[0]!.size.value),
-            ),
+            quantity: resQuantity,
+            totalPrice: resQuantity * options[0]!.price,
           },
         ];
       }
       // Range
       else if (normalizedIngredient.quantity.type === "range") {
         const targetQuantity = normalizedIngredient.quantity.min;
+        const resQuantity = Math.ceil(
+          getNumericValue(targetQuantity) /
+            getNumericValue(normalizedOptions[0]!.size.value),
+        );
         return [
           {
             product: options[0]!,
-            quantity: Math.ceil(
-              getNumericValue(targetQuantity) /
-                getNumericValue(normalizedOptions[0]!.size.value),
-            ),
+            quantity: resQuantity,
+            totalPrice: resQuantity * options[0]!.price,
           },
         ];
       }
@@ -174,9 +178,14 @@ export class ShoppingCart {
 
     const solution = solve(model);
     return solution.variables.map((variable) => {
-      return {
+      const resProductSelection = {
         product: options.find((option) => option.id === variable[0])!,
         quantity: variable[1],
+      };
+      return {
+        ...resProductSelection,
+        totalPrice:
+          resProductSelection.quantity * resProductSelection.product.price,
       };
     });
   }
