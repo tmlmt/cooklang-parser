@@ -80,6 +80,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "big.js": "7.0.1"
+    "big.js": "7.0.1",
+    "yalps": "^0.6.3"
   }
 }

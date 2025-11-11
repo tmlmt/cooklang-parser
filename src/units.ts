@@ -195,6 +195,14 @@ export function simplifyFraction(
   }
 }
 
+export function getNumericValue(v: DecimalValue | FractionValue): number {
+  // TODO: rename NumericValue to NumericalValue for all relevant functions
+  if (v.type === "decimal") {
+    return v.value;
+  }
+  return v.num / v.den;
+}
+
 export function multiplyNumericValue(
   v: DecimalValue | FractionValue,
   factor: number,

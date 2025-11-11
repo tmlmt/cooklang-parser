@@ -16,6 +16,9 @@ importers:
       big.js:
         specifier: 7.0.1
         version: 7.0.1
+      yalps:
+        specifier: ^0.6.3
+        version: 0.6.3
     devDependencies:
       '@eslint/compat':
         specifier: 1.4.1
@@ -1250,6 +1253,9 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
+  heap@0.2.7:
+    resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
+
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
 
@@ -2055,6 +2061,9 @@ packages:
   wrap-ansi@8.1.0:
     resolution: {integrity: sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==}
     engines: {node: '>=12'}
+
+  yalps@0.6.3:
+    resolution: {integrity: sha512-XS1Sb3uejyNMu/Bl+3ZdI4VZGJKT6JSoSDYcLFlapOUy0wJPN9h+XDXAY8xeFk0bQFdEMIOGNAN2/jht4XSJKA==}
 
   yaml@2.8.1:
     resolution: {integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw==}
@@ -3175,6 +3184,8 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
+  heap@0.2.7: {}
+
   hookable@5.5.3: {}
 
   html-escaper@2.0.2: {}
@@ -3991,6 +4002,10 @@ snapshots:
       ansi-styles: 6.2.1
       string-width: 5.1.2
       strip-ansi: 7.1.0
+
+  yalps@0.6.3:
+    dependencies:
+      heap: 0.2.7
 
   yaml@2.8.1: {}
 

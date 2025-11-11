@@ -13,3 +13,44 @@ You can either remove the reference to create a new ${item_type} defined as ${ne
     this.name = "ReferencedItemCannotBeRedefinedError";
   }
 }
+
+export class NoProductCatalogForCartError extends Error {
+  constructor() {
+    super(
+      `Cannot build a cart without a product catalog. Please set one using setProductCatalog()`,
+    );
+    this.name = "NoProductCatalogForCartError";
+  }
+}
+
+export class NoShoppingListForCartError extends Error {
+  constructor() {
+    super(
+      `Cannot build a cart without a shopping list. Please set one using setShoppingList()`,
+    );
+    this.name = "NoShoppingListForCartError";
+  }
+}
+
+export type NoProductMatchErrorCode =
+  | "incompatibleUnits"
+  | "noProduct"
+  | "textValue"
+  | "noQuantity";
+
+export class NoProductMatchError extends Error {
+  code: NoProductMatchErrorCode;
+
+  constructor(item_name: string, code: NoProductMatchErrorCode) {
+    const messageMap: Record<NoProductMatchErrorCode, string> = {
+      incompatibleUnits: `The units of the products in the catalogue are incompatible with ingredient ${item_name} in the shopping list.`,
+      noProduct:
+        "No product was found linked to ingredient name ${item_name} in the shopping list",
+      textValue: `Ingredient ${item_name} has a text value as quantity and can therefore not be matched with any product in the catalogue.`,
+      noQuantity: `Ingredient ${item_name} has no quantity and can therefore not be matched with any product in the catalogue.`,
+    };
+    super(messageMap[code]);
+    this.code = code;
+    this.name = "NoProductMatchError";
+  }
+}

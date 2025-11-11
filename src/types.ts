@@ -1,4 +1,5 @@
 import type { Recipe } from "./classes/recipe";
+import { NoProductMatchErrorCode } from "./errors";
 import type { Quantity } from "./units";
 
 /**
@@ -168,6 +169,11 @@ export interface FractionValue {
 export interface FixedValue {
   type: "fixed";
   value: TextValue | DecimalValue | FractionValue;
+}
+
+export interface FixedNumericValue {
+  type: "fixed";
+  value: DecimalValue | FractionValue;
 }
 
 /**
@@ -415,3 +421,43 @@ export interface Category {
   /** The ingredients in the category. */
   ingredients: CategoryIngredient[];
 }
+
+export interface ProductOption {
+  /** The ID of the product */
+  id: string;
+  /** The name of the product */
+  productName: string;
+  /** The name of the ingredient it corresponds to */
+  ingredientName: string;
+  /** The size of the product. */
+  size: FixedNumericValue;
+  /** The unit of the product size. */
+  unit?: string;
+  /** The price of the product */
+  price: number;
+}
+
+export type ProductCatalog = ProductOption[];
+
+export interface ProductSelection {
+  /** The selected product */
+  product: ProductOption;
+  /** The quantity of the selected product */
+  quantity: number;
+}
+
+export type CartContent = ProductSelection[];
+
+export interface ProductMatch {
+  ingredient: Ingredient;
+  selection: ProductSelection[];
+}
+
+export type CartMatch = ProductMatch[];
+
+export interface ProductMisMatch {
+  ingredient: Ingredient;
+  reason: NoProductMatchErrorCode;
+}
+
+export type CartMisMatch = ProductMisMatch[];
