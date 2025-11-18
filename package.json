@@ -47,7 +47,7 @@
     "@vitest/ui": "4.0.8",
     "eslint": "9.39.1",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-tsdoc": "0.4.0",
+    "eslint-plugin-tsdoc": "0.5.0",
     "execa": "9.6.0",
     "globals": "16.5.0",
     "human-regex": "2.1.5",
@@ -58,7 +58,7 @@
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.46.4",
+    "typescript-eslint": "8.47.0",
     "vitepress": "2.0.0-alpha.12",
     "vitest": "4.0.8"
   },
