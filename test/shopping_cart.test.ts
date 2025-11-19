@@ -48,6 +48,17 @@ productCatalog.products = [
 ];
 
 describe("initialisation", () => {
+  it("should be initialized directly with the class constructor", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(new Recipe(recipeForShoppingList1));
+    const shoppingCart = new ShoppingCart({
+      catalog: productCatalog,
+      list: shoppingList,
+    });
+    expect(shoppingCart.productCatalog).toBe(productCatalog);
+    expect(shoppingCart.shoppingList).toBe(shoppingList);
+  });
+
   it("should throw an error if no shopping list is set", () => {
     const shoppingCart = new ShoppingCart();
     shoppingCart.setProductCatalog(productCatalog);

@@ -34,6 +34,11 @@ export class ShoppingCart {
   match: CartMatch = [];
   misMatch: CartMisMatch = [];
 
+  constructor(options?: { catalog?: ProductCatalog; list?: ShoppingList }) {
+    if (options?.catalog) this.productCatalog = options.catalog;
+    if (options?.list) this.shoppingList = options.list;
+  }
+
   setProductCatalog(catalog: ProductCatalog) {
     this.productCatalog = catalog;
   }
