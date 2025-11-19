@@ -441,6 +441,10 @@ export interface ProductOption {
   price: number;
 }
 
+/**
+ * Represents a product option as described in a catalog TOML file
+ * @category Types
+ */
 export interface ProductOptionToml {
   /** The name of the product */
   name: string;
@@ -450,6 +454,10 @@ export interface ProductOptionToml {
   price: number;
 }
 
+/**
+ * Represents a product selection in a {@link ShoppingCart}
+ * @category Types
+ */
 export interface ProductSelection {
   /** The selected product */
   product: ProductOption;
@@ -459,18 +467,38 @@ export interface ProductSelection {
   totalPrice: number;
 }
 
+/**
+ * Represents the content of the actual cart of the {@link ShoppingCart}
+ * @category Types
+ */
 export type CartContent = ProductSelection[];
 
+/**
+ * Represents a successful match between a ingredient and product(s) in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
 export interface ProductMatch {
   ingredient: Ingredient;
   selection: ProductSelection[];
 }
 
+/**
+ * Represents all successful matches between ingredients and the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
 export type CartMatch = ProductMatch[];
 
+/**
+ * Represents an ingredient which didn't match with any product in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
 export interface ProductMisMatch {
   ingredient: Ingredient;
   reason: NoProductMatchErrorCode;
 }
 
+/**
+ * Represents all ingredients which didn't match with any product in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
 export type CartMisMatch = ProductMisMatch[];
