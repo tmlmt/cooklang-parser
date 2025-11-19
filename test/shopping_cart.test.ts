@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ShoppingCart } from "../src/classes/shopping_cart";
 import { ShoppingList } from "../src/classes/shopping_list";
 import { Recipe } from "../src/classes/recipe";
-import type { ProductCatalog } from "../src/types";
+import { ProductCatalog } from "../src/classes/product_catalog";
 import {
   NoProductCatalogForCartError,
   NoShoppingListForCartError,
@@ -12,7 +12,8 @@ import {
   recipeForShoppingList2,
 } from "./fixtures/recipes";
 
-const productCatalog: ProductCatalog = [
+const productCatalog: ProductCatalog = new ProductCatalog();
+productCatalog.products = [
   {
     id: "flour-80g",
     productName: "Flour (80g)",
@@ -121,7 +122,8 @@ describe("buildCart", () => {
     const recipe = new Recipe("@flour{600%g}");
     shoppingList.add_recipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
-    const catalog: ProductCatalog = [
+    const catalog = new ProductCatalog();
+    catalog.products = [
       {
         id: "flour-1kg",
         productName: "Flour (1kg)",
@@ -179,7 +181,7 @@ describe("buildCart", () => {
     // - 2x 500g pack: price 1.2, size 1000.
     // The solver should choose 1x 1kg pack.
     expect(shoppingCart.cart).toEqual([
-      { product: catalog[0], quantity: 1, totalPrice: 10 }, // 1x 1kg
+      { product: catalog.products[0], quantity: 1, totalPrice: 10 }, // 1x 1kg
     ]);
   });
 
@@ -194,9 +196,9 @@ describe("buildCart", () => {
 
     expect(shoppingCart.cart).toEqual([
       // Needs at least 30g of flour. 1 x 40g should be the solution
-      { product: productCatalog[1], quantity: 1, totalPrice: 15 },
+      { product: productCatalog.products[1], quantity: 1, totalPrice: 15 },
       // Needs at least 80cL of milk, 1 x 1L should be the solution
-      { product: productCatalog[3], quantity: 1, totalPrice: 30 },
+      { product: productCatalog.products[3], quantity: 1, totalPrice: 30 },
     ]);
   });
 
@@ -209,10 +211,10 @@ describe("buildCart", () => {
     shoppingCart.buildCart();
 
     expect(shoppingCart.cart).toEqual([
-      { product: productCatalog[0], quantity: 1, totalPrice: 25 }, // 1x
-      { product: productCatalog[1], quantity: 1, totalPrice: 15 }, // 1x
-      { product: productCatalog[2], quantity: 2, totalPrice: 40 }, // 1x
-      { product: productCatalog[3], quantity: 1, totalPrice: 30 }, // 1x
+      { product: productCatalog.products[0], quantity: 1, totalPrice: 25 }, // 1x
+      { product: productCatalog.products[1], quantity: 1, totalPrice: 15 }, // 1x
+      { product: productCatalog.products[2], quantity: 2, totalPrice: 40 }, // 1x
+      { product: productCatalog.products[3], quantity: 1, totalPrice: 30 }, // 1x
     ]);
     expect(shoppingCart.match.length).toBe(3);
     expect(shoppingCart.misMatch.length).toBe(3);
@@ -228,9 +230,9 @@ describe("buildCart", () => {
     shoppingCart.buildCart();
 
     expect(shoppingCart.cart).toEqual([
-      { product: productCatalog[0], quantity: 2, totalPrice: 50 }, // 1x
-      { product: productCatalog[2], quantity: 3, totalPrice: 60 }, // 1x
-      { product: productCatalog[3], quantity: 1, totalPrice: 30 }, // 1x
+      { product: productCatalog.products[0], quantity: 2, totalPrice: 50 }, // 1x
+      { product: productCatalog.products[2], quantity: 3, totalPrice: 60 }, // 1x
+      { product: productCatalog.products[3], quantity: 1, totalPrice: 30 }, // 1x
     ]);
     expect(shoppingCart.match.length).toBe(3);
     expect(

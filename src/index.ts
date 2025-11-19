@@ -1,6 +1,8 @@
 import { CategoryConfig } from "./classes/category_config";
+import { ProductCatalog } from "./classes/product_catalog";
 import { Recipe } from "./classes/recipe";
 import { ShoppingList } from "./classes/shopping_list";
+import { ShoppingCart } from "./classes/shopping_cart";
 import { Section } from "./classes/section";
 
 import type {
@@ -30,12 +32,21 @@ import type {
   CategoryIngredient,
   Category,
   QuantityPart,
+  ProductOption,
+  ProductSelection,
+  CartContent,
+  ProductMatch,
+  CartMatch,
+  ProductMisMatch,
+  CartMisMatch,
 } from "./types";
 
 export {
   Recipe,
   ShoppingList,
+  ShoppingCart,
   CategoryConfig,
+  ProductCatalog,
   Metadata,
   Ingredient,
   IngredientFlag,
@@ -63,4 +74,11 @@ export {
   Category,
   Section,
   QuantityPart,
+  ProductOption,
+  ProductSelection,
+  CartContent,
+  ProductMatch,
+  CartMatch,
+  ProductMisMatch,
+  CartMisMatch,
 };

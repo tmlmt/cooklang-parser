@@ -422,6 +422,10 @@ export interface Category {
   ingredients: CategoryIngredient[];
 }
 
+/**
+ * Represents a product option in a {@link ProductCatalog}
+ * @category Types
+ */
 export interface ProductOption {
   /** The ID of the product */
   id: string;
@@ -437,7 +441,14 @@ export interface ProductOption {
   price: number;
 }
 
-export type ProductCatalog = ProductOption[];
+export interface ProductOptionToml {
+  /** The name of the product */
+  name: string;
+  /** The size and unit of the product separated by % */
+  size: string;
+  /** The price of the product */
+  price: number;
+}
 
 export interface ProductSelection {
   /** The selected product */

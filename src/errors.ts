@@ -54,3 +54,10 @@ export class NoProductMatchError extends Error {
     this.name = "NoProductMatchError";
   }
 }
+
+export class InvalidProductCatalogFormat extends Error {
+  constructor() {
+    super("Invalid product catalog format.");
+    this.name = "InvalidProductCatalogFormat";
+  }
+}

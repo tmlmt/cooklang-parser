@@ -1,5 +1,4 @@
 import type {
-  ProductCatalog,
   ProductOption,
   ProductSelection,
   Ingredient,
@@ -9,6 +8,7 @@ import type {
   FixedNumericValue,
   Range,
 } from "../types";
+import { ProductCatalog } from "./product_catalog";
 import { ShoppingList } from "./shopping_list";
 import {
   NoProductCatalogForCartError,
@@ -22,15 +22,20 @@ import {
 } from "../units";
 import { solve, type Model } from "yalps";
 
+/**
+ * Shopping Cart Manager
+ *
+ * @category Classes
+ */
 export class ShoppingCart {
-  products?: ProductCatalog;
+  productCatalog?: ProductCatalog;
   shoppingList?: ShoppingList;
   cart: CartContent = [];
   match: CartMatch = [];
   misMatch: CartMisMatch = [];
 
   setProductCatalog(catalog: ProductCatalog) {
-    this.products = catalog;
+    this.productCatalog = catalog;
   }
 
   setShoppingList(list: ShoppingList) {
@@ -38,7 +43,7 @@ export class ShoppingCart {
   }
 
   buildCart() {
-    if (!this.products) {
+    if (!this.productCatalog) {
       throw new NoProductCatalogForCartError();
     } else if (!this.shoppingList) {
       throw new NoShoppingListForCartError();
@@ -65,7 +70,7 @@ export class ShoppingCart {
 
   private getProductOptions(ingredient: Ingredient): ProductOption[] {
     return (
-      this.products?.filter(
+      this.productCatalog?.products.filter(
         (product) => product.ingredientName === ingredient.name,
       ) ?? []
     );
