@@ -24,6 +24,8 @@ features:
     details: Fully-typed, compliant with the Cooklang Specifications
   - title: Useful extensions
     details: Additional features to the original specs
-  - title: Parsing, scaling and shopping
-    details: Classes to parse and scale recipes, as well as parse category configuration and create shopping lists
+  - title: Parsing and scaling
+    details: Classes to parse and scale recipes
+  - title: Shopping
+    details: Classes to parse category configurations, create shopping lists, and fill in a virtual shopping cart based on a product catalog
 ---

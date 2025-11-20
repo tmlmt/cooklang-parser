@@ -42,6 +42,7 @@
     "@eslint/js": "9.39.1",
     "@iconify-json/material-symbols": "1.2.44",
     "@types/big.js": "6.2.2",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "22.19.0",
     "@vitest/coverage-v8": "4.0.8",
     "@vitest/ui": "4.0.8",
@@ -81,6 +82,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "big.js": "7.0.1"
+    "big.js": "7.0.1",
+    "smol-toml": "^1.5.2",
+    "yalps": "^0.6.3"
   }
 }
