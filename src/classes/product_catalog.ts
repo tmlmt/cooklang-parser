@@ -19,8 +19,8 @@ import { InvalidProductCatalogFormat } from "../errors";
  * 
  * ## Usage
  *
- * You can either directly populate the products by feeding the {@link ProductCatalog.products | products} property, 
- * or you can provide a catalog in TOML format to either the constructor itself or to the {@link ProductCatalog.parse | parse()} method. 
+ * You can either directly populate the products by feeding the {@link ProductCatalog.products | products} property. Alternatively,
+ * you can provide a catalog in TOML format to either the constructor itself or to the {@link ProductCatalog.parse | parse()} method. 
  *
  * @category Classes
  * 
