@@ -5,6 +5,7 @@ import {
   normalizeUnit,
   simplifyFraction,
   addNumericValues,
+  getNumericValue,
   CannotAddTextValueError,
   IncompatibleUnitsError,
   addQuantityValues,
@@ -584,6 +585,16 @@ describe("multiplyQuantityValue", () => {
     expect(multiplyQuantityValue(val, 3)).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 3.6 },
+    });
+  });
+
+  describe("getNumericValue", () => {
+    it("should get the numerical value of a DecimalValue", () => {
+      expect(getNumericValue({ type: "decimal", value: 1.2 })).toBe(1.2);
+    });
+
+    it("should get the numerical value of a FractionValue", () => {
+      expect(getNumericValue({ type: "fraction", num: 2, den: 3 })).toBe(2 / 3);
     });
   });
 });

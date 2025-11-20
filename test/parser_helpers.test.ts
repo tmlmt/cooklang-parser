@@ -12,6 +12,7 @@ import {
   extractMetadata,
   findAndUpsertCookware,
   findAndUpsertIngredient,
+  stringifyQuantityValue,
 } from "../src/parser_helpers";
 
 describe("parseSimpleMetaVar", () => {
@@ -593,5 +594,32 @@ describe("parseQuantityInput", () => {
       type: "fixed",
       value: { type: "decimal", value: 1.2 },
     });
+  });
+});
+
+describe("stringifyQuantityValue", () => {
+  it("correctly stringify fixed values", () => {
+    expect(
+      stringifyQuantityValue({
+        type: "fixed",
+        value: { type: "decimal", value: 1.5 },
+      }),
+    ).toEqual("1.5");
+    expect(
+      stringifyQuantityValue({
+        type: "fixed",
+        value: { type: "fraction", num: 2, den: 3 },
+      }),
+    ).toEqual("2/3");
+  });
+
+  it("correctly stringify ranges", () => {
+    expect(
+      stringifyQuantityValue({
+        type: "range",
+        min: { type: "decimal", value: 1 },
+        max: { type: "decimal", value: 2 },
+      }),
+    ).toEqual("1-2");
   });
 });

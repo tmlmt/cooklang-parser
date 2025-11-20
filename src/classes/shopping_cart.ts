@@ -55,29 +55,24 @@ export class ShoppingCart {
     }
 
     for (const ingredient of this.shoppingList.ingredients) {
-      if (ingredient.flags?.includes("hidden")) continue;
       const productOptions = this.getProductOptions(ingredient);
-      if (productOptions.length > 0) {
-        try {
-          const optimumMatch = this.getOptimumMatch(ingredient, productOptions);
-          this.cart.push(...optimumMatch);
-          this.match.push({ ingredient, selection: optimumMatch });
-        } catch (error) {
-          if (error instanceof NoProductMatchError) {
-            this.misMatch.push({ ingredient, reason: error.code });
-          }
+      try {
+        const optimumMatch = this.getOptimumMatch(ingredient, productOptions);
+        this.cart.push(...optimumMatch);
+        this.match.push({ ingredient, selection: optimumMatch });
+      } catch (error) {
+        /* v8 ignore else -- @preserve */
+        if (error instanceof NoProductMatchError) {
+          this.misMatch.push({ ingredient, reason: error.code });
         }
-      } else {
-        this.misMatch.push({ ingredient, reason: "noProduct" });
       }
     }
   }
 
   private getProductOptions(ingredient: Ingredient): ProductOption[] {
-    return (
-      this.productCatalog?.products.filter(
-        (product) => product.ingredientName === ingredient.name,
-      ) ?? []
+    // this function is only called in buildCart() which starts by checking that a product catalog is present
+    return this.productCatalog!.products.filter(
+      (product) => product.ingredientName === ingredient.name,
     );
   }
 
@@ -145,7 +140,7 @@ export class ShoppingCart {
         ];
       }
       // Range
-      else if (normalizedIngredient.quantity.type === "range") {
+      else {
         const targetQuantity = normalizedIngredient.quantity.min;
         const resQuantity = Math.ceil(
           getNumericValue(targetQuantity) /

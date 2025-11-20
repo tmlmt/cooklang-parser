@@ -132,11 +132,7 @@ export class ProductCatalog {
   }
 
   private isValidTomlContent(products: TomlTable): boolean {
-    for (const [ingredientName, productsRaw] of Object.entries(products)) {
-      if (typeof ingredientName !== "string") {
-        return false;
-      }
-
+    for (const productsRaw of Object.values(products)) {
       for (const [id, obj] of Object.entries(productsRaw)) {
         if (!isPositiveIntegerString(id)) {
           return false;

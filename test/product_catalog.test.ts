@@ -83,6 +83,11 @@ size = "100%g"
 
     it("should throw an error for an invalid product catalog", () => {
       const tomlContentArray = [
+        // Ingredient value is not a table
+        `eggs = "not a table"`,
+        // Product is not an object
+        `[eggs]
+01123 = "not an object"`,
         // No price
         `[eggs]
 01123 = { name = "Single Egg", size = "1" }`,
@@ -116,6 +121,39 @@ Text = { name = "Single Egg", size = "1", price = 2 }`,
       catalog.products = exampleProductOptions;
       const stringified = catalog.stringify();
       expect(stringified).toBe(exampleTomlContentAlt);
+    });
+  });
+
+  describe("adding", () => {
+    it("should add a product to the catalog", () => {
+      const catalog = new ProductCatalog();
+      const newProduct: ProductOption = {
+        id: "12345",
+        productName: "New Product",
+        ingredientName: "new-ingredient",
+        size: { type: "fixed", value: { type: "decimal", value: 1 } },
+        unit: "kg",
+        price: 10,
+      };
+      catalog.add(newProduct);
+      expect(catalog.products.length).toBe(1);
+      expect(catalog.products[0]).toEqual(newProduct);
+    });
+  });
+
+  describe("removing", () => {
+    it("should remove a product from the catalog", () => {
+      const catalog = new ProductCatalog();
+      catalog.products = exampleProductOptions;
+      catalog.remove("11244");
+      expect(catalog.products.length).toBe(3);
+      expect(catalog.products).not.toContainEqual({
+        id: "11244",
+        productName: "Pack of 6 eggs",
+        ingredientName: "eggs",
+        price: 10,
+        size: { type: "fixed", value: { type: "decimal", value: 6 } },
+      });
     });
   });
 });
