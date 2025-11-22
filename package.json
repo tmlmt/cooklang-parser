@@ -59,7 +59,7 @@
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.4",
-    "vitepress": "2.0.0-alpha.12",
+    "vitepress": "2.0.0-alpha.15",
     "vitest": "4.0.8"
   },
   "bugs": {
