@@ -1,4 +1,4 @@
-import { IngredientFlag, CookwareFlag } from "./types";
+import { IngredientFlag, CookwareFlag, NoProductMatchErrorCode } from "./types";
 
 export class ReferencedItemCannotBeRedefinedError extends Error {
   constructor(
@@ -31,12 +31,6 @@ export class NoShoppingListForCartError extends Error {
     this.name = "NoShoppingListForCartError";
   }
 }
-
-export type NoProductMatchErrorCode =
-  | "incompatibleUnits"
-  | "noProduct"
-  | "textValue"
-  | "noQuantity";
 
 export class NoProductMatchError extends Error {
   code: NoProductMatchErrorCode;
