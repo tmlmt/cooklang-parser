@@ -1,5 +1,4 @@
 import type { Recipe } from "./classes/recipe";
-import { NoProductMatchErrorCode } from "./errors";
 import type { Quantity } from "./units";
 
 /**
@@ -487,6 +486,12 @@ export interface ProductMatch {
  * @category Types
  */
 export type CartMatch = ProductMatch[];
+
+export type NoProductMatchErrorCode =
+  | "incompatibleUnits"
+  | "noProduct"
+  | "textValue"
+  | "noQuantity";
 
 /**
  * Represents an ingredient which didn't match with any product in the product catalog, in a {@link ShoppingCart}
