@@ -157,9 +157,9 @@ export class ShoppingCart {
   buildCart(): boolean {
     this.resetCart();
 
-    if (!this.productCatalog) {
+    if (this.productCatalog === undefined) {
       throw new NoProductCatalogForCartError();
-    } else if (!this.shoppingList) {
+    } else if (this.shoppingList === undefined) {
       throw new NoShoppingListForCartError();
     }
 

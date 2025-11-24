@@ -43,6 +43,7 @@ import type {
   CartMatch,
   ProductMisMatch,
   CartMisMatch,
+  NoProductMatchErrorCode,
 } from "./types";
 
 export {
@@ -87,4 +88,5 @@ export {
   CartMatch,
   ProductMisMatch,
   CartMisMatch,
+  NoProductMatchErrorCode,
 };
