@@ -29,21 +29,23 @@ import { InvalidProductCatalogFormat } from "../errors";
  * import { ProductCatalog } from "@tmlmt/cooklang-parser";
  *
  * const catalog = `[eggs]
+ * aliases = ["oeuf", "huevo"]
  * 01123 = { name = "Single Egg", size = "1", price = 2 }
  * 11244 = { name = "Pack of 6 eggs", size = "6", price = 10 }
- *
  * [flour]
+ * aliases = ["farine", "Mehl"]
  * 01124 = { name = "Small pack", size = "100%g", price = 1.5 }
  * 14141 = { name = "Big pack", size = "6%kg", price = 10 }
  * `
  * const catalog = new ProductCatalog(catalog);
+ * const eggs = catalog.find("oeuf");
  * ```
  */
 export class ProductCatalog {
   public products: ProductOption[] = [];
 
   constructor(tomlContent?: string) {
-    if (tomlContent) this.products = this.parse(tomlContent);
+    if (tomlContent) this.parse(tomlContent);
   }
 
   /**
@@ -54,25 +56,37 @@ export class ProductCatalog {
   public parse(tomlContent: string): ProductOption[] {
     const catalogRaw = TOML.parse(tomlContent);
 
+    // Reset internal state
+    this.products = [];
+
     if (!this.isValidTomlContent(catalogRaw)) {
       throw new InvalidProductCatalogFormat();
     }
 
-    for (const [ingredientName, productsRaw] of Object.entries(catalogRaw)) {
-      for (const [productId, productRaw] of Object.entries(productsRaw)) {
-        const sizeAndUnitRaw = (productRaw as ProductOptionToml).size.split(
-          "%",
-        );
+    for (const [ingredientName, ingredientData] of Object.entries(catalogRaw)) {
+      const ingredientTable = ingredientData as TomlTable;
+      const aliases = ingredientTable.aliases as string[] | undefined;
+
+      for (const [key, productData] of Object.entries(ingredientTable)) {
+        if (key === "aliases") {
+          continue;
+        }
+
+        const productId = key;
+        const productRaw = productData as unknown as ProductOptionToml;
+
+        const sizeAndUnitRaw = productRaw.size.split("%");
         const size = parseQuantityInput(
           sizeAndUnitRaw[0]!,
         ) as FixedNumericValue;
 
         const productOption: ProductOption = {
           id: productId,
-          productName: (productRaw as ProductOptionToml).name,
+          productName: productRaw.name,
           ingredientName: ingredientName,
-          price: (productRaw as ProductOptionToml).price,
+          price: productRaw.price,
           size,
+          ingredientAliases: aliases,
         };
 
         if (sizeAndUnitRaw.length > 1) {
@@ -91,28 +105,34 @@ export class ProductCatalog {
    * @returns The TOML string representation of the catalog.
    */
   public stringify(): string {
-    const groupedProducts = this.products.reduce(
-      (acc, item) => {
-        const { id, ingredientName, size, unit, productName, ...product } =
-          item;
+    const grouped: Record<string, TomlTable> = {};
 
-        if (!acc[ingredientName]) {
-          acc[ingredientName] = {};
-        }
+    for (const product of this.products) {
+      const {
+        id,
+        ingredientName,
+        ingredientAliases,
+        size,
+        unit,
+        productName,
+        ...rest
+      } = product;
+      if (!grouped[ingredientName]) {
+        grouped[ingredientName] = {};
+      }
+      if (ingredientAliases && !grouped[ingredientName].aliases) {
+        grouped[ingredientName].aliases = ingredientAliases;
+      }
+      grouped[ingredientName][id] = {
+        ...rest,
+        name: productName,
+        size: unit
+          ? `${stringifyQuantityValue(size)}%${unit}`
+          : stringifyQuantityValue(size),
+      };
+    }
 
-        acc[ingredientName][id] = {
-          ...product,
-          name: productName,
-          size: unit
-            ? `${stringifyQuantityValue(size)}%${unit}`
-            : stringifyQuantityValue(size),
-        };
-
-        return acc;
-      },
-      {} as Record<string, Record<string, ProductOptionToml>>,
-    );
-    return TOML.stringify(groupedProducts);
+    return TOML.stringify(grouped);
   }
 
   /**
@@ -131,31 +151,41 @@ export class ProductCatalog {
     this.products = this.products.filter((product) => product.id !== productId);
   }
 
-  private isValidTomlContent(products: TomlTable): boolean {
-    for (const productsRaw of Object.values(products)) {
+  private isValidTomlContent(catalog: TomlTable): boolean {
+    for (const productsRaw of Object.values(catalog)) {
+      if (typeof productsRaw !== "object" || productsRaw === null) {
+        return false;
+      }
+
       for (const [id, obj] of Object.entries(productsRaw)) {
-        if (!isPositiveIntegerString(id)) {
-          return false;
-        }
-        if (typeof obj !== "object" || obj === null) {
-          return false;
-        }
+        if (id === "aliases") {
+          if (!Array.isArray(obj)) {
+            return false;
+          }
+        } else {
+          if (!isPositiveIntegerString(id)) {
+            return false;
+          }
+          if (typeof obj !== "object" || obj === null) {
+            return false;
+          }
 
-        const record = obj as Record<string, unknown>;
-        const keys = Object.keys(record);
+          const record = obj as Record<string, unknown>;
+          const keys = Object.keys(record);
 
-        const allowedKeys = new Set(["name", "size", "price"]);
+          const allowedKeys = new Set(["name", "size", "price"]);
 
-        if (keys.some((key) => !allowedKeys.has(key))) {
-          return false;
-        }
+          if (keys.some((key) => !allowedKeys.has(key))) {
+            return false;
+          }
 
-        const hasProductName = typeof record.name === "string";
-        const hasSize = typeof record.size === "string";
-        const hasPrice = typeof record.price === "number";
+          const hasProductName = typeof record.name === "string";
+          const hasSize = typeof record.size === "string";
+          const hasPrice = typeof record.price === "number";
 
-        if (!(hasProductName && hasSize && hasPrice)) {
-          return false;
+          if (!(hasProductName && hasSize && hasPrice)) {
+            return false;
+          }
         }
       }
     }

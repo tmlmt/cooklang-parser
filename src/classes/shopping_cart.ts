@@ -190,7 +190,9 @@ export class ShoppingCart {
   private getProductOptions(ingredient: Ingredient): ProductOption[] {
     // this function is only called in buildCart() which starts by checking that a product catalog is present
     return this.productCatalog!.products.filter(
-      (product) => product.ingredientName === ingredient.name,
+      (product) =>
+        product.ingredientName === ingredient.name ||
+        product.ingredientAliases?.includes(ingredient.name),
     );
   }
 
