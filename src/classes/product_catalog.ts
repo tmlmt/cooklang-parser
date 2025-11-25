@@ -16,25 +16,25 @@ import { InvalidProductCatalogFormat } from "../errors";
  * Product Catalog Manager
  *
  * Used in conjunction with {@link ShoppingCart}
- * 
+ *
  * ## Usage
  *
  * You can either directly populate the products by feeding the {@link ProductCatalog.products | products} property. Alternatively,
- * you can provide a catalog in TOML format to either the constructor itself or to the {@link ProductCatalog.parse | parse()} method. 
+ * you can provide a catalog in TOML format to either the constructor itself or to the {@link ProductCatalog.parse | parse()} method.
  *
  * @category Classes
- * 
+ *
  * @example
  * ```typescript
  * import { ProductCatalog } from "@tmlmt/cooklang-parser";
  *
  * const catalog = `[eggs]
-01123 = { name = "Single Egg", size = "1", price = 2 }
-11244 = { name = "Pack of 6 eggs", size = "6", price = 10 }
-
-[flour]
-01124 = { name = "Small pack", size = "100%g", price = 1.5 }
-14141 = { name = "Big pack", size = "6%kg", price = 10 }
+ * 01123 = { name = "Single Egg", size = "1", price = 2 }
+ * 11244 = { name = "Pack of 6 eggs", size = "6", price = 10 }
+ *
+ * [flour]
+ * 01124 = { name = "Small pack", size = "100%g", price = 1.5 }
+ * 14141 = { name = "Big pack", size = "6%kg", price = 10 }
  * `
  * const catalog = new ProductCatalog(catalog);
  * ```
