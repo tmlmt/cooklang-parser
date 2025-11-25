@@ -440,6 +440,9 @@ export interface ProductOption {
   unit?: string;
   /** The price of the product */
   price: number;
+  /** Arbitrary additional metadata */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 /**
@@ -453,6 +456,9 @@ export interface ProductOptionToml {
   size: string;
   /** The price of the product */
   price: number;
+  /** Arbitrary additional metadata */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 /**

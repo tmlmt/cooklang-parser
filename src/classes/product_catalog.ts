@@ -73,21 +73,25 @@ export class ProductCatalog {
         }
 
         const productId = key;
-        const productRaw = productData as unknown as ProductOptionToml;
+        const { name, size, price, ...rest } =
+          productData as unknown as ProductOptionToml;
 
-        const sizeAndUnitRaw = productRaw.size.split("%");
-        const size = parseQuantityInput(
+        const sizeAndUnitRaw = size.split("%");
+        const sizeParsed = parseQuantityInput(
           sizeAndUnitRaw[0]!,
         ) as FixedNumericValue;
 
         const productOption: ProductOption = {
           id: productId,
-          productName: productRaw.name,
+          productName: name,
           ingredientName: ingredientName,
-          price: productRaw.price,
-          size,
-          ingredientAliases: aliases,
+          price: price,
+          size: sizeParsed,
+          ...rest,
         };
+        if (aliases) {
+          productOption.ingredientAliases = aliases;
+        }
 
         if (sizeAndUnitRaw.length > 1) {
           productOption.unit = sizeAndUnitRaw[1]!;
@@ -173,9 +177,9 @@ export class ProductCatalog {
           const record = obj as Record<string, unknown>;
           const keys = Object.keys(record);
 
-          const allowedKeys = new Set(["name", "size", "price"]);
+          const mandatoryKeys = ["name", "size", "price"];
 
-          if (keys.some((key) => !allowedKeys.has(key))) {
+          if (mandatoryKeys.some((key) => !keys.includes(key))) {
             return false;
           }
 
