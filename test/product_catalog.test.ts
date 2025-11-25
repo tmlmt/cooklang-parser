@@ -99,6 +99,23 @@ aliases = ["oeuf", "huevo"]
       ]);
     });
 
+    it("should parse a product catalog with additional metadata", () => {
+      const catalog = new ProductCatalog();
+      const products = catalog.parse(`[eggs]
+01123 = { name = "Single Egg", size = "1", price = 2, image = "egg.png" }`);
+      expect(products.length).toBe(1);
+      expect(products).toEqual([
+        {
+          id: "01123",
+          image: "egg.png",
+          productName: "Single Egg",
+          ingredientName: "eggs",
+          price: 2,
+          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+        },
+      ]);
+    });
+
     it.each([
       // Ingredient value is not a table
       `eggs = "not a table"`,
@@ -120,9 +137,6 @@ Text = { name = "Single Egg", size = "1", price = 2 }`,
       // Non numerical price
       `[flour]
 01234 = { name = "Single Pack", size = "100%g", price = "2" }`,
-      // Non authorized key
-      `[flour]
-01234 = { name = "Single Pack", size = "100%g", price = 2, some-other-key = "yo" }`,
       // Invalid aliases definition
       `[eggs]
 aliases = "not an array"`,
@@ -177,6 +191,27 @@ size = "6"
 price = 2
 name = "Single Egg"
 size = "1"
+`);
+    });
+
+    it("should handle products with arbitrary metadata", () => {
+      const catalog = new ProductCatalog();
+      catalog.products = [
+        {
+          id: "11244",
+          productName: "Pack of 6 eggs",
+          ingredientName: "eggs",
+          price: 10,
+          size: { type: "fixed", value: { type: "decimal", value: 6 } },
+          image: "egg.png",
+        },
+      ];
+      const stringified = catalog.stringify();
+      expect(stringified).toBe(`[eggs.11244]
+price = 10
+image = "egg.png"
+name = "Pack of 6 eggs"
+size = "6"
 `);
     });
   });
