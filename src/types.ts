@@ -432,6 +432,8 @@ export interface ProductOption {
   productName: string;
   /** The name of the ingredient it corresponds to */
   ingredientName: string;
+  /** The aliases of the ingredient it also corresponds to */
+  ingredientAliases?: string[];
   /** The size of the product. */
   size: FixedNumericValue;
   /** The unit of the product size. */
