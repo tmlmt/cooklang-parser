@@ -205,7 +205,7 @@ export function getNumericValue(v: DecimalValue | FractionValue): number {
 
 export function multiplyNumericValue(
   v: DecimalValue | FractionValue,
-  factor: number,
+  factor: number | Big,
 ): DecimalValue | FractionValue {
   if (v.type === "decimal") {
     return { type: "decimal", value: Big(v.value).times(factor).toNumber() };
@@ -267,16 +267,16 @@ const toRoundedDecimal = (v: DecimalValue | FractionValue): DecimalValue => {
 
 export function multiplyQuantityValue(
   value: FixedValue | Range,
-  factor: number,
+  factor: number | Big,
 ): FixedValue | Range {
   if (value.type === "fixed") {
     const newValue = multiplyNumericValue(
       value.value as DecimalValue | FractionValue,
-      factor,
+      Big(factor),
     );
     if (
       factor === parseInt(factor.toString()) || // e.g. 2 === int
-      1 / factor === parseInt((1 / factor).toString()) // e.g. 0.25 => 4 === int
+      Big(1).div(factor).toNumber() === parseInt(Big(1).div(factor).toString()) // e.g. 0.25 => 4 === int
     ) {
       // Preserve fractions
       return {
