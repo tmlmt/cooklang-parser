@@ -35,6 +35,7 @@ import {
   multiplyQuantityValue,
   type Quantity,
 } from "../units";
+import Big from "big.js";
 
 /**
  * Recipe parser.
@@ -359,16 +360,17 @@ export class Recipe {
       throw new Error("Error scaling recipe: no initial servings value set");
     }
 
-    const factor = newServings / originalServings;
+    const factor = Big(newServings).div(originalServings);
     return this.scaleBy(factor);
   }
 
   /**
    * Scales the recipe by a factor.
-   * @param factor - The factor to scale the recipe by.
+   * @param factor - The factor to scale the recipe by. While integers can be passed as-is, it is recommended to pass fractions as
+   *   [Big](https://github.com/MikeMcl/big.js/) values, e.g. `Big(num).div(den)` in order to avoid undesirable floating point operation inaccuracies.
    * @returns A new Recipe instance with the scaled ingredients.
    */
-  scaleBy(factor: number): Recipe {
+  scaleBy(factor: number | Big): Recipe {
     const newRecipe = this.clone();
 
     const originalServings = newRecipe.getServings();
@@ -393,7 +395,7 @@ export class Recipe {
                 ...quantityPart,
                 value: multiplyQuantityValue(
                   quantityPart.value,
-                  quantityPart.scalable ? factor : 1,
+                  quantityPart.scalable ? Big(factor) : 1,
                 ),
               };
             },
@@ -416,7 +418,7 @@ export class Recipe {
       })
       .filter((ingredient) => ingredient.quantity !== null);
 
-    newRecipe.servings = originalServings * factor;
+    newRecipe.servings = Big(originalServings).times(factor).toNumber();
 
     /* v8 ignore else -- @preserve */
     if (newRecipe.metadata.servings && this.metadata.servings) {
@@ -426,7 +428,9 @@ export class Recipe {
         const servingsValue = parseFloat(
           String(this.metadata.servings).replace(",", "."),
         );
-        newRecipe.metadata.servings = String(servingsValue * factor);
+        newRecipe.metadata.servings = String(
+          Big(servingsValue).times(factor).toNumber(),
+        );
       }
     }
 
@@ -438,7 +442,9 @@ export class Recipe {
         const yieldValue = parseFloat(
           String(this.metadata.yield).replace(",", "."),
         );
-        newRecipe.metadata.yield = String(yieldValue * factor);
+        newRecipe.metadata.yield = String(
+          Big(yieldValue).times(factor).toNumber(),
+        );
       }
     }
 
@@ -450,7 +456,9 @@ export class Recipe {
         const servesValue = parseFloat(
           String(this.metadata.serves).replace(",", "."),
         );
-        newRecipe.metadata.serves = String(servesValue * factor);
+        newRecipe.metadata.serves = String(
+          Big(servesValue).times(factor).toNumber(),
+        );
       }
     }
 

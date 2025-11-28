@@ -110,6 +110,18 @@ describe("scaleTo", () => {
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
   });
+
+  it("should handle numbers with repeating decimals", () => {
+    const recipe = new Recipe(`---
+servings: 3
+---
+@eggs{6}`);
+    const scaledRecipe = recipe.scaleTo(2);
+    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 4 },
+    });
+  });
 });
 
 describe("scaleBy", () => {
