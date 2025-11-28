@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.1.4
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.3...v2.1.4)
+
+### 🩹 Fixes
+
+- **scaleTo:** Floating point inacurracies when proving a repeating decimal fraction ([#68](https://github.com/tmlmt/cooklang-parser/pull/68))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.3
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.2...v2.1.3)
