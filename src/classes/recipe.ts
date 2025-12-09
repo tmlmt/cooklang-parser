@@ -3,6 +3,7 @@ import type {
   Ingredient,
   IngredientExtras,
   IngredientItem,
+  IngredientItemQuantity,
   Timer,
   Step,
   Note,
@@ -11,6 +12,8 @@ import type {
   CookwareItem,
   IngredientFlag,
   CookwareFlag,
+  RecipeChoices,
+  IngredientAlternative,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -18,8 +21,10 @@ import {
   commentRegex,
   blockCommentRegex,
   metadataRegex,
+  ingredientWithAlternativeRegex,
   ingredientAliasRegex,
   floatRegex,
+  quantityAlternativeRegex,
 } from "../regex";
 import {
   flushPendingItems,
@@ -74,6 +79,10 @@ export class Recipe {
    */
   metadata: Metadata = {};
   /**
+   * The default or manual choice of alternative ingredients
+   */
+  choices: RecipeChoices = { ingredients: [] };
+  /**
    * The parsed recipe ingredients.
    */
   ingredients: Ingredient[] = [];
@@ -97,6 +106,10 @@ export class Recipe {
    * @see {@link Recipe.scaleBy | scaleBy()} and {@link Recipe.scaleTo | scaleTo()} methods
    */
   servings?: number;
+  /**
+   * Number of items in the recipe. Used for giving ID numbers to items.
+   */
+  private _itemCount: number = 0;
 
   /**
    * Creates a new Recipe instance.
@@ -108,11 +121,164 @@ export class Recipe {
     }
   }
 
+  private _parseQuantityRecursive(quantityRaw: string): Quantity[] {
+    let quantityMatch = quantityRaw.match(quantityAlternativeRegex);
+    const quantities: Quantity[] = [];
+    while (quantityMatch?.groups) {
+      const value = quantityMatch.groups.ingredientQuantityValue
+        ? parseQuantityInput(quantityMatch.groups.ingredientQuantityValue)
+        : undefined;
+      const unit = quantityMatch.groups.ingredientUnit;
+      if (value) {
+        quantities.push({ value, unit });
+      } else {
+        return quantities;
+      }
+      quantityMatch = quantityMatch.groups.ingredientAltQuantity
+        ? quantityMatch.groups.ingredientAltQuantity.match(
+            quantityAlternativeRegex,
+          )
+        : null;
+    }
+    return quantities;
+  }
+
+  private _parseIngredientWithAlternativeRecursive(
+    ingredientMatchString: string,
+    items: Step["items"],
+  ): void {
+    const match = ingredientMatchString.match(ingredientWithAlternativeRegex);
+    const alternatives: IngredientAlternative[] = [];
+    while (match?.groups) {
+      const groups = match.groups;
+
+      // Use variables for readability
+      // @<modifiers><name>{quantity%unit|altQuantities}(preparation)[note]|<altIngredients>
+      let name = (groups.mIngredientName || groups.sIngredientName)!;
+
+      // 1. We build up the different parts of the Ingredient object
+      // Preparation
+      const preparation = groups.ingredientPreparation;
+      // Flags
+      const modifiers = groups.ingredientModifiers;
+      const reference = modifiers !== undefined && modifiers.includes("&");
+      const flags: IngredientFlag[] = [];
+      if (modifiers !== undefined && modifiers.includes("?")) {
+        flags.push("optional");
+      }
+      if (modifiers !== undefined && modifiers.includes("-")) {
+        flags.push("hidden");
+      }
+      if (
+        (modifiers !== undefined && modifiers.includes("@")) ||
+        groups.mingredientRecipeAnchor
+      ) {
+        flags.push("recipe");
+      }
+      // Extras
+      let extras: IngredientExtras | undefined = undefined;
+      // -- if the ingredient is a recipe, we need to extract the name from the path given
+      if (flags.includes("recipe")) {
+        extras = { path: `${name}.cook` };
+        name = name.substring(name.lastIndexOf("/") + 1);
+      }
+      // Distinguish name from display name / name alias
+      const aliasMatch = name.match(ingredientAliasRegex);
+      let listName, displayName: string;
+      if (
+        aliasMatch &&
+        aliasMatch.groups!.ingredientListName!.trim().length > 0 &&
+        aliasMatch.groups!.ingredientDisplayName!.trim().length > 0
+      ) {
+        listName = aliasMatch.groups!.ingredientListName!.trim();
+        displayName = aliasMatch.groups!.ingredientDisplayName!.trim();
+      } else {
+        listName = name;
+        displayName = name;
+      }
+
+      const newIngredient: Ingredient = {
+        name: listName,
+      };
+      // Only add parameters if they are non null / non empty
+      if (preparation) {
+        newIngredient.preparation = preparation;
+      }
+      if (flags.length > 0) {
+        newIngredient.flags = flags;
+      }
+      if (extras) {
+        newIngredient.extras = extras;
+      }
+
+      const idxInList = findAndUpsertIngredient(
+        this.ingredients,
+        newIngredient,
+        reference,
+      );
+
+      // 2. We build up the ingredient item
+      // -- alternative quantities
+      const quantity: IngredientItemQuantity | undefined =
+        groups.ingredientQuantity
+          ? {
+              equivalents: this._parseQuantityRecursive(
+                groups.ingredientQuantity,
+              ),
+              scalable: groups.ingredientQuantityModifier !== "=",
+            }
+          : undefined;
+
+      const alternative: IngredientAlternative = {
+        index: idxInList,
+        displayName,
+      };
+      // Only add quantity and note if they exist
+      const note = groups.ingredientNote?.trim();
+      if (note) {
+        alternative.note = note;
+      }
+      if (quantity) {
+        alternative.quantity = quantity;
+      }
+      alternatives.push(alternative);
+    }
+
+    // Update alternatives list of all processed ingredients
+    if (alternatives.length > 1) {
+      const alternativesIndexes = alternatives.map((alt) => alt.index);
+      for (const index of alternativesIndexes) {
+        if (!this.ingredients[index]?.alternatives) {
+          this.ingredients[index]!.alternatives = alternativesIndexes.filter(
+            (altIndex) => altIndex !== index,
+          );
+        } else {
+          this.ingredients[index].alternatives.push(
+            ...alternativesIndexes.filter(
+              (altIndex) =>
+                altIndex !== index &&
+                !this.ingredients[index]?.alternatives?.includes(altIndex),
+            ),
+          );
+        }
+      }
+    }
+
+    // Finalize item
+    const newItem: IngredientItem = {
+      type: "ingredient",
+      id: `ingredient-item-${this._itemCount}`,
+      alternatives,
+    };
+    items.push(newItem);
+  }
+
   /**
    * Parses a recipe from a string.
    * @param content - The recipe content to parse.
    */
   parse(content: string) {
+    // Remove noise
     const cleanContent = content
       .replace(metadataRegex, "")
       .replace(commentRegex, "")
@@ -120,18 +286,23 @@ export class Recipe {
       .trim()
       .split(/\r\n?|\n/);
 
+    // Metadata
     const { metadata, servings }: MetadataExtract = extractMetadata(content);
     this.metadata = metadata;
     this.servings = servings;
 
+    // Initializing utility variables and property bearers
     let blankLineBefore = true;
     let section: Section = new Section();
     const items: Step["items"] = [];
     let note: Note["note"] = "";
     let inNote = false;
 
+    // We parse content line by line
     for (const line of cleanContent) {
+      // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
+        this._itemCount += items.length;
         flushPendingItems(section, items);
         note = flushPendingNote(section, note);
         blankLineBefore = true;
@@ -139,7 +310,9 @@ export class Recipe {
         continue;
       }
 
+      // New section
       if (line.startsWith("=")) {
+        this._itemCount += items.length;
         flushPendingItems(section, items);
         note = flushPendingNote(section, note);
 
@@ -157,6 +330,7 @@ export class Recipe {
         continue;
       }
 
+      // New note
       if (blankLineBefore && line.startsWith(">")) {
         flushPendingItems(section, items);
         note = flushPendingNote(section, note);
@@ -166,6 +340,7 @@ export class Recipe {
         continue;
       }
 
+      // Continue note
       if (inNote) {
         if (line.startsWith(">")) {
           note += " " + line.substring(1).trim();
@@ -175,9 +350,9 @@ export class Recipe {
         blankLineBefore = false;
         continue;
       }
-
       note = flushPendingNote(section, note);
 
+      // Detecting items
       let cursor = 0;
       for (const match of line.matchAll(tokensRegex)) {
         const idx = match.index;
@@ -188,95 +363,16 @@ export class Recipe {
 
         const groups = match.groups!;
 
+        // Ingredient items with potential in-line alternatives
         if (groups.mIngredientName || groups.sIngredientName) {
-          let name = (groups.mIngredientName || groups.sIngredientName)!;
-          const scalableQuantity =
-            (groups.mIngredientQuantityModifier ||
-              groups.sIngredientQuantityModifier) !== "=";
-          const quantityRaw =
-            groups.mIngredientQuantity || groups.sIngredientQuantity;
-          const unit = groups.mIngredientUnit || groups.sIngredientUnit;
-          const preparation =
-            groups.mIngredientPreparation || groups.sIngredientPreparation;
-          const modifiers =
-            groups.mIngredientModifiers || groups.sIngredientModifiers;
-          const reference = modifiers !== undefined && modifiers.includes("&");
-          const flags: IngredientFlag[] = [];
-          if (modifiers !== undefined && modifiers.includes("?")) {
-            flags.push("optional");
-          }
-          if (modifiers !== undefined && modifiers.includes("-")) {
-            flags.push("hidden");
-          }
-          if (
-            (modifiers !== undefined && modifiers.includes("@")) ||
-            groups.mIngredientRecipeAnchor ||
-            groups.sIngredientRecipeAnchor
-          ) {
-            flags.push("recipe");
-          }
-
-          let extras: IngredientExtras | undefined = undefined;
-          // If the ingredient is a recipe, we need to extract the name from the path given
-          if (flags.includes("recipe")) {
-            extras = { path: `${name}.cook` };
-            name = name.substring(name.lastIndexOf("/") + 1);
-          }
-
-          const quantity = quantityRaw
-            ? parseQuantityInput(quantityRaw)
-            : undefined;
-          const aliasMatch = name.match(ingredientAliasRegex);
-          let listName, displayName: string;
-          if (
-            aliasMatch &&
-            aliasMatch.groups!.ingredientListName!.trim().length > 0 &&
-            aliasMatch.groups!.ingredientDisplayName!.trim().length > 0
-          ) {
-            listName = aliasMatch.groups!.ingredientListName!.trim();
-            displayName = aliasMatch.groups!.ingredientDisplayName!.trim();
-          } else {
-            listName = name;
-            displayName = name;
-          }
-
-          const newIngredient: Ingredient = {
-            name: listName,
-            quantity,
-            quantityParts: quantity
-              ? [
-                  {
-                    value: quantity,
-                    unit,
-                    scalable: scalableQuantity,
-                  },
-                ]
-              : undefined,
-            unit,
-            preparation,
-            flags,
-          };
-
-          if (extras) {
-            newIngredient.extras = extras;
-          }
-
-          const idxsInList = findAndUpsertIngredient(
-            this.ingredients,
-            newIngredient,
-            reference,
-          );
-
-          const newItem: IngredientItem = {
-            type: "ingredient",
-            index: idxsInList.ingredientIndex,
-            displayName,
-          };
-          if (idxsInList.quantityPartIndex !== undefined) {
-            newItem.quantityPartIndex = idxsInList.quantityPartIndex;
-          }
-          items.push(newItem);
-        } else if (groups.mCookwareName || groups.sCookwareName) {
+          this._parseIngredientWithAlternativeRecursive(match[0], items);
+        }
+        // Ingredient items part of a group of alternative ingredients
+        else if (groups.gmIngredientName || groups.gsIngredientName) {
+          // TODO parse ingredient
+        }
+        // Cookware items
+        else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;
           const modifiers =
             groups.mCookwareModifiers || groups.sCookwareModifiers;
@@ -338,6 +434,7 @@ export class Recipe {
     }
 
     // End of content reached: pushing all temporarily saved elements
+    this._itemCount += items.length;
     flushPendingItems(section, items);
     note = flushPendingNote(section, note);
     if (!section.isBlank()) {

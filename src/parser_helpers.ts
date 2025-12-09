@@ -15,14 +15,7 @@ import {
 } from "./regex";
 import { Section as SectionObject } from "./classes/section";
 import type { Ingredient, Note, Step, Cookware } from "./types";
-import {
-  addQuantities,
-  getDefaultQuantityValue,
-  CannotAddTextValueError,
-  IncompatibleUnitsError,
-  Quantity,
-  addQuantityValues,
-} from "./units";
+import { CannotAddTextValueError, addQuantityValues } from "./units";
 import { ReferencedItemCannotBeRedefinedError } from "./errors";
 
 /**
@@ -73,13 +66,9 @@ export function findAndUpsertIngredient(
   ingredients: Ingredient[],
   newIngredient: Ingredient,
   isReference: boolean,
-): {
-  ingredientIndex: number;
-  quantityPartIndex: number | undefined;
-} {
-  const { name, quantity, unit } = newIngredient;
+): number {
+  const { name } = newIngredient;
 
-  // New ingredient
   if (isReference) {
     const indexFind = ingredients.findIndex(
       (i) => i.name.toLowerCase() === name.toLowerCase(),
@@ -91,7 +80,7 @@ export function findAndUpsertIngredient(
       );
     }
 
-    // Ingredient already exists, update it
+    // Ingredient already exists
     const existingIngredient = ingredients[indexFind]!;
 
     // Checking whether any provided flags are the same as the original ingredient
@@ -106,50 +95,11 @@ export function findAndUpsertIngredient(
       }
     }
 
-    let quantityPartIndex = undefined;
-    if (quantity !== undefined) {
-      const currentQuantity: Quantity = {
-        value: existingIngredient.quantity ?? getDefaultQuantityValue(),
-        unit: existingIngredient.unit ?? "",
-      };
-      const newQuantity = { value: quantity, unit: unit ?? "" };
-      try {
-        const total = addQuantities(currentQuantity, newQuantity);
-        existingIngredient.quantity = total.value;
-        existingIngredient.unit = total.unit || undefined;
-        if (existingIngredient.quantityParts) {
-          existingIngredient.quantityParts.push(
-            ...newIngredient.quantityParts!,
-          );
-        } else {
-          existingIngredient.quantityParts = newIngredient.quantityParts;
-        }
-        quantityPartIndex = existingIngredient.quantityParts!.length - 1;
-      } catch (e) {
-        /* v8 ignore else -- expliciting error types -- @preserve */
-        if (
-          e instanceof IncompatibleUnitsError ||
-          e instanceof CannotAddTextValueError
-        ) {
-          // Addition not possible, so add as a new ingredient.
-          return {
-            ingredientIndex: ingredients.push(newIngredient) - 1,
-            quantityPartIndex: 0,
-          };
-        }
-      }
-    }
-    return {
-      ingredientIndex: indexFind,
-      quantityPartIndex,
-    };
+    return indexFind;
   }
 
   // Not a reference, so add as a new ingredient.
-  return {
-    ingredientIndex: ingredients.push(newIngredient) - 1,
-    quantityPartIndex: newIngredient.quantity ? 0 : undefined,
-  };
+  return ingredients.push(newIngredient) - 1;
 }
 
 export function findAndUpsertCookware(
