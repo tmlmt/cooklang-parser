@@ -191,17 +191,6 @@ export interface Range {
 }
 
 /**
- * Represents a contributor to an ingredient's total quantity
- * @category Types
- */
-export interface QuantityPart extends Quantity {
-  /** - If _true_, the quantity will scale
-   * - If _false_, the quantity is fixed
-   */
-  scalable: boolean;
-}
-
-/**
  * Represents a possible state modifier or other flag for an ingredient in a recipe
  * @category Types
  */
@@ -235,14 +224,12 @@ export interface IngredientExtras {
 export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
-  /** The quantity of the ingredient. */
-  quantity?: FixedValue | Range;
-  /** The unit of the ingredient. */
-  unit?: string;
-  /** The array of contributors to the ingredient's total quantity. */
-  quantityParts?: QuantityPart[];
+  /** The total quantity of the ingredient in the recipe. */
+  quantity?: Quantity | Quantity[];
   /** The preparation of the ingredient. */
   preparation?: string;
+  /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
+  alternatives?: number[];
   /** A list of potential state modifiers or other flags for the ingredient */
   flags?: IngredientFlag[];
   /** The collection of potential additional metadata for the ingredient */
@@ -250,27 +237,36 @@ export interface Ingredient {
 }
 
 /**
- * Represents a timer in a recipe.
+ * Represents a contributor to an ingredient's total quantity, corresponding
+ * to a single mention in the recipe text. It can contain multiple
+ * equivalent quantities (e.g., in different units).
  * @category Types
  */
-export interface Timer {
-  /** The name of the timer. */
-  name?: string;
-  /** The duration of the timer. */
-  duration: FixedValue | Range;
-  /** The unit of the timer. */
-  unit: string;
+export interface IngredientItemQuantity {
+  /**
+   * A list of equivalent quantities for this ingredient mention.
+   * The first item is considered the primary quantity.
+   * For `@salt{1%tsp|5%g}`, this would contain two `Quantity` objects.
+   */
+  equivalents: Quantity[];
+  /** Indicates whether this quantity should be scaled when the recipe serving size changes. */
+  scalable: boolean;
 }
 
 /**
- * Represents a text item in a recipe step.
+ * Represents a single ingredient choice within an `IngredientItem`. It points
+ * to a specific ingredient and its corresponding quantity information.
  * @category Types
  */
-export interface TextItem {
-  /** The type of the item. */
-  type: "text";
-  /** The content of the text item. */
-  value: string;
+export interface IngredientAlternative {
+  /** The index of the ingredient within the {@link Recipe.ingredients} array. */
+  index: number;
+  /** The quantity of this specific mention of the ingredient */
+  quantity?: IngredientItemQuantity;
+  /** The alias/name of the ingredient as it should be displayed for this occurrence. */
+  displayName: string;
+  /** An optional note for this specific choice (e.g., "for a vegan version"). */
+  note?: string;
 }
 
 /**
@@ -280,14 +276,49 @@ export interface TextItem {
 export interface IngredientItem {
   /** The type of the item. */
   type: "ingredient";
-  /** The index of the ingredient, within the {@link Recipe.ingredients | list of ingredients} */
-  index: number;
-  /** Index of the quantity part corresponding to this item / this occurence
-   * of the ingredient, which may be referenced elsewhere. */
-  quantityPartIndex?: number;
-  /** The alias/name of the ingredient as it should be displayed in the preparation
-   * for this occurence */
-  displayName: string;
+  /** The item identifier */
+  id: string;
+  /**
+   * A list of alternative ingredient choices. For a standard ingredient,
+   * this array will contain a single element.
+   */
+  alternatives: IngredientAlternative[];
+  /**
+   * An optional identifier for linking distributed alternatives. If multiple
+   * `IngredientItem`s in a recipe share the same `group` ID (e.g., from
+   * `@|group|...` syntax), they represent a single logical choice.
+   */
+  group?: string;
+}
+
+/**
+ * Represents the available alternatives for an ingredient mention together with the
+ * current active choice.
+ * @category Types
+ */
+export interface IngredientChoiceInline {
+  id: string;
+  alternatives: IngredientAlternative[];
+  active: number;
+}
+
+/**
+ * Represents the available alternatives for a group of ingredient mentions together
+ * with the current active choice.
+ * @category Types
+ */
+export interface IngredientChoiceGrouped {
+  group: string;
+  alternatives: IngredientAlternative[];
+  active: number;
+}
+
+/**
+ * Represents the choices one can make in a recipe
+ * @category Types
+ */
+export interface RecipeChoices {
+  ingredients: (IngredientChoiceInline | IngredientChoiceGrouped)[];
 }
 
 /**
@@ -313,6 +344,30 @@ export interface TimerItem {
   type: "timer";
   /** The index of the timer, within the {@link Recipe.timers | list of timers} */
   index: number;
+}
+
+/**
+ * Represents a timer in a recipe.
+ * @category Types
+ */
+export interface Timer {
+  /** The name of the timer. */
+  name?: string;
+  /** The duration of the timer. */
+  duration: FixedValue | Range;
+  /** The unit of the timer. */
+  unit: string;
+}
+
+/**
+ * Represents a text item in a recipe step.
+ * @category Types
+ */
+export interface TextItem {
+  /** The type of the item. */
+  type: "text";
+  /** The content of the text item. */
+  value: string;
 }
 
 /**
@@ -402,7 +457,7 @@ export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name" | "quantity" | "unit">;
+export type AddedIngredient = Pick<Ingredient, "name"> & Quantity;
 
 /**
  * Represents an ingredient in a category.
