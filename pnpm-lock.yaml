@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  human-regex@2.1.5:
-    hash: 6d6bd9e233f99785a7c2187fd464edc114b76d47001dbb4eb6b5d72168de7460
-    path: patches/human-regex@2.1.5.patch
-
 importers:
 
   .:
@@ -17,10 +12,10 @@ importers:
         specifier: 7.0.1
         version: 7.0.1
       smol-toml:
-        specifier: ^1.5.2
+        specifier: 1.5.2
         version: 1.5.2
       yalps:
-        specifier: ^0.6.3
+        specifier: 0.6.3
         version: 0.6.3
     devDependencies:
       '@eslint/compat':
@@ -36,7 +31,7 @@ importers:
         specifier: 6.2.2
         version: 6.2.2
       '@types/js-yaml':
-        specifier: ^4.0.9
+        specifier: 4.0.9
         version: 4.0.9
       '@types/node':
         specifier: 22.19.0
@@ -63,8 +58,8 @@ importers:
         specifier: 16.5.0
         version: 16.5.0
       human-regex:
-        specifier: 2.1.5
-        version: 2.1.5(patch_hash=6d6bd9e233f99785a7c2187fd464edc114b76d47001dbb4eb6b5d72168de7460)
+        specifier: 2.2.0
+        version: 2.2.0
       prettier:
         specifier: 3.6.2
         version: 3.6.2
@@ -1286,8 +1281,8 @@ packages:
   html-void-elements@3.0.0:
     resolution: {integrity: sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg==}
 
-  human-regex@2.1.5:
-    resolution: {integrity: sha512-0IjS3kUvWMu27q4JT1t/0eA8J78iOEsn6igZ4yElBmYeyAU901+4cwQHKUyco1A2e9llO8pnIsPimPD5y+n06A==}
+  human-regex@2.2.0:
+    resolution: {integrity: sha512-lpDOVu5sVKVylCvnSG4RlhCY+9/iT0OSflkm0t6ApZ4B6wrfmHALwfifZTB7Awdjq7Xb1IR1CXgP/ecxQ7ZwrQ==}
 
   human-signals@8.0.1:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
@@ -3234,7 +3229,7 @@ snapshots:
 
   html-void-elements@3.0.0: {}
 
-  human-regex@2.1.5(patch_hash=6d6bd9e233f99785a7c2187fd464edc114b76d47001dbb4eb6b5d72168de7460):
+  human-regex@2.2.0:
     dependencies:
       tslib: 2.8.1
 

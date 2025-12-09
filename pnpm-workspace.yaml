@@ -3,6 +3,3 @@ packages:
 
 onlyBuiltDependencies:
   - esbuild
-
-patchedDependencies:
-  human-regex@2.1.5: patches/human-regex@2.1.5.patch
