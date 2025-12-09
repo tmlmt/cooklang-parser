@@ -341,7 +341,7 @@ export function extractMetadata(content: string): MetadataExtract {
   let servings: number | undefined = undefined;
 
   // Is there front-matter at all?
-  const metadataContent = content.match(metadataRegex)?.[1];
+  const metadataContent = content.match(metadataRegex)?.[2];
   if (!metadataContent) {
     return { metadata };
   }
