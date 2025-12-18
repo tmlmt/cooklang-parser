@@ -1,5 +1,5 @@
 import type { Recipe } from "./classes/recipe";
-import type { Quantity } from "./units";
+import type { MaybeNestedGroup, Quantity } from "./units";
 
 /**
  * Represents the metadata of a recipe.
@@ -225,7 +225,7 @@ export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
   /** The total quantity of the ingredient in the recipe. */
-  quantity?: Quantity | Quantity[];
+  quantity?: Quantity | MaybeNestedGroup<Quantity>;
   /** The preparation of the ingredient. */
   preparation?: string;
   /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
@@ -297,7 +297,6 @@ export interface IngredientItem {
  * @category Types
  */
 export interface IngredientChoiceInline {
-  id: string;
   alternatives: IngredientAlternative[];
   active: number;
 }
@@ -308,7 +307,6 @@ export interface IngredientChoiceInline {
  * @category Types
  */
 export interface IngredientChoiceGrouped {
-  group: string;
   alternatives: IngredientAlternative[];
   active: number;
 }
@@ -318,7 +316,10 @@ export interface IngredientChoiceGrouped {
  * @category Types
  */
 export interface RecipeChoices {
-  ingredients: (IngredientChoiceInline | IngredientChoiceGrouped)[];
+  /** Map of choices that can be made at Ingredient Item level */
+  ingredientItems: Map<string, IngredientChoiceInline>;
+  /** Map of choices that can be made for Grouped Ingredient Item's */
+  ingredientGroups: Map<string, IngredientChoiceGrouped>;
 }
 
 /**

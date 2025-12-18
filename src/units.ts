@@ -3,18 +3,68 @@ import Big from "big.js";
 export type UnitType = "mass" | "volume" | "count";
 export type UnitSystem = "metric" | "imperial";
 
-export interface UnitDefinition {
-  name: string; // canonical name, e.g. 'g'
+export interface Unit {
+  name: string;
+  integerProtected?: boolean;
+}
+
+export interface UnitDefinition extends Unit {
   type: UnitType;
   system: UnitSystem;
   aliases: string[]; // e.g. ['gram', 'grams']
   toBase: number; // conversion factor to the base unit of its type
 }
 
+export type UnitDefinitionLike =
+  | UnitDefinition
+  | { name: string; system: "none"; integerProtected?: boolean };
+
 export interface Quantity {
   value: FixedValue | Range;
-  unit?: string;
+  unit?: Unit;
 }
+
+export type QuantityWithUnitDef = Omit<Quantity, "unit"> & {
+  unit: UnitDefinitionLike;
+};
+
+export interface FlatOrGroup<T = Quantity | QuantityWithUnitDef> {
+  type: "or";
+  quantities: T[];
+}
+export interface MaybeNestedOrGroup<T = Quantity | QuantityWithUnitDef> {
+  type: "or";
+  quantities: (T | MaybeNestedGroup<T>)[];
+}
+
+export interface FlatAndGroup<T = Quantity | QuantityWithUnitDef> {
+  type: "and";
+  quantities: T[];
+}
+export interface NestedAndGroup<T = Quantity | QuantityWithUnitDef> {
+  type: "and";
+  quantities: T[];
+}
+export interface MaybeNestedAndGroup<T = Quantity | QuantityWithUnitDef> {
+  type: "and";
+  quantities: (T | MaybeNestedGroup<T>)[];
+}
+
+export type FlatGroup<T = Quantity | QuantityWithUnitDef> =
+  | FlatAndGroup<T>
+  | FlatOrGroup<T>;
+export type MaybeNestedGroup<T = Quantity | QuantityWithUnitDef> =
+  | MaybeNestedAndGroup<T>
+  | MaybeNestedOrGroup<T>;
+export type Group<T = Quantity | QuantityWithUnitDef> =
+  | MaybeNestedGroup<T>
+  | FlatGroup<T>;
+export type OrGroup<T = Quantity | QuantityWithUnitDef> =
+  | MaybeNestedOrGroup<T>
+  | FlatOrGroup<T>;
+export type AndGroup<T = Quantity | QuantityWithUnitDef> =
+  | MaybeNestedAndGroup<T>
+  | FlatAndGroup<T>;
 
 // Base units: mass -> gram (g), volume -> milliliter (ml)
 const units: UnitDefinition[] = [
@@ -152,6 +202,32 @@ export function normalizeUnit(unit: string = ""): UnitDefinition | undefined {
   return unitMap.get(unit.toLowerCase().trim());
 }
 
+export function deNormalizeQuantity(q: QuantityWithUnitDef): Quantity {
+  const result: Quantity = {
+    value: q.value,
+  };
+  if (q.unit.name !== "__no-unit__") {
+    result.unit = { name: q.unit.name };
+  }
+  return result;
+}
+
+export function getNormalizedUnit(unit: string): UnitDefinitionLike {
+  const normalizedUnit = normalizeUnit(unit);
+  return normalizedUnit
+    ? { ...normalizedUnit, name: unit }
+    : { name: unit, system: "none" };
+}
+
+export class StrictUnitError extends Error {
+  constructor(unit: string) {
+    super(
+      `Unit ${unit} is strict, and the values provided have different units so they cannot be added`,
+    );
+    this.name = "StrictUnitError";
+  }
+}
+
 export class CannotAddTextValueError extends Error {
   constructor() {
     super("Cannot add a quantity with a text value.");
@@ -262,7 +338,7 @@ export function addNumericValues(
 
 const toRoundedDecimal = (v: DecimalValue | FractionValue): DecimalValue => {
   const value = v.type === "decimal" ? v.value : v.num / v.den;
-  return { type: "decimal", value: Math.floor(value * 100) / 100 };
+  return { type: "decimal", value: Math.round(value * 1000) / 1000 };
 };
 
 export function multiplyQuantityValue(
@@ -384,28 +460,36 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
     throw new CannotAddTextValueError();
   }
 
-  const unit1Def = normalizeUnit(q1.unit);
-  const unit2Def = normalizeUnit(q2.unit);
+  const unit1Def = normalizeUnit(q1.unit?.name);
+  const unit2Def = normalizeUnit(q2.unit?.name);
 
   const addQuantityValuesAndSetUnit = (
     val1: FixedValue | Range,
     val2: FixedValue | Range,
-    unit: string | undefined,
+    unit?: Unit,
   ): Quantity => ({ value: addQuantityValues(val1, val2), unit });
 
   // Case 2: one of the two values doesn't have a unit, we preserve its value and consider its unit to be that of the other one
   // If at least one of the two units is "", this preserves it versus setting the resulting unit as undefined
-  if ((q1.unit === "" || q1.unit === undefined) && q2.unit !== undefined) {
+  if (
+    (q1.unit?.name === "" || q1.unit === undefined) &&
+    q2.unit !== undefined
+  ) {
     return addQuantityValuesAndSetUnit(v1, v2, q2.unit); // Prefer q2's unit
   }
-  if ((q2.unit === "" || q2.unit === undefined) && q1.unit !== undefined) {
+  if (
+    (q2.unit?.name === "" || q2.unit === undefined) &&
+    q1.unit !== undefined
+  ) {
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit); // Prefer q1's unit
   }
 
   // Case 3: the two quantities have the exact same unit
   if (
     (!q1.unit && !q2.unit) ||
-    (q1.unit && q2.unit && q1.unit.toLowerCase() === q2.unit.toLowerCase())
+    (q1.unit &&
+      q2.unit &&
+      q1.unit.name.toLowerCase() === q2.unit.name.toLowerCase())
   ) {
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
   }
@@ -416,8 +500,8 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
 
     if (unit1Def.type !== unit2Def.type) {
       throw new IncompatibleUnitsError(
-        `${unit1Def.type} (${q1.unit})`,
-        `${unit2Def.type} (${q2.unit})`,
+        `${unit1Def.type} (${q1.unit?.name})`,
+        `${unit2Def.type} (${q2.unit?.name})`,
       );
     }
 
@@ -438,14 +522,510 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
     }
     const convertedV1 = convertQuantityValue(v1, unit1Def, targetUnitDef);
     const convertedV2 = convertQuantityValue(v2, unit2Def, targetUnitDef);
+    const targetUnit: Unit = { name: targetUnitDef.name };
+    if (q1.unit?.integerProtected || q2.unit?.integerProtected) {
+      targetUnit.integerProtected = true;
+    }
 
-    return addQuantityValuesAndSetUnit(
-      convertedV1,
-      convertedV2,
-      targetUnitDef.name,
-    );
+    return addQuantityValuesAndSetUnit(convertedV1, convertedV2, targetUnit);
   }
 
   // Case 5: the two quantities have different units of unknown type
-  throw new IncompatibleUnitsError(q1.unit!, q2.unit!);
+  throw new IncompatibleUnitsError(
+    q1.unit?.name as string,
+    q2.unit?.name as string,
+  );
+}
+
+// Helper type-checks (as before)
+function isGroup(x: Quantity | QuantityWithUnitDef | Group): x is Group {
+  return x && "type" in x;
+}
+function isOrGroup(x: Quantity | QuantityWithUnitDef | Group): x is OrGroup {
+  return isGroup(x) && x.type === "or";
+}
+function isQuantity(x: Quantity | QuantityWithUnitDef | Group): x is Quantity {
+  return x && typeof x === "object" && "value" in x;
+}
+
+export function getAverageValue(q: FixedValue | Range): string | number {
+  if (q.type === "fixed") {
+    return q.value.type === "text" ? q.value.value : getNumericValue(q.value);
+  } else {
+    return (getNumericValue(q.min) + getNumericValue(q.max)) / 2;
+  }
+}
+
+export function getUnitRatio(q1: QuantityWithUnitDef, q2: QuantityWithUnitDef) {
+  const q1Value = getAverageValue(q1.value);
+  const q2Value = getAverageValue(q2.value);
+  const factor =
+    "toBase" in q1.unit && "toBase" in q2.unit
+      ? q1.unit.toBase / q2.unit.toBase
+      : 1;
+
+  if (typeof q1Value !== "number" || typeof q2Value !== "number") {
+    throw Error(
+      "One of both values is not a number, so a ratio cannot be computed",
+    );
+  }
+  return Big(q1Value).times(factor).div(q2Value);
+}
+
+export function getBaseUnitRatio(
+  q: QuantityWithUnitDef,
+  qRef: QuantityWithUnitDef,
+) {
+  if ("toBase" in q.unit && "toBase" in qRef.unit) {
+    return q.unit.toBase / qRef.unit.toBase;
+  } else {
+    return 1;
+  }
+}
+
+export function getEquivalentUnitsLists(
+  ...quantities: (Quantity | FlatOrGroup<Quantity>)[]
+): QuantityWithUnitDef[][] {
+  const quantitiesCopy = JSON.parse(JSON.stringify(quantities)) as (
+    | Quantity
+    | FlatOrGroup<Quantity>
+  )[];
+
+  const OrGroups = (
+    quantitiesCopy.filter(isOrGroup) as FlatOrGroup<Quantity>[]
+  ).filter((q) => q.quantities.length > 1);
+
+  const unitLists: QuantityWithUnitDef[][] = [];
+  for (const orGroup of OrGroups) {
+    // Normalize units, transfer integerProtected tag, and add name to it when no unit
+    const orGroupModified = {
+      ...orGroup,
+      quantities: orGroup.quantities.map((q) => {
+        if (isQuantity(q)) {
+          const integerProtected = q.unit?.integerProtected;
+          q.unit = getNormalizedUnit(q.unit ? q.unit.name : "__no-unit__");
+          if (integerProtected) {
+            q.unit.integerProtected = true;
+          }
+        }
+        return q as QuantityWithUnitDef;
+      }),
+    };
+    // Is the unit already listed in an equivalent group?
+    const units = orGroupModified.quantities.map((q) => q.unit);
+    // Is the quantity already represented in one of the existing unit lists?
+    const linkIndex = unitLists.findIndex((l) => {
+      const listItem = l.map((q) =>
+        getNormalizedUnit(q.unit ? q.unit.name : "__no-unit__"),
+      );
+      return units.some((u) =>
+        listItem.some(
+          (lu) =>
+            lu.name === u.name ||
+            (lu.system === u.system &&
+              "type" in lu &&
+              "type" in u &&
+              lu.type === u.type),
+        ),
+      );
+    });
+    if (linkIndex === -1) {
+      // We populate a new group with the entire group of quantities of the provided OR group
+      unitLists.push(orGroupModified.quantities);
+    } else {
+      let unitRatio: Big | undefined;
+      const commonUnitList = unitLists[linkIndex]!.reduce((acc, v) => {
+        const normalizedV: QuantityWithUnitDef = {
+          ...v,
+          unit: getNormalizedUnit(v.unit ? v.unit.name : "__no-unit__"),
+        };
+        if (v.unit?.integerProtected) normalizedV.unit.integerProtected = true;
+
+        const commonQuantity = orGroupModified.quantities.find(
+          (q) =>
+            isQuantity(q) &&
+            q.unit &&
+            (q.unit.name === normalizedV.unit.name ||
+              (q.unit.system === normalizedV.unit.system &&
+                "type" in q.unit &&
+                "type" in normalizedV.unit &&
+                q.unit?.type === normalizedV.unit.type)),
+        );
+        if (commonQuantity) {
+          acc.push(normalizedV);
+          unitRatio = getUnitRatio(normalizedV, commonQuantity);
+        }
+        return acc;
+      }, [] as QuantityWithUnitDef[]);
+      for (const newQ of orGroupModified.quantities) {
+        if (
+          commonUnitList.some(
+            (q) =>
+              q.unit?.name === newQ.unit?.name ||
+              (q.unit &&
+                newQ.unit &&
+                q.unit.system === newQ.unit?.system &&
+                "type" in q.unit &&
+                "type" in newQ.unit &&
+                q.unit.type === newQ.unit?.type),
+          )
+        ) {
+          continue;
+        } else {
+          newQ.value = multiplyQuantityValue(newQ.value, unitRatio!);
+          unitLists[linkIndex]!.push(newQ);
+        }
+      }
+    }
+  }
+
+  return unitLists;
+}
+
+export function isValueIntegerLike(q: FixedValue | Range) {
+  let result = false;
+  if (q.type === "fixed") {
+    if (q.value.type === "decimal") return Number.isInteger(q.value.value);
+    if (q.value.type === "fraction")
+      return Number.isInteger(q.value.num / q.value.den);
+  } else {
+    if (q.min.type === "decimal")
+      result = result ? Number.isInteger(q.min.value) : false;
+    if (q.min.type === "fraction")
+      result = result ? Number.isInteger(q.min.num / q.min.den) : false;
+    if (q.max.type === "decimal")
+      result = result ? Number.isInteger(q.max.value) : false;
+    if (q.max.type === "fraction")
+      result = result ? Number.isInteger(q.max.num / q.max.den) : false;
+  }
+  return result;
+}
+
+function findListWithCompatibleQuantity(
+  list: QuantityWithUnitDef[][],
+  quantity: Quantity,
+) {
+  const quantityWithUnitDef = {
+    ...quantity,
+    unit: getNormalizedUnit(quantity.unit ? quantity.unit.name : "__no-unit__"),
+  };
+  return list.find((l) =>
+    l.some(
+      (lq) =>
+        lq.unit?.name === quantityWithUnitDef.unit?.name ||
+        (lq.unit?.system === quantityWithUnitDef.unit?.system &&
+          "type" in lq.unit &&
+          "type" in quantityWithUnitDef.unit &&
+          lq.unit?.type === quantityWithUnitDef.unit.type),
+    ),
+  );
+}
+
+function findCompatibleQuantityWithinList(
+  list: QuantityWithUnitDef[],
+  quantity: Quantity,
+) {
+  const quantityWithUnitDef = {
+    ...quantity,
+    unit: getNormalizedUnit(quantity.unit ? quantity.unit.name : "__no-unit__"),
+  };
+  if (!list) return undefined;
+  return list.find(
+    (q) =>
+      q.unit?.name === quantityWithUnitDef.unit?.name ||
+      (q.unit?.system === quantityWithUnitDef.unit?.system &&
+        "type" in q.unit &&
+        "type" in quantityWithUnitDef.unit &&
+        q.unit?.type === quantityWithUnitDef.unit.type),
+  );
+}
+
+export function sortUnitList(list: QuantityWithUnitDef[]) {
+  if (!list || list.length <= 1) return list;
+  const priorityList: QuantityWithUnitDef[] = [];
+  const nonPriorityList: QuantityWithUnitDef[] = [];
+  for (const q of list) {
+    if (q.unit.integerProtected || q.unit.system === "none") {
+      priorityList.push(q);
+    } else {
+      nonPriorityList.push(q);
+    }
+  }
+
+  return priorityList
+    .sort((a, b) => {
+      let prefixA = "";
+      if (a.unit.integerProtected) prefixA = "___";
+      else if (a.unit.system === "none") prefixA = "__";
+      let prefixB = "";
+      if (b.unit.integerProtected) prefixB = "___";
+      else if (b.unit.system === "none") prefixB = "__";
+      return (prefixA + a.unit.name).localeCompare(prefixB + b.unit.name);
+    })
+    .concat(nonPriorityList);
+}
+
+export function reduceOrsToFirstEquivalent(
+  unitList: QuantityWithUnitDef[][],
+  quantities: (Quantity | FlatOrGroup<Quantity>)[],
+): Quantity[] {
+  function reduceToQuantity(firstQuantity: Quantity) {
+    // Look for the global list of equivalent for this quantity unit;
+    const equivalentList = sortUnitList(
+      findListWithCompatibleQuantity(unitList, firstQuantity)!,
+    );
+    if (!equivalentList) return firstQuantity;
+    // Find that first quantity in the OR
+    const firstQuantityInList = findCompatibleQuantityWithinList(
+      equivalentList,
+      firstQuantity,
+    )!;
+    // Normalize the first quantity's unit
+    const normalizedFirstQuantity: QuantityWithUnitDef = {
+      ...firstQuantity,
+      unit: getNormalizedUnit(
+        firstQuantity.unit ? firstQuantity.unit.name : "__no-unit__",
+      ),
+    };
+    // Priority 1: the first quantity has an integer-protected unit
+    if (firstQuantityInList.unit.integerProtected) {
+      const resultQuantity: Quantity = {
+        value: firstQuantity.value,
+      };
+      if (normalizedFirstQuantity.unit.name !== "__no-unit__") {
+        resultQuantity.unit = { name: normalizedFirstQuantity.unit.name };
+      }
+      return resultQuantity;
+    } else {
+      // Priority 2: the next integer-protected units in the equivalent list
+      let nextProtected: number | undefined;
+      const equivalentListTemp = [...equivalentList];
+      while (nextProtected !== -1) {
+        nextProtected = equivalentListTemp.findIndex(
+          (eq) => eq.unit?.integerProtected,
+        );
+        // Ratio between the values in the OR group vs the ones used in the equivalent unit list
+        if (nextProtected !== -1) {
+          const unitRatio = getUnitRatio(
+            equivalentListTemp[nextProtected]!,
+            firstQuantityInList,
+          );
+          const nextProtectedQuantityValue = multiplyQuantityValue(
+            firstQuantity.value,
+            unitRatio,
+          );
+          if (isValueIntegerLike(nextProtectedQuantityValue)) {
+            const nextProtectedQuantity: Quantity = {
+              value: nextProtectedQuantityValue,
+            };
+            if (
+              equivalentListTemp[nextProtected]!.unit.name !== "__no-unit__"
+            ) {
+              nextProtectedQuantity.unit = {
+                name: equivalentListTemp[nextProtected]!.unit.name,
+              };
+            }
+
+            return nextProtectedQuantity;
+          } else {
+            equivalentListTemp.splice(nextProtected, 1);
+          }
+        }
+      }
+
+      // Priority 3: the first non-integer-Protected value of the list
+      const firstNonIntegerProtected = equivalentListTemp.filter(
+        (q) => !q.unit.integerProtected,
+      )[0]!;
+      // Example: with unitsList = [10 mL, 1 large] and input FirstQuantity = 0.5 large
+      // value in target unit = value of input * target-in-list/input-in-list * 1 large / 1 large
+      //       5 (mL)     =        0.5 (large) *           10 / 1
+      // Example: with unitsList = [1 large, 10 mL] and input FirstQuantity = 2 cL
+      // value in target unit = value of input * target-in-list/input-in-list * 1 cL / 1 mL
+      //       2 large    =          2 large      *           1 / 10               10 / 1'
+      // Example: with unitsList = [10 mL, 1 large] and input FirstQuantity = 2 cL
+      // value in target unit = value of input * target-in-list/input-in-list * 1 cL / 1 mL
+      //       20 mL      =          2 large      *           1 / 10               10 / 1
+      const unitRatio = getUnitRatio(
+        firstNonIntegerProtected,
+        firstQuantityInList,
+      ).times(getBaseUnitRatio(normalizedFirstQuantity, firstQuantityInList));
+      const firstEqQuantity: Quantity = {
+        value:
+          firstNonIntegerProtected.unit.name === firstQuantity.unit!.name
+            ? firstQuantity.value
+            : multiplyQuantityValue(firstQuantity.value, unitRatio),
+      };
+      if (firstNonIntegerProtected.unit.name !== "__no-unit__") {
+        firstEqQuantity.unit = { name: firstNonIntegerProtected.unit.name };
+      }
+      return firstEqQuantity;
+    }
+  }
+  return quantities.map((q) => {
+    if (isQuantity(q)) return reduceToQuantity(q);
+    // Now, q is necessarily an OR group
+    // We normalize units and sort them to get integerProtected elements first, then no units, then the rest
+    const qListModified = sortUnitList(
+      q.quantities.map((qq) => {
+        const integerProtected = qq.unit?.integerProtected;
+        qq.unit = getNormalizedUnit(qq.unit ? qq.unit.name : "__no-unit__");
+        if (integerProtected) {
+          qq.unit.integerProtected = true;
+        }
+        return qq as QuantityWithUnitDef;
+      }),
+    );
+    // We can simply use the first element
+    return reduceToQuantity(qListModified[0]!);
+  });
+}
+
+export function addQuantitiesOrGroups(
+  ...quantities: (Quantity | FlatOrGroup<Quantity>)[]
+): {
+  sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>;
+  unitsLists: QuantityWithUnitDef[][];
+} {
+  if (quantities.length === 0)
+    return {
+      sum: {
+        value: getDefaultQuantityValue(),
+        unit: getNormalizedUnit("__no-unit__"),
+      },
+      unitsLists: [],
+    };
+  if (quantities.length === 1) {
+    if (isQuantity(quantities[0]!))
+      return {
+        sum: {
+          ...quantities[0],
+          unit: getNormalizedUnit(
+            quantities[0].unit ? quantities[0].unit.name : "__no-unit__",
+          ),
+        },
+        unitsLists: [],
+      };
+  }
+  // Step 1: find equivalents units
+  const unitsLists = getEquivalentUnitsLists(...quantities);
+  // Step 2: reduce the OR group to Quantities
+  const reducedQuantities = reduceOrsToFirstEquivalent(unitsLists, quantities);
+  // Step 3: calculate the sum
+  const sum: QuantityWithUnitDef[] = [];
+  for (const nextQ of reducedQuantities) {
+    const existingQ = findCompatibleQuantityWithinList(sum, nextQ);
+    if (existingQ === undefined) {
+      sum.push({
+        ...nextQ,
+        unit: getNormalizedUnit(nextQ.unit ? nextQ.unit.name : "__no-unit__"),
+      });
+    } else {
+      const sumQ = addQuantities(existingQ, nextQ);
+      existingQ.value = sumQ.value;
+      existingQ.unit = getNormalizedUnit(
+        sumQ.unit ? sumQ.unit.name : "__no-unit__",
+      );
+    }
+  }
+  if (sum.length === 1) {
+    return { sum: sum[0]!, unitsLists };
+  }
+  return { sum: { type: "and", quantities: sum }, unitsLists };
+}
+
+function regroupQuantitiesAndExpandEquivalents(
+  sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>,
+  unitsLists: QuantityWithUnitDef[][],
+): (Quantity | MaybeNestedOrGroup<Quantity>)[] {
+  const sumQuantities = isGroup(sum) ? sum.quantities : [sum];
+  const result: (Quantity | MaybeNestedOrGroup<Quantity>)[] = [];
+  const processedQuantities = new Set<QuantityWithUnitDef>();
+
+  for (const list of unitsLists) {
+    const listCopy = [...list];
+    const main: QuantityWithUnitDef[] = [];
+    const mainCandidates = sumQuantities.filter(
+      (q) => !processedQuantities.has(q),
+    );
+
+    if (mainCandidates.length === 0) continue;
+
+    mainCandidates.forEach((q) => {
+      // If the sum contain a value from the unit list, we push it to the mains and remove it from the list
+      const mainInList = findCompatibleQuantityWithinList(listCopy, q);
+      if (mainInList !== undefined) {
+        processedQuantities.add(q);
+        main.push(q);
+        listCopy.splice(listCopy.indexOf(mainInList), 1);
+      }
+    });
+
+    // We sort the equivalent units and calculate the equivalent value for each of them
+    const equivalents = sortUnitList(listCopy).map((equiv) => {
+      const initialValue: Quantity = { value: getDefaultQuantityValue() };
+      if (equiv.unit) {
+        initialValue.unit = { name: equiv.unit.name };
+      }
+      return main.reduce((acc, v) => {
+        const mainInList = findCompatibleQuantityWithinList(list, v)!;
+        console.log(mainInList);
+        console.log(equiv);
+        console.log(getUnitRatio(equiv, mainInList));
+        const newValue: Quantity = {
+          value: multiplyQuantityValue(
+            v.value,
+            Big(getAverageValue(equiv.value)).div(
+              getAverageValue(mainInList.value),
+            ),
+          ),
+        };
+        if (equiv.unit && equiv.unit.name !== "__no-unit__") {
+          newValue.unit = { name: equiv.unit.name };
+        }
+        return addQuantities(acc, newValue);
+      }, initialValue);
+    });
+
+    if (main.length + equivalents.length > 1) {
+      const resultMain: Quantity | FlatAndGroup<Quantity> =
+        main.length > 1
+          ? {
+              type: "and",
+              quantities: main.map(deNormalizeQuantity),
+            }
+          : deNormalizeQuantity(main[0]!);
+      result.push({
+        type: "or",
+        quantities: [resultMain, ...equivalents],
+      });
+    } else {
+      result.push(deNormalizeQuantity(main[0]!));
+    }
+  }
+
+  // We add at the end the lone quantities
+  sumQuantities
+    .filter((q) => !processedQuantities.has(q))
+    .forEach((q) => result.push(deNormalizeQuantity(q)));
+
+  return result;
+}
+
+export function addEquivalentsAndSimplify(
+  ...quantities: (Quantity | FlatOrGroup<Quantity>)[]
+): Quantity | MaybeNestedGroup<Quantity> {
+  if (quantities.length === 1) {
+    if (isQuantity(quantities[0]!)) return quantities[0];
+    else return quantities[0] as FlatOrGroup<Quantity>;
+  }
+  // Step 1+2+3: find equivalents, reduce groups and add quantities
+  const { sum, unitsLists } = addQuantitiesOrGroups(...quantities);
+  // Step 4: regroup and expand equivalents per group
+  const regrouped = regroupQuantitiesAndExpandEquivalents(sum, unitsLists);
+  if (regrouped.length === 1) {
+    return regrouped[0]!;
+  } else {
+    return { type: "and", quantities: regrouped };
+  }
 }

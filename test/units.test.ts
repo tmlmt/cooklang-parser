@@ -11,8 +11,17 @@ import {
   addQuantityValues,
   multiplyNumericValue,
   multiplyQuantityValue,
+  addQuantitiesOrGroups,
+  getAverageValue,
+  getUnitRatio,
+  getEquivalentUnitsLists,
+  getNormalizedUnit,
+  reduceOrsToFirstEquivalent,
+  addEquivalentsAndSimplify,
 } from "../src/units";
+import type { Quantity, QuantityWithUnitDef, FlatOrGroup } from "../src/units";
 import type { DecimalValue, FixedValue, FractionValue } from "../src/types";
+import Big from "big.js";
 
 describe("normalizeUnit", () => {
   it("should normalize various unit strings to a canonical definition", () => {
@@ -209,16 +218,16 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 200 } },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 300 } },
-      unit: "g",
+      unit: { name: "g" },
     });
   });
 
@@ -227,16 +236,16 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 1.1 } },
-          unit: "kg",
+          unit: { name: "kg" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 1.3 } },
-          unit: "kg",
+          unit: { name: "kg" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 2.4 } },
-      unit: "kg",
+      unit: { name: "kg" },
     });
   });
 
@@ -249,7 +258,7 @@ describe("addQuantities", () => {
             min: { type: "decimal", value: 100 },
             max: { type: "decimal", value: 200 },
           },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: {
@@ -257,7 +266,7 @@ describe("addQuantities", () => {
             min: { type: "decimal", value: 10 },
             max: { type: "decimal", value: 20 },
           },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toEqual({
@@ -266,7 +275,7 @@ describe("addQuantities", () => {
         min: { type: "decimal", value: 110 },
         max: { type: "decimal", value: 220 },
       },
-      unit: "g",
+      unit: { name: "g" },
     });
 
     expect(
@@ -276,7 +285,7 @@ describe("addQuantities", () => {
             type: "fixed",
             value: { type: "decimal", value: 100 },
           },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: {
@@ -284,7 +293,7 @@ describe("addQuantities", () => {
             min: { type: "decimal", value: 10 },
             max: { type: "decimal", value: 20 },
           },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toEqual({
@@ -293,7 +302,7 @@ describe("addQuantities", () => {
         min: { type: "decimal", value: 110 },
         max: { type: "decimal", value: 120 },
       },
-      unit: "g",
+      unit: { name: "g" },
     });
 
     expect(
@@ -304,14 +313,14 @@ describe("addQuantities", () => {
             min: { type: "decimal", value: 10 },
             max: { type: "decimal", value: 20 },
           },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: {
             type: "fixed",
             value: { type: "decimal", value: 100 },
           },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toEqual({
@@ -320,7 +329,7 @@ describe("addQuantities", () => {
         min: { type: "decimal", value: 110 },
         max: { type: "decimal", value: 120 },
       },
-      unit: "g",
+      unit: { name: "g" },
     });
   });
 
@@ -329,31 +338,31 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "kg",
+          unit: { name: "kg" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 500 } },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
-      unit: "kg",
+      unit: { name: "kg" },
     });
     expect(
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 500 } },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "kg",
+          unit: { name: "kg" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
-      unit: "kg",
+      unit: { name: "kg" },
     });
   });
 
@@ -362,16 +371,16 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "lb",
+          unit: { name: "lb" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 8 } },
-          unit: "oz",
+          unit: { name: "oz" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
-      unit: "lb",
+      unit: { name: "lb" },
     });
   });
 
@@ -379,14 +388,14 @@ describe("addQuantities", () => {
     const result = addQuantities(
       {
         value: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "lb",
+        unit: { name: "lb" },
       },
       {
         value: { type: "fixed", value: { type: "decimal", value: 500 } },
-        unit: "g",
+        unit: { name: "g" },
       },
     );
-    expect(result.unit).toBe("kg");
+    expect(result.unit).toEqual({ name: "kg" });
     expect(result.value).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 0.95 },
@@ -398,11 +407,11 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "text", value: "to taste" } },
-          unit: "",
+          unit: { name: "" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toThrow(CannotAddTextValueError);
@@ -413,31 +422,31 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "",
+          unit: { name: "" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 2 } },
-          unit: "g",
+          unit: { name: "g" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 3 } },
-      unit: "g",
+      unit: { name: "g" },
     });
     expect(
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "",
+          unit: { name: "" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 101 } },
-      unit: "g",
+      unit: { name: "g" },
     });
   });
 
@@ -447,16 +456,16 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "",
+          unit: { name: "" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 2 } },
-          unit: "",
+          unit: { name: "" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "decimal", value: 3 } },
-      unit: "",
+      unit: { name: "" },
     });
     // No unit
     expect(
@@ -478,11 +487,11 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "L",
+          unit: { name: "L" },
         },
       ),
     ).toThrow(IncompatibleUnitsError);
@@ -490,11 +499,11 @@ describe("addQuantities", () => {
       addQuantities(
         {
           value: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          unit: { name: "g" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "bag",
+          unit: { name: "bag" },
         },
       ),
     ).toThrow(IncompatibleUnitsError);
@@ -509,11 +518,11 @@ describe("addQuantities", () => {
             min: { type: "decimal", value: 1 },
             max: { type: "decimal", value: 2 },
           },
-          unit: "tsp",
+          unit: { name: "tsp" },
         },
         {
           value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "tsp",
+          unit: { name: "tsp" },
         },
       ),
     ).toEqual({
@@ -522,7 +531,7 @@ describe("addQuantities", () => {
         min: { type: "decimal", value: 2 },
         max: { type: "decimal", value: 3 },
       },
-      unit: "tsp",
+      unit: { name: "tsp" },
     });
   });
 });
@@ -534,12 +543,12 @@ describe("getDefaultQuantityValue + addQuantities", () => {
         { value: getDefaultQuantityValue() },
         {
           value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
-          unit: "",
+          unit: { name: "" },
         },
       ),
     ).toEqual({
       value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
-      unit: "",
+      unit: { name: "" },
     });
   });
   it("should preseve ranges", () => {
@@ -552,7 +561,7 @@ describe("getDefaultQuantityValue + addQuantities", () => {
             min: { type: "decimal", value: 1 },
             max: { type: "decimal", value: 2 },
           },
-          unit: "",
+          unit: { name: "" },
         },
       ),
     ).toEqual({
@@ -561,7 +570,7 @@ describe("getDefaultQuantityValue + addQuantities", () => {
         min: { type: "decimal", value: 1 },
         max: { type: "decimal", value: 2 },
       },
-      unit: "",
+      unit: { name: "" },
     });
   });
 });
@@ -595,6 +604,325 @@ describe("multiplyQuantityValue", () => {
 
     it("should get the numerical value of a FractionValue", () => {
       expect(getNumericValue({ type: "fraction", num: 2, den: 3 })).toBe(2 / 3);
+    });
+  });
+});
+
+// Minimal mock for Quantity and FixedValue for testing
+const q = (
+  amount: number,
+  unit?: string,
+  integerProtected?: boolean,
+): Quantity => {
+  const quantity: Quantity = {
+    value: { type: "fixed", value: { type: "decimal", value: amount } },
+  };
+  if (unit) {
+    quantity.unit = { name: unit };
+    if (integerProtected) {
+      quantity.unit.integerProtected = integerProtected;
+    }
+  }
+  return quantity;
+};
+
+const qWithUnitDef = (
+  amount: number,
+  unit?: string,
+  integerProtected?: boolean,
+): QuantityWithUnitDef => {
+  const quantity = q(amount, unit, integerProtected);
+  quantity.unit = getNormalizedUnit(
+    quantity.unit ? quantity.unit.name : "__no-unit__",
+  );
+  if (integerProtected) {
+    quantity.unit.integerProtected = integerProtected;
+  }
+  return quantity as QuantityWithUnitDef;
+};
+
+describe("getAverageValue", () => {
+  it("should return the correct value for fixed values", () => {
+    expect(
+      getAverageValue({ type: "fixed", value: { type: "decimal", value: 1 } }),
+    ).toBe(1);
+  });
+  it("should return the correct value for ranges", () => {
+    expect(
+      getAverageValue({
+        type: "range",
+        min: { type: "decimal", value: 1 },
+        max: { type: "decimal", value: 2 },
+      }),
+    ).toBe(1.5);
+  });
+  it("should return the correct value for text values", () => {
+    expect(
+      getAverageValue({ type: "fixed", value: { type: "text", value: "two" } }),
+    ).toBe("two");
+  });
+});
+
+describe("getUnitRatio", () => {
+  it("should return the correct ratio for numerical values", () => {
+    expect(
+      getUnitRatio(qWithUnitDef(2, "large"), qWithUnitDef(1, "cup")),
+    ).toEqual(Big(2));
+    expect(
+      getUnitRatio(qWithUnitDef(2, "large"), qWithUnitDef(1.5, "cup")),
+    ).toEqual(Big(2).div(1.5));
+  });
+  it("should return the correct ratio for system units", () => {
+    expect(getUnitRatio(qWithUnitDef(10, "mL"), qWithUnitDef(2, "cL"))).toEqual(
+      Big(0.5),
+    );
+  });
+  it("should throw and error if one of the values is a text", () => {
+    expect(() =>
+      getUnitRatio(
+        {
+          value: { type: "fixed", value: { type: "text", value: "two" } },
+          unit: { name: "large", system: "none" },
+        },
+        qWithUnitDef(1, "cup"),
+      ),
+    ).toThrowError();
+  });
+});
+
+describe("getEquivalentUnitsLists", () => {
+  it("should consider units of the same system and type as similar", () => {
+    expect(
+      getEquivalentUnitsLists(
+        { type: "or", quantities: [q(1, "small"), q(10, "mL"), q(1, "cup")] },
+        { type: "or", quantities: [q(1, "large"), q(2, "cL"), q(1, "pint")] },
+      ),
+    ).toEqual([
+      [
+        qWithUnitDef(1, "small"),
+        qWithUnitDef(10, "mL"),
+        qWithUnitDef(1, "cup"),
+        qWithUnitDef(0.5, "large"),
+      ],
+    ]);
+  });
+  it("should return the correct list for complex quantity groups", () => {
+    expect(
+      getEquivalentUnitsLists(
+        {
+          type: "or",
+          quantities: [q(1, "bucket")],
+        },
+        {
+          type: "or",
+          quantities: [q(1, "mini"), q(1, "bag")],
+        },
+        q(1, "small"),
+        q(1, "mini"),
+        { type: "or", quantities: [q(1, "small"), q(1, "cup")] },
+        {
+          type: "or",
+          quantities: [q(1, "large", true), q(0.75, "cup"), q(0.5, "pack")],
+        },
+      ),
+    ).toEqual([
+      [qWithUnitDef(1, "mini"), qWithUnitDef(1, "bag")],
+      [
+        qWithUnitDef(1, "small"),
+        qWithUnitDef(1, "cup"),
+        qWithUnitDef(1.333, "large", true),
+        qWithUnitDef(0.667, "pack"),
+      ],
+    ]);
+  });
+});
+
+describe("reduceOrsToFirstEquivalent", () => {
+  const unitList = [
+    [
+      qWithUnitDef(2, "large", true),
+      qWithUnitDef(1.5, "cup"),
+      qWithUnitDef(3, "small", true),
+    ],
+  ];
+  it("should keep protected Quantity's intact", () => {
+    expect(
+      reduceOrsToFirstEquivalent(unitList, [q(2, "large"), q(5, "small")]),
+    ).toEqual([q(2, "large"), q(5, "small")]);
+  });
+  it("should correctly reduce or groups to first protected unit", () => {
+    expect(
+      reduceOrsToFirstEquivalent(unitList, [
+        { type: "or", quantities: [q(2, "large"), q(1.5, "cup")] },
+      ]),
+    ).toEqual([q(2, "large")]);
+  });
+  it("should disregard order in the group", () => {
+    expect(
+      reduceOrsToFirstEquivalent(unitList, [
+        { type: "or", quantities: [q(2, "large"), q(1.5, "cup")] },
+        { type: "or", quantities: [q(1, "cup"), q(3, "large")] },
+      ]),
+    ).toEqual([q(2, "large"), q(3, "large")]);
+  });
+  it("should handle units of different systems and types", () => {
+    expect(
+      reduceOrsToFirstEquivalent(
+        [[qWithUnitDef(10, "mL"), qWithUnitDef(1, "cup")]],
+        [
+          { type: "or", quantities: [q(10, "mL"), q(1, "cup")] },
+          { type: "or", quantities: [q(2, "cL"), q(1, "pint")] },
+        ],
+      ),
+    ).toEqual([q(10, "mL"), q(20, "mL")]);
+  });
+  it("should correctly transform Quantity into first compatible protected unit quantity", () => {
+    expect(reduceOrsToFirstEquivalent(unitList, [q(1.5, "cup")])).toEqual([
+      q(2, "large"),
+    ]);
+    expect(reduceOrsToFirstEquivalent(unitList, [q(1, "cup")])).toEqual([
+      q(2, "small"),
+    ]);
+  });
+});
+
+describe("addQuantitiesOrGroups", () => {
+  it("should reduce an OR group to its most relevant member", () => {
+    const or: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "large"), q(1.5, "cup")],
+    };
+
+    const { sum } = addQuantitiesOrGroups(or);
+    expect(sum).toEqual(qWithUnitDef(2, "large"));
+  });
+  it("should add two OR groups to the sum of their most relevant member", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "large"), q(1.5, "cup")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(4, "large"), q(3, "cup")],
+    };
+
+    const { sum } = addQuantitiesOrGroups(or1, or2);
+    expect(sum).toEqual(qWithUnitDef(6, "large"));
+  });
+  it("should reduce two OR groups partially overlapping to the sum of the most relevant member of the union", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "large"), q(1.5, "cup")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "small"), q(1, "cup")],
+    };
+
+    const { sum } = addQuantitiesOrGroups(or1, or2);
+    expect(sum).toEqual(qWithUnitDef(3.333, "large"));
+  });
+  it("should handle OR groups with different normalizable units", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(100, "ml"), q(1, "cup")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(20, "cl"), q(1, "pint")],
+    }; // 10 cl = 100 ml
+
+    const { sum } = addQuantitiesOrGroups(or1, or2);
+    expect(sum).toEqual(qWithUnitDef(300, "ml"));
+  });
+});
+
+describe("addEquivalentsAndSimplify", () => {
+  it("leaves Quantity's intact", () => {
+    expect(addEquivalentsAndSimplify(q(2, "kg"))).toEqual(q(2, "kg"));
+    expect(addEquivalentsAndSimplify(q(2, "kg"), q(2, "large"))).toEqual({
+      type: "and",
+      quantities: [q(2, "kg"), q(2, "large")],
+    });
+  });
+  it("leaves single OR group intact", () => {
+    const or: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "kg"), q(2, "large")],
+    };
+    expect(addEquivalentsAndSimplify(or)).toEqual(or);
+  });
+  it("correctly adds two groups of equivalent quantities of same unit", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(1, "kg"), q(2, "large")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(1.5, "kg"), q(3, "large")],
+    };
+    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+      type: "or",
+      quantities: [q(5, "large"), q(2.5, "kg")],
+    });
+  });
+  it("correctly adds two groups of equivalent quantities of similar unit", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(1, "kg"), q(20, "large")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(100, "g"), q(2, "large")],
+    };
+    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+      type: "or",
+      quantities: [q(22, "large"), q(1.1, "kg")],
+    });
+  });
+  it("correctly adds two groups of equivalents with partial overlap", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "large"), q(1.5, "cup")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "small"), q(1, "cup")],
+    };
+    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+      type: "or",
+      quantities: [q(3.333, "large"), q(5, "small"), q(2.5, "cup")],
+    });
+  });
+  it("accepts units of the same type but different system as alternative", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(10, "cup"), q(2366, "mL")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(1, "pint"), q(473, "mL")],
+    };
+    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+      type: "or",
+      quantities: [q(12, "cup"), q(2839.2, "mL")],
+    });
+  });
+  it("correctly take integer-protected units into account", () => {
+    const or1: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "large", true), q(1.5, "cup")],
+    };
+    const or2: FlatOrGroup<Quantity> = {
+      type: "or",
+      quantities: [q(2, "small"), q(1, "cup")],
+    };
+    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+      type: "or",
+      quantities: [
+        { type: "and", quantities: [q(2, "large"), q(2, "small")] },
+        q(2.5, "cup"),
+      ],
     });
   });
 });

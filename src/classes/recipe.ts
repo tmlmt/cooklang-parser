@@ -39,6 +39,8 @@ import {
   getDefaultQuantityValue,
   multiplyQuantityValue,
   type Quantity,
+  type FlatOrGroup,
+  addEquivalentsAndSimplify,
 } from "../units";
 import Big from "big.js";
 
@@ -81,7 +83,10 @@ export class Recipe {
   /**
    * The default or manual choice of alternative ingredients
    */
-  choices: RecipeChoices = { ingredients: [] };
+  choices: RecipeChoices = {
+    ingredientItems: new Map(),
+    ingredientGroups: new Map(),
+  };
   /**
    * The parsed recipe ingredients.
    */
@@ -130,7 +135,18 @@ export class Recipe {
         : undefined;
       const unit = quantityMatch.groups.ingredientUnit;
       if (value) {
-        quantities.push({ value, unit });
+        const newQuantity: Quantity = { value };
+        if (unit) {
+          if (unit.startsWith("=")) {
+            newQuantity.unit = {
+              name: unit.substring(1),
+              integerProtected: true,
+            };
+          } else {
+            newQuantity.unit = { name: unit };
+          }
+        }
+        quantities.push(newQuantity);
       } else {
         return quantities;
       }
@@ -147,9 +163,11 @@ export class Recipe {
     ingredientMatchString: string,
     items: Step["items"],
   ): void {
-    const match = ingredientMatchString.match(ingredientWithAlternativeRegex);
     const alternatives: IngredientAlternative[] = [];
-    while (match?.groups) {
+    let testString = ingredientMatchString;
+    while (true) {
+      const match = testString.match(ingredientWithAlternativeRegex);
+      if (!match?.groups) break;
       const groups = match.groups;
 
       // Use variables for readability
@@ -242,6 +260,7 @@ export class Recipe {
         alternative.quantity = quantity;
       }
       alternatives.push(alternative);
+      testString = groups.altIngredients || "";
     }
 
     // Update alternatives list of all processed ingredients
@@ -264,13 +283,19 @@ export class Recipe {
       }
     }
 
+    const id = `ingredient-item-${this._itemCount}`;
+
     // Finalize item
     const newItem: IngredientItem = {
       type: "ingredient",
-      id: `ingredient-item-${this._itemCount}`,
+      id,
       alternatives,
     };
     items.push(newItem);
+
+    if (alternatives.length > 1) {
+      this.choices.ingredientItems.set(id, { alternatives, active: 0 });
+    }
   }
 
   /**
@@ -439,6 +464,67 @@ export class Recipe {
     note = flushPendingNote(section, note);
     if (!section.isBlank()) {
       this.sections.push(section);
+    }
+  }
+
+  calc_ingredient_quantities(): void {
+    // Resets quantities
+    this.ingredients = this.ingredients.map((ing) => {
+      if (ing.quantity) {
+        delete ing.quantity;
+      }
+      return ing;
+    });
+
+    const ingredientQuantities = new Map<
+      number,
+      (Quantity | FlatOrGroup<Quantity>)[]
+    >();
+
+    // Looping ingredient items
+    for (const section of this.sections) {
+      for (const step of section.content.filter(
+        (item) => item.type === "step",
+      )) {
+        for (const item of step.items.filter(
+          (item) => item.type === "ingredient",
+        )) {
+          for (let i = 0; i < item.alternatives.length; i++) {
+            const alternative = item.alternatives[i] as IngredientAlternative;
+            // Is the ingredient selected (potentially by default)
+            const alternativeChoiceItem =
+              this.choices.ingredientGroups.get(item.id)?.active === i;
+            const alternativeChoiceGroup = item.group
+              ? this.choices.ingredientItems.get(item.group)?.active === i
+              : false;
+            if (
+              alternative.quantity &&
+              (alternativeChoiceItem || alternativeChoiceGroup)
+            ) {
+              const equivalents: Quantity | FlatOrGroup<Quantity> =
+                alternative.quantity.equivalents.length === 1
+                  ? alternative.quantity.equivalents[0]!
+                  : {
+                      type: "or",
+                      quantities: alternative.quantity.equivalents,
+                    };
+              ingredientQuantities.set(alternative.index, [
+                ...(ingredientQuantities.get(alternative.index) || []),
+                equivalents,
+              ]);
+            }
+          }
+        }
+      }
+    }
+
+    // The main calculation loop
+    for (const [index, quantities] of ingredientQuantities) {
+      if (!this.ingredients[index])
+        throw Error(`Ingredient with index ${index} not found`);
+      this.ingredients[index].quantity = addEquivalentsAndSimplify(
+        ...quantities,
+      );
     }
   }
 
