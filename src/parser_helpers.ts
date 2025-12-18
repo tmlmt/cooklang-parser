@@ -67,17 +67,25 @@ export function findAndUpsertIngredient(
   newIngredient: Ingredient,
   isReference: boolean,
 ): number {
-  const { name } = newIngredient;
+  const { name, preparation } = newIngredient;
 
   if (isReference) {
     const indexFind = ingredients.findIndex(
-      (i) => i.name.toLowerCase() === name.toLowerCase(),
+      (i) =>
+        i.name.toLowerCase() === name.toLowerCase() &&
+        (!preparation || i.preparation === preparation),
     );
 
     if (indexFind === -1) {
-      throw new Error(
-        `Referenced ingredient "${name}" not found. A referenced ingredient must be declared before being referenced with '&'.`,
-      );
+      if (preparation) {
+        throw new Error(
+          `Referenced ingredient "${name}" with preparation "${preparation}" not found. A referenced ingredient must be declared and with the same preparation note before being referenced with '&'`,
+        );
+      } else {
+        throw new Error(
+          `Referenced ingredient "${name}" not found. A referenced ingredient must be declared before being referenced with '&'.`,
+        );
+      }
     }
 
     // Ingredient already exists
