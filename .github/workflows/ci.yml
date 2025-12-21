@@ -7,6 +7,10 @@ on:
   release:
     types: [published] # Trigger publish job when a GitHub release is published
 
+permissions:
+  id-token: write # required for OICD see npm Trusted publishing
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
