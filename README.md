@@ -70,4 +70,4 @@ You can run the tests yourself by cloning the repository and running `pnpm test`
 
 ## Contributing
 
-If you find any issue with your own examples of recipes, feel free to open an Issue and if you want to help fix it, to submit a Pull Request.
+If you find any issue with your own examples of recipes, feel free to open an Issue and if you want to help fix it, to submit a Pull Request (PR). Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) spec when submitting PRs.
