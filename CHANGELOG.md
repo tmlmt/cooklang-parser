@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.1.6
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.5...v2.1.6)
+
+### 🤖 CI
+
+- **npm:** Bump npm to v11 required by OICD ([79c6d50](https://github.com/tmlmt/cooklang-parser/commit/79c6d50))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.5
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.4...v2.1.5)
