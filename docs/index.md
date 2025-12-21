@@ -17,7 +17,7 @@ hero:
       link: /api
     - theme: alt
       text: Examples
-      link: /example-scaling-recipes
+      link: /examples-scaling-recipes
 
 features:
   - title: Cooklang + Typescript
