@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.1.5
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.4...v2.1.5)
+
+### 📖 Documentation
+
+- Fix link to Examples section on index page ([#72](https://github.com/tmlmt/cooklang-parser/pull/72))
+
+### 🏡 Chore
+
+- **README:** Replace list of backlog items by link to up-to-date Issues page ([1bdada8](https://github.com/tmlmt/cooklang-parser/commit/1bdada8))
+- **README:** Refer to Conventional Commits when submitting PRs ([a2f6a28](https://github.com/tmlmt/cooklang-parser/commit/a2f6a28))
+
+### 🤖 CI
+
+- **npm:** Adjust permissions to work with Trusted publishing ([c915078](https://github.com/tmlmt/cooklang-parser/commit/c915078))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+- Helge ([@HelgeKrueger](https://github.com/HelgeKrueger))
+
 ## v2.1.4
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.3...v2.1.4)
