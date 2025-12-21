@@ -8,8 +8,9 @@ on:
     types: [published] # Trigger publish job when a GitHub release is published
 
 permissions:
-  id-token: write # required for OICD see npm Trusted publishing
   contents: read
+  # Required for npm OICD (https://docs.npmjs.com/trusted-publishers)
+  id-token: write
 
 jobs:
   build-and-test:
@@ -37,6 +38,10 @@ jobs:
           node-version: 22
           registry-url: "https://registry.npmjs.org/"
       - uses: pnpm/action-setup@v4
+      - name: Re-install npm
+        # TODO: OIDC requires npm >=11.5.1.
+        # Until Node.js v24 is LTS (with npm 11 as the default), we need to bump.
+        run: npm install -g npm@11
       - run: pnpm install
       - run: pnpm build
       - name: Publish to npm
