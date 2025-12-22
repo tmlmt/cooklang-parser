@@ -36,14 +36,8 @@ import {
   extractMetadata,
   unionOfSets,
 } from "../parser_helpers";
-import {
-  addQuantities,
-  getDefaultQuantityValue,
-  multiplyQuantityValue,
-  type Quantity,
-  type FlatOrGroup,
-  addEquivalentsAndSimplify,
-} from "../units";
+import { multiplyQuantityValue, addEquivalentsAndSimplify } from "../units";
+import type { Quantity, FlatOrGroup } from "../units";
 import Big from "big.js";
 
 /**
@@ -439,6 +433,72 @@ export class Recipe {
     }
   }
 
+  calc_ingredient_quantities(): void {
+    // Resets quantities
+    this.ingredients = this.ingredients.map((ing) => {
+      if (ing.quantity) {
+        delete ing.quantity;
+      }
+      return ing;
+    });
+
+    const ingredientQuantities = new Map<
+      number,
+      (Quantity | FlatOrGroup<Quantity>)[]
+    >();
+
+    // Looping ingredient items
+    for (const section of this.sections) {
+      for (const step of section.content.filter(
+        (item) => item.type === "step",
+      )) {
+        for (const item of step.items.filter(
+          (item) => item.type === "ingredient",
+        )) {
+          for (let i = 0; i < item.alternatives.length; i++) {
+            const alternative = item.alternatives[i] as IngredientAlternative;
+            // Is the ingredient selected (potentially by default)
+            const isAlternativeChoiceItem =
+              this.choices.ingredientGroups.get(item.id)?.active === i;
+            const alternativeChoiceGroup = item.group
+              ? this.choices.ingredientItems.get(item.group)
+              : undefined;
+            const isAlternativeChoiceGroup = alternativeChoiceGroup
+              ? alternativeChoiceGroup.alternatives[
+                  alternativeChoiceGroup.active
+                ]!.itemId === item.id
+              : false;
+            if (
+              alternative.quantity &&
+              (isAlternativeChoiceItem || isAlternativeChoiceGroup)
+            ) {
+              const equivalents: Quantity | FlatOrGroup<Quantity> =
+                alternative.quantity.equivalents.length === 1
+                  ? alternative.quantity.equivalents[0]!
+                  : {
+                      type: "or",
+                      quantities: alternative.quantity.equivalents,
+                    };
+              ingredientQuantities.set(alternative.index, [
+                ...(ingredientQuantities.get(alternative.index) || []),
+                equivalents,
+              ]);
+            }
+          }
+        }
+      }
+    }
+
+    // The main calculation loop
+    for (const [index, quantities] of ingredientQuantities) {
+      if (!this.ingredients[index])
+        throw Error(`Ingredient with index ${index} not found`);
+      this.ingredients[index].quantity = addEquivalentsAndSimplify(
+        ...quantities,
+      );
+    }
+  }
+
   /**
    * Parses a recipe from a string.
    * @param content - The recipe content to parse.
@@ -606,72 +666,8 @@ export class Recipe {
     if (!section.isBlank()) {
       this.sections.push(section);
     }
-  }
 
-  calc_ingredient_quantities(): void {
-    // Resets quantities
-    this.ingredients = this.ingredients.map((ing) => {
-      if (ing.quantity) {
-        delete ing.quantity;
-      }
-      return ing;
-    });
-
-    const ingredientQuantities = new Map<
-      number,
-      (Quantity | FlatOrGroup<Quantity>)[]
-    >();
-
-    // Looping ingredient items
-    for (const section of this.sections) {
-      for (const step of section.content.filter(
-        (item) => item.type === "step",
-      )) {
-        for (const item of step.items.filter(
-          (item) => item.type === "ingredient",
-        )) {
-          for (let i = 0; i < item.alternatives.length; i++) {
-            const alternative = item.alternatives[i] as IngredientAlternative;
-            // Is the ingredient selected (potentially by default)
-            const isAlternativeChoiceItem =
-              this.choices.ingredientGroups.get(item.id)?.active === i;
-            const alternativeChoiceGroup = item.group
-              ? this.choices.ingredientItems.get(item.group)
-              : undefined;
-            const isAlternativeChoiceGroup = alternativeChoiceGroup
-              ? alternativeChoiceGroup.alternatives[
-                  alternativeChoiceGroup.active
-                ]!.itemId === item.id
-              : false;
-            if (
-              alternative.quantity &&
-              (isAlternativeChoiceItem || isAlternativeChoiceGroup)
-            ) {
-              const equivalents: Quantity | FlatOrGroup<Quantity> =
-                alternative.quantity.equivalents.length === 1
-                  ? alternative.quantity.equivalents[0]!
-                  : {
-                      type: "or",
-                      quantities: alternative.quantity.equivalents,
-                    };
-              ingredientQuantities.set(alternative.index, [
-                ...(ingredientQuantities.get(alternative.index) || []),
-                equivalents,
-              ]);
-            }
-          }
-        }
-      }
-    }
-
-    // The main calculation loop
-    for (const [index, quantities] of ingredientQuantities) {
-      if (!this.ingredients[index])
-        throw Error(`Ingredient with index ${index} not found`);
-      this.ingredients[index].quantity = addEquivalentsAndSimplify(
-        ...quantities,
-      );
-    }
+    this.calc_ingredient_quantities();
   }
 
   /**
@@ -708,44 +704,55 @@ export class Recipe {
       throw new Error("Error scaling recipe: no initial servings value set");
     }
 
-    newRecipe.ingredients = newRecipe.ingredients
-      .map((ingredient) => {
-        // Scale first individual parts of total quantity depending on whether they are scalable or not
-        if (ingredient.quantityParts) {
-          ingredient.quantityParts = ingredient.quantityParts.map(
-            (quantityPart) => {
+    function scaleAlternativesBy(
+      alternatives: IngredientAlternative[],
+      factor: number | Big,
+    ) {
+      for (const alternative of alternatives) {
+        if (alternative.quantity) {
+          alternative.quantity.equivalents =
+            alternative.quantity.equivalents.map((altQuantity) => {
               if (
-                quantityPart.value.type === "fixed" &&
-                quantityPart.value.value.type === "text"
+                altQuantity.value.type === "fixed" &&
+                altQuantity.value.value.type === "text"
               ) {
-                return quantityPart;
+                return altQuantity;
+              } else {
+                return {
+                  ...altQuantity,
+                  value: multiplyQuantityValue(
+                    altQuantity.value,
+                    alternative.quantity!.scalable ? Big(factor) : 1,
+                  ),
+                };
               }
-              return {
-                ...quantityPart,
-                value: multiplyQuantityValue(
-                  quantityPart.value,
-                  quantityPart.scalable ? Big(factor) : 1,
-                ),
-              };
-            },
-          );
-          // Recalculate total quantity from quantity parts
-          if (ingredient.quantityParts.length === 1) {
-            ingredient.quantity = ingredient.quantityParts[0]!.value;
-            ingredient.unit = ingredient.quantityParts[0]!.unit;
-          } else {
-            const totalQuantity = ingredient.quantityParts.reduce(
-              (acc, val) =>
-                addQuantities(acc, { value: val.value, unit: val.unit }),
-              { value: getDefaultQuantityValue() } as Quantity,
-            );
-            ingredient.quantity = totalQuantity.value;
-            ingredient.unit = totalQuantity.unit;
-          }
+            });
         }
-        return ingredient;
-      })
-      .filter((ingredient) => ingredient.quantity !== null);
+      }
+    }
+
+    // Scale IngredientItems
+    for (const section of newRecipe.sections) {
+      for (const step of section.content.filter(
+        (item) => item.type === "step",
+      )) {
+        for (const item of step.items.filter(
+          (item) => item.type === "ingredient",
+        )) {
+          scaleAlternativesBy(item.alternatives, factor);
+        }
+      }
+    }
+
+    // Scale Choices
+    for (const choice of newRecipe.choices.ingredientGroups.values()) {
+      scaleAlternativesBy(choice.alternatives, factor);
+    }
+    for (const choice of newRecipe.choices.ingredientItems.values()) {
+      scaleAlternativesBy(choice.alternatives, factor);
+    }
+
+    newRecipe.calc_ingredient_quantities();
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
 

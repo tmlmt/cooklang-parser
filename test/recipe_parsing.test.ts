@@ -17,59 +17,24 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "eggs",
-          flags: [],
           quantity: {
             type: "fixed",
             value: { type: "decimal", value: 3 },
           },
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 3 },
-              },
-              unit: undefined,
-              scalable: true,
-            },
-          ],
-          unit: undefined,
-          preparation: undefined,
         },
         {
           name: "flour",
-          flags: [],
-          quantity: undefined,
-          unit: undefined,
-          quantityParts: undefined,
-          preparation: undefined,
         },
         {
           name: "coarse salt",
-          flags: [],
-          preparation: undefined,
-          quantity: undefined,
-          unit: undefined,
-          quantityParts: undefined,
         },
         {
           name: "butter",
-          flags: [],
           quantity: {
             type: "fixed",
             value: { type: "decimal", value: 50 },
           },
           unit: "g",
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 50 },
-              },
-              unit: "g",
-              scalable: true,
-            },
-          ],
-          preparation: undefined,
         },
       ]);
     });
