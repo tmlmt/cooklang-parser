@@ -229,7 +229,7 @@ export interface Ingredient {
   /** The preparation of the ingredient. */
   preparation?: string;
   /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
-  alternatives?: number[];
+  alternatives?: Set<number>;
   /** A list of potential state modifiers or other flags for the ingredient */
   flags?: IngredientFlag[];
   /** The collection of potential additional metadata for the ingredient */
@@ -267,6 +267,8 @@ export interface IngredientAlternative {
   displayName: string;
   /** An optional note for this specific choice (e.g., "for a vegan version"). */
   note?: string;
+  /** When used in the {@link Recipe.choices} property, the id of the corresponding ingredient item */
+  itemId?: string;
 }
 
 /**

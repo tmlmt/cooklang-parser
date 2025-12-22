@@ -22,6 +22,7 @@ import {
   blockCommentRegex,
   metadataRegex,
   ingredientWithAlternativeRegex,
+  ingredientWithGroupKeyRegex,
   ingredientAliasRegex,
   floatRegex,
   quantityAlternativeRegex,
@@ -33,6 +34,7 @@ import {
   findAndUpsertCookware,
   parseQuantityInput,
   extractMetadata,
+  unionOfSets,
 } from "../parser_helpers";
 import {
   addQuantities,
@@ -267,18 +269,20 @@ export class Recipe {
     if (alternatives.length > 1) {
       const alternativesIndexes = alternatives.map((alt) => alt.index);
       for (const index of alternativesIndexes) {
-        if (!this.ingredients[index]?.alternatives) {
-          this.ingredients[index]!.alternatives = alternativesIndexes.filter(
-            (altIndex) => altIndex !== index,
-          );
-        } else {
-          this.ingredients[index].alternatives.push(
-            ...alternativesIndexes.filter(
-              (altIndex) =>
-                altIndex !== index &&
-                !this.ingredients[index]?.alternatives?.includes(altIndex),
-            ),
-          );
+        const ingredient = this.ingredients[index];
+        if (ingredient) {
+          if (!ingredient.alternatives) {
+            ingredient.alternatives = new Set(
+              alternativesIndexes.filter((altIndex) => altIndex !== index),
+            );
+          } else {
+            ingredient.alternatives = unionOfSets(
+              ingredient.alternatives,
+              new Set(
+                alternativesIndexes.filter((altIndex) => altIndex !== index),
+              ),
+            );
+          }
         }
       }
     }
@@ -295,6 +299,143 @@ export class Recipe {
 
     if (alternatives.length > 1) {
       this.choices.ingredientItems.set(id, { alternatives, active: 0 });
+    }
+  }
+
+  private _parseIngredientWithGroupKey(
+    ingredientMatchString: string,
+    items: Step["items"],
+  ): void {
+    const match = ingredientMatchString.match(ingredientWithGroupKeyRegex);
+    if (!match?.groups) return;
+    const groups = match.groups;
+
+    // Use variables for readability
+    // @|<groupKey|<modifiers><name>{quantity%unit|altQuantities}(preparation)[note]
+    const groupKey = groups.ingredientGroupKey!;
+    let name = (groups.gmIngredientName || groups.gsIngredientName)!;
+
+    // 1. We build up the different parts of the Ingredient object
+    // Preparation
+    const preparation = groups.gIngredientPreparation;
+    // Flags
+    const modifiers = groups.gIngredientModifiers;
+    const reference = modifiers !== undefined && modifiers.includes("&");
+    const flags: IngredientFlag[] = [];
+    if (modifiers !== undefined && modifiers.includes("?")) {
+      flags.push("optional");
+    }
+    if (modifiers !== undefined && modifiers.includes("-")) {
+      flags.push("hidden");
+    }
+    if (
+      (modifiers !== undefined && modifiers.includes("@")) ||
+      groups.ingredientRecipeAnchor
+    ) {
+      flags.push("recipe");
+    }
+    // Extras
+    let extras: IngredientExtras | undefined = undefined;
+    // -- if the ingredient is a recipe, we need to extract the name from the path given
+    if (flags.includes("recipe")) {
+      extras = { path: `${name}.cook` };
+      name = name.substring(name.lastIndexOf("/") + 1);
+    }
+    // Distinguish name from display name / name alias
+    const aliasMatch = name.match(ingredientAliasRegex);
+    let listName, displayName: string;
+    if (
+      aliasMatch &&
+      aliasMatch.groups!.ingredientListName!.trim().length > 0 &&
+      aliasMatch.groups!.ingredientDisplayName!.trim().length > 0
+    ) {
+      listName = aliasMatch.groups!.ingredientListName!.trim();
+      displayName = aliasMatch.groups!.ingredientDisplayName!.trim();
+    } else {
+      listName = name;
+      displayName = name;
+    }
+
+    const newIngredient: Ingredient = {
+      name: listName,
+    };
+    // Only add parameters if they are non null / non empty
+    if (preparation) {
+      newIngredient.preparation = preparation;
+    }
+    if (flags.length > 0) {
+      newIngredient.flags = flags;
+    }
+    if (extras) {
+      newIngredient.extras = extras;
+    }
+
+    const idxInList = findAndUpsertIngredient(
+      this.ingredients,
+      newIngredient,
+      reference,
+    );
+
+    // 2. We build up the ingredient item
+    // -- alternative quantities
+    const quantity: IngredientItemQuantity | undefined =
+      groups.gIngredientQuantity
+        ? {
+            equivalents: this._parseQuantityRecursive(
+              groups.gIngredientQuantity,
+            ),
+            scalable: groups.gIngredientQuantityModifier !== "=",
+          }
+        : undefined;
+
+    const alternative: IngredientAlternative = {
+      index: idxInList,
+      displayName,
+    };
+    // Only add quantity and note if they exist
+    const note = groups.ingredientNote?.trim();
+    if (note) {
+      alternative.note = note;
+    }
+    if (quantity) {
+      alternative.quantity = quantity;
+    }
+
+    const existingAlternatives = this.choices.ingredientGroups.get(groupKey);
+    // For all alternative ingredients already processed for this group, add the new ingredient as alternative
+    if (existingAlternatives) {
+      for (const alt of existingAlternatives.alternatives) {
+        const ingredient = this.ingredients[alt.index];
+        if (ingredient) {
+          if (ingredient.alternatives === undefined) {
+            ingredient.alternatives = new Set([idxInList]);
+          } else {
+            ingredient.alternatives.add(idxInList);
+          }
+        }
+      }
+    }
+    const id = `ingredient-item-${this._itemCount}`;
+
+    // Finalize item
+    const newItem: IngredientItem = {
+      type: "ingredient",
+      id,
+      group: groupKey,
+      alternatives: [alternative],
+    };
+    items.push(newItem);
+
+    // Populate or update choices
+    alternative.itemId = id;
+    const existingChoice = this.choices.ingredientGroups.get(groupKey);
+    if (!existingChoice) {
+      this.choices.ingredientGroups.set(groupKey, {
+        alternatives: [alternative],
+        active: 0,
+      });
+    } else {
+      existingChoice.alternatives.push(alternative);
     }
   }
 
@@ -492,14 +633,19 @@ export class Recipe {
           for (let i = 0; i < item.alternatives.length; i++) {
             const alternative = item.alternatives[i] as IngredientAlternative;
             // Is the ingredient selected (potentially by default)
-            const alternativeChoiceItem =
+            const isAlternativeChoiceItem =
               this.choices.ingredientGroups.get(item.id)?.active === i;
             const alternativeChoiceGroup = item.group
-              ? this.choices.ingredientItems.get(item.group)?.active === i
+              ? this.choices.ingredientItems.get(item.group)
+              : undefined;
+            const isAlternativeChoiceGroup = alternativeChoiceGroup
+              ? alternativeChoiceGroup.alternatives[
+                  alternativeChoiceGroup.active
+                ]!.itemId === item.id
               : false;
             if (
               alternative.quantity &&
-              (alternativeChoiceItem || alternativeChoiceGroup)
+              (isAlternativeChoiceItem || isAlternativeChoiceGroup)
             ) {
               const equivalents: Quantity | FlatOrGroup<Quantity> =
                 alternative.quantity.equivalents.length === 1
