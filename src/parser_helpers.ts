@@ -386,3 +386,11 @@ export function extractMetadata(content: string): MetadataExtract {
 export function isPositiveIntegerString(str: string): boolean {
   return /^\d+$/.test(str);
 }
+
+export function unionOfSets<T>(s1: Set<T>, s2: Set<T>): Set<T> {
+  const result = new Set(s1);
+  for (const item of s2) {
+    result.add(item);
+  }
+  return result;
+}
