@@ -92,14 +92,24 @@ export function findAndUpsertIngredient(
     const existingIngredient = ingredients[indexFind]!;
 
     // Checking whether any provided flags are the same as the original ingredient
-    for (const flag of newIngredient.flags!) {
-      /* v8 ignore else -- @preserve */
-      if (!existingIngredient.flags!.includes(flag)) {
+    if (!newIngredient.flags) {
+      if (Array.isArray(existingIngredient.flags)) {
         throw new ReferencedItemCannotBeRedefinedError(
           "ingredient",
           existingIngredient.name,
-          flag,
+          existingIngredient.flags[0]!,
         );
+      }
+    } else {
+      for (const flag of newIngredient.flags) {
+        /* v8 ignore else -- @preserve */
+        if (!existingIngredient.flags!.includes(flag)) {
+          throw new ReferencedItemCannotBeRedefinedError(
+            "ingredient",
+            existingIngredient.name,
+            flag,
+          );
+        }
       }
     }
 

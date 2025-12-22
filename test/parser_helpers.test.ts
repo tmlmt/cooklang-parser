@@ -384,163 +384,82 @@ describe("findAndUpsertIngredient", () => {
     const ingredients: Ingredient[] = [];
     const newIngredient: Ingredient = {
       name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      quantityParts: [
-        {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          scalable: true,
-        },
-      ],
-      flags: [],
+      quantity: {
+        value: { type: "fixed", value: { type: "decimal", value: 1 } },
+      },
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual({
-      ingredientIndex: 0,
-      quantityPartIndex: 0,
-    });
+    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual(
+      0,
+    );
     expect(ingredients).toEqual([newIngredient]);
-  });
-
-  it("should not return a quantityPartIndex for a non-quantified ingredient", () => {
-    const ingredients: Ingredient[] = [];
-    const newIngredient: Ingredient = {
-      name: "flour",
-      flags: [],
-      quantity: undefined,
-      unit: undefined,
-      quantityParts: undefined,
-      preparation: undefined,
-    };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual({
-      ingredientIndex: 0,
-      quantityPartIndex: undefined,
-    });
   });
 
   it("should correctly add a referenced ingredient", () => {
     const ingredients: Ingredient[] = [
       {
         name: "eggs",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        quantityParts: [
-          {
-            value: { type: "fixed", value: { type: "decimal", value: 1 } },
-            scalable: true,
-          },
-        ],
-        flags: [],
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        },
       },
     ];
     const newIngredient: Ingredient = {
       name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
-      quantityParts: [
-        {
-          value: { type: "fixed", value: { type: "decimal", value: 2 } },
-          scalable: true,
-        },
-      ],
-      flags: [],
+      quantity: {
+        value: { type: "fixed", value: { type: "decimal", value: 2 } },
+      },
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
-      ingredientIndex: 0,
-      quantityPartIndex: 1,
-    });
+    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual(
+      0,
+    );
     expect(ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 3 },
+      value: { type: "fixed", value: { type: "decimal", value: 1 } },
     });
 
-    const ingredients_noqtt: Ingredient[] = [{ name: "salt", flags: [] }];
-    const newIngredient_noqtt: Ingredient = { name: "salt", flags: [] };
+    const ingredients_noqtt: Ingredient[] = [{ name: "salt" }];
+    const newIngredient_noqtt: Ingredient = { name: "salt" };
     expect(
       findAndUpsertIngredient(ingredients_noqtt, newIngredient_noqtt, true),
-    ).toEqual({
-      ingredientIndex: 0,
-      quantityPartIndex: undefined,
-    });
+    ).toEqual(0);
     expect(ingredients_noqtt[0]!.quantity).toBe(undefined);
   });
 
-  it("should insert new ingredient if referenced ingredient has a text quantity", () => {
+  it("should return index of referenced ingredient even if it has a text quantity", () => {
     const ingredients: Ingredient[] = [
       {
         name: "eggs",
-        quantity: { type: "fixed", value: { type: "text", value: "one" } },
-        quantityParts: [
-          {
-            value: { type: "fixed", value: { type: "text", value: "one" } },
-            scalable: true,
-          },
-        ],
-        flags: [],
+        quantity: {
+          value: { type: "fixed", value: { type: "text", value: "one" } },
+        },
       },
     ];
     const newIngredient: Ingredient = {
       name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      quantityParts: [
-        {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          scalable: true,
-        },
-      ],
-      flags: [],
+      quantity: {
+        value: { type: "fixed", value: { type: "decimal", value: 1 } },
+      },
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
-      ingredientIndex: 1,
-      quantityPartIndex: 0,
-    });
-    expect(ingredients).toHaveLength(2);
-  });
-
-  it("should adopt quantity of new ingredient if referenced one has none", () => {
-    const ingredients: Ingredient[] = [{ name: "eggs", flags: [] }];
-    const newIngredient: Ingredient = {
-      name: "eggs",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      quantityParts: [
-        {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
-          scalable: true,
-        },
-      ],
-      flags: [],
-    };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual({
-      ingredientIndex: 0,
-      quantityPartIndex: 0,
-    });
-    expect(ingredients[0]?.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 1 },
-    });
+    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual(
+      0,
+    );
+    expect(ingredients).toHaveLength(1);
   });
 
   it("should throw an error if an non-existing ingredient is referenced", () => {
     const ingredients: Ingredient[] = [
       {
         name: "eggs",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        quantityParts: [
-          {
-            value: { type: "fixed", value: { type: "decimal", value: 1 } },
-            scalable: true,
-          },
-        ],
-        flags: [],
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        },
       },
     ];
     const newIngredient: Ingredient = {
       name: "unreferenced-ingredient",
-      quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-      unit: "g",
-      quantityParts: [
-        {
-          value: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
-          scalable: true,
-        },
-      ],
+      quantity: {
+        value: { type: "fixed", value: { type: "decimal", value: 100 } },
+        unit: { name: "g" },
+      },
       flags: [],
     };
     expect(() =>
