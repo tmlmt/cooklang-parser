@@ -11,30 +11,74 @@ describe("parse function", () => {
   });
 
   describe("ingredients with variants", () => {
-    it("extracts ingredients correctly", () => {
-      const result = new Recipe(simpleRecipe);
-      expect(result.ingredients.length).toBe(4);
+    it("extracts single word ingredient with quantity but without unit correctly", () => {
+      const result = new Recipe("@eggs{3}");
+      expect(result.sections.length).toBe(1);
+      expect(result.sections[0]!.content).toEqual([
+        {
+          type: "step",
+          items: [
+            {
+              type: "ingredient",
+              id: "ingredient-item-0",
+              alternatives: [
+                {
+                  displayName: "eggs",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 3 },
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ]);
       expect(result.ingredients).toEqual([
         {
           name: "eggs",
           quantity: {
-            type: "fixed",
-            value: { type: "decimal", value: 3 },
+            value: { type: "fixed", value: { type: "decimal", value: 3 } },
           },
         },
+      ]);
+    });
+
+    it("extracts plain unquantified single-word ingredient correctly", () => {
+      const result = new Recipe("@flour");
+      expect(result.ingredients).toEqual([
         {
           name: "flour",
         },
+      ]);
+    });
+
+    it("extracts plain unquantified multi-word ingredient correctly", () => {
+      const result = new Recipe("@coarse salt{}");
+      expect(result.ingredients).toEqual([
         {
           name: "coarse salt",
         },
+      ]);
+    });
+
+    it("extracts single-word ingredient with quantity and unit correctly", () => {
+      const result = new Recipe("@butter{30%g}");
+      expect(result.ingredients).toEqual([
         {
           name: "butter",
           quantity: {
-            type: "fixed",
-            value: { type: "decimal", value: 50 },
+            value: { type: "fixed", value: { type: "decimal", value: 30 } },
+            unit: "g",
           },
-          unit: "g",
         },
       ]);
     });
@@ -69,19 +113,9 @@ describe("parse function", () => {
 
         const expected_dough = {
           name: "pizza dough",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 1 },
-              },
-              unit: undefined,
-              scalable: true,
-            },
-          ],
-          unit: undefined,
-          preparation: undefined,
+          quantity: {
+            value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          },
           flags: ["recipe"],
           extras: {
             path: "pizza dough.cook",
@@ -89,9 +123,6 @@ describe("parse function", () => {
         };
         const expected_toppings = {
           name: "toppings",
-          quantity: undefined,
-          unit: undefined,
-          preparation: undefined,
           flags: ["recipe"],
           extras: {
             path: "toppings.cook",
@@ -122,19 +153,9 @@ describe("parse function", () => {
 
         const expected_dough = {
           name: "pizza dough",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 1 },
-              },
-              unit: undefined,
-              scalable: true,
-            },
-          ],
-          unit: undefined,
-          preparation: undefined,
+          quantity: {
+            value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          },
           flags: ["recipe"],
           extras: {
             path: "some essentials/my.doughs/pizza dough.cook",
@@ -142,9 +163,6 @@ describe("parse function", () => {
         };
         const expected_toppings = {
           name: "toppings",
-          quantity: undefined,
-          unit: undefined,
-          preparation: undefined,
           flags: ["recipe"],
           extras: {
             path: "../some-essentials/toppings.cook",
@@ -176,37 +194,18 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0]).toEqual({
         name: "wheat flour",
-        quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 100 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-        ],
-        unit: "g",
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          unit: "g",
+        },
         preparation: "sifted",
-        flags: [],
       });
       expect(result.ingredients[1]).toEqual({
         name: "eggs",
-        quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
-        unit: undefined,
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 2 },
-            },
-            unit: undefined,
-            scalable: true,
-          },
-        ],
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+        },
         preparation: "large, beaten",
-        flags: [],
       });
     });
 
@@ -220,17 +219,10 @@ describe("parse function", () => {
       expect(result.ingredients[0]).toEqual({
         name: "salt",
         flags: ["hidden"],
-        quantity: undefined,
-        quantityParts: undefined,
-        unit: undefined,
-        preparation: undefined,
       });
       expect(result.ingredients[1]).toEqual({
         name: "pepper",
         flags: ["optional"],
-        quantity: undefined,
-        unit: undefined,
-        preparation: undefined,
       });
     });
 
@@ -243,10 +235,6 @@ describe("parse function", () => {
       expect(result.ingredients[0]).toEqual({
         name: "salt",
         flags: ["optional", "hidden"],
-        quantity: undefined,
-        quantityParts: undefined,
-        unit: undefined,
-        preparation: undefined,
       });
     });
 
@@ -254,50 +242,6 @@ describe("parse function", () => {
       const recipe =
         new Recipe(`Mix @flour tipo 00|flour{100%g} with @water{300%mL}, 
     then add more @&flour tipo 00|flour{50%g}`);
-      expect(recipe.ingredients).toEqual([
-        {
-          name: "flour tipo 00",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 100 },
-              },
-              unit: "g",
-              scalable: true,
-            },
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 50 },
-              },
-              unit: "g",
-              scalable: true,
-            },
-          ],
-          unit: "g",
-          flags: [],
-          preparation: undefined,
-        },
-        {
-          name: "water",
-          quantity: { type: "fixed", value: { type: "decimal", value: 300 } },
-          unit: "mL",
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 300 },
-              },
-              unit: "mL",
-              scalable: true,
-            },
-          ],
-          flags: [],
-          preparation: undefined,
-        },
-      ]);
       expect(recipe.sections[0]?.content).toEqual([
         {
           type: "step",
@@ -307,20 +251,52 @@ describe("parse function", () => {
               value: "Mix ",
             },
             {
-              displayName: "flour",
-              quantityPartIndex: 0,
               type: "ingredient",
-              index: 0,
+              id: "ingredient-item-0",
+              alternatives: [
+                {
+                  displayName: "flour",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 100 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
             {
               type: "text",
               value: " with ",
             },
             {
-              displayName: "water",
-              quantityPartIndex: 0,
               type: "ingredient",
-              index: 1,
+              id: "ingredient-item-1",
+              alternatives: [
+                {
+                  displayName: "water",
+                  index: 1,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 300 },
+                        },
+                        unit: { name: "mL" },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
             {
               type: "text",
@@ -331,12 +307,50 @@ describe("parse function", () => {
               value: "    then add more ",
             },
             {
-              displayName: "flour",
-              quantityPartIndex: 1,
               type: "ingredient",
-              index: 0,
+              id: "ingredient-item-2",
+              alternatives: [
+                {
+                  displayName: "flour",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 50 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
           ],
+        },
+      ]);
+      expect(recipe.ingredients).toEqual([
+        {
+          name: "flour tipo 00",
+          quantity: {
+            value: {
+              type: "fixed",
+              value: { type: "decimal", value: 150 },
+            },
+            unit: "g",
+          },
+        },
+        {
+          name: "water",
+          quantity: {
+            value: {
+              type: "fixed",
+              value: { type: "decimal", value: 300 },
+            },
+            unit: "mL",
+          },
         },
       ]);
     });
@@ -352,28 +366,10 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 100 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 50 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-        ],
-        unit: "g",
-        preparation: undefined,
-        flags: [],
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 150 } },
+          unit: "g",
+        },
       });
     });
 
@@ -395,9 +391,25 @@ describe("parse function", () => {
             },
             {
               type: "ingredient",
-              displayName: "flour",
-              index: 0,
-              quantityPartIndex: 0,
+              id: "ingredient-item-0",
+              alternatives: [
+                {
+                  displayName: "flour",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 100 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
             {
               type: "text",
@@ -408,10 +420,26 @@ describe("parse function", () => {
               value: "        Then add some more ",
             },
             {
-              quantityPartIndex: 1,
               type: "ingredient",
-              displayName: "flour",
-              index: 0,
+              id: "ingredient-item-1",
+              alternatives: [
+                {
+                  displayName: "flour",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 50 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
             {
               type: "text",
@@ -431,37 +459,17 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-        unit: "g",
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 100 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-        ],
-        flags: [],
-        preparation: undefined,
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          unit: "g",
+        },
       });
       expect(result.ingredients[1]).toEqual({
         name: "flour",
-        quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-        unit: "g",
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 50 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-        ],
-        flags: [],
-        preparation: undefined,
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 50 } },
+          unit: "g",
+        },
       });
     });
 
@@ -470,34 +478,16 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "eggs",
-          flags: [],
           preparation: "boiled",
           quantity: {
-            type: "fixed",
             value: {
-              type: "decimal",
-              value: 2,
+              type: "fixed",
+              value: {
+                type: "decimal",
+                value: 2,
+              },
             },
           },
-          unit: undefined,
-          quantityParts: [
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 1 },
-              },
-              unit: undefined,
-              scalable: true,
-            },
-            {
-              value: {
-                type: "fixed",
-                value: { type: "decimal", value: 1 },
-              },
-              unit: undefined,
-              scalable: true,
-            },
-          ],
         },
       ]);
       expect(result.sections[0]?.content).toEqual([
@@ -509,20 +499,50 @@ describe("parse function", () => {
               value: "Mix ",
             },
             {
-              quantityPartIndex: 0,
               type: "ingredient",
-              displayName: "eggs",
-              index: 0,
+              id: "ingredient-item-0",
+              alternatives: [
+                {
+                  displayName: "eggs",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 1 },
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
             {
               type: "text",
               value: " and ",
             },
             {
-              quantityPartIndex: 1,
               type: "ingredient",
-              displayName: "eggs",
-              index: 0,
+              id: "ingredient-item-1",
+              alternatives: [
+                {
+                  displayName: "eggs",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        value: {
+                          type: "fixed",
+                          value: { type: "decimal", value: 1 },
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
             },
           ],
         },
@@ -538,28 +558,10 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "Sugar", // Note: original casing is preserved
-        quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-        unit: "g",
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 100 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 50 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-        ],
-        flags: [],
-        preparation: undefined,
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 150 } },
+          unit: "g",
+        },
       });
     });
 
@@ -572,28 +574,10 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "sugar",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1.5 } },
-        unit: "kg",
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 500 },
-            },
-            unit: "g",
-            scalable: true,
-          },
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 1 },
-            },
-            unit: "kg",
-            scalable: true,
-          },
-        ],
-        flags: [],
-        preparation: undefined,
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
+          unit: "kg",
+        },
       });
     });
 
@@ -606,10 +590,12 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       const butter = result.ingredients[0]!;
       expect(butter.name).toBe("butter");
-      expect(butter.unit).toBe("kg"); // largest metric mass unit
       expect(butter.quantity).toEqual({
-        type: "fixed",
-        value: { type: "decimal", value: 0.7 },
+        value: {
+          type: "fixed",
+          value: { type: "decimal", value: 0.704 },
+        },
+        unit: "kg",
       });
       // TODO: 700g would be more elegant
     });
@@ -628,46 +614,28 @@ describe("parse function", () => {
       );
     });
 
-    it("adds a referenced ingredient as a new ingredient when units are incompatible", () => {
+    it("simply add quantities to the referenced ingredients as separate ones if units are incompatible", () => {
       const recipe = `
         Add @water{1%l}.
         Then add some more @&water{1%kg}.
       `;
       const result = new Recipe(recipe);
-      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 1 },
+        quantity: {
+          type: "and",
+          quantities: [
+            {
+              value: { type: "fixed", value: { type: "decimal", value: 1 } },
+              unit: "l",
             },
-            unit: "l",
-            scalable: true,
-          },
-        ],
-        flags: [],
-        preparation: undefined,
-      });
-      expect(result.ingredients[1]).toEqual({
-        name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "kg",
-        quantityParts: [
-          {
-            value: {
-              type: "fixed",
-              value: { type: "decimal", value: 1 },
+            {
+              value: { type: "fixed", value: { type: "decimal", value: 1 } },
+              unit: "kg",
             },
-            unit: "kg",
-            scalable: true,
-          },
-        ],
-        flags: [],
-        preparation: undefined,
+          ],
+        },
       });
     });
   });
@@ -678,15 +646,12 @@ describe("parse function", () => {
       expect(result.cookware.length).toBe(2);
       expect(result.cookware[0]).toEqual({
         name: "bowl",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        quantityParts: [
-          { type: "fixed", value: { type: "decimal", value: 1 } },
-        ],
-        flags: [],
+        quantity: {
+          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        },
       });
       expect(result.cookware[1]).toEqual({
         name: "pan",
-        flags: [],
       });
     });
 
@@ -713,19 +678,11 @@ describe("parse function", () => {
       const result = new Recipe(recipe);
       expect(result.cookware).toHaveLength(1);
       expect(result.cookware[0]!.quantity).toEqual({
-        type: "fixed",
-        value: { type: "decimal", value: 3 },
+        value: {
+          type: "fixed",
+          value: { type: "decimal", value: 3 },
+        },
       });
-      expect(result.cookware[0]!.quantityParts).toEqual([
-        {
-          type: "fixed",
-          value: { type: "decimal", value: 1 },
-        },
-        {
-          type: "fixed",
-          value: { type: "decimal", value: 2 },
-        },
-      ]);
     });
 
     it("should correctly handle modifiers for cookware", () => {
@@ -736,7 +693,6 @@ describe("parse function", () => {
       expect(result.cookware).toHaveLength(3);
       expect(result.cookware[0]).toEqual({
         name: "oven",
-        flags: [],
       });
       expect(result.cookware[1]).toEqual({
         name: "pan",
@@ -760,7 +716,6 @@ describe("parse function", () => {
     const result = new Recipe(simpleRecipe);
     expect(result.timers.length).toBe(1);
     expect(result.timers[0]).toEqual({
-      name: undefined,
       duration: { type: "fixed", value: { type: "decimal", value: 15 } },
       unit: "minutes",
     }); // Note: timer name may be empty based on regex
