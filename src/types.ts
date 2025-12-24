@@ -1,5 +1,9 @@
 import type { Recipe } from "./classes/recipe";
-import type { MaybeNestedGroup, Quantity } from "./units";
+import type {
+  MaybeNestedGroup,
+  QuantityWithExtendedUnit,
+  QuantityWithPlainUnit,
+} from "./units";
 
 /**
  * Represents the metadata of a recipe.
@@ -225,7 +229,7 @@ export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
   /** The total quantity of the ingredient in the recipe. */
-  quantity?: Quantity | MaybeNestedGroup<Quantity>;
+  quantity?: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>;
   /** The preparation of the ingredient. */
   preparation?: string;
   /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
@@ -248,7 +252,7 @@ export interface IngredientItemQuantity {
    * The first item is considered the primary quantity.
    * For `@salt{1%tsp|5%g}`, this would contain two `Quantity` objects.
    */
-  equivalents: Quantity[];
+  equivalents: QuantityWithExtendedUnit[];
   /** Indicates whether this quantity should be scaled when the recipe serving size changes. */
   scalable: boolean;
 }
@@ -460,7 +464,7 @@ export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name"> & Quantity;
+export type AddedIngredient = Pick<Ingredient, "name"> & QuantityWithPlainUnit;
 
 /**
  * Represents an ingredient in a category.

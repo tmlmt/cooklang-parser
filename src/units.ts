@@ -19,50 +19,67 @@ export type UnitDefinitionLike =
   | UnitDefinition
   | { name: string; system: "none"; integerProtected?: boolean };
 
-export interface Quantity {
+export interface QuantityBase {
   value: FixedValue | Range;
+}
+
+export interface QuantityWithPlainUnit extends QuantityBase {
+  unit?: string;
+}
+
+export interface QuantityWithExtendedUnit extends QuantityBase {
   unit?: Unit;
 }
 
-export type QuantityWithUnitDef = Omit<Quantity, "unit"> & {
+export interface QuantityWithUnitDef extends QuantityBase {
   unit: UnitDefinitionLike;
-};
+}
 
-export interface FlatOrGroup<T = Quantity | QuantityWithUnitDef> {
+export interface FlatOrGroup<
+  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
+> {
   type: "or";
   quantities: T[];
 }
-export interface MaybeNestedOrGroup<T = Quantity | QuantityWithUnitDef> {
+export interface MaybeNestedOrGroup<
+  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
+> {
   type: "or";
   quantities: (T | MaybeNestedGroup<T>)[];
 }
 
-export interface FlatAndGroup<T = Quantity | QuantityWithUnitDef> {
+export interface FlatAndGroup<
+  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
+> {
   type: "and";
   quantities: T[];
 }
-export interface NestedAndGroup<T = Quantity | QuantityWithUnitDef> {
+export interface NestedAndGroup<
+  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
+> {
   type: "and";
   quantities: T[];
 }
-export interface MaybeNestedAndGroup<T = Quantity | QuantityWithUnitDef> {
+export interface MaybeNestedAndGroup<
+  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
+> {
   type: "and";
   quantities: (T | MaybeNestedGroup<T>)[];
 }
 
-export type FlatGroup<T = Quantity | QuantityWithUnitDef> =
+export type FlatGroup<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
   | FlatAndGroup<T>
   | FlatOrGroup<T>;
-export type MaybeNestedGroup<T = Quantity | QuantityWithUnitDef> =
-  | MaybeNestedAndGroup<T>
-  | MaybeNestedOrGroup<T>;
-export type Group<T = Quantity | QuantityWithUnitDef> =
+export type MaybeNestedGroup<
+  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
+> = MaybeNestedAndGroup<T> | MaybeNestedOrGroup<T>;
+export type Group<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
   | MaybeNestedGroup<T>
   | FlatGroup<T>;
-export type OrGroup<T = Quantity | QuantityWithUnitDef> =
+export type OrGroup<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
   | MaybeNestedOrGroup<T>
   | FlatOrGroup<T>;
-export type AndGroup<T = Quantity | QuantityWithUnitDef> =
+export type AndGroup<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
   | MaybeNestedAndGroup<T>
   | FlatAndGroup<T>;
 
@@ -202,8 +219,10 @@ export function normalizeUnit(unit: string = ""): UnitDefinition | undefined {
   return unitMap.get(unit.toLowerCase().trim());
 }
 
-export function deNormalizeQuantity(q: QuantityWithUnitDef): Quantity {
-  const result: Quantity = {
+export function deNormalizeQuantity(
+  q: QuantityWithUnitDef,
+): QuantityWithExtendedUnit {
+  const result: QuantityWithExtendedUnit = {
     value: q.value,
   };
   if (q.unit.name !== "__no-unit__") {
@@ -448,10 +467,12 @@ export function addQuantityValues(
 /**
  * Adds two quantities, returning the result in the most appropriate unit.
  */
-export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
+export function addQuantities(
+  q1: QuantityWithExtendedUnit,
+  q2: QuantityWithExtendedUnit,
+): QuantityWithExtendedUnit {
   const v1 = q1.value;
   const v2 = q2.value;
-
   // Case 1: one of the two values is a text, we throw an error we can catch on the other end
   if (
     (v1.type === "fixed" && v1.value.type === "text") ||
@@ -467,7 +488,10 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
     val1: FixedValue | Range,
     val2: FixedValue | Range,
     unit?: Unit,
-  ): Quantity => ({ value: addQuantityValues(val1, val2), unit });
+  ): QuantityWithExtendedUnit => ({
+    value: addQuantityValues(val1, val2),
+    unit,
+  });
 
   // Case 2: one of the two values doesn't have a unit, we preserve its value and consider its unit to be that of the other one
   // If at least one of the two units is "", this preserves it versus setting the resulting unit as undefined
@@ -497,7 +521,6 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
   // Case 4: the two quantities have different units of known type
   if (unit1Def && unit2Def) {
     // Case 4.1: different unit type => we can't add quantities
-
     if (unit1Def.type !== unit2Def.type) {
       throw new IncompatibleUnitsError(
         `${unit1Def.type} (${q1.unit?.name})`,
@@ -538,13 +561,19 @@ export function addQuantities(q1: Quantity, q2: Quantity): Quantity {
 }
 
 // Helper type-checks (as before)
-function isGroup(x: Quantity | QuantityWithUnitDef | Group): x is Group {
+function isGroup(
+  x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
+): x is Group {
   return x && "type" in x;
 }
-function isOrGroup(x: Quantity | QuantityWithUnitDef | Group): x is OrGroup {
+function isOrGroup(
+  x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
+): x is OrGroup {
   return isGroup(x) && x.type === "or";
 }
-function isQuantity(x: Quantity | QuantityWithUnitDef | Group): x is Quantity {
+function isQuantity(
+  x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
+): x is QuantityWithExtendedUnit | QuantityWithUnitDef {
   return x && typeof x === "object" && "value" in x;
 }
 
@@ -584,15 +613,18 @@ export function getBaseUnitRatio(
 }
 
 export function getEquivalentUnitsLists(
-  ...quantities: (Quantity | FlatOrGroup<Quantity>)[]
+  ...quantities: (
+    | QuantityWithExtendedUnit
+    | FlatOrGroup<QuantityWithExtendedUnit>
+  )[]
 ): QuantityWithUnitDef[][] {
   const quantitiesCopy = JSON.parse(JSON.stringify(quantities)) as (
-    | Quantity
-    | FlatOrGroup<Quantity>
+    | QuantityWithExtendedUnit
+    | FlatOrGroup<QuantityWithExtendedUnit>
   )[];
 
   const OrGroups = (
-    quantitiesCopy.filter(isOrGroup) as FlatOrGroup<Quantity>[]
+    quantitiesCopy.filter(isOrGroup) as FlatOrGroup<QuantityWithExtendedUnit>[]
   ).filter((q) => q.quantities.length > 1);
 
   const unitLists: QuantityWithUnitDef[][] = [];
@@ -703,7 +735,7 @@ export function isValueIntegerLike(q: FixedValue | Range) {
 
 function findListWithCompatibleQuantity(
   list: QuantityWithUnitDef[][],
-  quantity: Quantity,
+  quantity: QuantityWithExtendedUnit,
 ) {
   const quantityWithUnitDef = {
     ...quantity,
@@ -723,7 +755,7 @@ function findListWithCompatibleQuantity(
 
 function findCompatibleQuantityWithinList(
   list: QuantityWithUnitDef[],
-  quantity: Quantity,
+  quantity: QuantityWithExtendedUnit,
 ) {
   const quantityWithUnitDef = {
     ...quantity,
@@ -733,8 +765,7 @@ function findCompatibleQuantityWithinList(
   return list.find(
     (q) =>
       q.unit?.name === quantityWithUnitDef.unit?.name ||
-      (q.unit?.system === quantityWithUnitDef.unit?.system &&
-        "type" in q.unit &&
+      ("type" in q.unit &&
         "type" in quantityWithUnitDef.unit &&
         q.unit?.type === quantityWithUnitDef.unit.type),
   );
@@ -767,9 +798,12 @@ export function sortUnitList(list: QuantityWithUnitDef[]) {
 
 export function reduceOrsToFirstEquivalent(
   unitList: QuantityWithUnitDef[][],
-  quantities: (Quantity | FlatOrGroup<Quantity>)[],
-): Quantity[] {
-  function reduceToQuantity(firstQuantity: Quantity) {
+  quantities: (
+    | QuantityWithExtendedUnit
+    | FlatOrGroup<QuantityWithExtendedUnit>
+  )[],
+): QuantityWithExtendedUnit[] {
+  function reduceToQuantity(firstQuantity: QuantityWithExtendedUnit) {
     // Look for the global list of equivalent for this quantity unit;
     const equivalentList = sortUnitList(
       findListWithCompatibleQuantity(unitList, firstQuantity)!,
@@ -789,7 +823,7 @@ export function reduceOrsToFirstEquivalent(
     };
     // Priority 1: the first quantity has an integer-protected unit
     if (firstQuantityInList.unit.integerProtected) {
-      const resultQuantity: Quantity = {
+      const resultQuantity: QuantityWithExtendedUnit = {
         value: firstQuantity.value,
       };
       if (normalizedFirstQuantity.unit.name !== "__no-unit__") {
@@ -815,7 +849,7 @@ export function reduceOrsToFirstEquivalent(
             unitRatio,
           );
           if (isValueIntegerLike(nextProtectedQuantityValue)) {
-            const nextProtectedQuantity: Quantity = {
+            const nextProtectedQuantity: QuantityWithExtendedUnit = {
               value: nextProtectedQuantityValue,
             };
             if (
@@ -850,7 +884,7 @@ export function reduceOrsToFirstEquivalent(
         firstNonIntegerProtected,
         firstQuantityInList,
       ).times(getBaseUnitRatio(normalizedFirstQuantity, firstQuantityInList));
-      const firstEqQuantity: Quantity = {
+      const firstEqQuantity: QuantityWithExtendedUnit = {
         value:
           firstNonIntegerProtected.unit.name === firstQuantity.unit!.name
             ? firstQuantity.value
@@ -882,7 +916,10 @@ export function reduceOrsToFirstEquivalent(
 }
 
 export function addQuantitiesOrGroups(
-  ...quantities: (Quantity | FlatOrGroup<Quantity>)[]
+  ...quantities: (
+    | QuantityWithExtendedUnit
+    | FlatOrGroup<QuantityWithExtendedUnit>
+  )[]
 ): {
   sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>;
   unitsLists: QuantityWithUnitDef[][];
@@ -937,9 +974,12 @@ export function addQuantitiesOrGroups(
 function regroupQuantitiesAndExpandEquivalents(
   sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>,
   unitsLists: QuantityWithUnitDef[][],
-): (Quantity | MaybeNestedOrGroup<Quantity>)[] {
+): (QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>)[] {
   const sumQuantities = isGroup(sum) ? sum.quantities : [sum];
-  const result: (Quantity | MaybeNestedOrGroup<Quantity>)[] = [];
+  const result: (
+    | QuantityWithExtendedUnit
+    | MaybeNestedOrGroup<QuantityWithExtendedUnit>
+  )[] = [];
   const processedQuantities = new Set<QuantityWithUnitDef>();
 
   for (const list of unitsLists) {
@@ -963,16 +1003,15 @@ function regroupQuantitiesAndExpandEquivalents(
 
     // We sort the equivalent units and calculate the equivalent value for each of them
     const equivalents = sortUnitList(listCopy).map((equiv) => {
-      const initialValue: Quantity = { value: getDefaultQuantityValue() };
+      const initialValue: QuantityWithExtendedUnit = {
+        value: getDefaultQuantityValue(),
+      };
       if (equiv.unit) {
         initialValue.unit = { name: equiv.unit.name };
       }
       return main.reduce((acc, v) => {
         const mainInList = findCompatibleQuantityWithinList(list, v)!;
-        console.log(mainInList);
-        console.log(equiv);
-        console.log(getUnitRatio(equiv, mainInList));
-        const newValue: Quantity = {
+        const newValue: QuantityWithExtendedUnit = {
           value: multiplyQuantityValue(
             v.value,
             Big(getAverageValue(equiv.value)).div(
@@ -988,7 +1027,9 @@ function regroupQuantitiesAndExpandEquivalents(
     });
 
     if (main.length + equivalents.length > 1) {
-      const resultMain: Quantity | FlatAndGroup<Quantity> =
+      const resultMain:
+        | QuantityWithExtendedUnit
+        | FlatAndGroup<QuantityWithExtendedUnit> =
         main.length > 1
           ? {
               type: "and",
@@ -1012,20 +1053,39 @@ function regroupQuantitiesAndExpandEquivalents(
   return result;
 }
 
+export function toPlainUnit(
+  quantity:
+    | QuantityWithExtendedUnit
+    | MaybeNestedGroup<QuantityWithExtendedUnit>,
+): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {
+  if (isQuantity(quantity))
+    return quantity.unit
+      ? { ...quantity, unit: quantity.unit.name }
+      : (quantity as QuantityWithPlainUnit);
+  else {
+    return {
+      ...quantity,
+      quantities: quantity.quantities.map(toPlainUnit),
+    } as MaybeNestedGroup<QuantityWithPlainUnit>;
+  }
+}
+
 export function addEquivalentsAndSimplify(
-  ...quantities: (Quantity | FlatOrGroup<Quantity>)[]
-): Quantity | MaybeNestedGroup<Quantity> {
+  ...quantities: (
+    | QuantityWithExtendedUnit
+    | FlatOrGroup<QuantityWithExtendedUnit>
+  )[]
+): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {
   if (quantities.length === 1) {
-    if (isQuantity(quantities[0]!)) return quantities[0];
-    else return quantities[0] as FlatOrGroup<Quantity>;
+    return toPlainUnit(quantities[0]!);
   }
   // Step 1+2+3: find equivalents, reduce groups and add quantities
   const { sum, unitsLists } = addQuantitiesOrGroups(...quantities);
   // Step 4: regroup and expand equivalents per group
   const regrouped = regroupQuantitiesAndExpandEquivalents(sum, unitsLists);
   if (regrouped.length === 1) {
-    return regrouped[0]!;
+    return toPlainUnit(regrouped[0]!);
   } else {
-    return { type: "and", quantities: regrouped };
+    return { type: "and", quantities: regrouped.map(toPlainUnit) };
   }
 }
