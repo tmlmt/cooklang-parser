@@ -67,25 +67,17 @@ export function findAndUpsertIngredient(
   newIngredient: Ingredient,
   isReference: boolean,
 ): number {
-  const { name, preparation } = newIngredient;
+  const { name } = newIngredient;
 
   if (isReference) {
     const indexFind = ingredients.findIndex(
-      (i) =>
-        i.name.toLowerCase() === name.toLowerCase() &&
-        (!preparation || i.preparation === preparation),
+      (i) => i.name.toLowerCase() === name.toLowerCase(),
     );
 
     if (indexFind === -1) {
-      if (preparation) {
-        throw new Error(
-          `Referenced ingredient "${name}" with preparation "${preparation}" not found. A referenced ingredient must be declared and with the same preparation note before being referenced with '&'`,
-        );
-      } else {
-        throw new Error(
-          `Referenced ingredient "${name}" not found. A referenced ingredient must be declared before being referenced with '&'.`,
-        );
-      }
+      throw new Error(
+        `Referenced ingredient "${name}" not found. A referenced ingredient must be declared before being referenced with '&'.`,
+      );
     }
 
     // Ingredient already exists
@@ -103,7 +95,10 @@ export function findAndUpsertIngredient(
     } else {
       for (const flag of newIngredient.flags) {
         /* v8 ignore else -- @preserve */
-        if (!existingIngredient.flags!.includes(flag)) {
+        if (
+          existingIngredient.flags === undefined ||
+          !existingIngredient.flags.includes(flag)
+        ) {
           throw new ReferencedItemCannotBeRedefinedError(
             "ingredient",
             existingIngredient.name,
@@ -146,7 +141,10 @@ export function findAndUpsertCookware(
     // Checking whether any provided flags are the same as the original cookware
     for (const flag of newCookware.flags) {
       /* v8 ignore else -- @preserve */
-      if (!existingCookware.flags.includes(flag)) {
+      if (
+        existingCookware.flags === undefined ||
+        !existingCookware.flags.includes(flag)
+      ) {
         throw new ReferencedItemCannotBeRedefinedError(
           "cookware",
           existingCookware.name,

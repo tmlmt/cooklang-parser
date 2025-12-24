@@ -37,7 +37,7 @@ import {
   unionOfSets,
 } from "../parser_helpers";
 import { multiplyQuantityValue, addEquivalentsAndSimplify } from "../units";
-import type { Quantity, FlatOrGroup } from "../units";
+import type { FlatOrGroup, QuantityWithExtendedUnit } from "../units";
 import Big from "big.js";
 
 /**
@@ -122,16 +122,18 @@ export class Recipe {
     }
   }
 
-  private _parseQuantityRecursive(quantityRaw: string): Quantity[] {
+  private _parseQuantityRecursive(
+    quantityRaw: string,
+  ): QuantityWithExtendedUnit[] {
     let quantityMatch = quantityRaw.match(quantityAlternativeRegex);
-    const quantities: Quantity[] = [];
+    const quantities: QuantityWithExtendedUnit[] = [];
     while (quantityMatch?.groups) {
       const value = quantityMatch.groups.ingredientQuantityValue
         ? parseQuantityInput(quantityMatch.groups.ingredientQuantityValue)
         : undefined;
       const unit = quantityMatch.groups.ingredientUnit;
       if (value) {
-        const newQuantity: Quantity = { value };
+        const newQuantity: QuantityWithExtendedUnit = { value };
         if (unit) {
           if (unit.startsWith("=")) {
             newQuantity.unit = {
@@ -282,6 +284,7 @@ export class Recipe {
     }
 
     const id = `ingredient-item-${this._itemCount}`;
+    this._itemCount++;
 
     // Finalize item
     const newItem: IngredientItem = {
@@ -410,6 +413,7 @@ export class Recipe {
       }
     }
     const id = `ingredient-item-${this._itemCount}`;
+    this._itemCount++;
 
     // Finalize item
     const newItem: IngredientItem = {
@@ -444,7 +448,7 @@ export class Recipe {
 
     const ingredientQuantities = new Map<
       number,
-      (Quantity | FlatOrGroup<Quantity>)[]
+      (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[]
     >();
 
     // Looping ingredient items
@@ -470,9 +474,13 @@ export class Recipe {
               : false;
             if (
               alternative.quantity &&
-              (isAlternativeChoiceItem || isAlternativeChoiceGroup)
+              (item.alternatives.length === 1 ||
+                isAlternativeChoiceItem ||
+                isAlternativeChoiceGroup)
             ) {
-              const equivalents: Quantity | FlatOrGroup<Quantity> =
+              const equivalents:
+                | QuantityWithExtendedUnit
+                | FlatOrGroup<QuantityWithExtendedUnit> =
                 alternative.quantity.equivalents.length === 1
                   ? alternative.quantity.equivalents[0]!
                   : {
@@ -528,7 +536,6 @@ export class Recipe {
     for (const line of cleanContent) {
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
-        this._itemCount += items.length;
         flushPendingItems(section, items);
         note = flushPendingNote(section, note);
         blankLineBefore = true;
@@ -538,7 +545,6 @@ export class Recipe {
 
       // New section
       if (line.startsWith("=")) {
-        this._itemCount += items.length;
         flushPendingItems(section, items);
         note = flushPendingNote(section, note);
 
@@ -595,7 +601,7 @@ export class Recipe {
         }
         // Ingredient items part of a group of alternative ingredients
         else if (groups.gmIngredientName || groups.gsIngredientName) {
-          // TODO parse ingredient
+          this._parseIngredientWithGroupKey(match[0], items);
         }
         // Cookware items
         else if (groups.mCookwareName || groups.sCookwareName) {
@@ -660,7 +666,6 @@ export class Recipe {
     }
 
     // End of content reached: pushing all temporarily saved elements
-    this._itemCount += items.length;
     flushPendingItems(section, items);
     note = flushPendingNote(section, note);
     if (!section.isBlank()) {
