@@ -302,10 +302,7 @@ describe("findAndUpsertCookware", () => {
   it("should correctly add a non-referenced cookware", () => {
     const cookware: Cookware[] = [{ name: "oven", flags: [] }];
     const newCookware: Cookware = { name: "pan", flags: [] };
-    expect(findAndUpsertCookware(cookware, newCookware, false)).toEqual({
-      cookwareIndex: 1,
-      quantityPartIndex: undefined,
-    });
+    expect(findAndUpsertCookware(cookware, newCookware, false)).toBe(1);
     expect(cookware.length).toEqual(2);
   });
 
@@ -314,24 +311,14 @@ describe("findAndUpsertCookware", () => {
     const newCookware: Cookware = {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-      quantityParts: [{ type: "fixed", value: { type: "decimal", value: 1 } }],
       flags: [],
     };
-    expect(findAndUpsertCookware(cookware, newCookware, true)).toEqual({
-      cookwareIndex: 0,
-      quantityPartIndex: 0,
-    });
+    expect(findAndUpsertCookware(cookware, newCookware, true)).toBe(0);
     expect(cookware.length).toBe(1);
     expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
       value: { type: "decimal", value: 1 },
     });
-    expect(cookware[0]!.quantityParts).toEqual([
-      {
-        type: "fixed",
-        value: { type: "decimal", value: 1 },
-      },
-    ]);
   });
 
   it("should add quantities of referenced cookware", () => {
@@ -458,7 +445,7 @@ describe("findAndUpsertIngredient", () => {
       name: "unreferenced-ingredient",
       quantity: {
         value: { type: "fixed", value: { type: "decimal", value: 100 } },
-        unit: { name: "g" },
+        unit: "g",
       },
       flags: [],
     };
