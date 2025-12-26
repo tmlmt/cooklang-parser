@@ -119,10 +119,7 @@ export function findAndUpsertCookware(
   cookware: Cookware[],
   newCookware: Cookware,
   isReference: boolean,
-): {
-  cookwareIndex: number;
-  quantityPartIndex: number | undefined;
-} {
+): number {
   const { name, quantity } = newCookware;
 
   if (isReference) {
@@ -139,62 +136,43 @@ export function findAndUpsertCookware(
     const existingCookware = cookware[index]!;
 
     // Checking whether any provided flags are the same as the original cookware
-    for (const flag of newCookware.flags) {
-      /* v8 ignore else -- @preserve */
-      if (
-        existingCookware.flags === undefined ||
-        !existingCookware.flags.includes(flag)
-      ) {
-        throw new ReferencedItemCannotBeRedefinedError(
-          "cookware",
-          existingCookware.name,
-          flag,
-        );
+    if (newCookware.flags) {
+      for (const flag of newCookware.flags) {
+        /* v8 ignore else -- @preserve */
+        if (
+          existingCookware.flags === undefined ||
+          !existingCookware.flags.includes(flag)
+        ) {
+          throw new ReferencedItemCannotBeRedefinedError(
+            "cookware",
+            existingCookware.name,
+            flag,
+          );
+        }
       }
     }
 
-    let quantityPartIndex = undefined;
     if (quantity !== undefined) {
       if (!existingCookware.quantity) {
         existingCookware.quantity = quantity;
-        existingCookware.quantityParts = newCookware.quantityParts;
-        quantityPartIndex = 0;
       } else {
         try {
           existingCookware.quantity = addQuantityValues(
             existingCookware.quantity,
             quantity,
           );
-          if (!existingCookware.quantityParts) {
-            existingCookware.quantityParts = newCookware.quantityParts;
-            quantityPartIndex = 0;
-          } else {
-            quantityPartIndex =
-              existingCookware.quantityParts.push(
-                ...newCookware.quantityParts!,
-              ) - 1;
-          }
         } catch (e) {
           /* v8 ignore else -- expliciting error type -- @preserve */
           if (e instanceof CannotAddTextValueError) {
-            return {
-              cookwareIndex: cookware.push(newCookware) - 1,
-              quantityPartIndex: 0,
-            };
+            return cookware.push(newCookware) - 1;
           }
         }
       }
     }
-    return {
-      cookwareIndex: index,
-      quantityPartIndex,
-    };
+    return index;
   }
 
-  return {
-    cookwareIndex: cookware.push(newCookware) - 1,
-    quantityPartIndex: quantity ? 0 : undefined,
-  };
+  return cookware.push(newCookware) - 1;
 }
 
 // Parser when we know the input is either a number-like value

@@ -337,9 +337,8 @@ export interface CookwareItem {
   type: "cookware";
   /** The index of the cookware, within the {@link Recipe.cookware | list of cookware} */
   index: number;
-  /** Index of the quantity part corresponding to this item / this occurence
-   * of the cookware, which may be referenced elsewhere. */
-  quantityPartIndex?: number;
+  /** The quantity of this specific mention of the cookware */
+  quantity?: FixedValue | Range;
 }
 
 /**
@@ -418,10 +417,8 @@ export interface Cookware {
   name: string;
   /** The quantity of cookware */
   quantity?: FixedValue | Range;
-  /** The array of contributors to the cookware's total quantity. */
-  quantityParts?: (FixedValue | Range)[];
   /** A list of potential state modifiers or other flags for the cookware */
-  flags: CookwareFlag[];
+  flags?: CookwareFlag[];
 }
 
 /**

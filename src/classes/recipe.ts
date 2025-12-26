@@ -606,10 +606,8 @@ export class Recipe {
         // Cookware items
         else if (groups.mCookwareName || groups.sCookwareName) {
           const name = (groups.mCookwareName || groups.sCookwareName)!;
-          const modifiers =
-            groups.mCookwareModifiers || groups.sCookwareModifiers;
-          const quantityRaw =
-            groups.mCookwareQuantity || groups.sCookwareQuantity;
+          const modifiers = groups.cookwareModifiers;
+          const quantityRaw = groups.cookwareQuantity;
           const reference = modifiers !== undefined && modifiers.includes("&");
           const flags: CookwareFlag[] = [];
           if (modifiers !== undefined && modifiers.includes("?")) {
@@ -621,22 +619,32 @@ export class Recipe {
           const quantity = quantityRaw
             ? parseQuantityInput(quantityRaw)
             : undefined;
+          const newCookware: Cookware = {
+            name,
+          };
+          if (quantity) {
+            newCookware.quantity = quantity;
+          }
+          if (flags.length > 0) {
+            newCookware.flags = flags;
+          }
 
-          const idxsInList = findAndUpsertCookware(
+          // Add cookware in cookware list
+          const idxInList = findAndUpsertCookware(
             this.cookware,
-            {
-              name,
-              quantity,
-              quantityParts: quantity ? [quantity] : undefined,
-              flags,
-            },
+            newCookware,
             reference,
           );
-          items.push({
+
+          // Adding the item itself in the preparation
+          const newItem: CookwareItem = {
             type: "cookware",
-            index: idxsInList.cookwareIndex,
-            quantityPartIndex: idxsInList.quantityPartIndex,
-          } as CookwareItem);
+            index: idxInList,
+          };
+          if (quantity) {
+            newItem.quantity = quantity;
+          }
+          items.push(newItem);
         }
         // Then it's necessarily a timer which was matched
         else {
@@ -824,12 +832,19 @@ export class Recipe {
    */
   clone(): Recipe {
     const newRecipe = new Recipe();
+    newRecipe._itemCount = this._itemCount;
     // deep copy
     newRecipe.metadata = JSON.parse(JSON.stringify(this.metadata)) as Metadata;
     newRecipe.ingredients = JSON.parse(
       JSON.stringify(this.ingredients),
     ) as Ingredient[];
-    newRecipe.sections = JSON.parse(JSON.stringify(this.sections)) as Section[];
+    newRecipe.sections = this.sections.map((section) => {
+      const newSection = new Section(section.name);
+      newSection.content = JSON.parse(
+        JSON.stringify(section.content),
+      ) as Section["content"];
+      return newSection;
+    });
     newRecipe.cookware = JSON.parse(
       JSON.stringify(this.cookware),
     ) as Cookware[];
