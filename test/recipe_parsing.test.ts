@@ -646,9 +646,7 @@ describe("parse function", () => {
       expect(result.cookware.length).toBe(2);
       expect(result.cookware[0]).toEqual({
         name: "bowl",
-        quantity: {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
-        },
+        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
       });
       expect(result.cookware[1]).toEqual({
         name: "pan",
@@ -678,10 +676,8 @@ describe("parse function", () => {
       const result = new Recipe(recipe);
       expect(result.cookware).toHaveLength(1);
       expect(result.cookware[0]!.quantity).toEqual({
-        value: {
-          type: "fixed",
-          value: { type: "decimal", value: 3 },
-        },
+        type: "fixed",
+        value: { type: "decimal", value: 3 },
       });
     });
 
