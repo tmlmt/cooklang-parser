@@ -19,21 +19,21 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: "g",
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 50 } },
           unit: "g",
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: "ml",
         },
         {
@@ -54,21 +54,21 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
           unit: "g",
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 50 } },
           unit: "g",
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 3 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: "ml",
         },
         {
@@ -80,17 +80,17 @@ describe("ShoppingList", () => {
         },
         {
           name: "spices",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "pinch",
         },
         {
           name: "butter",
-          quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 25 } },
           unit: "g",
         },
         {
           name: "pepper",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "tsp",
         },
       ]);
@@ -103,21 +103,21 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: "g",
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: "g",
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 4 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 400 } },
           unit: "ml",
         },
         {
@@ -137,21 +137,21 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: "g",
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: "g",
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 4 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 400 } },
           unit: "ml",
         },
         {
@@ -171,21 +171,21 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 300 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
           unit: "g",
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
           unit: "g",
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 6 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 6 } },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 600 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 600 } },
           unit: "ml",
         },
         {
@@ -281,31 +281,43 @@ sugar
         Bakery: [
           {
             name: "flour",
-            quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
             unit: "g",
           },
           {
             name: "sugar",
-            quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
             unit: "g",
           },
         ],
         Dairy: [
           {
             name: "butter",
-            quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 25 },
+            },
             unit: "g",
           },
           {
             name: "milk",
-            quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
             unit: "ml",
           },
         ],
         other: [
           {
             name: "eggs",
-            quantity: { type: "fixed", value: { type: "decimal", value: 3 } },
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
           },
           {
             name: "pepper",
@@ -316,12 +328,12 @@ sugar
           },
           {
             name: "pepper",
-            quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
             unit: "tsp",
           },
           {
             name: "spices",
-            quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
             unit: "pinch",
           },
         ],
@@ -344,21 +356,30 @@ sugar
         other: [
           {
             name: "flour",
-            quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
             unit: "g",
           },
           {
             name: "sugar",
-            quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
             unit: "g",
           },
           {
             name: "eggs",
-            quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
           },
           {
             name: "milk",
-            quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
             unit: "ml",
           },
           {
@@ -383,26 +404,26 @@ sugar
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 50 } },
           unit: "g",
         },
         {
           name: "butter",
-          quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 25 } },
           unit: "g",
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
         {
           name: "pepper",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "tsp",
         },
         {
           name: "spices",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "pinch",
         },
       ]);
@@ -418,7 +439,7 @@ sugar
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
           unit: "g",
         },
       ]);
@@ -426,7 +447,7 @@ sugar
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 50 } },
           unit: "g",
         },
       ]);

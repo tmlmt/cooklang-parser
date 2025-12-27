@@ -180,7 +180,7 @@ export const parseFixedValue = (
   input_str: string,
 ): TextValue | DecimalValue | FractionValue => {
   if (!numberLikeRegex.test(input_str)) {
-    return { type: "text", value: input_str };
+    return { type: "text", text: input_str };
   }
 
   // After this we know that s is either a fraction or a decimal value
@@ -197,7 +197,7 @@ export const parseFixedValue = (
   }
 
   // decimal
-  return { type: "decimal", value: Number(s) };
+  return { type: "decimal", decimal: Number(s) };
 };
 
 export function stringifyQuantityValue(quantity: FixedValue | Range): string {
@@ -211,7 +211,9 @@ export function stringifyQuantityValue(quantity: FixedValue | Range): string {
 function stringifyFixedValue(quantity: FixedValue): string {
   if (quantity.value.type === "fraction")
     return `${quantity.value.num}/${quantity.value.den}`;
-  else return String(quantity.value.value);
+  else if (quantity.value.type === "decimal")
+    return String(quantity.value.decimal);
+  else return quantity.value.text;
 }
 
 // TODO: rename to parseQuantityValue

@@ -20,7 +20,7 @@ export type UnitDefinitionLike =
   | { name: string; system: "none"; integerProtected?: boolean };
 
 export interface QuantityBase {
-  value: FixedValue | Range;
+  quantity: FixedValue | Range;
 }
 
 export interface QuantityWithPlainUnit extends QuantityBase {
@@ -223,7 +223,7 @@ export function deNormalizeQuantity(
   q: QuantityWithUnitDef,
 ): QuantityWithExtendedUnit {
   const result: QuantityWithExtendedUnit = {
-    value: q.value,
+    quantity: q.quantity,
   };
   if (q.unit.name !== "__no-unit__") {
     result.unit = { name: q.unit.name };
@@ -284,7 +284,7 @@ export function simplifyFraction(
   }
 
   if (simplifiedDen === 1) {
-    return { type: "decimal", value: simplifiedNum };
+    return { type: "decimal", decimal: simplifiedNum };
   } else {
     return { type: "fraction", num: simplifiedNum, den: simplifiedDen };
   }
@@ -293,7 +293,7 @@ export function simplifyFraction(
 export function getNumericValue(v: DecimalValue | FractionValue): number {
   // TODO: rename NumericValue to NumericalValue for all relevant functions
   if (v.type === "decimal") {
-    return v.value;
+    return v.decimal;
   }
   return v.num / v.den;
 }
@@ -303,7 +303,10 @@ export function multiplyNumericValue(
   factor: number | Big,
 ): DecimalValue | FractionValue {
   if (v.type === "decimal") {
-    return { type: "decimal", value: Big(v.value).times(factor).toNumber() };
+    return {
+      type: "decimal",
+      decimal: Big(v.decimal).times(factor).toNumber(),
+    };
   }
   return simplifyFraction(Big(v.num).times(factor).toNumber(), v.den);
 }
@@ -318,7 +321,7 @@ export function addNumericValues(
   let den2: number;
 
   if (val1.type === "decimal") {
-    num1 = val1.value;
+    num1 = val1.decimal;
     den1 = 1;
   } else {
     num1 = val1.num;
@@ -326,7 +329,7 @@ export function addNumericValues(
   }
 
   if (val2.type === "decimal") {
-    num2 = val2.value;
+    num2 = val2.decimal;
     den2 = 1;
   } else {
     num2 = val2.num;
@@ -335,14 +338,16 @@ export function addNumericValues(
 
   // Return 0 if both values are 0
   if (num1 === 0 && num2 === 0) {
-    return { type: "decimal", value: 0 };
+    return { type: "decimal", decimal: 0 };
   }
 
   // We only return a fraction where both input values are fractions themselves or only one while the other is 0
   if (
     (val1.type === "fraction" && val2.type === "fraction") ||
-    (val1.type === "fraction" && val2.type === "decimal" && val2.value === 0) ||
-    (val2.type === "fraction" && val1.type === "decimal" && val1.value === 0)
+    (val1.type === "fraction" &&
+      val2.type === "decimal" &&
+      val2.decimal === 0) ||
+    (val2.type === "fraction" && val1.type === "decimal" && val1.decimal === 0)
   ) {
     const commonDen = den1 * den2;
     const sumNum = num1 * den2 + num2 * den1;
@@ -350,14 +355,14 @@ export function addNumericValues(
   } else {
     return {
       type: "decimal",
-      value: Big(num1).div(den1).add(Big(num2).div(den2)).toNumber(),
+      decimal: Big(num1).div(den1).add(Big(num2).div(den2)).toNumber(),
     };
   }
 }
 
 const toRoundedDecimal = (v: DecimalValue | FractionValue): DecimalValue => {
-  const value = v.type === "decimal" ? v.value : v.num / v.den;
-  return { type: "decimal", value: Math.round(value * 1000) / 1000 };
+  const value = v.type === "decimal" ? v.decimal : v.num / v.den;
+  return { type: "decimal", decimal: Math.round(value * 1000) / 1000 };
 };
 
 export function multiplyQuantityValue(
@@ -412,7 +417,7 @@ const convertQuantityValue = (
  * @return zero
  */
 export function getDefaultQuantityValue(): FixedValue {
-  return { type: "fixed", value: { type: "decimal", value: 0 } };
+  return { type: "fixed", value: { type: "decimal", decimal: 0 } };
 }
 
 /**
@@ -471,8 +476,8 @@ export function addQuantities(
   q1: QuantityWithExtendedUnit,
   q2: QuantityWithExtendedUnit,
 ): QuantityWithExtendedUnit {
-  const v1 = q1.value;
-  const v2 = q2.value;
+  const v1 = q1.quantity;
+  const v2 = q2.quantity;
   // Case 1: one of the two values is a text, we throw an error we can catch on the other end
   if (
     (v1.type === "fixed" && v1.value.type === "text") ||
@@ -489,7 +494,7 @@ export function addQuantities(
     val2: FixedValue | Range,
     unit?: Unit,
   ): QuantityWithExtendedUnit => ({
-    value: addQuantityValues(val1, val2),
+    quantity: addQuantityValues(val1, val2),
     unit,
   });
 
@@ -574,20 +579,20 @@ function isOrGroup(
 function isQuantity(
   x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
 ): x is QuantityWithExtendedUnit | QuantityWithUnitDef {
-  return x && typeof x === "object" && "value" in x;
+  return x && typeof x === "object" && "quantity" in x;
 }
 
 export function getAverageValue(q: FixedValue | Range): string | number {
   if (q.type === "fixed") {
-    return q.value.type === "text" ? q.value.value : getNumericValue(q.value);
+    return q.value.type === "text" ? q.value.text : getNumericValue(q.value);
   } else {
     return (getNumericValue(q.min) + getNumericValue(q.max)) / 2;
   }
 }
 
 export function getUnitRatio(q1: QuantityWithUnitDef, q2: QuantityWithUnitDef) {
-  const q1Value = getAverageValue(q1.value);
-  const q2Value = getAverageValue(q2.value);
+  const q1Value = getAverageValue(q1.quantity);
+  const q2Value = getAverageValue(q2.quantity);
   const factor =
     "toBase" in q1.unit && "toBase" in q2.unit
       ? q1.unit.toBase / q2.unit.toBase
@@ -704,7 +709,7 @@ export function getEquivalentUnitsLists(
         ) {
           continue;
         } else {
-          newQ.value = multiplyQuantityValue(newQ.value, unitRatio!);
+          newQ.quantity = multiplyQuantityValue(newQ.quantity, unitRatio!);
           unitLists[linkIndex]!.push(newQ);
         }
       }
@@ -717,16 +722,16 @@ export function getEquivalentUnitsLists(
 export function isValueIntegerLike(q: FixedValue | Range) {
   let result = false;
   if (q.type === "fixed") {
-    if (q.value.type === "decimal") return Number.isInteger(q.value.value);
+    if (q.value.type === "decimal") return Number.isInteger(q.value.decimal);
     if (q.value.type === "fraction")
       return Number.isInteger(q.value.num / q.value.den);
   } else {
     if (q.min.type === "decimal")
-      result = result ? Number.isInteger(q.min.value) : false;
+      result = result ? Number.isInteger(q.min.decimal) : false;
     if (q.min.type === "fraction")
       result = result ? Number.isInteger(q.min.num / q.min.den) : false;
     if (q.max.type === "decimal")
-      result = result ? Number.isInteger(q.max.value) : false;
+      result = result ? Number.isInteger(q.max.decimal) : false;
     if (q.max.type === "fraction")
       result = result ? Number.isInteger(q.max.num / q.max.den) : false;
   }
@@ -824,7 +829,7 @@ export function reduceOrsToFirstEquivalent(
     // Priority 1: the first quantity has an integer-protected unit
     if (firstQuantityInList.unit.integerProtected) {
       const resultQuantity: QuantityWithExtendedUnit = {
-        value: firstQuantity.value,
+        quantity: firstQuantity.quantity,
       };
       if (normalizedFirstQuantity.unit.name !== "__no-unit__") {
         resultQuantity.unit = { name: normalizedFirstQuantity.unit.name };
@@ -845,12 +850,12 @@ export function reduceOrsToFirstEquivalent(
             firstQuantityInList,
           );
           const nextProtectedQuantityValue = multiplyQuantityValue(
-            firstQuantity.value,
+            firstQuantity.quantity,
             unitRatio,
           );
           if (isValueIntegerLike(nextProtectedQuantityValue)) {
             const nextProtectedQuantity: QuantityWithExtendedUnit = {
-              value: nextProtectedQuantityValue,
+              quantity: nextProtectedQuantityValue,
             };
             if (
               equivalentListTemp[nextProtected]!.unit.name !== "__no-unit__"
@@ -885,10 +890,10 @@ export function reduceOrsToFirstEquivalent(
         firstQuantityInList,
       ).times(getBaseUnitRatio(normalizedFirstQuantity, firstQuantityInList));
       const firstEqQuantity: QuantityWithExtendedUnit = {
-        value:
+        quantity:
           firstNonIntegerProtected.unit.name === firstQuantity.unit!.name
-            ? firstQuantity.value
-            : multiplyQuantityValue(firstQuantity.value, unitRatio),
+            ? firstQuantity.quantity
+            : multiplyQuantityValue(firstQuantity.quantity, unitRatio),
       };
       if (firstNonIntegerProtected.unit.name !== "__no-unit__") {
         firstEqQuantity.unit = { name: firstNonIntegerProtected.unit.name };
@@ -927,7 +932,7 @@ export function addQuantitiesOrGroups(
   if (quantities.length === 0)
     return {
       sum: {
-        value: getDefaultQuantityValue(),
+        quantity: getDefaultQuantityValue(),
         unit: getNormalizedUnit("__no-unit__"),
       },
       unitsLists: [],
@@ -959,7 +964,7 @@ export function addQuantitiesOrGroups(
       });
     } else {
       const sumQ = addQuantities(existingQ, nextQ);
-      existingQ.value = sumQ.value;
+      existingQ.quantity = sumQ.quantity;
       existingQ.unit = getNormalizedUnit(
         sumQ.unit ? sumQ.unit.name : "__no-unit__",
       );
@@ -1004,7 +1009,7 @@ function regroupQuantitiesAndExpandEquivalents(
     // We sort the equivalent units and calculate the equivalent value for each of them
     const equivalents = sortUnitList(listCopy).map((equiv) => {
       const initialValue: QuantityWithExtendedUnit = {
-        value: getDefaultQuantityValue(),
+        quantity: getDefaultQuantityValue(),
       };
       if (equiv.unit) {
         initialValue.unit = { name: equiv.unit.name };
@@ -1012,10 +1017,10 @@ function regroupQuantitiesAndExpandEquivalents(
       return main.reduce((acc, v) => {
         const mainInList = findCompatibleQuantityWithinList(list, v)!;
         const newValue: QuantityWithExtendedUnit = {
-          value: multiplyQuantityValue(
-            v.value,
-            Big(getAverageValue(equiv.value)).div(
-              getAverageValue(mainInList.value),
+          quantity: multiplyQuantityValue(
+            v.quantity,
+            Big(getAverageValue(equiv.quantity)).div(
+              getAverageValue(mainInList.quantity),
             ),
           ),
         };

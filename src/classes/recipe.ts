@@ -133,7 +133,7 @@ export class Recipe {
         : undefined;
       const unit = quantityMatch.groups.ingredientUnit;
       if (value) {
-        const newQuantity: QuantityWithExtendedUnit = { value };
+        const newQuantity: QuantityWithExtendedUnit = { quantity: value };
         if (unit) {
           if (unit.startsWith("=")) {
             newQuantity.unit = {
@@ -440,8 +440,8 @@ export class Recipe {
   calc_ingredient_quantities(): void {
     // Resets quantities
     this.ingredients = this.ingredients.map((ing) => {
-      if (ing.quantity) {
-        delete ing.quantity;
+      if (ing.quantityTotal) {
+        delete ing.quantityTotal;
       }
       return ing;
     });
@@ -501,7 +501,7 @@ export class Recipe {
     for (const [index, quantities] of ingredientQuantities) {
       if (!this.ingredients[index])
         throw Error(`Ingredient with index ${index} not found`);
-      this.ingredients[index].quantity = addEquivalentsAndSimplify(
+      this.ingredients[index].quantityTotal = addEquivalentsAndSimplify(
         ...quantities,
       );
     }
@@ -726,15 +726,15 @@ export class Recipe {
           alternative.quantity.equivalents =
             alternative.quantity.equivalents.map((altQuantity) => {
               if (
-                altQuantity.value.type === "fixed" &&
-                altQuantity.value.value.type === "text"
+                altQuantity.quantity.type === "fixed" &&
+                altQuantity.quantity.value.type === "text"
               ) {
                 return altQuantity;
               } else {
                 return {
                   ...altQuantity,
-                  value: multiplyQuantityValue(
-                    altQuantity.value,
+                  quantity: multiplyQuantityValue(
+                    altQuantity.quantity,
                     alternative.quantity!.scalable ? Big(factor) : 1,
                   ),
                 };

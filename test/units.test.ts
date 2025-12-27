@@ -76,12 +76,12 @@ describe("simplifyFraction", () => {
 
   it("should return a decimal value when the fraction simplifies to a whole number", () => {
     const result = simplifyFraction(10, 2);
-    expect(result).toEqual({ type: "decimal", value: 5 });
+    expect(result).toEqual({ type: "decimal", decimal: 5 });
   });
 
   it("should handle cases where the numerator is zero", () => {
     const result = simplifyFraction(0, 5);
-    expect(result).toEqual({ type: "decimal", value: 0 });
+    expect(result).toEqual({ type: "decimal", decimal: 0 });
   });
 
   it("should handle cases where the numerator is < 1", () => {
@@ -92,17 +92,20 @@ describe("simplifyFraction", () => {
 
 describe("addNumericValues", () => {
   it("should add two decimal values", () => {
-    const val1: DecimalValue = { type: "decimal", value: 1.5 };
-    const val2: DecimalValue = { type: "decimal", value: 2.5 };
-    expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 4 });
+    const val1: DecimalValue = { type: "decimal", decimal: 1.5 };
+    const val2: DecimalValue = { type: "decimal", decimal: 2.5 };
+    expect(addNumericValues(val1, val2)).toEqual({
+      type: "decimal",
+      decimal: 4,
+    });
   });
 
   it("should add two big decimal values", () => {
-    const val1: DecimalValue = { type: "decimal", value: 1.1 };
-    const val2: DecimalValue = { type: "decimal", value: 1.3 };
+    const val1: DecimalValue = { type: "decimal", decimal: 1.1 };
+    const val2: DecimalValue = { type: "decimal", decimal: 1.3 };
     expect(addNumericValues(val1, val2)).toEqual({
       type: "decimal",
-      value: 2.4,
+      decimal: 2.4,
     });
   });
 
@@ -117,27 +120,30 @@ describe("addNumericValues", () => {
   });
 
   it("should add a decimal and a fraction value", () => {
-    const val1: DecimalValue = { type: "decimal", value: 0.5 };
+    const val1: DecimalValue = { type: "decimal", decimal: 0.5 };
     const val2: FractionValue = { type: "fraction", num: 1, den: 4 };
     expect(addNumericValues(val1, val2)).toEqual({
       type: "decimal",
-      value: 0.75,
+      decimal: 0.75,
     });
   });
 
   it("should add a fraction and a decimal value", () => {
     const val1: FractionValue = { type: "fraction", num: 1, den: 2 };
-    const val2: DecimalValue = { type: "decimal", value: 0.25 };
+    const val2: DecimalValue = { type: "decimal", decimal: 0.25 };
     expect(addNumericValues(val1, val2)).toEqual({
       type: "decimal",
-      value: 0.75,
+      decimal: 0.75,
     });
   });
 
   it("should return a decimal when fractions add up to a whole number", () => {
     const val1: FractionValue = { type: "fraction", num: 1, den: 2 };
     const val2: FractionValue = { type: "fraction", num: 1, den: 2 };
-    expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 1 });
+    expect(addNumericValues(val1, val2)).toEqual({
+      type: "decimal",
+      decimal: 1,
+    });
   });
 
   it("should simplify the resulting fraction", () => {
@@ -151,9 +157,12 @@ describe("addNumericValues", () => {
   });
 
   it("should return 0 if both values are 0", () => {
-    const val1: DecimalValue = { type: "decimal", value: 0 };
-    const val2: DecimalValue = { type: "decimal", value: 0 };
-    expect(addNumericValues(val1, val2)).toEqual({ type: "decimal", value: 0 });
+    const val1: DecimalValue = { type: "decimal", decimal: 0 };
+    const val2: DecimalValue = { type: "decimal", decimal: 0 };
+    expect(addNumericValues(val1, val2)).toEqual({
+      type: "decimal",
+      decimal: 0,
+    });
   });
 });
 
@@ -161,10 +170,10 @@ describe("addQuantityValues", () => {
   it("should add two fixed numerical values", () => {
     expect(
       addQuantityValues(
-        { type: "fixed", value: { type: "decimal", value: 1 } },
-        { type: "fixed", value: { type: "decimal", value: 2 } },
+        { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        { type: "fixed", value: { type: "decimal", decimal: 2 } },
       ),
-    ).toEqual({ type: "fixed", value: { type: "decimal", value: 3 } });
+    ).toEqual({ type: "fixed", value: { type: "decimal", decimal: 3 } });
   });
 
   it("should add two range values", () => {
@@ -172,46 +181,46 @@ describe("addQuantityValues", () => {
       addQuantityValues(
         {
           type: "range",
-          min: { type: "decimal", value: 1 },
-          max: { type: "decimal", value: 2 },
+          min: { type: "decimal", decimal: 1 },
+          max: { type: "decimal", decimal: 2 },
         },
         {
           type: "range",
-          min: { type: "decimal", value: 3 },
-          max: { type: "decimal", value: 4 },
+          min: { type: "decimal", decimal: 3 },
+          max: { type: "decimal", decimal: 4 },
         },
       ),
     ).toEqual({
       type: "range",
-      min: { type: "decimal", value: 4 },
-      max: { type: "decimal", value: 6 },
+      min: { type: "decimal", decimal: 4 },
+      max: { type: "decimal", decimal: 6 },
     });
   });
 
   it("should add a fixed and a range value", () => {
     expect(
       addQuantityValues(
-        { type: "fixed", value: { type: "decimal", value: 1 } },
+        { type: "fixed", value: { type: "decimal", decimal: 1 } },
         {
           type: "range",
-          min: { type: "decimal", value: 3 },
-          max: { type: "decimal", value: 4 },
+          min: { type: "decimal", decimal: 3 },
+          max: { type: "decimal", decimal: 4 },
         },
       ),
     ).toEqual({
       type: "range",
-      min: { type: "decimal", value: 4 },
-      max: { type: "decimal", value: 5 },
+      min: { type: "decimal", decimal: 4 },
+      max: { type: "decimal", decimal: 5 },
     });
   });
 
   it("should throw an error if one of the value is a text value", () => {
     expect(() =>
       addQuantityValues(
-        { type: "fixed", value: { type: "text", value: "to taste" } },
+        { type: "fixed", value: { type: "text", text: "to taste" } },
         {
           type: "fixed",
-          value: { type: "decimal", value: 1 },
+          value: { type: "decimal", decimal: 1 },
         },
       ),
     ).toThrow(CannotAddTextValueError);
@@ -223,16 +232,16 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: { name: "g" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 200 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: { name: "g" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 300 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
       unit: { name: "g" },
     });
   });
@@ -241,16 +250,16 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1.1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1.1 } },
           unit: { name: "kg" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1.3 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1.3 } },
           unit: { name: "kg" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 2.4 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2.4 } },
       unit: { name: "kg" },
     });
   });
@@ -259,27 +268,27 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: {
+          quantity: {
             type: "range",
-            min: { type: "decimal", value: 100 },
-            max: { type: "decimal", value: 200 },
+            min: { type: "decimal", decimal: 100 },
+            max: { type: "decimal", decimal: 200 },
           },
           unit: { name: "g" },
         },
         {
-          value: {
+          quantity: {
             type: "range",
-            min: { type: "decimal", value: 10 },
-            max: { type: "decimal", value: 20 },
+            min: { type: "decimal", decimal: 10 },
+            max: { type: "decimal", decimal: 20 },
           },
           unit: { name: "g" },
         },
       ),
     ).toEqual({
-      value: {
+      quantity: {
         type: "range",
-        min: { type: "decimal", value: 110 },
-        max: { type: "decimal", value: 220 },
+        min: { type: "decimal", decimal: 110 },
+        max: { type: "decimal", decimal: 220 },
       },
       unit: { name: "g" },
     });
@@ -287,26 +296,26 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: {
+          quantity: {
             type: "fixed",
-            value: { type: "decimal", value: 100 },
+            value: { type: "decimal", decimal: 100 },
           },
           unit: { name: "g" },
         },
         {
-          value: {
+          quantity: {
             type: "range",
-            min: { type: "decimal", value: 10 },
-            max: { type: "decimal", value: 20 },
+            min: { type: "decimal", decimal: 10 },
+            max: { type: "decimal", decimal: 20 },
           },
           unit: { name: "g" },
         },
       ),
     ).toEqual({
-      value: {
+      quantity: {
         type: "range",
-        min: { type: "decimal", value: 110 },
-        max: { type: "decimal", value: 120 },
+        min: { type: "decimal", decimal: 110 },
+        max: { type: "decimal", decimal: 120 },
       },
       unit: { name: "g" },
     });
@@ -314,26 +323,26 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: {
+          quantity: {
             type: "range",
-            min: { type: "decimal", value: 10 },
-            max: { type: "decimal", value: 20 },
+            min: { type: "decimal", decimal: 10 },
+            max: { type: "decimal", decimal: 20 },
           },
           unit: { name: "g" },
         },
         {
-          value: {
+          quantity: {
             type: "fixed",
-            value: { type: "decimal", value: 100 },
+            value: { type: "decimal", decimal: 100 },
           },
           unit: { name: "g" },
         },
       ),
     ).toEqual({
-      value: {
+      quantity: {
         type: "range",
-        min: { type: "decimal", value: 110 },
-        max: { type: "decimal", value: 120 },
+        min: { type: "decimal", decimal: 110 },
+        max: { type: "decimal", decimal: 120 },
       },
       unit: { name: "g" },
     });
@@ -343,31 +352,31 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "kg" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 500 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
           unit: { name: "g" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
       unit: { name: "kg" },
     });
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 500 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
           unit: { name: "g" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "kg" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
       unit: { name: "kg" },
     });
   });
@@ -376,16 +385,16 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "lb" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 8 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 8 } },
           unit: { name: "oz" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 1.5 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
       unit: { name: "lb" },
     });
   });
@@ -393,18 +402,18 @@ describe("addQuantities", () => {
   it("should add compatible metric and imperial units, converting to largest metric", () => {
     const result = addQuantities(
       {
-        value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         unit: { name: "lb" },
       },
       {
-        value: { type: "fixed", value: { type: "decimal", value: 500 } },
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
         unit: { name: "g" },
       },
     );
     expect(result.unit).toEqual({ name: "kg" });
-    expect(result.value).toEqual({
+    expect(result.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 0.954 },
+      value: { type: "decimal", decimal: 0.954 },
     });
   });
 
@@ -412,11 +421,14 @@ describe("addQuantities", () => {
     expect(() =>
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "text", value: "to taste" } },
+          quantity: {
+            type: "fixed",
+            value: { type: "text", text: "to taste" },
+          },
           unit: { name: "" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: { name: "g" },
         },
       ),
@@ -427,31 +439,31 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
           unit: { name: "g" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 3 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
       unit: { name: "g" },
     });
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: { name: "g" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 101 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 101 } },
       unit: { name: "g" },
     });
   });
@@ -461,30 +473,30 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
           unit: { name: "" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 3 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
       unit: { name: "" },
     });
     // No unit
     expect(
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 2 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 3 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
     });
   });
 
@@ -492,11 +504,11 @@ describe("addQuantities", () => {
     expect(() =>
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: { name: "g" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "L" },
         },
       ),
@@ -504,11 +516,11 @@ describe("addQuantities", () => {
     expect(() =>
       addQuantities(
         {
-          value: { type: "fixed", value: { type: "decimal", value: 100 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
           unit: { name: "g" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "bag" },
         },
       ),
@@ -519,23 +531,23 @@ describe("addQuantities", () => {
     expect(
       addQuantities(
         {
-          value: {
+          quantity: {
             type: "range",
-            min: { type: "decimal", value: 1 },
-            max: { type: "decimal", value: 2 },
+            min: { type: "decimal", decimal: 1 },
+            max: { type: "decimal", decimal: 2 },
           },
           unit: { name: "tsp" },
         },
         {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "tsp" },
         },
       ),
     ).toEqual({
-      value: {
+      quantity: {
         type: "range",
-        min: { type: "decimal", value: 2 },
-        max: { type: "decimal", value: 3 },
+        min: { type: "decimal", decimal: 2 },
+        max: { type: "decimal", decimal: 3 },
       },
       unit: { name: "tsp" },
     });
@@ -546,35 +558,38 @@ describe("getDefaultQuantityValue + addQuantities", () => {
   it("should preseve fractions", () => {
     expect(
       addQuantities(
-        { value: getDefaultQuantityValue() },
+        { quantity: getDefaultQuantityValue() },
         {
-          value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+          quantity: {
+            type: "fixed",
+            value: { type: "fraction", num: 1, den: 2 },
+          },
           unit: { name: "" },
         },
       ),
     ).toEqual({
-      value: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
       unit: { name: "" },
     });
   });
   it("should preseve ranges", () => {
     expect(
       addQuantities(
-        { value: getDefaultQuantityValue() },
+        { quantity: getDefaultQuantityValue() },
         {
-          value: {
+          quantity: {
             type: "range",
-            min: { type: "decimal", value: 1 },
-            max: { type: "decimal", value: 2 },
+            min: { type: "decimal", decimal: 1 },
+            max: { type: "decimal", decimal: 2 },
           },
           unit: { name: "" },
         },
       ),
     ).toEqual({
-      value: {
+      quantity: {
         type: "range",
-        min: { type: "decimal", value: 1 },
-        max: { type: "decimal", value: 2 },
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
       },
       unit: { name: "" },
     });
@@ -583,10 +598,10 @@ describe("getDefaultQuantityValue + addQuantities", () => {
 
 describe("multiplyNumericValue", () => {
   it("should multiply a decimal value", () => {
-    const val: DecimalValue = { type: "decimal", value: 1.2 };
+    const val: DecimalValue = { type: "decimal", decimal: 1.2 };
     expect(multiplyNumericValue(val, 3)).toEqual({
       type: "decimal",
-      value: 3.6,
+      decimal: 3.6,
     });
   });
 });
@@ -595,17 +610,17 @@ describe("multiplyQuantityValue", () => {
   it("should multiply a decimal value", () => {
     const val: FixedValue = {
       type: "fixed",
-      value: { type: "decimal", value: 1.2 },
+      value: { type: "decimal", decimal: 1.2 },
     };
     expect(multiplyQuantityValue(val, 3)).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 3.6 },
+      value: { type: "decimal", decimal: 3.6 },
     });
   });
 
   describe("getNumericValue", () => {
     it("should get the numerical value of a DecimalValue", () => {
-      expect(getNumericValue({ type: "decimal", value: 1.2 })).toBe(1.2);
+      expect(getNumericValue({ type: "decimal", decimal: 1.2 })).toBe(1.2);
     });
 
     it("should get the numerical value of a FractionValue", () => {
@@ -621,7 +636,7 @@ const q = (
   integerProtected?: boolean,
 ): QuantityWithExtendedUnit => {
   const quantity: QuantityWithExtendedUnit = {
-    value: { type: "fixed", value: { type: "decimal", value: amount } },
+    quantity: { type: "fixed", value: { type: "decimal", decimal: amount } },
   };
   if (unit) {
     quantity.unit = { name: unit };
@@ -635,7 +650,7 @@ const q = (
 // Minimal mock for Quantity and FixedValue for testing
 const qPlain = (amount: number, unit?: string): QuantityWithPlainUnit => {
   const quantity: QuantityWithPlainUnit = {
-    value: { type: "fixed", value: { type: "decimal", value: amount } },
+    quantity: { type: "fixed", value: { type: "decimal", decimal: amount } },
   };
   if (unit) {
     quantity.unit = unit;
@@ -661,21 +676,24 @@ const qWithUnitDef = (
 describe("getAverageValue", () => {
   it("should return the correct value for fixed values", () => {
     expect(
-      getAverageValue({ type: "fixed", value: { type: "decimal", value: 1 } }),
+      getAverageValue({
+        type: "fixed",
+        value: { type: "decimal", decimal: 1 },
+      }),
     ).toBe(1);
   });
   it("should return the correct value for ranges", () => {
     expect(
       getAverageValue({
         type: "range",
-        min: { type: "decimal", value: 1 },
-        max: { type: "decimal", value: 2 },
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
       }),
     ).toBe(1.5);
   });
   it("should return the correct value for text values", () => {
     expect(
-      getAverageValue({ type: "fixed", value: { type: "text", value: "two" } }),
+      getAverageValue({ type: "fixed", value: { type: "text", text: "two" } }),
     ).toBe("two");
   });
 });
@@ -698,7 +716,7 @@ describe("getUnitRatio", () => {
     expect(() =>
       getUnitRatio(
         {
-          value: { type: "fixed", value: { type: "text", value: "two" } },
+          quantity: { type: "fixed", value: { type: "text", text: "two" } },
           unit: { name: "large", system: "none" },
         },
         qWithUnitDef(1, "cup"),

@@ -39,21 +39,21 @@ size = "100%g"
       productName: "Pack of 6 eggs",
       ingredientName: "eggs",
       price: 10,
-      size: { type: "fixed", value: { type: "decimal", value: 6 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 6 } },
     },
     {
       id: "01123",
       productName: "Single Egg",
       ingredientName: "eggs",
       price: 2,
-      size: { type: "fixed", value: { type: "decimal", value: 1 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     },
     {
       id: "14141",
       productName: "Big pack",
       ingredientName: "flour",
       price: 10,
-      size: { type: "fixed", value: { type: "decimal", value: 6 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 6 } },
       unit: "kg",
     },
     {
@@ -61,7 +61,7 @@ size = "100%g"
       productName: "Small pack",
       ingredientName: "flour",
       price: 1.5,
-      size: { type: "fixed", value: { type: "decimal", value: 100 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 100 } },
       unit: "g",
     },
   ];
@@ -94,7 +94,7 @@ aliases = ["oeuf", "huevo"]
           ingredientName: "eggs",
           ingredientAliases: ["oeuf", "huevo"],
           price: 2,
-          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+          size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       ]);
     });
@@ -111,7 +111,7 @@ aliases = ["oeuf", "huevo"]
           productName: "Single Egg",
           ingredientName: "eggs",
           price: 2,
-          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+          size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       ]);
     });
@@ -167,7 +167,7 @@ aliases = "not an array"`,
           ingredientName: "eggs",
           ingredientAliases: ["oeuf", "huevo"],
           price: 10,
-          size: { type: "fixed", value: { type: "decimal", value: 6 } },
+          size: { type: "fixed", value: { type: "decimal", decimal: 6 } },
         },
         {
           id: "01123",
@@ -175,7 +175,7 @@ aliases = "not an array"`,
           ingredientName: "eggs",
           ingredientAliases: ["oeuf", "huevo"],
           price: 2,
-          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+          size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       ];
       const stringified = catalog.stringify();
@@ -202,7 +202,7 @@ size = "1"
           productName: "Pack of 6 eggs",
           ingredientName: "eggs",
           price: 10,
-          size: { type: "fixed", value: { type: "decimal", value: 6 } },
+          size: { type: "fixed", value: { type: "decimal", decimal: 6 } },
           image: "egg.png",
         },
       ];
@@ -223,7 +223,7 @@ size = "6"
         id: "12345",
         productName: "New Product",
         ingredientName: "new-ingredient",
-        size: { type: "fixed", value: { type: "decimal", value: 1 } },
+        size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         unit: "kg",
         price: 10,
       };
@@ -243,7 +243,7 @@ size = "6"
         productName: "Pack of 6 eggs",
         ingredientName: "eggs",
         price: 10,
-        size: { type: "fixed", value: { type: "decimal", value: 6 } },
+        size: { type: "fixed", value: { type: "decimal", decimal: 6 } },
       });
     });
 
@@ -263,7 +263,7 @@ size = "6"
         productName: "New Product",
         ingredientName: "new-ingredient",
         ingredientAliases: ["alias-1"],
-        size: { type: "fixed", value: { type: "decimal", value: 1 } },
+        size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         unit: "kg",
         price: 10,
       };

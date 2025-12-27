@@ -140,7 +140,7 @@ export interface MetadataExtract {
  */
 export interface TextValue {
   type: "text";
-  value: string;
+  text: string;
 }
 
 /**
@@ -149,7 +149,7 @@ export interface TextValue {
  */
 export interface DecimalValue {
   type: "decimal";
-  value: number;
+  decimal: number;
 }
 
 /**
@@ -229,7 +229,9 @@ export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
   /** The total quantity of the ingredient in the recipe. */
-  quantity?: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>;
+  quantityTotal?:
+    | QuantityWithPlainUnit
+    | MaybeNestedGroup<QuantityWithPlainUnit>;
   /** The preparation of the ingredient. */
   preparation?: string;
   /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */

@@ -310,14 +310,14 @@ describe("findAndUpsertCookware", () => {
     const cookware: Cookware[] = [{ name: "oven", flags: [] }];
     const newCookware: Cookware = {
       name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       flags: [],
     };
     expect(findAndUpsertCookware(cookware, newCookware, true)).toBe(0);
     expect(cookware.length).toBe(1);
     expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 1 },
+      value: { type: "decimal", decimal: 1 },
     });
   });
 
@@ -325,19 +325,19 @@ describe("findAndUpsertCookware", () => {
     const cookware: Cookware[] = [
       {
         name: "oven",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         flags: [],
       },
     ];
     const newCookware: Cookware = {
       name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
       flags: [],
     };
     findAndUpsertCookware(cookware, newCookware, true);
     expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 3 },
+      value: { type: "decimal", decimal: 3 },
     });
   });
 
@@ -345,13 +345,13 @@ describe("findAndUpsertCookware", () => {
     const cookware: Cookware[] = [
       {
         name: "oven",
-        quantity: { type: "fixed", value: { type: "text", value: "one" } },
+        quantity: { type: "fixed", value: { type: "text", text: "one" } },
         flags: [],
       },
     ];
     const newCookware: Cookware = {
       name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       flags: [],
     };
     findAndUpsertCookware(cookware, newCookware, true);
@@ -371,8 +371,8 @@ describe("findAndUpsertIngredient", () => {
     const ingredients: Ingredient[] = [];
     const newIngredient: Ingredient = {
       name: "eggs",
-      quantity: {
-        value: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantityTotal: {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       },
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual(
@@ -385,22 +385,22 @@ describe("findAndUpsertIngredient", () => {
     const ingredients: Ingredient[] = [
       {
         name: "eggs",
-        quantity: {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       },
     ];
     const newIngredient: Ingredient = {
       name: "eggs",
-      quantity: {
-        value: { type: "fixed", value: { type: "decimal", value: 2 } },
+      quantityTotal: {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
       },
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual(
       0,
     );
-    expect(ingredients[0]!.quantity).toEqual({
-      value: { type: "fixed", value: { type: "decimal", value: 1 } },
+    expect(ingredients[0]!.quantityTotal).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     });
 
     const ingredients_noqtt: Ingredient[] = [{ name: "salt" }];
@@ -408,22 +408,22 @@ describe("findAndUpsertIngredient", () => {
     expect(
       findAndUpsertIngredient(ingredients_noqtt, newIngredient_noqtt, true),
     ).toEqual(0);
-    expect(ingredients_noqtt[0]!.quantity).toBe(undefined);
+    expect(ingredients_noqtt[0]!.quantityTotal).toBe(undefined);
   });
 
   it("should return index of referenced ingredient even if it has a text quantity", () => {
     const ingredients: Ingredient[] = [
       {
         name: "eggs",
-        quantity: {
-          value: { type: "fixed", value: { type: "text", value: "one" } },
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "text", text: "one" } },
         },
       },
     ];
     const newIngredient: Ingredient = {
       name: "eggs",
-      quantity: {
-        value: { type: "fixed", value: { type: "decimal", value: 1 } },
+      quantityTotal: {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       },
     };
     expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual(
@@ -436,15 +436,15 @@ describe("findAndUpsertIngredient", () => {
     const ingredients: Ingredient[] = [
       {
         name: "eggs",
-        quantity: {
-          value: { type: "fixed", value: { type: "decimal", value: 1 } },
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       },
     ];
     const newIngredient: Ingredient = {
       name: "unreferenced-ingredient",
-      quantity: {
-        value: { type: "fixed", value: { type: "decimal", value: 100 } },
+      quantityTotal: {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
         unit: "g",
       },
       flags: [],
@@ -459,7 +459,7 @@ describe("findAndUpsertIngredient", () => {
 
 describe("parseFixedValue", () => {
   it("parses non numerical value as text", () => {
-    expect(parseFixedValue("1-ish")).toEqual({ type: "text", value: "1-ish" });
+    expect(parseFixedValue("1-ish")).toEqual({ type: "text", text: "1-ish" });
   });
 
   it("parses fractions as such", () => {
@@ -471,9 +471,9 @@ describe("parseFixedValue", () => {
   });
 
   it("parses decimal values as such", () => {
-    expect(parseFixedValue("1.5")).toEqual({ type: "decimal", value: 1.5 });
-    expect(parseFixedValue("0.1")).toEqual({ type: "decimal", value: 0.1 });
-    expect(parseFixedValue("1")).toEqual({ type: "decimal", value: 1 });
+    expect(parseFixedValue("1.5")).toEqual({ type: "decimal", decimal: 1.5 });
+    expect(parseFixedValue("0.1")).toEqual({ type: "decimal", decimal: 0.1 });
+    expect(parseFixedValue("1")).toEqual({ type: "decimal", decimal: 1 });
   });
 });
 
@@ -481,24 +481,24 @@ describe("parseQuantityInput", () => {
   it("correctly parses ranges", () => {
     expect(parseQuantityInput("1-2")).toEqual({
       type: "range",
-      min: { type: "decimal", value: 1 },
-      max: { type: "decimal", value: 2 },
+      min: { type: "decimal", decimal: 1 },
+      max: { type: "decimal", decimal: 2 },
     });
     expect(parseQuantityInput("1/2-1")).toEqual({
       type: "range",
       min: { type: "fraction", num: 1, den: 2 },
-      max: { type: "decimal", value: 1 },
+      max: { type: "decimal", decimal: 1 },
     });
   });
 
   it("correctly parses fixed values", () => {
     expect(parseQuantityInput("1")).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 1 },
+      value: { type: "decimal", decimal: 1 },
     });
     expect(parseQuantityInput("1.2")).toEqual({
       type: "fixed",
-      value: { type: "decimal", value: 1.2 },
+      value: { type: "decimal", decimal: 1.2 },
     });
   });
 });
@@ -508,7 +508,7 @@ describe("stringifyQuantityValue", () => {
     expect(
       stringifyQuantityValue({
         type: "fixed",
-        value: { type: "decimal", value: 1.5 },
+        value: { type: "decimal", decimal: 1.5 },
       }),
     ).toEqual("1.5");
     expect(
@@ -523,8 +523,8 @@ describe("stringifyQuantityValue", () => {
     expect(
       stringifyQuantityValue({
         type: "range",
-        min: { type: "decimal", value: 1 },
-        max: { type: "decimal", value: 2 },
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
       }),
     ).toEqual("1-2");
   });
