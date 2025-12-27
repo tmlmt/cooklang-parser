@@ -19,7 +19,7 @@ productCatalog.products = [
     productName: "Flour (80g)",
     ingredientName: "flour",
     price: 25,
-    size: { type: "fixed", value: { type: "decimal", value: 80 } },
+    size: { type: "fixed", value: { type: "decimal", decimal: 80 } },
     unit: "g",
   },
   {
@@ -27,7 +27,7 @@ productCatalog.products = [
     productName: "Flour (40g)",
     ingredientName: "flour",
     price: 15,
-    size: { type: "fixed", value: { type: "decimal", value: 40 } },
+    size: { type: "fixed", value: { type: "decimal", decimal: 40 } },
     unit: "g",
   },
   {
@@ -35,14 +35,14 @@ productCatalog.products = [
     productName: "Single Egg",
     ingredientName: "eggs",
     price: 20,
-    size: { type: "fixed", value: { type: "decimal", value: 1 } },
+    size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
   },
   {
     id: "milk-1L",
     productName: "Milk (1L)",
     ingredientName: "milk",
     price: 30,
-    size: { type: "fixed", value: { type: "decimal", value: 1 } },
+    size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     unit: "l",
   },
 ];
@@ -135,7 +135,7 @@ describe("buildCart", () => {
       productName: "Pack of 12 eggs",
       ingredientName: "eggs",
       price: 20,
-      size: { type: "fixed", value: { type: "decimal", value: 1 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       unit: "dozen",
     });
     shoppingList2.add_recipe(recipe2);
@@ -156,7 +156,7 @@ describe("buildCart", () => {
       productName: "Single Egg",
       ingredientName: "eggs",
       price: 20,
-      size: { type: "fixed", value: { type: "decimal", value: 1 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     });
     shoppingList3.add_recipe(recipe3);
     shoppingCart3.setShoppingList(shoppingList3);
@@ -176,7 +176,7 @@ describe("buildCart", () => {
       productName: "Peeled Tomatoes",
       ingredientName: "peeled tomatoes",
       price: 20,
-      size: { type: "fixed", value: { type: "decimal", value: 400 } },
+      size: { type: "fixed", value: { type: "decimal", decimal: 400 } },
       unit: "g",
     });
     shoppingList4.add_recipe(recipe4);
@@ -202,7 +202,7 @@ describe("buildCart", () => {
         productName: "Flour (1kg)",
         ingredientName: "flour",
         price: 10,
-        size: { type: "fixed", value: { type: "decimal", value: 1000 } },
+        size: { type: "fixed", value: { type: "decimal", decimal: 1000 } },
         unit: "g",
       },
       {
@@ -210,7 +210,7 @@ describe("buildCart", () => {
         productName: "Flour (500g)",
         ingredientName: "flour",
         price: 6,
-        size: { type: "fixed", value: { type: "decimal", value: 500 } },
+        size: { type: "fixed", value: { type: "decimal", decimal: 500 } },
         unit: "g",
       },
     ];
