@@ -463,7 +463,7 @@ export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name"> & QuantityWithPlainUnit;
+export type AddedIngredient = Pick<Ingredient, "name" | "quantityTotal">;
 
 /**
  * Represents an ingredient in a category.

@@ -35,51 +35,46 @@ export interface QuantityWithUnitDef extends QuantityBase {
   unit: UnitDefinitionLike;
 }
 
-export interface FlatOrGroup<
-  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
-> {
+type QuantityWithUnitLike =
+  | QuantityWithPlainUnit
+  | QuantityWithExtendedUnit
+  | QuantityWithUnitDef;
+
+export interface FlatOrGroup<T = QuantityWithUnitLike> {
   type: "or";
   quantities: T[];
 }
-export interface MaybeNestedOrGroup<
-  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
-> {
+export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
   type: "or";
   quantities: (T | MaybeNestedGroup<T>)[];
 }
 
-export interface FlatAndGroup<
-  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
-> {
+export interface FlatAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   quantities: T[];
 }
-export interface NestedAndGroup<
-  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
-> {
+export interface NestedAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   quantities: T[];
 }
-export interface MaybeNestedAndGroup<
-  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
-> {
+export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   quantities: (T | MaybeNestedGroup<T>)[];
 }
 
-export type FlatGroup<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
+export type FlatGroup<T = QuantityWithUnitLike> =
   | FlatAndGroup<T>
   | FlatOrGroup<T>;
-export type MaybeNestedGroup<
-  T = QuantityWithExtendedUnit | QuantityWithUnitDef,
-> = MaybeNestedAndGroup<T> | MaybeNestedOrGroup<T>;
-export type Group<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
+export type MaybeNestedGroup<T = QuantityWithUnitLike> =
+  | MaybeNestedAndGroup<T>
+  | MaybeNestedOrGroup<T>;
+export type Group<T = QuantityWithUnitLike> =
   | MaybeNestedGroup<T>
   | FlatGroup<T>;
-export type OrGroup<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
+export type OrGroup<T = QuantityWithUnitLike> =
   | MaybeNestedOrGroup<T>
   | FlatOrGroup<T>;
-export type AndGroup<T = QuantityWithExtendedUnit | QuantityWithUnitDef> =
+export type AndGroup<T = QuantityWithUnitLike> =
   | MaybeNestedAndGroup<T>
   | FlatAndGroup<T>;
 
@@ -229,6 +224,22 @@ export function deNormalizeQuantity(
     result.unit = { name: q.unit.name };
   }
   return result;
+}
+
+export function extendUnits(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
+  if (isGroup(q)) {
+    return { ...q, quantities: q.quantities.map(extendUnits) };
+  } else {
+    const newQ: QuantityWithExtendedUnit = {
+      quantity: q.quantity,
+    };
+    if (q.unit) {
+      newQ.unit = { name: q.unit };
+    }
+    return newQ;
+  }
 }
 
 export function getNormalizedUnit(unit: string): UnitDefinitionLike {
@@ -566,19 +577,18 @@ export function addQuantities(
 }
 
 // Helper type-checks (as before)
-function isGroup(
-  x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
-): x is Group {
+export function isGroup(x: QuantityWithUnitLike | Group): x is Group {
   return x && "type" in x;
 }
-function isOrGroup(
-  x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
-): x is OrGroup {
+export function isOrGroup(x: QuantityWithUnitLike | Group): x is OrGroup {
   return isGroup(x) && x.type === "or";
 }
-function isQuantity(
-  x: QuantityWithExtendedUnit | QuantityWithUnitDef | Group,
-): x is QuantityWithExtendedUnit | QuantityWithUnitDef {
+export function isAndGroup(x: QuantityWithUnitLike | Group): x is AndGroup {
+  return isGroup(x) && x.type === "and";
+}
+export function isQuantity(
+  x: QuantityWithUnitLike | Group,
+): x is QuantityWithUnitLike {
   return x && typeof x === "object" && "quantity" in x;
 }
 

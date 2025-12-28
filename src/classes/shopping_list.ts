@@ -1,12 +1,17 @@
 import { CategoryConfig } from "./category_config";
 import { Recipe } from "./recipe";
 import type {
-  Ingredient,
   CategorizedIngredients,
   AddedRecipe,
   AddedIngredient,
 } from "../types";
-import { addQuantities, type Quantity } from "../units";
+import type {
+  QuantityWithExtendedUnit,
+  QuantityWithPlainUnit,
+  MaybeNestedGroup,
+  FlatOrGroup,
+} from "../units";
+import { isAndGroup, extendUnits, addEquivalentsAndSimplify } from "../units";
 
 /**
  * Shopping List generator.
@@ -35,10 +40,11 @@ import { addQuantities, type Quantity } from "../units";
  * @category Classes
  */
 export class ShoppingList {
+  // TODO: backport type change
   /**
    * The ingredients in the shopping list.
    */
-  ingredients: Ingredient[] = [];
+  ingredients: AddedIngredient[] = [];
   /**
    * The recipes in the shopping list.
    */
@@ -64,6 +70,62 @@ export class ShoppingList {
 
   private calculate_ingredients() {
     this.ingredients = [];
+
+    const addIngredientQuantity = (
+      name: string,
+      quantityTotal:
+        | QuantityWithPlainUnit
+        | MaybeNestedGroup<QuantityWithPlainUnit>,
+    ) => {
+      const quantityTotalExtended = extendUnits(quantityTotal);
+      const newQuantities = (
+        isAndGroup(quantityTotalExtended)
+          ? quantityTotalExtended.quantities
+          : [quantityTotalExtended]
+      ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
+
+      const candidates = this.ingredients.filter((i) => i.name === name);
+      console.log("");
+      console.log(JSON.stringify(newQuantities));
+      console.log(JSON.stringify(candidates));
+
+      for (const [index, existing] of candidates.entries()) {
+        if (!existing.quantityTotal) {
+          if (index === candidates.length - 1) {
+            existing.quantityTotal = quantityTotal;
+            return;
+          } else {
+            continue;
+          }
+        }
+        try {
+          const existingQuantityTotalExtended = extendUnits(
+            existing.quantityTotal,
+          );
+          const existingQuantities = (
+            isAndGroup(existingQuantityTotalExtended)
+              ? existingQuantityTotalExtended.quantities
+              : [existingQuantityTotalExtended]
+          ) as (
+            | QuantityWithExtendedUnit
+            | FlatOrGroup<QuantityWithExtendedUnit>
+          )[];
+          existing.quantityTotal = addEquivalentsAndSimplify(
+            ...existingQuantities,
+            ...newQuantities,
+          );
+          return;
+        } catch {
+          // Incompatible
+        }
+      }
+
+      this.ingredients.push({
+        name,
+        quantityTotal,
+      });
+    };
+
     for (const addedRecipe of this.recipes) {
       let scaledRecipe: Recipe;
       if ("factor" in addedRecipe) {
@@ -79,51 +141,10 @@ export class ShoppingList {
           continue;
         }
 
-        const existingIngredient = this.ingredients.find(
-          (i) => i.name === ingredient.name,
-        );
-
-        let addSeparate = false;
-        try {
-          if (existingIngredient && ingredient.quantity) {
-            if (existingIngredient.quantity) {
-              const newQuantity: Quantity = addQuantities(
-                {
-                  value: existingIngredient.quantity,
-                  unit: existingIngredient.unit ?? "",
-                },
-                {
-                  value: ingredient.quantity,
-                  unit: ingredient.unit ?? "",
-                },
-              );
-              existingIngredient.quantity = newQuantity.value;
-              if (newQuantity.unit) {
-                existingIngredient.unit = newQuantity.unit;
-              }
-            } else {
-              existingIngredient.quantity = ingredient.quantity;
-
-              /* v8 ignore else -- only set unit if it is given -- @preserve */
-              if (ingredient.unit) {
-                existingIngredient.unit = ingredient.unit;
-              }
-            }
-          }
-        } catch {
-          // Cannot add quantities, adding as separate ingredients
-          addSeparate = true;
-        }
-
-        if (!existingIngredient || addSeparate) {
-          const newIngredient: AddedIngredient = { name: ingredient.name };
-          if (ingredient.quantity) {
-            newIngredient.quantity = ingredient.quantity;
-          }
-          if (ingredient.unit) {
-            newIngredient.unit = ingredient.unit;
-          }
-          this.ingredients.push(newIngredient);
+        if (ingredient.quantityTotal) {
+          addIngredientQuantity(ingredient.name, ingredient.quantityTotal);
+        } else if (!this.ingredients.some((i) => i.name === ingredient.name)) {
+          this.ingredients.push({ name: ingredient.name });
         }
       }
     }
