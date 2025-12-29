@@ -15,8 +15,11 @@ import {
 } from "./regex";
 import { Section as SectionObject } from "./classes/section";
 import type { Ingredient, Note, Step, Cookware } from "./types";
-import { CannotAddTextValueError, addQuantityValues } from "./units";
-import { ReferencedItemCannotBeRedefinedError } from "./errors";
+import { addQuantityValues } from "./units";
+import {
+  CannotAddTextValueError,
+  ReferencedItemCannotBeRedefinedError,
+} from "./errors";
 
 /**
  * Pushes a pending note to the section content if it's not empty.

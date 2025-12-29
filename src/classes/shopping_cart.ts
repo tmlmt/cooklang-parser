@@ -9,6 +9,9 @@ import type {
   Range,
   ProductOptionNormalized,
   NoProductMatchErrorCode,
+  FlatOrGroup,
+  MaybeNestedGroup,
+  QuantityWithUnitDef,
 } from "../types";
 import { ProductCatalog } from "./product_catalog";
 import { ShoppingList } from "./shopping_list";
@@ -21,13 +24,11 @@ import {
   multiplyQuantityValue,
   getNumericValue,
   normalizeAllUnits,
-  QuantityWithUnitDef,
   isAndGroup,
   getNormalizedUnit,
   areUnitsCompatible,
   isOrGroup,
 } from "../units";
-import type { FlatOrGroup, MaybeNestedGroup } from "../units";
 import { solve, type Model } from "yalps";
 
 /**

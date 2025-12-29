@@ -14,6 +14,8 @@ import type {
   CookwareFlag,
   RecipeChoices,
   IngredientAlternative,
+  FlatOrGroup,
+  QuantityWithExtendedUnit,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -37,7 +39,6 @@ import {
   unionOfSets,
 } from "../parser_helpers";
 import { multiplyQuantityValue, addEquivalentsAndSimplify } from "../units";
-import type { FlatOrGroup, QuantityWithExtendedUnit } from "../units";
 import Big from "big.js";
 
 /**

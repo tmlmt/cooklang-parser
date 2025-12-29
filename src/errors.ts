@@ -64,3 +64,19 @@ export class InvalidProductCatalogFormat extends Error {
     this.name = "InvalidProductCatalogFormat";
   }
 }
+
+export class CannotAddTextValueError extends Error {
+  constructor() {
+    super("Cannot add a quantity with a text value.");
+    this.name = "CannotAddTextValueError";
+  }
+}
+
+export class IncompatibleUnitsError extends Error {
+  constructor(unit1: string, unit2: string) {
+    super(
+      `Cannot add quantities with incompatible or unknown units: ${unit1} and ${unit2}`,
+    );
+    this.name = "IncompatibleUnitsError";
+  }
+}
