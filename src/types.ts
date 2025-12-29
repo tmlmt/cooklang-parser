@@ -3,6 +3,7 @@ import type {
   MaybeNestedGroup,
   QuantityWithExtendedUnit,
   QuantityWithPlainUnit,
+  UnitDefinitionLike,
 } from "./units";
 
 /**
@@ -488,10 +489,10 @@ export interface Category {
 }
 
 /**
- * Represents a product option in a {@link ProductCatalog}
+ * Base type for {@link ProductOption}
  * @category Types
  */
-export interface ProductOption {
+export interface ProductOptionBase {
   /** The ID of the product */
   id: string;
   /** The name of the product */
@@ -502,13 +503,24 @@ export interface ProductOption {
   ingredientAliases?: string[];
   /** The size of the product. */
   size: FixedNumericValue;
-  /** The unit of the product size. */
-  unit?: string;
   /** The price of the product */
   price: number;
   /** Arbitrary additional metadata */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
+}
+
+/**
+ * Represents a product option in a {@link ProductCatalog}
+ * @category Types
+ */
+export interface ProductOption extends ProductOptionBase {
+  /** The unit of the product size. */
+  unit?: string;
+}
+
+export interface ProductOptionNormalized extends ProductOptionBase {
+  unit: UnitDefinitionLike;
 }
 
 /**
@@ -567,8 +579,9 @@ export type CartMatch = ProductMatch[];
  */
 export type NoProductMatchErrorCode =
   | "incompatibleUnits"
-  | "noProduct"
   | "textValue"
+  | "textValue_incompatibleUnits"
+  | "noProduct"
   | "noQuantity";
 
 /**

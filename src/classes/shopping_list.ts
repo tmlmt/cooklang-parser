@@ -11,7 +11,11 @@ import type {
   MaybeNestedGroup,
   FlatOrGroup,
 } from "../units";
-import { isAndGroup, extendUnits, addEquivalentsAndSimplify } from "../units";
+import {
+  isAndGroup,
+  extendAllUnits,
+  addEquivalentsAndSimplify,
+} from "../units";
 
 /**
  * Shopping List generator.
@@ -77,7 +81,7 @@ export class ShoppingList {
         | QuantityWithPlainUnit
         | MaybeNestedGroup<QuantityWithPlainUnit>,
     ) => {
-      const quantityTotalExtended = extendUnits(quantityTotal);
+      const quantityTotalExtended = extendAllUnits(quantityTotal);
       const newQuantities = (
         isAndGroup(quantityTotalExtended)
           ? quantityTotalExtended.quantities
@@ -85,9 +89,6 @@ export class ShoppingList {
       ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
 
       const candidates = this.ingredients.filter((i) => i.name === name);
-      console.log("");
-      console.log(JSON.stringify(newQuantities));
-      console.log(JSON.stringify(candidates));
 
       for (const [index, existing] of candidates.entries()) {
         if (!existing.quantityTotal) {
@@ -99,7 +100,7 @@ export class ShoppingList {
           }
         }
         try {
-          const existingQuantityTotalExtended = extendUnits(
+          const existingQuantityTotalExtended = extendAllUnits(
             existing.quantityTotal,
           );
           const existingQuantities = (

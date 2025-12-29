@@ -50,6 +50,7 @@ export class NoProductMatchError extends Error {
         "No product was found linked to ingredient name ${item_name} in the shopping list",
       textValue: `Ingredient ${item_name} has a text value as quantity and can therefore not be matched with any product in the catalogue.`,
       noQuantity: `Ingredient ${item_name} has no quantity and can therefore not be matched with any product in the catalogue.`,
+      textValue_incompatibleUnits: `Multiple alternative quantities were provided for ingredient ${item_name} in the shopping list but they were either text values or no product in catalog were found to have compatible units`,
     };
     super(messageMap[code]);
     this.code = code;

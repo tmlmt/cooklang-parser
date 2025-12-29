@@ -17,7 +17,7 @@ export interface UnitDefinition extends Unit {
 
 export type UnitDefinitionLike =
   | UnitDefinition
-  | { name: string; system: "none"; integerProtected?: boolean };
+  | { name: string; type: "other"; system: "none"; integerProtected?: boolean };
 
 export interface QuantityBase {
   quantity: FixedValue | Range;
@@ -226,11 +226,11 @@ export function deNormalizeQuantity(
   return result;
 }
 
-export function extendUnits(
+export function extendAllUnits(
   q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
 ): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
   if (isGroup(q)) {
-    return { ...q, quantities: q.quantities.map(extendUnits) };
+    return { ...q, quantities: q.quantities.map(extendAllUnits) };
   } else {
     const newQ: QuantityWithExtendedUnit = {
       quantity: q.quantity,
@@ -242,11 +242,27 @@ export function extendUnits(
   }
 }
 
-export function getNormalizedUnit(unit: string): UnitDefinitionLike {
+export function normalizeAllUnits(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithUnitDef | MaybeNestedGroup<QuantityWithUnitDef> {
+  if (isGroup(q)) {
+    return { ...q, quantities: q.quantities.map(normalizeAllUnits) };
+  } else {
+    const newQ: QuantityWithUnitDef = {
+      quantity: q.quantity,
+      unit: getNormalizedUnit(q.unit),
+    };
+    return newQ;
+  }
+}
+
+export function getNormalizedUnit(
+  unit: string = "__no-unit__",
+): UnitDefinitionLike {
   const normalizedUnit = normalizeUnit(unit);
   return normalizedUnit
     ? { ...normalizedUnit, name: unit }
-    : { name: unit, system: "none" };
+    : { name: unit, type: "other", system: "none" };
 }
 
 export class StrictUnitError extends Error {
@@ -627,6 +643,19 @@ export function getBaseUnitRatio(
   }
 }
 
+export function areUnitsCompatible(
+  u1: UnitDefinitionLike,
+  u2: UnitDefinitionLike,
+): boolean {
+  if (u1.name === u2.name) {
+    return true;
+  }
+  if (u1.type !== "other" && u1.type === u2.type && u1.system === u2.system) {
+    return true;
+  }
+  return false;
+}
+
 export function getEquivalentUnitsLists(
   ...quantities: (
     | QuantityWithExtendedUnit
@@ -650,7 +679,7 @@ export function getEquivalentUnitsLists(
       quantities: orGroup.quantities.map((q) => {
         if (isQuantity(q)) {
           const integerProtected = q.unit?.integerProtected;
-          q.unit = getNormalizedUnit(q.unit ? q.unit.name : "__no-unit__");
+          q.unit = getNormalizedUnit(q.unit?.name);
           if (integerProtected) {
             q.unit.integerProtected = true;
           }
@@ -662,17 +691,14 @@ export function getEquivalentUnitsLists(
     const units = orGroupModified.quantities.map((q) => q.unit);
     // Is the quantity already represented in one of the existing unit lists?
     const linkIndex = unitLists.findIndex((l) => {
-      const listItem = l.map((q) =>
-        getNormalizedUnit(q.unit ? q.unit.name : "__no-unit__"),
-      );
+      const listItem = l.map((q) => getNormalizedUnit(q.unit?.name));
       return units.some((u) =>
         listItem.some(
           (lu) =>
             lu.name === u.name ||
             (lu.system === u.system &&
-              "type" in lu &&
-              "type" in u &&
-              lu.type === u.type),
+              lu.type === u.type &&
+              lu.type !== "other"),
         ),
       );
     });
@@ -684,19 +710,12 @@ export function getEquivalentUnitsLists(
       const commonUnitList = unitLists[linkIndex]!.reduce((acc, v) => {
         const normalizedV: QuantityWithUnitDef = {
           ...v,
-          unit: getNormalizedUnit(v.unit ? v.unit.name : "__no-unit__"),
+          unit: getNormalizedUnit(v.unit?.name),
         };
         if (v.unit?.integerProtected) normalizedV.unit.integerProtected = true;
 
         const commonQuantity = orGroupModified.quantities.find(
-          (q) =>
-            isQuantity(q) &&
-            q.unit &&
-            (q.unit.name === normalizedV.unit.name ||
-              (q.unit.system === normalizedV.unit.system &&
-                "type" in q.unit &&
-                "type" in normalizedV.unit &&
-                q.unit?.type === normalizedV.unit.type)),
+          (q) => isQuantity(q) && areUnitsCompatible(q.unit, normalizedV.unit),
         );
         if (commonQuantity) {
           acc.push(normalizedV);
@@ -705,18 +724,7 @@ export function getEquivalentUnitsLists(
         return acc;
       }, [] as QuantityWithUnitDef[]);
       for (const newQ of orGroupModified.quantities) {
-        if (
-          commonUnitList.some(
-            (q) =>
-              q.unit?.name === newQ.unit?.name ||
-              (q.unit &&
-                newQ.unit &&
-                q.unit.system === newQ.unit?.system &&
-                "type" in q.unit &&
-                "type" in newQ.unit &&
-                q.unit.type === newQ.unit?.type),
-          )
-        ) {
+        if (commonUnitList.some((q) => areUnitsCompatible(q.unit, newQ.unit))) {
           continue;
         } else {
           newQ.quantity = multiplyQuantityValue(newQ.quantity, unitRatio!);
@@ -754,35 +762,27 @@ function findListWithCompatibleQuantity(
 ) {
   const quantityWithUnitDef = {
     ...quantity,
-    unit: getNormalizedUnit(quantity.unit ? quantity.unit.name : "__no-unit__"),
+    unit: getNormalizedUnit(quantity.unit?.name),
   };
   return list.find((l) =>
-    l.some(
-      (lq) =>
-        lq.unit?.name === quantityWithUnitDef.unit?.name ||
-        (lq.unit?.system === quantityWithUnitDef.unit?.system &&
-          "type" in lq.unit &&
-          "type" in quantityWithUnitDef.unit &&
-          lq.unit?.type === quantityWithUnitDef.unit.type),
-    ),
+    l.some((lq) => areUnitsCompatible(lq.unit, quantityWithUnitDef.unit)),
   );
 }
 
-function findCompatibleQuantityWithinList(
+export function findCompatibleQuantityWithinList(
   list: QuantityWithUnitDef[],
   quantity: QuantityWithExtendedUnit,
 ) {
   const quantityWithUnitDef = {
     ...quantity,
-    unit: getNormalizedUnit(quantity.unit ? quantity.unit.name : "__no-unit__"),
+    unit: getNormalizedUnit(quantity.unit?.name),
   };
   if (!list) return undefined;
   return list.find(
     (q) =>
-      q.unit?.name === quantityWithUnitDef.unit?.name ||
-      ("type" in q.unit &&
-        "type" in quantityWithUnitDef.unit &&
-        q.unit?.type === quantityWithUnitDef.unit.type),
+      q.unit.name === quantityWithUnitDef.unit.name ||
+      (q.unit.type === quantityWithUnitDef.unit.type &&
+        q.unit.type !== "other"),
   );
 }
 
@@ -832,9 +832,7 @@ export function reduceOrsToFirstEquivalent(
     // Normalize the first quantity's unit
     const normalizedFirstQuantity: QuantityWithUnitDef = {
       ...firstQuantity,
-      unit: getNormalizedUnit(
-        firstQuantity.unit ? firstQuantity.unit.name : "__no-unit__",
-      ),
+      unit: getNormalizedUnit(firstQuantity.unit?.name),
     };
     // Priority 1: the first quantity has an integer-protected unit
     if (firstQuantityInList.unit.integerProtected) {
@@ -918,7 +916,7 @@ export function reduceOrsToFirstEquivalent(
     const qListModified = sortUnitList(
       q.quantities.map((qq) => {
         const integerProtected = qq.unit?.integerProtected;
-        qq.unit = getNormalizedUnit(qq.unit ? qq.unit.name : "__no-unit__");
+        qq.unit = getNormalizedUnit(qq.unit?.name);
         if (integerProtected) {
           qq.unit.integerProtected = true;
         }
@@ -952,9 +950,7 @@ export function addQuantitiesOrGroups(
       return {
         sum: {
           ...quantities[0],
-          unit: getNormalizedUnit(
-            quantities[0].unit ? quantities[0].unit.name : "__no-unit__",
-          ),
+          unit: getNormalizedUnit(quantities[0].unit?.name),
         },
         unitsLists: [],
       };
@@ -970,14 +966,12 @@ export function addQuantitiesOrGroups(
     if (existingQ === undefined) {
       sum.push({
         ...nextQ,
-        unit: getNormalizedUnit(nextQ.unit ? nextQ.unit.name : "__no-unit__"),
+        unit: getNormalizedUnit(nextQ.unit?.name),
       });
     } else {
       const sumQ = addQuantities(existingQ, nextQ);
       existingQ.quantity = sumQ.quantity;
-      existingQ.unit = getNormalizedUnit(
-        sumQ.unit ? sumQ.unit.name : "__no-unit__",
-      );
+      existingQ.unit = getNormalizedUnit(sumQ.unit?.name);
     }
   }
   if (sum.length === 1) {

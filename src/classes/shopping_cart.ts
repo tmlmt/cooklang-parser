@@ -7,6 +7,8 @@ import type {
   CartMisMatch,
   FixedNumericValue,
   Range,
+  ProductOptionNormalized,
+  NoProductMatchErrorCode,
 } from "../types";
 import { ProductCatalog } from "./product_catalog";
 import { ShoppingList } from "./shopping_list";
@@ -17,9 +19,15 @@ import {
 } from "../errors";
 import {
   multiplyQuantityValue,
-  normalizeUnit,
   getNumericValue,
+  normalizeAllUnits,
+  QuantityWithUnitDef,
+  isAndGroup,
+  getNormalizedUnit,
+  areUnitsCompatible,
+  isOrGroup,
 } from "../units";
+import type { FlatOrGroup, MaybeNestedGroup } from "../units";
 import { solve, type Model } from "yalps";
 
 /**
@@ -211,146 +219,171 @@ export class ShoppingCart {
     if (options.length === 0)
       throw new NoProductMatchError(ingredient.name, "noProduct");
     // If the ingredient has no quantity, we can't match any product
-    if (!ingredient.quantity)
+    if (!ingredient.quantityTotal)
       throw new NoProductMatchError(ingredient.name, "noQuantity");
-    // If the ingredient has a text quantity, we can't match any product
-    if (
-      ingredient.quantity.type === "fixed" &&
-      ingredient.quantity.value.type === "text"
-    )
-      throw new NoProductMatchError(ingredient.name, "textValue");
-    // Convert quantities to base
-    if (!this.checkUnitCompatibility(ingredient, options)) {
-      throw new NoProductMatchError(ingredient.name, "incompatibleUnits");
-    }
 
-    const normalizedOptions = options
+    // Normalize options units and scale size to base
+    const normalizedOptions: ProductOptionNormalized[] = options
       .map((option) => {
-        return { ...option, unit: normalizeUnit(option.unit) };
+        return { ...option, unit: getNormalizedUnit(option.unit) };
       })
       .map((option) => {
         return {
           ...option,
-          size: option.unit
-            ? (multiplyQuantityValue(
-                option.size,
-                option.unit.toBase,
-              ) as FixedNumericValue)
-            : option.size,
+          size:
+            option.unit && "toBase" in option.unit
+              ? (multiplyQuantityValue(
+                  option.size,
+                  option.unit.toBase,
+                ) as FixedNumericValue)
+              : option.size,
         };
       });
-    const normalizedIngredient = {
-      ...ingredient,
-      quantity: ingredient.quantity as FixedNumericValue | Range,
-      unit: normalizeUnit(ingredient.unit),
-    };
-    if (normalizedIngredient.unit && normalizedIngredient.quantity)
-      normalizedIngredient.quantity = multiplyQuantityValue(
-        normalizedIngredient.quantity,
-        normalizedIngredient.unit.toBase,
-      ) as FixedNumericValue | Range;
+    const normalizedQuantityTotal = normalizeAllUnits(ingredient.quantityTotal);
 
-    // Simple minimization exercise if only one product option
-    if (normalizedOptions.length == 1) {
-      // FixedValue
-      if (normalizedIngredient.quantity.type === "fixed") {
-        const resQuantity = Math.ceil(
-          getNumericValue(normalizedIngredient.quantity.value) /
-            getNumericValue(normalizedOptions[0]!.size.value),
-        );
-        return [
-          {
-            product: options[0]!,
-            quantity: resQuantity,
-            totalPrice: resQuantity * options[0]!.price,
-          },
-        ];
+    function getOptimumMatchForQuantityParts(
+      normalizedQuantities:
+        | QuantityWithUnitDef
+        | MaybeNestedGroup<QuantityWithUnitDef>,
+      normalizedOptions: ProductOptionNormalized[],
+      selection: ProductSelection[] = [],
+    ): ProductSelection[] {
+      if (isAndGroup(normalizedQuantities)) {
+        for (const q of normalizedQuantities.quantities) {
+          getOptimumMatchForQuantityParts(q, normalizedOptions, selection);
+        }
+      } else {
+        const alternativeUnitsOfQuantity = isOrGroup(normalizedQuantities)
+          ? (normalizedQuantities as FlatOrGroup<QuantityWithUnitDef>)
+              .quantities
+          : [normalizedQuantities];
+        const solutions: ProductSelection[][] = [];
+        const errors = new Set<NoProductMatchErrorCode>();
+        for (const alternative of alternativeUnitsOfQuantity) {
+          // At this stage, we're treating individual Quantities we should try to match
+          if (
+            alternative.quantity.type === "fixed" &&
+            alternative.quantity.value.type === "text"
+          ) {
+            errors.add("textValue");
+          }
+          // At this stage, we know there is a numerical quantity
+          // So we scale it to base in order to calculate the correct quantity
+          const scaledQuantity = multiplyQuantityValue(
+            alternative.quantity,
+            "toBase" in alternative.unit ? alternative.unit.toBase : 1,
+          ) as FixedNumericValue | Range;
+          alternative.quantity = scaledQuantity;
+          // Are there compatible product options for that specific unit alternative?
+          const matchOptions = normalizedOptions.filter((option) =>
+            areUnitsCompatible(alternative.unit, option.unit),
+          );
+          if (matchOptions.length > 0) {
+            // Simple minimization exercise if only one product option
+            if (matchOptions.length == 1) {
+              const matchedOption = matchOptions[0]!;
+              const product = options.find(
+                (opt) => opt.id === matchedOption.id,
+              )!;
+              // FixedValue
+              if (scaledQuantity.type === "fixed") {
+                const resQuantity = Math.ceil(
+                  getNumericValue(scaledQuantity.value) /
+                    getNumericValue(matchedOption.size.value),
+                );
+                return [
+                  {
+                    product,
+                    quantity: resQuantity,
+                    totalPrice: resQuantity * matchedOption.price,
+                  },
+                ];
+              }
+              // Range
+              else {
+                const targetQuantity = scaledQuantity.min;
+                const resQuantity = Math.ceil(
+                  getNumericValue(targetQuantity) /
+                    getNumericValue(matchedOption.size.value),
+                );
+                solutions.push([
+                  {
+                    product,
+                    quantity: resQuantity,
+                    totalPrice: resQuantity * matchedOption.price,
+                  },
+                ]);
+              }
+            }
+
+            // More complex problem if there are several options
+            const model: Model = {
+              direction: "minimize",
+              objective: "price",
+              integers: true,
+              constraints: {
+                size: {
+                  min:
+                    scaledQuantity.type === "fixed"
+                      ? getNumericValue(scaledQuantity.value)
+                      : getNumericValue(scaledQuantity.min),
+                },
+              },
+              variables: matchOptions.reduce(
+                (acc, option) => {
+                  acc[option.id] = {
+                    price: option.price,
+                    size: getNumericValue(option.size.value),
+                  };
+                  return acc;
+                },
+                {} as Record<string, { price: number; size: number }>,
+              ),
+            };
+
+            const solution = solve(model);
+            solutions.push(
+              solution.variables.map((variable) => {
+                const resProductSelection = {
+                  product: options.find((option) => option.id === variable[0])!,
+                  quantity: variable[1],
+                };
+                return {
+                  ...resProductSelection,
+                  totalPrice:
+                    resProductSelection.quantity *
+                    resProductSelection.product.price,
+                };
+              }),
+            );
+          } else {
+            errors.add("incompatibleUnits");
+          }
+        }
+        // All alternatives were checked
+        if (solutions.length === 0) {
+          throw new NoProductMatchError(
+            ingredient.name,
+            errors.size === 1
+              ? (errors.values().next().value as NoProductMatchErrorCode)
+              : "textValue_incompatibleUnits",
+          );
+        } else {
+          // We return the cheapest solution among those found
+          return solutions.sort(
+            (a, b) =>
+              a.reduce((acc, item) => acc + item.totalPrice, 0) -
+              b.reduce((acc, item) => acc + item.totalPrice, 0),
+          )[0]!;
+        }
       }
-      // Range
-      else {
-        const targetQuantity = normalizedIngredient.quantity.min;
-        const resQuantity = Math.ceil(
-          getNumericValue(targetQuantity) /
-            getNumericValue(normalizedOptions[0]!.size.value),
-        );
-        return [
-          {
-            product: options[0]!,
-            quantity: resQuantity,
-            totalPrice: resQuantity * options[0]!.price,
-          },
-        ];
-      }
+      return selection;
     }
 
-    // More complex problem if there are several options
-    const model: Model = {
-      direction: "minimize",
-      objective: "price",
-      integers: true,
-      constraints: {
-        size: {
-          min:
-            normalizedIngredient.quantity.type === "fixed"
-              ? getNumericValue(normalizedIngredient.quantity.value)
-              : getNumericValue(normalizedIngredient.quantity.min),
-        },
-      },
-      variables: normalizedOptions.reduce(
-        (acc, option) => {
-          acc[option.id] = {
-            price: option.price,
-            size: getNumericValue(option.size.value),
-          };
-          return acc;
-        },
-        {} as Record<string, { price: number; size: number }>,
-      ),
-    };
-
-    const solution = solve(model);
-    return solution.variables.map((variable) => {
-      const resProductSelection = {
-        product: options.find((option) => option.id === variable[0])!,
-        quantity: variable[1],
-      };
-      return {
-        ...resProductSelection,
-        totalPrice:
-          resProductSelection.quantity * resProductSelection.product.price,
-      };
-    });
-  }
-
-  /**
-   * Checks if the units of an ingredient and its product options are compatible
-   * @param ingredient - The ingredient to check
-   * @param options - The product options to check
-   * @returns `true` if the units are compatible, `false` otherwise
-   */
-  private checkUnitCompatibility(
-    ingredient: Ingredient,
-    options: ProductOption[],
-  ): boolean {
-    if (options.every((option) => option.unit === ingredient.unit)) {
-      return true;
-    }
-    if (!ingredient.unit && options.some((option) => option.unit)) {
-      return false;
-    }
-    if (ingredient.unit && options.some((option) => !option.unit)) {
-      return false;
-    }
-
-    const optionsUnits = options.map((options) => normalizeUnit(options.unit));
-    const normalizedUnit = normalizeUnit(ingredient.unit);
-    if (!normalizedUnit) {
-      return false;
-    }
-    if (optionsUnits.some((unit) => unit?.type !== normalizedUnit?.type)) {
-      return false;
-    }
-    return true;
+    return getOptimumMatchForQuantityParts(
+      normalizedQuantityTotal,
+      normalizedOptions,
+    );
   }
 
   /**

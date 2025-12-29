@@ -284,7 +284,6 @@ describe("buildCart", () => {
       ["pepper", "noProduct"],
       ["spices", "noProduct"],
       ["butter", "noProduct"],
-      ["pepper", "noProduct"],
     ]);
   });
 });
