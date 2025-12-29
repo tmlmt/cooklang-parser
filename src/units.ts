@@ -19,6 +19,7 @@ import type {
   OrGroup,
   AndGroup,
 } from "./types";
+import { CannotAddTextValueError, IncompatibleUnitsError } from "./errors";
 import Big from "big.js";
 
 // Base units: mass -> gram (g), volume -> milliliter (ml)
@@ -206,31 +207,6 @@ export function getNormalizedUnit(
   return normalizedUnit
     ? { ...normalizedUnit, name: unit }
     : { name: unit, type: "other", system: "none" };
-}
-
-export class StrictUnitError extends Error {
-  constructor(unit: string) {
-    super(
-      `Unit ${unit} is strict, and the values provided have different units so they cannot be added`,
-    );
-    this.name = "StrictUnitError";
-  }
-}
-
-export class CannotAddTextValueError extends Error {
-  constructor() {
-    super("Cannot add a quantity with a text value.");
-    this.name = "CannotAddTextValueError";
-  }
-}
-
-export class IncompatibleUnitsError extends Error {
-  constructor(unit1: string, unit2: string) {
-    super(
-      `Cannot add quantities with incompatible or unknown units: ${unit1} and ${unit2}`,
-    );
-    this.name = "IncompatibleUnitsError";
-  }
 }
 
 function gcd(a: number, b: number): number {
