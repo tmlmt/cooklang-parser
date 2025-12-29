@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { metadataRegex, tokensRegex } from "../src/regex";
+import { metadataRegex } from "../src/regex";
 
 describe("metadataRegex", () => {
   it("should match metadata", () => {
