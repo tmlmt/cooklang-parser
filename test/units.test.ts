@@ -664,9 +664,7 @@ const qWithUnitDef = (
   integerProtected?: boolean,
 ): QuantityWithUnitDef => {
   const quantity = q(amount, unit, integerProtected);
-  quantity.unit = getNormalizedUnit(
-    quantity.unit ? quantity.unit.name : "__no-unit__",
-  );
+  quantity.unit = getNormalizedUnit(quantity.unit?.name);
   if (integerProtected) {
     quantity.unit.integerProtected = integerProtected;
   }
@@ -717,7 +715,7 @@ describe("getUnitRatio", () => {
       getUnitRatio(
         {
           quantity: { type: "fixed", value: { type: "text", text: "two" } },
-          unit: { name: "large", system: "none" },
+          unit: { name: "large", type: "other", system: "none" },
         },
         qWithUnitDef(1, "cup"),
       ),
