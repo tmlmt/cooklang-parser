@@ -1,82 +1,25 @@
-import type { FixedValue, Range, DecimalValue, FractionValue } from "./types";
+import type {
+  FixedValue,
+  Range,
+  DecimalValue,
+  FractionValue,
+  Unit,
+  UnitDefinition,
+  UnitDefinitionLike,
+  QuantityWithPlainUnit,
+  QuantityWithExtendedUnit,
+  QuantityWithUnitDef,
+  QuantityWithUnitLike,
+  FlatOrGroup,
+  MaybeNestedOrGroup,
+  FlatAndGroup,
+  FlatGroup,
+  MaybeNestedGroup,
+  Group,
+  OrGroup,
+  AndGroup,
+} from "./types";
 import Big from "big.js";
-export type UnitType = "mass" | "volume" | "count";
-export type UnitSystem = "metric" | "imperial";
-
-export interface Unit {
-  name: string;
-  integerProtected?: boolean;
-}
-
-export interface UnitDefinition extends Unit {
-  type: UnitType;
-  system: UnitSystem;
-  aliases: string[]; // e.g. ['gram', 'grams']
-  toBase: number; // conversion factor to the base unit of its type
-}
-
-export type UnitDefinitionLike =
-  | UnitDefinition
-  | { name: string; type: "other"; system: "none"; integerProtected?: boolean };
-
-export interface QuantityBase {
-  quantity: FixedValue | Range;
-}
-
-export interface QuantityWithPlainUnit extends QuantityBase {
-  unit?: string;
-}
-
-export interface QuantityWithExtendedUnit extends QuantityBase {
-  unit?: Unit;
-}
-
-export interface QuantityWithUnitDef extends QuantityBase {
-  unit: UnitDefinitionLike;
-}
-
-type QuantityWithUnitLike =
-  | QuantityWithPlainUnit
-  | QuantityWithExtendedUnit
-  | QuantityWithUnitDef;
-
-export interface FlatOrGroup<T = QuantityWithUnitLike> {
-  type: "or";
-  quantities: T[];
-}
-export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
-  type: "or";
-  quantities: (T | MaybeNestedGroup<T>)[];
-}
-
-export interface FlatAndGroup<T = QuantityWithUnitLike> {
-  type: "and";
-  quantities: T[];
-}
-export interface NestedAndGroup<T = QuantityWithUnitLike> {
-  type: "and";
-  quantities: T[];
-}
-export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
-  type: "and";
-  quantities: (T | MaybeNestedGroup<T>)[];
-}
-
-export type FlatGroup<T = QuantityWithUnitLike> =
-  | FlatAndGroup<T>
-  | FlatOrGroup<T>;
-export type MaybeNestedGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedAndGroup<T>
-  | MaybeNestedOrGroup<T>;
-export type Group<T = QuantityWithUnitLike> =
-  | MaybeNestedGroup<T>
-  | FlatGroup<T>;
-export type OrGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedOrGroup<T>
-  | FlatOrGroup<T>;
-export type AndGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedAndGroup<T>
-  | FlatAndGroup<T>;
 
 // Base units: mass -> gram (g), volume -> milliliter (ml)
 const units: UnitDefinition[] = [
