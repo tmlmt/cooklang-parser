@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Recipe } from "../src/classes/recipe";
+import { Recipe } from "../src/models/recipe";
 import { simpleRecipe, complexRecipe } from "./fixtures/recipes";
 import { ReferencedItemCannotBeRedefinedError } from "../src/errors";
 import type { Ingredient } from "../src/types";

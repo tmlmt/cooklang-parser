@@ -1,4 +1,4 @@
-import { Section } from "../src/classes/section";
+import { Section } from "../src/models/section";
 import { describe, it, expect } from "vitest";
 
 describe("isBlank", () => {

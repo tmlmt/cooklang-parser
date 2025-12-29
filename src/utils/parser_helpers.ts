@@ -6,20 +6,20 @@ import type {
   TextValue,
   DecimalValue,
   FractionValue,
-} from "./types";
+} from "../types";
 import {
   metadataRegex,
   rangeRegex,
   numberLikeRegex,
   scalingMetaValueRegex,
-} from "./regex";
-import { Section as SectionObject } from "./classes/section";
-import type { Ingredient, Note, Step, Cookware } from "./types";
-import { addQuantityValues } from "./units";
+} from "../regex";
+import { Section as SectionObject } from "../models/section";
+import type { Ingredient, Note, Step, Cookware } from "../types";
+import { addQuantityValues } from "./quantity";
 import {
   CannotAddTextValueError,
   ReferencedItemCannotBeRedefinedError,
-} from "./errors";
+} from "../errors";
 
 /**
  * Pushes a pending note to the section content if it's not empty.

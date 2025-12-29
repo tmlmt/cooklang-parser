@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { ShoppingCart } from "../src/classes/shopping_cart";
-import { ShoppingList } from "../src/classes/shopping_list";
-import { Recipe } from "../src/classes/recipe";
-import { ProductCatalog } from "../src/classes/product_catalog";
+import { ShoppingCart } from "../src/models/shopping_cart";
+import { ShoppingList } from "../src/models/shopping_list";
+import { Recipe } from "../src/models/recipe";
+import { ProductCatalog } from "../src/models/product_catalog";
 import {
   NoProductCatalogForCartError,
   NoShoppingListForCartError,

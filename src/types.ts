@@ -1,4 +1,4 @@
-import type { Recipe } from "./classes/recipe";
+import type { Recipe } from "./models/recipe";
 
 /**
  * Represents the metadata of a recipe.
@@ -670,4 +670,3 @@ export type OrGroup<T = QuantityWithUnitLike> =
 export type AndGroup<T = QuantityWithUnitLike> =
   | MaybeNestedAndGroup<T>
   | FlatAndGroup<T>;
-

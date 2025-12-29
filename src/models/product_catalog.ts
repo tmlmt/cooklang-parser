@@ -9,7 +9,7 @@ import {
   isPositiveIntegerString,
   parseQuantityInput,
   stringifyQuantityValue,
-} from "../parser_helpers";
+} from "../utils/parser_helpers";
 import { InvalidProductCatalogFormat } from "../errors";
 
 /**

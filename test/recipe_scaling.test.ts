@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { IngredientItem, Step } from "../src/types";
-import { Recipe } from "../src/classes/recipe";
+import { Recipe } from "../src/models/recipe";
 import {
   recipeToScale,
   recipeToScaleSomeFixedQuantities,
