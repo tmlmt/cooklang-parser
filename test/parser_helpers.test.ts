@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Section as SectionObject } from "../src/classes/section";
+import { Section as SectionObject } from "../src/models/section";
 import type { Step, MetadataExtract, Cookware, Ingredient } from "../src/types";
 import {
   flushPendingNote,
@@ -13,7 +13,7 @@ import {
   findAndUpsertCookware,
   findAndUpsertIngredient,
   stringifyQuantityValue,
-} from "../src/parser_helpers";
+} from "../src/utils/parser_helpers";
 
 describe("parseSimpleMetaVar", () => {
   it("should parse canonical string vars", () => {

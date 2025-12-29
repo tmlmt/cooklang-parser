@@ -9,11 +9,9 @@ import type {
   MaybeNestedGroup,
   FlatOrGroup,
 } from "../types";
-import {
-  isAndGroup,
-  extendAllUnits,
-  addEquivalentsAndSimplify,
-} from "../units";
+import { addEquivalentsAndSimplify } from "../utils/equivalents";
+import { extendAllUnits } from "../utils/quantity";
+import { isAndGroup } from "../utils/type_guards";
 
 /**
  * Shopping List generator.

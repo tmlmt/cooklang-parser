@@ -20,16 +20,11 @@ import {
   NoShoppingListForCartError,
   NoProductMatchError,
 } from "../errors";
-import {
-  multiplyQuantityValue,
-  getNumericValue,
-  normalizeAllUnits,
-  isAndGroup,
-  getNormalizedUnit,
-  areUnitsCompatible,
-  isOrGroup,
-} from "../units";
+import { getNormalizedUnit } from "./unit_definitions";
+import { getNumericValue, multiplyQuantityValue } from "../utils/numeric";
 import { solve, type Model } from "yalps";
+import { areUnitsCompatible, normalizeAllUnits } from "../utils/quantity";
+import { isAndGroup, isOrGroup } from "../utils/type_guards";
 
 /**
  * Options for the {@link ShoppingCart} constructor

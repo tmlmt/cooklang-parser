@@ -37,8 +37,9 @@ import {
   parseQuantityInput,
   extractMetadata,
   unionOfSets,
-} from "../parser_helpers";
-import { multiplyQuantityValue, addEquivalentsAndSimplify } from "../units";
+} from "../utils/parser_helpers";
+import { addEquivalentsAndSimplify } from "../utils/equivalents";
+import { multiplyQuantityValue } from "../utils/numeric";
 import Big from "big.js";
 
 /**

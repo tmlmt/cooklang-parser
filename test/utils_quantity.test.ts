@@ -1,0 +1,493 @@
+import { describe, it, expect } from "vitest";
+import {
+  addQuantityValues,
+  addQuantities,
+  getDefaultQuantityValue,
+  getAverageValue,
+  getUnitRatio,
+} from "../src/utils/quantity";
+import { CannotAddTextValueError, IncompatibleUnitsError } from "../src/errors";
+import { qWithUnitDef } from "./mocks/quantity";
+import Big from "big.js";
+
+describe("addQuantityValues", () => {
+  it("should add two fixed numerical values", () => {
+    expect(
+      addQuantityValues(
+        { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        { type: "fixed", value: { type: "decimal", decimal: 2 } },
+      ),
+    ).toEqual({ type: "fixed", value: { type: "decimal", decimal: 3 } });
+  });
+
+  it("should add two range values", () => {
+    expect(
+      addQuantityValues(
+        {
+          type: "range",
+          min: { type: "decimal", decimal: 1 },
+          max: { type: "decimal", decimal: 2 },
+        },
+        {
+          type: "range",
+          min: { type: "decimal", decimal: 3 },
+          max: { type: "decimal", decimal: 4 },
+        },
+      ),
+    ).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 4 },
+      max: { type: "decimal", decimal: 6 },
+    });
+  });
+
+  it("should add a fixed and a range value", () => {
+    expect(
+      addQuantityValues(
+        { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        {
+          type: "range",
+          min: { type: "decimal", decimal: 3 },
+          max: { type: "decimal", decimal: 4 },
+        },
+      ),
+    ).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 4 },
+      max: { type: "decimal", decimal: 5 },
+    });
+  });
+
+  it("should throw an error if one of the value is a text value", () => {
+    expect(() =>
+      addQuantityValues(
+        { type: "fixed", value: { type: "text", text: "to taste" } },
+        {
+          type: "fixed",
+          value: { type: "decimal", decimal: 1 },
+        },
+      ),
+    ).toThrow(CannotAddTextValueError);
+  });
+});
+
+describe("addQuantities", () => {
+  it("should add same units correctly", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+          unit: { name: "g" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
+      unit: { name: "g" },
+    });
+  });
+
+  it("should add big decimal numbers correctly", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1.1 } },
+          unit: { name: "kg" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1.3 } },
+          unit: { name: "kg" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2.4 } },
+      unit: { name: "kg" },
+    });
+  });
+
+  it("should also work when at least one value is a range", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 100 },
+            max: { type: "decimal", decimal: 200 },
+          },
+          unit: { name: "g" },
+        },
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 10 },
+            max: { type: "decimal", decimal: 20 },
+          },
+          unit: { name: "g" },
+        },
+      ),
+    ).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 110 },
+        max: { type: "decimal", decimal: 220 },
+      },
+      unit: { name: "g" },
+    });
+
+    expect(
+      addQuantities(
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: { name: "g" },
+        },
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 10 },
+            max: { type: "decimal", decimal: 20 },
+          },
+          unit: { name: "g" },
+        },
+      ),
+    ).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 110 },
+        max: { type: "decimal", decimal: 120 },
+      },
+      unit: { name: "g" },
+    });
+
+    expect(
+      addQuantities(
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 10 },
+            max: { type: "decimal", decimal: 20 },
+          },
+          unit: { name: "g" },
+        },
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: { name: "g" },
+        },
+      ),
+    ).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 110 },
+        max: { type: "decimal", decimal: 120 },
+      },
+      unit: { name: "g" },
+    });
+  });
+
+  it("should add compatible metric units and convert to largest", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "kg" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+          unit: { name: "g" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
+      unit: { name: "kg" },
+    });
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+          unit: { name: "g" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "kg" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
+      unit: { name: "kg" },
+    });
+  });
+
+  it("should add compatible imperial units and convert to largest", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "lb" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 8 } },
+          unit: { name: "oz" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
+      unit: { name: "lb" },
+    });
+  });
+
+  it("should add compatible metric and imperial units, converting to largest metric", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "lb" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+        unit: { name: "g" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "kg" });
+    expect(result.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 0.954 },
+    });
+  });
+
+  it("should handle text quantities", () => {
+    expect(() =>
+      addQuantities(
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "text", text: "to taste" },
+          },
+          unit: { name: "" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+      ),
+    ).toThrow(CannotAddTextValueError);
+  });
+
+  it("should handle adding to a quantity with no unit", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: { name: "g" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+      unit: { name: "g" },
+    });
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 101 } },
+      unit: { name: "g" },
+    });
+  });
+
+  it("should simply add two quantities without unit or with empty string unit", () => {
+    // Empty string unit
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: { name: "" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+      unit: { name: "" },
+    });
+    // No unit
+    expect(
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+    });
+  });
+
+  it("should throw error if trying to add incompatible units", () => {
+    expect(() =>
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "L" },
+        },
+      ),
+    ).toThrow(IncompatibleUnitsError);
+    expect(() =>
+      addQuantities(
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "bag" },
+        },
+      ),
+    ).toThrow(IncompatibleUnitsError);
+  });
+
+  it("should add quantities defined as ranges", () => {
+    expect(
+      addQuantities(
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 1 },
+            max: { type: "decimal", decimal: 2 },
+          },
+          unit: { name: "tsp" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "tsp" },
+        },
+      ),
+    ).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 2 },
+        max: { type: "decimal", decimal: 3 },
+      },
+      unit: { name: "tsp" },
+    });
+  });
+});
+
+describe("getDefaultQuantityValue + addQuantities", () => {
+  it("should preseve fractions", () => {
+    expect(
+      addQuantities(
+        { quantity: getDefaultQuantityValue() },
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "fraction", num: 1, den: 2 },
+          },
+          unit: { name: "" },
+        },
+      ),
+    ).toEqual({
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: { name: "" },
+    });
+  });
+  it("should preseve ranges", () => {
+    expect(
+      addQuantities(
+        { quantity: getDefaultQuantityValue() },
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 1 },
+            max: { type: "decimal", decimal: 2 },
+          },
+          unit: { name: "" },
+        },
+      ),
+    ).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
+      },
+      unit: { name: "" },
+    });
+  });
+});
+
+describe("getAverageValue", () => {
+  it("should return the correct value for fixed values", () => {
+    expect(
+      getAverageValue({
+        type: "fixed",
+        value: { type: "decimal", decimal: 1 },
+      }),
+    ).toBe(1);
+  });
+  it("should return the correct value for ranges", () => {
+    expect(
+      getAverageValue({
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
+      }),
+    ).toBe(1.5);
+  });
+  it("should return the correct value for text values", () => {
+    expect(
+      getAverageValue({ type: "fixed", value: { type: "text", text: "two" } }),
+    ).toBe("two");
+  });
+});
+
+describe("getUnitRatio", () => {
+  it("should return the correct ratio for numerical values", () => {
+    expect(
+      getUnitRatio(qWithUnitDef(2, "large"), qWithUnitDef(1, "cup")),
+    ).toEqual(Big(2));
+    expect(
+      getUnitRatio(qWithUnitDef(2, "large"), qWithUnitDef(1.5, "cup")),
+    ).toEqual(Big(2).div(1.5));
+  });
+  it("should return the correct ratio for system units", () => {
+    expect(getUnitRatio(qWithUnitDef(10, "mL"), qWithUnitDef(2, "cL"))).toEqual(
+      Big(0.5),
+    );
+  });
+  it("should throw and error if one of the values is a text", () => {
+    expect(() =>
+      getUnitRatio(
+        {
+          quantity: { type: "fixed", value: { type: "text", text: "two" } },
+          unit: { name: "large", type: "other", system: "none" },
+        },
+        qWithUnitDef(1, "cup"),
+      ),
+    ).toThrowError();
+  });
+});
