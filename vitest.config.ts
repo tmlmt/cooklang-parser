@@ -9,7 +9,7 @@ export default defineConfig({
       reporter: ["text", "html"],
       enabled: true,
       include: ["src/**"],
-      exclude: ["src/types.ts", "src/index.ts"],
+      exclude: ["src/types.ts", "src/index.ts", "src/utils/general.ts"],
     },
   },
 });

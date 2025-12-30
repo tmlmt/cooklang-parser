@@ -28,12 +28,3 @@ export function getBaseUnitRatio(
     return 1;
   }
 }
-
-export function getConversionFactor(
-  from: QuantityWithUnitDef,
-  to: QuantityWithUnitDef,
-) {
-  if ("toBase" in from.unit && "toBase" in to.unit)
-    return from.unit.toBase / to.unit.toBase;
-  return 1;
-}

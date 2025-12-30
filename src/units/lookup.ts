@@ -34,12 +34,11 @@ export function findListWithCompatibleQuantity(
 export function findCompatibleQuantityWithinList(
   list: QuantityWithUnitDef[],
   quantity: QuantityWithExtendedUnit,
-) {
+): QuantityWithUnitDef | undefined {
   const quantityWithUnitDef = {
     ...quantity,
     unit: resolveUnit(quantity.unit?.name),
   };
-  if (!list) return undefined;
   return list.find(
     (q) =>
       q.unit.name === quantityWithUnitDef.unit.name ||
