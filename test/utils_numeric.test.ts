@@ -5,7 +5,8 @@ import {
   multiplyNumericValue,
   getNumericValue,
   multiplyQuantityValue,
-} from "../src/utils/numeric";
+  getAverageValue,
+} from "../src/quantities/numeric";
 import type { DecimalValue, FractionValue, FixedValue } from "../src/types";
 
 describe("simplifyFraction", () => {
@@ -160,5 +161,30 @@ describe("multiplyQuantityValue", () => {
       type: "fixed",
       value: { type: "decimal", decimal: 3.6 },
     });
+  });
+});
+
+describe("getAverageValue", () => {
+  it("should return the correct value for fixed values", () => {
+    expect(
+      getAverageValue({
+        type: "fixed",
+        value: { type: "decimal", decimal: 1 },
+      }),
+    ).toBe(1);
+  });
+  it("should return the correct value for ranges", () => {
+    expect(
+      getAverageValue({
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
+      }),
+    ).toBe(1.5);
+  });
+  it("should return the correct value for text values", () => {
+    expect(
+      getAverageValue({ type: "fixed", value: { type: "text", text: "two" } }),
+    ).toBe("two");
   });
 });

@@ -39,7 +39,7 @@ import {
   unionOfSets,
 } from "../utils/parser_helpers";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
-import { multiplyQuantityValue } from "../utils/numeric";
+import { multiplyQuantityValue } from "../quantities/numeric";
 import Big from "big.js";
 
 /**

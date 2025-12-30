@@ -22,7 +22,7 @@ import {
 } from "../errors";
 import { resolveUnit } from "../units/definitions";
 import { normalizeAllUnits } from "../quantities/mutations";
-import { getNumericValue, multiplyQuantityValue } from "../utils/numeric";
+import { getNumericValue, multiplyQuantityValue } from "../quantities/numeric";
 import { isAndGroup, isOrGroup } from "../utils/type_guards";
 import { areUnitsCompatible } from "../units/lookup";
 import { solve, type Model } from "yalps";
