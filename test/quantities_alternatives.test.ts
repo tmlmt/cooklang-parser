@@ -4,10 +4,10 @@ import {
   getEquivalentUnitsLists,
   reduceOrsToFirstEquivalent,
   addEquivalentsAndSimplify,
-} from "../src/utils/equivalents";
+} from "../src/quantities/alternatives";
 import type { FlatOrGroup, QuantityWithExtendedUnit } from "../src/types";
 import { q, qPlain, qWithUnitDef } from "./mocks/quantity";
-import { toPlainUnit } from "../src/utils/quantity";
+import { toPlainUnit } from "../src/quantities/mutations";
 
 describe("getEquivalentUnitsLists", () => {
   it("should consider units of the same system and type as similar", () => {

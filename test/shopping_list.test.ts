@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { ShoppingList } from "../src/models/shopping_list";
-import { CategoryConfig } from "../src/models/category_config";
+import { ShoppingList } from "../src/classes/shopping_list";
+import { CategoryConfig } from "../src/classes/category_config";
 import type { CategorizedIngredients, Ingredient } from "../src/types";
-import { Recipe } from "../src/models/recipe";
+import { Recipe } from "../src/classes/recipe";
 import {
   recipeForShoppingList1,
   recipeForShoppingList2,

@@ -38,7 +38,7 @@ import {
   extractMetadata,
   unionOfSets,
 } from "../utils/parser_helpers";
-import { addEquivalentsAndSimplify } from "../utils/equivalents";
+import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import { multiplyQuantityValue } from "../utils/numeric";
 import Big from "big.js";
 

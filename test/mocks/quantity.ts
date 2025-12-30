@@ -3,7 +3,7 @@ import type {
   QuantityWithPlainUnit,
   QuantityWithUnitDef,
 } from "../../src/types";
-import { getNormalizedUnit } from "../../src/models/unit_definitions";
+import { resolveUnit } from "../../src/units/definitions";
 
 // Minimal mock for Quantity and FixedValue for testing
 export const q = (
@@ -43,7 +43,7 @@ export const qWithUnitDef = (
   integerProtected?: boolean,
 ): QuantityWithUnitDef => {
   const quantity = q(amount, unit, integerProtected);
-  quantity.unit = getNormalizedUnit(quantity.unit?.name);
+  quantity.unit = resolveUnit(quantity.unit?.name);
   if (integerProtected) {
     quantity.unit.integerProtected = integerProtected;
   }

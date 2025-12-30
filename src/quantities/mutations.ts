@@ -5,37 +5,17 @@ import type {
   FractionValue,
   Unit,
   UnitDefinition,
-  UnitDefinitionLike,
   QuantityWithPlainUnit,
   QuantityWithExtendedUnit,
   QuantityWithUnitDef,
   MaybeNestedGroup,
 } from "../types";
-import {
-  units,
-  normalizeUnit,
-  getNormalizedUnit,
-} from "../models/unit_definitions";
-import {
-  getNumericValue,
-  addNumericValues,
-  multiplyQuantityValue,
-} from "./numeric";
+import { units, normalizeUnit, resolveUnit } from "../units/definitions";
+import { addNumericValues, multiplyQuantityValue } from "../utils/numeric";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
-import Big from "big.js";
-import { isGroup, isQuantity } from "./type_guards";
+import { isGroup, isQuantity } from "../utils/type_guards";
 
-export function deNormalizeQuantity(
-  q: QuantityWithUnitDef,
-): QuantityWithExtendedUnit {
-  const result: QuantityWithExtendedUnit = {
-    quantity: q.quantity,
-  };
-  if (q.unit.name !== "__no-unit__") {
-    result.unit = { name: q.unit.name };
-  }
-  return result;
-}
+// `deNormalizeQuantity` is provided by `./math` and re-exported below.
 
 export function extendAllUnits(
   q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
@@ -61,7 +41,7 @@ export function normalizeAllUnits(
   } else {
     const newQ: QuantityWithUnitDef = {
       quantity: q.quantity,
-      unit: getNormalizedUnit(q.unit),
+      unit: resolveUnit(q.unit),
     };
     return newQ;
   }
@@ -234,128 +214,6 @@ export function addQuantities(
   );
 }
 
-export function getAverageValue(q: FixedValue | Range): string | number {
-  if (q.type === "fixed") {
-    return q.value.type === "text" ? q.value.text : getNumericValue(q.value);
-  } else {
-    return (getNumericValue(q.min) + getNumericValue(q.max)) / 2;
-  }
-}
-
-export function getUnitRatio(q1: QuantityWithUnitDef, q2: QuantityWithUnitDef) {
-  const q1Value = getAverageValue(q1.quantity);
-  const q2Value = getAverageValue(q2.quantity);
-  const factor =
-    "toBase" in q1.unit && "toBase" in q2.unit
-      ? q1.unit.toBase / q2.unit.toBase
-      : 1;
-
-  if (typeof q1Value !== "number" || typeof q2Value !== "number") {
-    throw Error(
-      "One of both values is not a number, so a ratio cannot be computed",
-    );
-  }
-  return Big(q1Value).times(factor).div(q2Value);
-}
-
-export function getBaseUnitRatio(
-  q: QuantityWithUnitDef,
-  qRef: QuantityWithUnitDef,
-) {
-  if ("toBase" in q.unit && "toBase" in qRef.unit) {
-    return q.unit.toBase / qRef.unit.toBase;
-  } else {
-    return 1;
-  }
-}
-
-export function areUnitsCompatible(
-  u1: UnitDefinitionLike,
-  u2: UnitDefinitionLike,
-): boolean {
-  if (u1.name === u2.name) {
-    return true;
-  }
-  if (u1.type !== "other" && u1.type === u2.type && u1.system === u2.system) {
-    return true;
-  }
-  return false;
-}
-
-export function isValueIntegerLike(q: FixedValue | Range) {
-  let result = false;
-  if (q.type === "fixed") {
-    if (q.value.type === "decimal") return Number.isInteger(q.value.decimal);
-    if (q.value.type === "fraction")
-      return Number.isInteger(q.value.num / q.value.den);
-  } else {
-    if (q.min.type === "decimal")
-      result = result ? Number.isInteger(q.min.decimal) : false;
-    if (q.min.type === "fraction")
-      result = result ? Number.isInteger(q.min.num / q.min.den) : false;
-    if (q.max.type === "decimal")
-      result = result ? Number.isInteger(q.max.decimal) : false;
-    if (q.max.type === "fraction")
-      result = result ? Number.isInteger(q.max.num / q.max.den) : false;
-  }
-  return result;
-}
-
-export function findListWithCompatibleQuantity(
-  list: QuantityWithUnitDef[][],
-  quantity: QuantityWithExtendedUnit,
-) {
-  const quantityWithUnitDef = {
-    ...quantity,
-    unit: getNormalizedUnit(quantity.unit?.name),
-  };
-  return list.find((l) =>
-    l.some((lq) => areUnitsCompatible(lq.unit, quantityWithUnitDef.unit)),
-  );
-}
-
-export function findCompatibleQuantityWithinList(
-  list: QuantityWithUnitDef[],
-  quantity: QuantityWithExtendedUnit,
-) {
-  const quantityWithUnitDef = {
-    ...quantity,
-    unit: getNormalizedUnit(quantity.unit?.name),
-  };
-  if (!list) return undefined;
-  return list.find(
-    (q) =>
-      q.unit.name === quantityWithUnitDef.unit.name ||
-      (q.unit.type === quantityWithUnitDef.unit.type &&
-        q.unit.type !== "other"),
-  );
-}
-
-export function sortUnitList(list: QuantityWithUnitDef[]) {
-  if (!list || list.length <= 1) return list;
-  const priorityList: QuantityWithUnitDef[] = [];
-  const nonPriorityList: QuantityWithUnitDef[] = [];
-  for (const q of list) {
-    if (q.unit.integerProtected || q.unit.system === "none") {
-      priorityList.push(q);
-    } else {
-      nonPriorityList.push(q);
-    }
-  }
-
-  return priorityList
-    .sort((a, b) => {
-      let prefixA = "";
-      if (a.unit.integerProtected) prefixA = "___";
-      else if (a.unit.system === "none") prefixA = "__";
-      let prefixB = "";
-      if (b.unit.integerProtected) prefixB = "___";
-      else if (b.unit.system === "none") prefixB = "__";
-      return (prefixA + a.unit.name).localeCompare(prefixB + b.unit.name);
-    })
-    .concat(nonPriorityList);
-}
-
 export function toPlainUnit(
   quantity:
     | QuantityWithExtendedUnit
@@ -371,4 +229,16 @@ export function toPlainUnit(
       quantities: quantity.quantities.map(toPlainUnit),
     } as MaybeNestedGroup<QuantityWithPlainUnit>;
   }
+}
+
+export function deNormalizeQuantity(
+  q: QuantityWithUnitDef,
+): QuantityWithExtendedUnit {
+  const result: QuantityWithExtendedUnit = {
+    quantity: q.quantity,
+  };
+  if (q.unit.name !== "__no-unit__") {
+    result.unit = { name: q.unit.name };
+  }
+  return result;
 }

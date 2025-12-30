@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import {
-  normalizeUnit,
-  getNormalizedUnit,
-} from "../src/models/unit_definitions";
+import { normalizeUnit, resolveUnit } from "../src/units/definitions";
 
 describe("normalizeUnit", () => {
   it("should normalize various unit strings to a canonical definition", () => {
@@ -20,10 +17,10 @@ describe("normalizeUnit", () => {
   });
 });
 
-describe("getNormalizedUnit", () => {
+describe("resolveUnit", () => {
   it("should add various properties from the corresponding canonical definition but preserve the name", () => {
-    expect(getNormalizedUnit("g").name).toBe("g");
-    expect(getNormalizedUnit("gram")).toEqual({
+    expect(resolveUnit("g").name).toBe("g");
+    expect(resolveUnit("gram")).toEqual({
       name: "gram",
       type: "mass",
       system: "metric",
@@ -33,6 +30,6 @@ describe("getNormalizedUnit", () => {
   });
 
   it("should return type 'other' for unknown units", () => {
-    expect(getNormalizedUnit("glug").type).toBe("other");
+    expect(resolveUnit("glug").type).toBe("other");
   });
 });

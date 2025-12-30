@@ -1,13 +1,13 @@
-import { CategoryConfig } from "./models/category_config";
-import { ProductCatalog } from "./models/product_catalog";
-import { Recipe } from "./models/recipe";
-import { ShoppingList } from "./models/shopping_list";
+import { CategoryConfig } from "./classes/category_config";
+import { ProductCatalog } from "./classes/product_catalog";
+import { Recipe } from "./classes/recipe";
+import { ShoppingList } from "./classes/shopping_list";
 import {
   ShoppingCart,
   type ShoppingCartOptions,
   type ShoppingCartSummary,
-} from "./models/shopping_cart";
-import { Section } from "./models/section";
+} from "./classes/shopping_cart";
+import { Section } from "./classes/section";
 
 export {
   CategoryConfig,
