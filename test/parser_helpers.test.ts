@@ -13,7 +13,9 @@ import {
   findAndUpsertCookware,
   findAndUpsertIngredient,
   stringifyQuantityValue,
+  unionOfSets,
 } from "../src/utils/parser_helpers";
+import { ReferencedItemCannotBeRedefinedError } from "../src/errors";
 
 describe("parseSimpleMetaVar", () => {
   it("should parse canonical string vars", () => {
@@ -352,7 +354,6 @@ describe("findAndUpsertCookware", () => {
     const newCookware: Cookware = {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-      flags: [],
     };
     findAndUpsertCookware(cookware, newCookware, true);
     expect(cookware.length).toEqual(2);
@@ -362,6 +363,28 @@ describe("findAndUpsertCookware", () => {
     const newCookware: Cookware = { name: "unreferenced-cookware", flags: [] };
     expect(() => findAndUpsertCookware([], newCookware, true)).toThrowError(
       "Referenced cookware \"unreferenced-cookware\" not found. A referenced cookware must be declared before being referenced with '&'.",
+    );
+  });
+
+  it("should throw an error if flags differ in referenced cookware", () => {
+    const cookware: Cookware[] = [
+      {
+        name: "oven",
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        flags: ["hidden"],
+      },
+    ];
+    const newCookware: Cookware = {
+      name: "oven",
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+    };
+
+    expect(() => findAndUpsertCookware(cookware, newCookware, true)).toThrow(
+      ReferencedItemCannotBeRedefinedError,
+    );
+    newCookware.flags = ["optional"];
+    expect(() => findAndUpsertCookware(cookware, newCookware, true)).toThrow(
+      ReferencedItemCannotBeRedefinedError,
     );
   });
 });
@@ -455,6 +478,31 @@ describe("findAndUpsertIngredient", () => {
       "Referenced ingredient \"unreferenced-ingredient\" not found. A referenced ingredient must be declared before being referenced with '&'.",
     );
   });
+
+  it("should throw an error if flags differ in referenced ingredient", () => {
+    const ingredients: Ingredient[] = [
+      {
+        name: "eggs",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        },
+        flags: ["hidden"],
+      },
+    ];
+    const newIngredient: Ingredient = {
+      name: "eggs",
+      quantityTotal: {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+      },
+    };
+    expect(() =>
+      findAndUpsertIngredient(ingredients, newIngredient, true),
+    ).toThrow(ReferencedItemCannotBeRedefinedError);
+    newIngredient.flags = ["optional"];
+    expect(() =>
+      findAndUpsertIngredient(ingredients, newIngredient, true),
+    ).toThrow(ReferencedItemCannotBeRedefinedError);
+  });
 });
 
 describe("parseFixedValue", () => {
@@ -517,6 +565,12 @@ describe("stringifyQuantityValue", () => {
         value: { type: "fraction", num: 2, den: 3 },
       }),
     ).toEqual("2/3");
+    expect(
+      stringifyQuantityValue({
+        type: "fixed",
+        value: { type: "text", text: "a pinch" },
+      }),
+    ).toEqual("a pinch");
   });
 
   it("correctly stringify ranges", () => {
@@ -527,5 +581,13 @@ describe("stringifyQuantityValue", () => {
         max: { type: "decimal", decimal: 2 },
       }),
     ).toEqual("1-2");
+  });
+});
+
+describe("unionOfSets", () => {
+  it("should return the correct union of two sets", () => {
+    expect(
+      unionOfSets(new Set(["a", "b", "c"]), new Set(["b", "c", "d", "e"])),
+    ).toEqual(new Set(["a", "b", "c", "d", "e"]));
   });
 });

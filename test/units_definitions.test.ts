@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { normalizeUnit, resolveUnit } from "../src/units/definitions";
+import {
+  normalizeUnit,
+  resolveUnit,
+  isNoUnit,
+  NO_UNIT,
+} from "../src/units/definitions";
 
 describe("normalizeUnit", () => {
   it("should normalize various unit strings to a canonical definition", () => {
@@ -31,5 +36,24 @@ describe("resolveUnit", () => {
 
   it("should return type 'other' for unknown units", () => {
     expect(resolveUnit("glug").type).toBe("other");
+  });
+});
+
+describe("isNoUnit", () => {
+  it("should identify no-unit definitions", () => {
+    expect(isNoUnit({ name: NO_UNIT, type: "other", system: "none" })).toBe(
+      true,
+    );
+    expect(
+      isNoUnit({
+        name: "g",
+        type: "mass",
+        system: "metric",
+        aliases: ["gram", "grams", "grammes"],
+        toBase: 1,
+      }),
+    ).toBe(false);
+    expect(isNoUnit(undefined)).toBe(true);
+    expect(isNoUnit()).toBe(true);
   });
 });

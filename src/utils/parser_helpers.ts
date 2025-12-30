@@ -87,8 +87,12 @@ export function findAndUpsertIngredient(
     const existingIngredient = ingredients[indexFind]!;
 
     // Checking whether any provided flags are the same as the original ingredient
+    // TODO: backport fix (check on array length) to v2
     if (!newIngredient.flags) {
-      if (Array.isArray(existingIngredient.flags)) {
+      if (
+        Array.isArray(existingIngredient.flags) &&
+        existingIngredient.flags.length > 0
+      ) {
         throw new ReferencedItemCannotBeRedefinedError(
           "ingredient",
           existingIngredient.name,
@@ -139,7 +143,19 @@ export function findAndUpsertCookware(
     const existingCookware = cookware[index]!;
 
     // Checking whether any provided flags are the same as the original cookware
-    if (newCookware.flags) {
+    // TODO: backport fix (if/else) + check on array length to v2
+    if (!newCookware.flags) {
+      if (
+        Array.isArray(existingCookware.flags) &&
+        existingCookware.flags.length > 0
+      ) {
+        throw new ReferencedItemCannotBeRedefinedError(
+          "cookware",
+          existingCookware.name,
+          existingCookware.flags[0]!,
+        );
+      }
+    } else {
       for (const flag of newCookware.flags) {
         /* v8 ignore else -- @preserve */
         if (
