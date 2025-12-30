@@ -13,9 +13,9 @@ import {
   numberLikeRegex,
   scalingMetaValueRegex,
 } from "../regex";
-import { Section as SectionObject } from "../models/section";
+import { Section as SectionObject } from "../classes/section";
 import type { Ingredient, Note, Step, Cookware } from "../types";
-import { addQuantityValues } from "./quantity";
+import { addQuantityValues } from "../quantities/mutations";
 import {
   CannotAddTextValueError,
   ReferencedItemCannotBeRedefinedError,

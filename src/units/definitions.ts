@@ -136,9 +136,9 @@ export function normalizeUnit(unit: string = ""): UnitDefinition | undefined {
   return unitMap.get(unit.toLowerCase().trim());
 }
 
-export function getNormalizedUnit(
-  name: string = "__no-unit__",
-): UnitDefinitionLike {
+export const NO_UNIT = "__no-unit__";
+
+export function resolveUnit(name: string = NO_UNIT): UnitDefinitionLike {
   const normalizedUnit = normalizeUnit(name);
   return normalizedUnit
     ? { ...normalizedUnit, name }

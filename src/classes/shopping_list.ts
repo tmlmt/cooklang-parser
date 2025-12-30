@@ -9,8 +9,8 @@ import type {
   MaybeNestedGroup,
   FlatOrGroup,
 } from "../types";
-import { addEquivalentsAndSimplify } from "../utils/equivalents";
-import { extendAllUnits } from "../utils/quantity";
+import { addEquivalentsAndSimplify } from "../quantities/alternatives";
+import { extendAllUnits } from "../quantities/mutations";
 import { isAndGroup } from "../utils/type_guards";
 
 /**

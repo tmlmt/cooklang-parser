@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ProductCatalog } from "../src/models/product_catalog";
+import { ProductCatalog } from "../src/classes/product_catalog";
 import { InvalidProductCatalogFormat } from "../src/errors";
 import { ProductOption } from "../src";
 

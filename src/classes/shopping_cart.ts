@@ -20,11 +20,12 @@ import {
   NoShoppingListForCartError,
   NoProductMatchError,
 } from "../errors";
-import { getNormalizedUnit } from "./unit_definitions";
+import { resolveUnit } from "../units/definitions";
+import { normalizeAllUnits } from "../quantities/mutations";
 import { getNumericValue, multiplyQuantityValue } from "../utils/numeric";
-import { solve, type Model } from "yalps";
-import { areUnitsCompatible, normalizeAllUnits } from "../utils/quantity";
 import { isAndGroup, isOrGroup } from "../utils/type_guards";
+import { areUnitsCompatible } from "../units/lookup";
+import { solve, type Model } from "yalps";
 
 /**
  * Options for the {@link ShoppingCart} constructor
@@ -221,7 +222,7 @@ export class ShoppingCart {
     // Normalize options units and scale size to base
     const normalizedOptions: ProductOptionNormalized[] = options
       .map((option) => {
-        return { ...option, unit: getNormalizedUnit(option.unit) };
+        return { ...option, unit: resolveUnit(option.unit) };
       })
       .map((option) => {
         return {

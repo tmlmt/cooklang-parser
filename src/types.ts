@@ -1,4 +1,4 @@
-import type { Recipe } from "./models/recipe";
+import type { Recipe } from "./classes/recipe";
 
 /**
  * Represents the metadata of a recipe.
