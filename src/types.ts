@@ -637,10 +637,7 @@ export interface FlatAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   quantities: T[];
 }
-export interface NestedAndGroup<T = QuantityWithUnitLike> {
-  type: "and";
-  quantities: T[];
-}
+
 export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   quantities: (T | MaybeNestedGroup<T>)[];
