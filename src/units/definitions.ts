@@ -144,3 +144,8 @@ export function resolveUnit(name: string = NO_UNIT): UnitDefinitionLike {
     ? { ...normalizedUnit, name }
     : { name, type: "other", system: "none" };
 }
+
+export function isNoUnit(unit?: UnitDefinitionLike): boolean {
+  if (!unit) return true;
+  return resolveUnit(unit.name).name === NO_UNIT;
+}

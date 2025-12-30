@@ -136,3 +136,11 @@ export function multiplyQuantityValue(
     max: multiplyNumericValue(value.max, factor),
   };
 }
+
+export function getAverageValue(q: FixedValue | Range): string | number {
+  if (q.type === "fixed") {
+    return q.value.type === "text" ? q.value.text : getNumericValue(q.value);
+  } else {
+    return (getNumericValue(q.min) + getNumericValue(q.max)) / 2;
+  }
+}

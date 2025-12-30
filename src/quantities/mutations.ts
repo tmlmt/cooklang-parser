@@ -10,8 +10,13 @@ import type {
   QuantityWithUnitDef,
   MaybeNestedGroup,
 } from "../types";
-import { units, normalizeUnit, resolveUnit } from "../units/definitions";
-import { addNumericValues, multiplyQuantityValue } from "../utils/numeric";
+import {
+  units,
+  normalizeUnit,
+  resolveUnit,
+  isNoUnit,
+} from "../units/definitions";
+import { addNumericValues, multiplyQuantityValue } from "./numeric";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
 import { isGroup, isQuantity } from "../utils/type_guards";
 
@@ -237,7 +242,7 @@ export function deNormalizeQuantity(
   const result: QuantityWithExtendedUnit = {
     quantity: q.quantity,
   };
-  if (q.unit.name !== "__no-unit__") {
+  if (!isNoUnit(q.unit)) {
     result.unit = { name: q.unit.name };
   }
   return result;
