@@ -1,11 +1,198 @@
 import { describe, it, expect } from "vitest";
 
 import {
+  extendAllUnits,
   addQuantityValues,
   addQuantities,
   getDefaultQuantityValue,
+  normalizeAllUnits,
 } from "../src/quantities/mutations";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../src/errors";
+import {
+  MaybeNestedAndGroup,
+  QuantityWithExtendedUnit,
+  QuantityWithPlainUnit,
+} from "../src/types";
+
+describe("extendAllUnits", () => {
+  it("should extend units in a simple quantity with plain units", () => {
+    const original: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+      unit: "g",
+    };
+    const extended = extendAllUnits(original);
+    const expected: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+      unit: { name: "g" },
+    };
+    expect(extended).toEqual(expected);
+  });
+  it("should extend units in a nested group", () => {
+    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      quantities: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+        },
+        {
+          type: "or",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "tbsp",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 30 },
+              },
+              unit: "mL",
+            },
+          ],
+        },
+      ],
+    };
+    const extended = extendAllUnits(original);
+    const expected: MaybeNestedAndGroup<QuantityWithExtendedUnit> = {
+      type: "and",
+      quantities: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "cup" },
+        },
+        {
+          type: "or",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: { name: "tbsp" },
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 30 },
+              },
+              unit: { name: "mL" },
+            },
+          ],
+        },
+      ],
+    };
+    expect(extended).toEqual(expected);
+  });
+});
+
+describe("normalizeAllUnits", () => {
+  it("should normalize units in a simple quantity with plain units", () => {
+    const original: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 10 } },
+      unit: "g",
+    };
+    const normalized = normalizeAllUnits(original);
+    const expected = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 10 } },
+      unit: {
+        name: "g",
+        type: "mass",
+        system: "metric",
+        aliases: ["gram", "grams", "grammes"],
+        toBase: 1,
+      },
+    };
+    expect(normalized).toEqual(expected);
+  });
+  it("should normalize units in a nested group", () => {
+    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      quantities: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+        },
+        {
+          type: "or",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "tbsp",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 30 },
+              },
+              unit: "mL",
+            },
+          ],
+        },
+      ],
+    };
+    const normalized = normalizeAllUnits(original);
+    const expected = {
+      type: "and",
+      quantities: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: {
+            name: "cup",
+            type: "volume",
+            system: "imperial",
+            aliases: ["cups"],
+            toBase: 236.588,
+          },
+        },
+        {
+          type: "or",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: {
+                name: "tbsp",
+                type: "volume",
+                system: "metric",
+                aliases: ["tablespoon", "tablespoons"],
+                toBase: 15,
+              },
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 30 },
+              },
+              unit: {
+                name: "mL",
+                type: "volume",
+                system: "metric",
+                aliases: [
+                  "milliliter",
+                  "milliliters",
+                  "millilitre",
+                  "millilitres",
+                  "cc",
+                ],
+                toBase: 1,
+              },
+            },
+          ],
+        },
+      ],
+    };
+    expect(normalized).toEqual(expected);
+  });
+});
 
 describe("addQuantityValues", () => {
   it("should add two fixed numerical values", () => {

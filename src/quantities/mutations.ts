@@ -205,9 +205,6 @@ export function addQuantities(
     const convertedV1 = convertQuantityValue(v1, unit1Def, targetUnitDef);
     const convertedV2 = convertQuantityValue(v2, unit2Def, targetUnitDef);
     const targetUnit: Unit = { name: targetUnitDef.name };
-    if (q1.unit?.integerProtected || q2.unit?.integerProtected) {
-      targetUnit.integerProtected = true;
-    }
 
     return addQuantityValuesAndSetUnit(convertedV1, convertedV2, targetUnit);
   }
