@@ -13,14 +13,18 @@ import type {
 import { resolveUnit } from "../units/definitions";
 import { multiplyQuantityValue, getAverageValue } from "./numeric";
 import Big from "big.js";
-import { isGroup, isOrGroup, isQuantity } from "../utils/type_guards";
+import {
+  isGroup,
+  isOrGroup,
+  isQuantity,
+  isValueIntegerLike,
+} from "../utils/type_guards";
 import {
   getDefaultQuantityValue,
   addQuantities,
   deNormalizeQuantity,
   toPlainUnit,
 } from "./mutations";
-import { isValueIntegerLike } from "./math";
 import { getUnitRatio, getBaseUnitRatio } from "../units/conversion";
 import {
   areUnitsCompatible,

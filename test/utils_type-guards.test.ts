@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 
-import type { AndGroup, OrGroup, QuantityWithPlainUnit } from "../src/types";
+import type {
+  AndGroup,
+  FixedValue,
+  OrGroup,
+  QuantityWithPlainUnit,
+  Range,
+} from "../src/types";
 import {
   isGroup,
   isAndGroup,
@@ -8,6 +14,7 @@ import {
   isQuantity,
 } from "../src/utils/type_guards";
 import { qPlain } from "./mocks/quantity";
+import { isValueIntegerLike } from "../src/utils/type_guards";
 
 describe("Type Guards", () => {
   const andGroup: AndGroup = { type: "and", quantities: [] };
@@ -43,6 +50,57 @@ describe("Type Guards", () => {
       expect(isQuantity(quantity)).toBe(true);
       expect(isQuantity(andGroup)).toBe(false);
       expect(isQuantity(orGroup)).toBe(false);
+    });
+  });
+
+  describe("isValueIntegerLike", () => {
+    it("should identify integer-like fixed decimal values", () => {
+      const fixedInt: FixedValue = {
+        type: "fixed",
+        value: { type: "decimal", decimal: 4 },
+      };
+      const fixedNonInt: FixedValue = {
+        type: "fixed",
+        value: { type: "decimal", decimal: 4.5 },
+      };
+      expect(isValueIntegerLike(fixedInt)).toBe(true);
+      expect(isValueIntegerLike(fixedNonInt)).toBe(false);
+    });
+    it("should identify integer-like fixed fraction values", () => {
+      const fixedInt: FixedValue = {
+        type: "fixed",
+        value: { type: "fraction", num: 6, den: 3 },
+      };
+      const fixedNonInt: FixedValue = {
+        type: "fixed",
+        value: { type: "fraction", num: 7, den: 3 },
+      };
+      expect(isValueIntegerLike(fixedInt)).toBe(true);
+      expect(isValueIntegerLike(fixedNonInt)).toBe(false);
+    });
+    it("should identify integer-like range values", () => {
+      const rangeInt: Range = {
+        type: "range",
+        min: { type: "decimal", decimal: 2 },
+        max: { type: "decimal", decimal: 6 },
+      };
+      const rangeNonInt: Range = {
+        type: "range",
+        min: { type: "decimal", decimal: 2.5 },
+        max: { type: "decimal", decimal: 6 },
+      };
+      expect(isValueIntegerLike(rangeInt)).toBe(true);
+      expect(isValueIntegerLike(rangeNonInt)).toBe(false);
+    });
+    it("should return false for text values", () => {
+      const fixedText: FixedValue = {
+        type: "fixed",
+        value: {
+          type: "text",
+          text: "example",
+        },
+      };
+      expect(isValueIntegerLike(fixedText)).toBe(false);
     });
   });
 });
