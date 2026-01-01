@@ -43,9 +43,6 @@ export const qWithUnitDef = (
   integerProtected?: boolean,
 ): QuantityWithUnitDef => {
   const quantity = q(amount, unit, integerProtected);
-  quantity.unit = resolveUnit(quantity.unit?.name);
-  if (integerProtected) {
-    quantity.unit.integerProtected = integerProtected;
-  }
-  return quantity as QuantityWithUnitDef;
+  const resolvedUnit = resolveUnit(quantity.unit?.name, integerProtected);
+  return { ...quantity, unit: resolvedUnit } as QuantityWithUnitDef;
 };
