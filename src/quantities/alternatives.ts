@@ -263,7 +263,7 @@ export function addQuantitiesOrGroups(
     return {
       sum: {
         quantity: getDefaultQuantityValue(),
-        unit: resolveUnit("__no-unit__"),
+        unit: resolveUnit(),
       },
       unitsLists: [],
     };
