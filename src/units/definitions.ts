@@ -138,11 +138,17 @@ export function normalizeUnit(unit: string = ""): UnitDefinition | undefined {
 
 export const NO_UNIT = "__no-unit__";
 
-export function resolveUnit(name: string = NO_UNIT): UnitDefinitionLike {
+export function resolveUnit(
+  name: string = NO_UNIT,
+  integerProtected: boolean = false,
+): UnitDefinitionLike {
   const normalizedUnit = normalizeUnit(name);
-  return normalizedUnit
+  const resolvedUnit: UnitDefinitionLike = normalizedUnit
     ? { ...normalizedUnit, name }
     : { name, type: "other", system: "none" };
+  return integerProtected
+    ? { ...resolvedUnit, integerProtected: true }
+    : resolvedUnit;
 }
 
 export function isNoUnit(unit?: UnitDefinitionLike): boolean {

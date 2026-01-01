@@ -46,22 +46,13 @@ export function getEquivalentUnitsLists(
   ).filter((q) => q.quantities.length > 1);
 
   const unitLists: QuantityWithUnitDef[][] = [];
-  function normalizeOrGroup(og: FlatOrGroup<QuantityWithExtendedUnit>) {
-    return {
-      ...og,
-      quantities: og.quantities.map((q) => {
-        if (isQuantity(q)) {
-          const integerProtected = q.unit?.integerProtected;
-          const normalizedUnit = resolveUnit(q.unit?.name);
-          const unit = integerProtected
-            ? { ...normalizedUnit, integerProtected: true }
-            : normalizedUnit;
-          return { ...q, unit } as QuantityWithUnitDef;
-        }
-        return q as QuantityWithUnitDef;
-      }),
-    };
-  }
+  const normalizeOrGroup = (og: FlatOrGroup<QuantityWithExtendedUnit>) => ({
+    ...og,
+    quantities: og.quantities.map((q) => ({
+      ...q,
+      unit: resolveUnit(q.unit?.name, q.unit?.integerProtected),
+    })),
+  });
 
   function findLinkIndexForUnits(
     lists: QuantityWithUnitDef[][],
@@ -90,9 +81,8 @@ export function getEquivalentUnitsLists(
     const commonUnitList = lists[idx]!.reduce((acc, v) => {
       const normalizedV: QuantityWithUnitDef = {
         ...v,
-        unit: resolveUnit(v.unit?.name),
+        unit: resolveUnit(v.unit?.name, v.unit?.integerProtected),
       };
-      if (v.unit?.integerProtected) normalizedV.unit.integerProtected = true;
 
       const commonQuantity = og.quantities.find(
         (q) => isQuantity(q) && areUnitsCompatible(q.unit, normalizedV.unit),
@@ -250,12 +240,10 @@ export function reduceOrsToFirstEquivalent(
     // Now, q is necessarily an OR group
     // We normalize units and sort them to get integerProtected elements first, then no units, then the rest
     const qListModified = sortUnitList(
-      q.quantities.map((qq) => {
-        const integerProtected = qq.unit?.integerProtected;
-        const unit = resolveUnit(qq.unit?.name);
-        if (integerProtected) unit.integerProtected = true;
-        return { ...qq, unit } as QuantityWithUnitDef;
-      }),
+      q.quantities.map((qq) => ({
+        ...qq,
+        unit: resolveUnit(qq.unit?.name, qq.unit?.integerProtected),
+      })),
     );
     // We can simply use the first element
     return reduceToQuantity(qListModified[0]!);
