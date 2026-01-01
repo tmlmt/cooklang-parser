@@ -2,10 +2,16 @@ import { describe, it, expect } from "vitest";
 import {
   addQuantitiesOrGroups,
   getEquivalentUnitsLists,
+  sortUnitList,
   reduceOrsToFirstEquivalent,
   addEquivalentsAndSimplify,
+  regroupQuantitiesAndExpandEquivalents,
 } from "../src/quantities/alternatives";
-import type { FlatOrGroup, QuantityWithExtendedUnit } from "../src/types";
+import type {
+  FlatOrGroup,
+  QuantityWithExtendedUnit,
+  QuantityWithUnitDef,
+} from "../src/types";
 import { q, qPlain, qWithUnitDef } from "./mocks/quantity";
 import { toPlainUnit } from "../src/quantities/mutations";
 
@@ -52,6 +58,25 @@ describe("getEquivalentUnitsLists", () => {
         qWithUnitDef(1.333, "large", true),
         qWithUnitDef(0.667, "pack"),
       ],
+    ]);
+  });
+});
+
+describe("sortUnitList", () => {
+  it("should sort units by integer-protection, type and system", () => {
+    const unitList = [
+      qWithUnitDef(1, "cup"),
+      qWithUnitDef(2, "large", true),
+      qWithUnitDef(3),
+      qWithUnitDef(4, "small", true),
+      qWithUnitDef(5, "pint"),
+    ];
+    expect(sortUnitList(unitList)).toEqual([
+      qWithUnitDef(2, "large", true),
+      qWithUnitDef(4, "small", true),
+      qWithUnitDef(3),
+      qWithUnitDef(1, "cup"),
+      qWithUnitDef(5, "pint"),
     ]);
   });
 });
@@ -106,6 +131,30 @@ describe("reduceOrsToFirstEquivalent", () => {
 });
 
 describe("addQuantitiesOrGroups", () => {
+  it("should return correct values in case no quantities are passed", () => {
+    const result = addQuantitiesOrGroups();
+    expect(result).toEqual({
+      sum: {
+        ...q(0),
+        unit: { name: "__no-unit__", type: "other", system: "none" },
+      },
+      unitsLists: [],
+    });
+  });
+  it("should pass single quantities transparently", () => {
+    const quantity: QuantityWithExtendedUnit = q(1, "kg");
+    const result = addQuantitiesOrGroups(quantity);
+    expect(result.sum).toEqual({
+      ...q(1, "kg"),
+      unit: {
+        name: "kg",
+        type: "mass",
+        system: "metric",
+        aliases: ["kilogram", "kilograms", "kilogrammes", "kilos", "kilo"],
+        toBase: 1000,
+      },
+    });
+  });
   it("should reduce an OR group to its most relevant member", () => {
     const or: FlatOrGroup<QuantityWithExtendedUnit> = {
       type: "or",
@@ -153,6 +202,17 @@ describe("addQuantitiesOrGroups", () => {
 
     const { sum } = addQuantitiesOrGroups(or1, or2);
     expect(sum).toEqual(qWithUnitDef(300, "ml"));
+  });
+});
+
+describe("regroupQuantitiesAndExpandEquivalents", () => {
+  // Processing a UnitList with only 1 quantity is purely theoretical and won't happen in practice
+  it("simply passes on a single quantity", () => {
+    const sum = qWithUnitDef(1, "kg");
+    const unitsLists: QuantityWithUnitDef[][] = [[qWithUnitDef(1, "kg")]];
+    expect(regroupQuantitiesAndExpandEquivalents(sum, unitsLists)).toEqual([
+      q(1, "kg"),
+    ]);
   });
 });
 

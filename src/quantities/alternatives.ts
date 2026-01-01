@@ -123,7 +123,7 @@ export function getEquivalentUnitsLists(
  * @param list - list of quantities to sort
  * @returns sorted list of quantities with integerProtected units first, then no-unit, then the rest alphabetically
  */
-function sortUnitList(list: QuantityWithUnitDef[]) {
+export function sortUnitList(list: QuantityWithUnitDef[]) {
   if (!list || list.length <= 1) return list;
   const priorityList: QuantityWithUnitDef[] = [];
   const nonPriorityList: QuantityWithUnitDef[] = [];
@@ -137,12 +137,8 @@ function sortUnitList(list: QuantityWithUnitDef[]) {
 
   return priorityList
     .sort((a, b) => {
-      let prefixA = "";
-      if (a.unit.integerProtected) prefixA = "___";
-      else if (a.unit.system === "none") prefixA = "__";
-      let prefixB = "";
-      if (b.unit.integerProtected) prefixB = "___";
-      else if (b.unit.system === "none") prefixB = "__";
+      const prefixA = a.unit.integerProtected ? "___" : "";
+      const prefixB = b.unit.integerProtected ? "___" : "";
       return (prefixA + a.unit.name).localeCompare(prefixB + b.unit.name);
     })
     .concat(nonPriorityList);
@@ -267,6 +263,7 @@ export function addQuantitiesOrGroups(
       },
       unitsLists: [],
     };
+  // This is purely theoretical and won't really happen in practice
   if (quantities.length === 1) {
     if (isQuantity(quantities[0]!))
       return {
@@ -302,7 +299,7 @@ export function addQuantitiesOrGroups(
   return { sum: { type: "and", quantities: sum }, unitsLists };
 }
 
-function regroupQuantitiesAndExpandEquivalents(
+export function regroupQuantitiesAndExpandEquivalents(
   sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>,
   unitsLists: QuantityWithUnitDef[][],
 ): (QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>)[] {
@@ -371,7 +368,9 @@ function regroupQuantitiesAndExpandEquivalents(
         type: "or",
         quantities: [resultMain, ...equivalents],
       });
-    } else {
+    }
+    // Processing a UnitList with only 1 quantity is purely theoretical and won't happen in practice
+    else {
       result.push(deNormalizeQuantity(main[0]!));
     }
   }
