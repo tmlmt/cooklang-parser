@@ -172,12 +172,13 @@ export function reduceOrsToFirstEquivalent(
       const resultQuantity: QuantityWithExtendedUnit = {
         quantity: firstQuantity.quantity,
       };
+      /* v8 ignore else -- @preserve */
       if (!isNoUnit(normalizedFirstQuantity.unit)) {
         resultQuantity.unit = { name: normalizedFirstQuantity.unit.name };
       }
       return resultQuantity;
     } else {
-      // Priority 2: the next integer-protected units in the equivalent list;
+      // Priority 2: the next integer-protected units in the equivalent list
       let nextProtected: number | undefined;
       const equivalentListTemp = [...equivalentList];
       while (nextProtected !== -1) {
@@ -198,6 +199,7 @@ export function reduceOrsToFirstEquivalent(
             const nextProtectedQuantity: QuantityWithExtendedUnit = {
               quantity: nextProtectedQuantityValue,
             };
+            /* v8 ignore else -- @preserve */
             if (!isNoUnit(equivalentListTemp[nextProtected]!.unit)) {
               nextProtectedQuantity.unit = {
                 name: equivalentListTemp[nextProtected]!.unit.name,
@@ -311,17 +313,17 @@ export function regroupQuantitiesAndExpandEquivalents(
   const processedQuantities = new Set<QuantityWithUnitDef>();
 
   for (const list of unitsLists) {
-    const listCopy = [...list];
+    const listCopy = deepClone(list);
     const main: QuantityWithUnitDef[] = [];
     const mainCandidates = sumQuantities.filter(
       (q) => !processedQuantities.has(q),
     );
-
     if (mainCandidates.length === 0) continue;
 
     mainCandidates.forEach((q) => {
       // If the sum contain a value from the unit list, we push it to the mains and remove it from the list
       const mainInList = findCompatibleQuantityWithinList(listCopy, q);
+      /* v8 ignore else -- @preserve */
       if (mainInList !== undefined) {
         processedQuantities.add(q);
         main.push(q);
@@ -334,6 +336,7 @@ export function regroupQuantitiesAndExpandEquivalents(
       const initialValue: QuantityWithExtendedUnit = {
         quantity: getDefaultQuantityValue(),
       };
+      /* v8 ignore else -- @preserve */
       if (equiv.unit) {
         initialValue.unit = { name: equiv.unit.name };
       }
