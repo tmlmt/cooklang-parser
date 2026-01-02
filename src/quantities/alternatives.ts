@@ -139,7 +139,7 @@ export function sortUnitList(list: QuantityWithUnitDef[]) {
     .sort((a, b) => {
       const prefixA = a.unit.integerProtected ? "___" : "";
       const prefixB = b.unit.integerProtected ? "___" : "";
-      return (prefixA + a.unit.name).localeCompare(prefixB + b.unit.name);
+      return (prefixA + a.unit.name).localeCompare(prefixB + b.unit.name, "en");
     })
     .concat(nonPriorityList);
 }
@@ -177,7 +177,7 @@ export function reduceOrsToFirstEquivalent(
       }
       return resultQuantity;
     } else {
-      // Priority 2: the next integer-protected units in the equivalent list
+      // Priority 2: the next integer-protected units in the equivalent list;
       let nextProtected: number | undefined;
       const equivalentListTemp = [...equivalentList];
       while (nextProtected !== -1) {
