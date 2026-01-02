@@ -14,6 +14,7 @@ import type {
 } from "../src/types";
 import { q, qPlain, qWithUnitDef } from "./mocks/quantity";
 import { toPlainUnit } from "../src/quantities/mutations";
+import { NO_UNIT } from "../src/units/definitions";
 
 describe("getEquivalentUnitsLists", () => {
   it("should consider units of the same system and type as similar", () => {
@@ -63,6 +64,22 @@ describe("getEquivalentUnitsLists", () => {
 });
 
 describe("sortUnitList", () => {
+  it("should sort integer-protected units with no-unit first, then others", () => {
+    const unitList = [
+      qWithUnitDef(1, "small", true),
+      qWithUnitDef(2, NO_UNIT, true),
+      qWithUnitDef(3, "large", true),
+    ];
+    expect(sortUnitList(unitList)).toEqual([
+      qWithUnitDef(2, NO_UNIT, true),
+      qWithUnitDef(3, "large", true),
+      qWithUnitDef(1, "small", true),
+    ]);
+  });
+  it("should sort integer-protected units before non-integer-protected no-unit", () => {
+    const unitList = [qWithUnitDef(1, "small", true), qWithUnitDef(2, NO_UNIT)];
+    expect(sortUnitList(unitList)).toEqual(unitList);
+  });
   it("should sort units by integer-protection, type and system", () => {
     const unitList = [
       qWithUnitDef(1, "cup"),
@@ -85,6 +102,7 @@ describe("reduceOrsToFirstEquivalent", () => {
   const unitList = [
     [
       qWithUnitDef(2, "large", true),
+      qWithUnitDef(1, NO_UNIT),
       qWithUnitDef(1.5, "cup"),
       qWithUnitDef(3, "small", true),
     ],
@@ -108,6 +126,20 @@ describe("reduceOrsToFirstEquivalent", () => {
         { type: "or", quantities: [q(1, "cup"), q(3, "large")] },
       ]),
     ).toEqual([q(2, "large"), q(3, "large")]);
+  });
+  it("should correctly reduce to the first integer-protected unit, even when the first quantity has no unit", () => {
+    expect(
+      reduceOrsToFirstEquivalent(unitList, [
+        { type: "or", quantities: [q(2), q(3, "cup")] },
+      ]),
+    ).toEqual([q(4, "large")]);
+  });
+  it("should reduce to the first unit provided, if it is an integer-protected one", () => {
+    expect(
+      reduceOrsToFirstEquivalent(unitList, [
+        { type: "or", quantities: [q(2, "small"), q(3, "cup")] },
+      ]),
+    ).toEqual([q(2, "small")]);
   });
   it("should handle units of different systems and types", () => {
     expect(
@@ -214,6 +246,25 @@ describe("regroupQuantitiesAndExpandEquivalents", () => {
       q(1, "kg"),
     ]);
   });
+  it("does not process more unit lists if a match has been found", () => {
+    const sum = qWithUnitDef(4, "large");
+    const unitsLists: QuantityWithUnitDef[][] = [
+      [
+        qWithUnitDef(2, "large"),
+        qWithUnitDef(1, NO_UNIT),
+        qWithUnitDef(1.5, "cup"),
+        qWithUnitDef(3, "small", true),
+      ],
+      [qWithUnitDef(1, "bag"), qWithUnitDef(1, "mini")],
+    ];
+    expect(regroupQuantitiesAndExpandEquivalents(sum, unitsLists)).toEqual([
+      {
+        type: "or",
+        quantities: [q(4, "large"), q(6, "small"), q(2, NO_UNIT), q(3, "cup")],
+      },
+    ]);
+  });
+  it("adds units to the same ")
 });
 
 describe("addEquivalentsAndSimplify", () => {
