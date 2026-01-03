@@ -43,6 +43,7 @@ import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import { multiplyQuantityValue } from "../quantities/numeric";
 import Big from "big.js";
 import { deepClone } from "../utils/general";
+import { InvalidQuantityFormat } from "../errors";
 
 /**
  * Recipe parser.
@@ -150,7 +151,7 @@ export class Recipe {
         }
         quantities.push(newQuantity);
       } else {
-        return quantities;
+        throw new InvalidQuantityFormat(quantityRaw);
       }
       quantityMatch = quantityMatch.groups.ingredientAltQuantity
         ? quantityMatch.groups.ingredientAltQuantity.match(
