@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
 import { simpleRecipe, complexRecipe } from "./fixtures/recipes";
-import { ReferencedItemCannotBeRedefinedError } from "../src/errors";
+import {
+  InvalidQuantityFormat,
+  ReferencedItemCannotBeRedefinedError,
+} from "../src/errors";
 import type { Ingredient } from "../src/types";
 
 describe("parse function", () => {
@@ -51,6 +54,11 @@ describe("parse function", () => {
           },
         },
       ]);
+    });
+
+    it("throw an error if quantity has invalid format", () => {
+      const recipe = "Add @flour{%two}";
+      expect(() => new Recipe(recipe)).toThrowError(InvalidQuantityFormat);
     });
 
     it("extracts plain unquantified single-word ingredient correctly", () => {
@@ -1296,6 +1304,99 @@ Another step.
           ],
         ]),
         ingredientGroups: new Map(),
+      });
+    });
+
+    it("should correctly show alternatives to ingredients subject of variants multiple times", () => {
+      const recipe = `
+        Use @sugar{100%g}|brown sugar{100%g}[for a richer flavor] in the mix.
+        Then sprinkle some more @&sugar{50%g}|powder sugar{50%g} on top before serving.
+      `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(3);
+      const sugarIngredient: Ingredient = {
+        name: "sugar",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+          unit: "g",
+        },
+        alternatives: new Set([1, 2]),
+      };
+      expect(result.ingredients[0]).toEqual(sugarIngredient);
+    });
+  });
+
+  describe("alternative units", () => {
+    it("parses ingredients with alternative units correctly", () => {
+      const recipe = "Add @flour{1%=bag|0.22%lb|3.5%oz}";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      expect(result.ingredients[0]).toEqual({
+        name: "flour",
+        quantityTotal: {
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "bag",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 0.22 },
+              },
+              unit: "lb",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3.5 },
+              },
+              unit: "oz",
+            },
+          ],
+          type: "or",
+        },
+      });
+      const ingredientItem = result.sections[0]?.content[0];
+      if (ingredientItem?.type !== "step") return false;
+      expect(ingredientItem.items[1]).toEqual({
+        type: "ingredient",
+        id: "ingredient-item-0",
+        alternatives: [
+          {
+            displayName: "flour",
+            index: 0,
+            quantity: {
+              scalable: true,
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: { name: "bag", integerProtected: true },
+                },
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 0.22 },
+                  },
+                  unit: { name: "lb" },
+                },
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 3.5 },
+                  },
+                  unit: { name: "oz" },
+                },
+              ],
+            },
+          },
+        ],
       });
     });
   });
