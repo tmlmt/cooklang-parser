@@ -28,6 +28,7 @@ import {
   ingredientAliasRegex,
   floatRegex,
   quantityAlternativeRegex,
+  inlineIngredientAlternativesRegex,
 } from "../regex";
 import {
   flushPendingItems,
@@ -167,7 +168,11 @@ export class Recipe {
     const alternatives: IngredientAlternative[] = [];
     let testString = ingredientMatchString;
     while (true) {
-      const match = testString.match(ingredientWithAlternativeRegex);
+      const match = testString.match(
+        alternatives.length > 0
+          ? inlineIngredientAlternativesRegex
+          : ingredientWithAlternativeRegex,
+      );
       if (!match?.groups) break;
       const groups = match.groups;
 
@@ -262,6 +267,7 @@ export class Recipe {
       }
       alternatives.push(alternative);
       testString = groups.ingredientAlternative || "";
+      console.log("testString", testString);
     }
 
     // Update alternatives list of all processed ingredients
@@ -513,9 +519,7 @@ export class Recipe {
 
     // The main calculation loop
     for (const [index, quantities] of ingredientQuantities) {
-      if (!this.ingredients[index])
-        throw Error(`Ingredient with index ${index} not found`);
-      this.ingredients[index].quantityTotal = addEquivalentsAndSimplify(
+      this.ingredients[index]!.quantityTotal = addEquivalentsAndSimplify(
         ...quantities,
       );
     }
