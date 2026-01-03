@@ -147,7 +147,6 @@ export const ingredientWithAlternativeRegex = createRegex()
   .toRegExp();
 
 export const inlineIngredientAlternativesRegex = new RegExp("\\|" + ingredientWithAlternativeRegex.source.slice(1))
-console.log(inlineIngredientAlternativesRegex.source);
 
 export const quantityAlternativeRegex = createRegex()
   .startNamedGroup("ingredientQuantityValue")
@@ -166,8 +165,6 @@ export const quantityAlternativeRegex = createRegex()
     .endGroup().zeroOrMore()
   .endGroup()
   .toRegExp()
-
-console.log(ingredientWithAlternativeRegex.source)
   
 export const ingredientWithGroupKeyRegex = createRegex()
   .literal("@|")

@@ -267,7 +267,6 @@ export class Recipe {
       }
       alternatives.push(alternative);
       testString = groups.ingredientAlternative || "";
-      console.log("testString", testString);
     }
 
     // Update alternatives list of all processed ingredients

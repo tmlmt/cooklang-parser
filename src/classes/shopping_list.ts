@@ -83,7 +83,6 @@ export class ShoppingList {
           ? quantityTotalExtended.quantities
           : [quantityTotalExtended]
       ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
-      console.log(JSON.stringify(newQuantities));
       const existing = this.ingredients.find((i) => i.name === name);
 
       if (existing) {
@@ -135,7 +134,6 @@ export class ShoppingList {
         }
 
         if (ingredient.quantityTotal) {
-          console.log("Adding", ingredient.name, ingredient.quantityTotal);
           addIngredientQuantity(ingredient.name, ingredient.quantityTotal);
         } else if (!this.ingredients.some((i) => i.name === ingredient.name)) {
           this.ingredients.push({ name: ingredient.name });
