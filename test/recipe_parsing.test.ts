@@ -1205,9 +1205,9 @@ Another step.
   });
 
   describe("in-line alternative ingredients", () => {
-    it("parses simple in-line alternative ingredients correctly", () => {
+    it("parses in-line alternative ingredients correctly", () => {
       const recipe = `
-        Mix @milk{200%ml}|almond milk{100%ml}|soy milk{150%ml}
+        Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]
       `;
       const result = new Recipe(recipe);
       expect(result.ingredients).toHaveLength(3);
@@ -1260,6 +1260,7 @@ Another step.
                 {
                   displayName: "almond milk",
                   index: 1,
+                  note: "vegan version",
                   quantity: {
                     scalable: true,
                     equivalents: [
@@ -1276,6 +1277,7 @@ Another step.
                 {
                   displayName: "soy milk",
                   index: 2,
+                  note: "another vegan option",
                   quantity: {
                     scalable: true,
                     equivalents: [
