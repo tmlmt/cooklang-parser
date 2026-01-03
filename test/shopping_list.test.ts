@@ -6,11 +6,13 @@ import { Recipe } from "../src/classes/recipe";
 import {
   recipeForShoppingList1,
   recipeForShoppingList2,
+  recipeForShoppingList3,
 } from "./fixtures/recipes";
 
 describe("ShoppingList", () => {
   const recipe1 = new Recipe(recipeForShoppingList1);
   const recipe2 = new Recipe(recipeForShoppingList2);
+  const recipe3 = new Recipe(recipeForShoppingList3);
 
   describe("Adding recipes", () => {
     it("should add a recipe's ingredients", () => {
@@ -64,6 +66,41 @@ describe("ShoppingList", () => {
         },
         { name: "spices" },
       ]);
+    });
+
+    it("should handle adding a recipe with multiple units for the same ingredient", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.add_recipe(recipe1);
+      shoppingList.add_recipe(recipe3);
+      shoppingList.add_recipe(recipe1); // adding the same one again to check accumulation
+      expect(shoppingList.ingredients.find((i) => i.name === "eggs")).toEqual({
+        name: "eggs",
+        quantityTotal: {
+          type: "and",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 4 },
+              },
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "dozen",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "half dozen",
+            },
+          ],
+        },
+      });
     });
 
     it("should merge ingredients from multiple recipes", () => {
