@@ -819,74 +819,89 @@ Another step.
     expect(result).toMatchSnapshot();
   });
 
-  describe("alternative ingredients", () => {
-    it("parses in-line alternative ingredients correctly", () => {
-      const recipe = `
-        Mix @milk{200%ml}|@almond milk{200%ml}
-      `;
-      const result = new Recipe(recipe);
-      expect(result.ingredients).toHaveLength(2);
-      // The first ingredient should have a set quantity
-      const milkIngredient: Ingredient = {
-        name: "milk",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
-          unit: "ml",
-        },
-        alternatives: new Set([1]),
-      };
-      expect(result.ingredients[0]).toEqual(milkIngredient);
-      // The alternative should not have a quantity as it is not selected by default
-      const almondMilkIngredient: Ingredient = {
-        name: "almond milk",
-        alternatives: new Set([0]),
-      };
-      expect(result.ingredients[1]).toEqual(almondMilkIngredient);
-      // Choices should be those by default
-      expect(result.choices).toEqual({
-        ingredientItems: new Map([
-          [
-            "ingredient-item-0",
-            {
-              active: 0,
-              alternatives: [
-                {
-                  displayName: "milk",
-                  index: 0,
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 200 },
-                        },
-                        unit: { name: "ml" },
-                      },
-                    ],
-                  },
-                },
-                {
-                  displayName: "almond milk",
-                  index: 1,
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 200 },
-                        },
-                        unit: { name: "ml" },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          ],
-        ]),
-        ingredientGroups: new Map(),
+  describe("grouped alternative ingredients", () => {
+    describe("parses ingredients that are other recipes", () => {
+      it("parses a recipe in the same directory as the current recipe", () => {
+        const recipe1 = `
+          Defrost @|dough|@pizza dough{1} and form it into a nice disc
+          And @|toppings|@toppings on top
+        `;
+        const result1 = new Recipe(recipe1);
+
+        const expected_dough: Ingredient = {
+          name: "pizza dough",
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          },
+          flags: ["recipe"],
+          extras: {
+            path: "pizza dough.cook",
+          },
+        };
+        const expected_toppings: Ingredient = {
+          name: "toppings",
+          flags: ["recipe"],
+          extras: {
+            path: "toppings.cook",
+          },
+        };
+
+        expect(result1.ingredients).toHaveLength(2);
+        expect(result1.choices.ingredientGroups.has("dough")).toBe(true);
+        expect(result1.ingredients[0]).toEqual(expected_dough);
+        expect(result1.ingredients[1]).toEqual(expected_toppings);
+
+        const recipe2 = `
+          Defrost @|dough|./pizza dough{1} and form it into a nice disc
+          And @|toppings|./toppings on top
+        `;
+        const result2 = new Recipe(recipe2);
+
+        expect(result2.ingredients).toHaveLength(2);
+        expect(result2.choices.ingredientGroups.has("dough")).toBe(true);
+        expect(result2.ingredients[0]).toEqual(expected_dough);
+        expect(result2.ingredients[1]).toEqual(expected_toppings);
+        expect(result2.choices.ingredientGroups.has("dough")).toBe(true);
+      });
+
+      it("parses a recipe in a different relative directory", () => {
+        const recipe1 = `
+          Defrost @|dough|@some essentials/my.doughs/pizza dough{1} and form it into a nice disc
+          And @|toppings|@../some-essentials/toppings on top
+        `;
+        const result1 = new Recipe(recipe1);
+
+        const expected_dough: Ingredient = {
+          name: "pizza dough",
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          },
+          flags: ["recipe"],
+          extras: {
+            path: "some essentials/my.doughs/pizza dough.cook",
+          },
+        };
+        const expected_toppings: Ingredient = {
+          name: "toppings",
+          flags: ["recipe"],
+          extras: {
+            path: "../some-essentials/toppings.cook",
+          },
+        };
+
+        expect(result1.ingredients).toHaveLength(2);
+        expect(result1.ingredients[0]).toEqual(expected_dough);
+        expect(result1.ingredients[1]).toEqual(expected_toppings);
+
+        const recipe2 = `
+          Defrost @./some essentials/my.doughs/pizza dough{1} and form it into a nice disc
+          And @./../some-essentials/toppings{} on top
+        `;
+        const result2 = new Recipe(recipe2);
+
+        expect(result2.ingredients).toHaveLength(2);
+        expect(result2.ingredients[0]).toEqual(expected_dough);
+        expect(result2.ingredients[1]).toEqual(expected_toppings);
       });
     });
 
@@ -959,6 +974,78 @@ Another step.
           ],
         ]),
         ingredientItems: new Map(),
+      });
+    });
+  });
+
+  describe("in-line alternative ingredients", () => {
+    it("parses simple in-line alternative ingredients correctly", () => {
+      const recipe = `
+        Mix @milk{200%ml}|@almond milk{200%ml}
+      `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      // The first ingredient should have a set quantity
+      const milkIngredient: Ingredient = {
+        name: "milk",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+          unit: "ml",
+        },
+        alternatives: new Set([1]),
+      };
+      expect(result.ingredients[0]).toEqual(milkIngredient);
+      // The alternative should not have a quantity as it is not selected by default
+      const almondMilkIngredient: Ingredient = {
+        name: "almond milk",
+        alternatives: new Set([0]),
+      };
+      expect(result.ingredients[1]).toEqual(almondMilkIngredient);
+      // Choices should be those by default
+      expect(result.choices).toEqual({
+        ingredientItems: new Map([
+          [
+            "ingredient-item-0",
+            {
+              active: 0,
+              alternatives: [
+                {
+                  displayName: "milk",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 200 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+                {
+                  displayName: "almond milk",
+                  index: 1,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 200 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        ]),
+        ingredientGroups: new Map(),
       });
     });
   });
