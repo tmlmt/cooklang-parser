@@ -260,7 +260,7 @@ export class Recipe {
         alternative.quantity = quantity;
       }
       alternatives.push(alternative);
-      testString = groups.altIngredients || "";
+      testString = groups.ingredientAlternative || "";
     }
 
     // Update alternatives list of all processed ingredients
@@ -306,12 +306,14 @@ export class Recipe {
     items: Step["items"],
   ): void {
     const match = ingredientMatchString.match(ingredientWithGroupKeyRegex);
+    // This is a type guard to ensure match and match.groups are defined
+    /* v8 ignore if -- @preserve */
     if (!match?.groups) return;
     const groups = match.groups;
 
     // Use variables for readability
     // @|<groupKey|<modifiers><name>{quantity%unit|altQuantities}(preparation)[note]
-    const groupKey = groups.ingredientGroupKey!;
+    const groupKey = groups.gIngredientGroupKey!;
     let name = (groups.gmIngredientName || groups.gsIngredientName)!;
 
     // 1. We build up the different parts of the Ingredient object
@@ -402,16 +404,24 @@ export class Recipe {
 
     const existingAlternatives = this.choices.ingredientGroups.get(groupKey);
     // For all alternative ingredients already processed for this group, add the new ingredient as alternative
+    function upsertAlternativeToIngredient(
+      ingredients: Ingredient[],
+      ingredientIdx: number,
+      newAlternativeIdx: number,
+    ) {
+      const ingredient = ingredients[ingredientIdx];
+      if (ingredient) {
+        if (ingredient.alternatives === undefined) {
+          ingredient.alternatives = new Set([newAlternativeIdx]);
+        } else {
+          ingredient.alternatives.add(newAlternativeIdx);
+        }
+      }
+    }
     if (existingAlternatives) {
       for (const alt of existingAlternatives.alternatives) {
-        const ingredient = this.ingredients[alt.index];
-        if (ingredient) {
-          if (ingredient.alternatives === undefined) {
-            ingredient.alternatives = new Set([idxInList]);
-          } else {
-            ingredient.alternatives.add(idxInList);
-          }
-        }
+        upsertAlternativeToIngredient(this.ingredients, alt.index, idxInList);
+        upsertAlternativeToIngredient(this.ingredients, idxInList, alt.index);
       }
     }
     const id = `ingredient-item-${this._itemCount}`;
@@ -465,9 +475,9 @@ export class Recipe {
             const alternative = item.alternatives[i] as IngredientAlternative;
             // Is the ingredient selected (potentially by default)
             const isAlternativeChoiceItem =
-              this.choices.ingredientGroups.get(item.id)?.active === i;
+              this.choices.ingredientItems.get(item.id)?.active === i;
             const alternativeChoiceGroup = item.group
-              ? this.choices.ingredientItems.get(item.group)
+              ? this.choices.ingredientGroups.get(item.group)
               : undefined;
             const isAlternativeChoiceGroup = alternativeChoiceGroup
               ? alternativeChoiceGroup.alternatives[
@@ -476,8 +486,8 @@ export class Recipe {
               : false;
             if (
               alternative.quantity &&
-              (item.alternatives.length === 1 ||
-                isAlternativeChoiceItem ||
+              ((!("group" in item) &&
+                (item.alternatives.length === 1 || isAlternativeChoiceItem)) ||
                 isAlternativeChoiceGroup)
             ) {
               const equivalents:

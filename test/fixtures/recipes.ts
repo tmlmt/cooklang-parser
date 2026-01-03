@@ -107,3 +107,10 @@ Mix @flour{50%g}, @butter{25%g} and @eggs{1}
 
 Add @pepper{1%tsp} and @spices{1%pinch}
 `;
+
+export const recipeForShoppingList3 = `
+---
+servings: 1
+---
+Add @eggs{1%dozen} and @&eggs{1%half dozen}
+`;
