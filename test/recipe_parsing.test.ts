@@ -818,4 +818,148 @@ Another step.
     const result = new Recipe(complexRecipe);
     expect(result).toMatchSnapshot();
   });
+
+  describe("alternative ingredients", () => {
+    it("parses in-line alternative ingredients correctly", () => {
+      const recipe = `
+        Mix @milk{200%ml}|@almond milk{200%ml}
+      `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      // The first ingredient should have a set quantity
+      const milkIngredient: Ingredient = {
+        name: "milk",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+          unit: "ml",
+        },
+        alternatives: new Set([1]),
+      };
+      expect(result.ingredients[0]).toEqual(milkIngredient);
+      // The alternative should not have a quantity as it is not selected by default
+      const almondMilkIngredient: Ingredient = {
+        name: "almond milk",
+        alternatives: new Set([0]),
+      };
+      expect(result.ingredients[1]).toEqual(almondMilkIngredient);
+      // Choices should be those by default
+      expect(result.choices).toEqual({
+        ingredientItems: new Map([
+          [
+            "ingredient-item-0",
+            {
+              active: 0,
+              alternatives: [
+                {
+                  displayName: "milk",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 200 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+                {
+                  displayName: "almond milk",
+                  index: 1,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 200 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        ]),
+        ingredientGroups: new Map(),
+      });
+    });
+
+    it("parses grouped altenatives correctly", () => {
+      const recipe = `
+        Mix @|milk|milk{200%ml} or @|milk|almond milk{200%ml} for a vegan version
+      `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      // The first ingredient should have a set quantity
+      const milkIngredient: Ingredient = {
+        name: "milk",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+          unit: "ml",
+        },
+        alternatives: new Set([1]),
+      };
+      expect(result.ingredients[0]).toEqual(milkIngredient);
+      // The alternative should not have a quantity as it is not selected by default
+      const almondMilkIngredient: Ingredient = {
+        name: "almond milk",
+        alternatives: new Set([0]),
+      };
+      expect(result.ingredients[1]).toEqual(almondMilkIngredient);
+      // Choices should be those by default
+      expect(result.choices).toEqual({
+        ingredientGroups: new Map([
+          [
+            "milk",
+            {
+              active: 0,
+              alternatives: [
+                {
+                  displayName: "milk",
+                  index: 0,
+                  itemId: "ingredient-item-0",
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 200 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+                {
+                  displayName: "almond milk",
+                  index: 1,
+                  itemId: "ingredient-item-1",
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 200 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        ]),
+        ingredientItems: new Map(),
+      });
+    });
+  });
 });

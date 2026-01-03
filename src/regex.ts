@@ -282,8 +282,8 @@ const timerRegex = createRegex()
 
 export const tokensRegex = new RegExp(
   [
-    ingredientWithAlternativeRegex,
     ingredientWithGroupKeyRegex,
+    ingredientWithAlternativeRegex,
     cookwareRegex,
     timerRegex,
   ]
