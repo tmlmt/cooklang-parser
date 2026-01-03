@@ -83,17 +83,13 @@ export class ShoppingList {
           ? quantityTotalExtended.quantities
           : [quantityTotalExtended]
       ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
+      console.log(JSON.stringify(newQuantities));
+      const existing = this.ingredients.find((i) => i.name === name);
 
-      const candidates = this.ingredients.filter((i) => i.name === name);
-
-      for (const [index, existing] of candidates.entries()) {
+      if (existing) {
         if (!existing.quantityTotal) {
-          if (index === candidates.length - 1) {
-            existing.quantityTotal = quantityTotal;
-            return;
-          } else {
-            continue;
-          }
+          existing.quantityTotal = quantityTotal;
+          return;
         }
         try {
           const existingQuantityTotalExtended = extendAllUnits(
@@ -139,6 +135,7 @@ export class ShoppingList {
         }
 
         if (ingredient.quantityTotal) {
+          console.log("Adding", ingredient.name, ingredient.quantityTotal);
           addIngredientQuantity(ingredient.name, ingredient.quantityTotal);
         } else if (!this.ingredients.some((i) => i.name === ingredient.name)) {
           this.ingredients.push({ name: ingredient.name });
