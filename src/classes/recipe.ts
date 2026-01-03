@@ -399,11 +399,7 @@ export class Recipe {
       index: idxInList,
       displayName,
     };
-    // Only add quantity and note if they exist
-    const note = groups.ingredientNote?.trim();
-    if (note) {
-      alternative.note = note;
-    }
+    // Only add quantity if it exists
     if (quantity) {
       alternative.quantity = quantity;
     }
