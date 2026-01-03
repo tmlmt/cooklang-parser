@@ -41,6 +41,7 @@ import {
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import { multiplyQuantityValue } from "../quantities/numeric";
 import Big from "big.js";
+import { deepClone } from "../utils/general";
 
 /**
  * Recipe parser.
@@ -437,15 +438,16 @@ export class Recipe {
     items.push(newItem);
 
     // Populate or update choices
-    alternative.itemId = id;
+    const choiceAlternative = deepClone(alternative);
+    choiceAlternative.itemId = id;
     const existingChoice = this.choices.ingredientGroups.get(groupKey);
     if (!existingChoice) {
       this.choices.ingredientGroups.set(groupKey, {
-        alternatives: [alternative],
+        alternatives: [choiceAlternative],
         active: 0,
       });
     } else {
-      existingChoice.alternatives.push(alternative);
+      existingChoice.alternatives.push(choiceAlternative);
     }
   }
 

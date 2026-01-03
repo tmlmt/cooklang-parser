@@ -905,6 +905,179 @@ Another step.
       });
     });
 
+    it("parses ingredients with preparation", () => {
+      const recipe = `
+      Add some @|flour|wheat flour{100%g}(sifted).
+      And @|eggs|eggs{2}(large, beaten).
+    `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.choices.ingredientGroups.has("flour")).toBe(true);
+      expect(result.ingredients[0]).toEqual({
+        name: "wheat flour",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: "g",
+        },
+        preparation: "sifted",
+      });
+      expect(result.choices.ingredientGroups.has("eggs")).toBe(true);
+      expect(result.ingredients[1]).toEqual({
+        name: "eggs",
+        quantityTotal: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        },
+        preparation: "large, beaten",
+      });
+    });
+
+    it("parses hidden or optional ingredients", () => {
+      const recipe = `
+      Add some @|spices|-salt{}.
+      or maybe some @|spices|?pepper{}.
+    `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.choices.ingredientGroups.has("spices")).toBe(true);
+      expect(result.ingredients[0]).toEqual({
+        name: "salt",
+        flags: ["hidden"],
+        alternatives: new Set([1]),
+      });
+      expect(result.ingredients[1]).toEqual({
+        name: "pepper",
+        flags: ["optional"],
+        alternatives: new Set([0]),
+      });
+    });
+
+    it("parses hidden and optional ingredients", () => {
+      const recipe = `
+      Potentially add some @|spices|-?salt{}.
+    `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      expect(result.choices.ingredientGroups.has("spices")).toBe(true);
+      expect(result.ingredients[0]).toEqual({
+        name: "salt",
+        flags: ["optional", "hidden"],
+      });
+    });
+
+    it("detects and correctly extracts ingredients aliases and references", () => {
+      const recipe =
+        new Recipe(`Mix @flour tipo 00{100%g} with either an extra @|flour|&flour tipo 00|same flour{100%g}, 
+    or @|flour|flour tipo 1|whole wheat flour{50%g}`);
+      expect(recipe.sections[0]?.content).toEqual([
+        {
+          type: "step",
+          items: [
+            {
+              type: "text",
+              value: "Mix ",
+            },
+            {
+              type: "ingredient",
+              id: "ingredient-item-0",
+              alternatives: [
+                {
+                  displayName: "flour tipo 00",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 100 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              type: "text",
+              value: " with either an extra ",
+            },
+            {
+              type: "ingredient",
+              id: "ingredient-item-1",
+              group: "flour",
+              alternatives: [
+                {
+                  displayName: "same flour",
+                  index: 0,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 100 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              type: "text",
+              value: ", ",
+            },
+            {
+              type: "text",
+              value: "    or ",
+            },
+            {
+              type: "ingredient",
+              id: "ingredient-item-2",
+              group: "flour",
+              alternatives: [
+                {
+                  displayName: "whole wheat flour",
+                  index: 1,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 50 },
+                        },
+                        unit: { name: "g" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+      expect(recipe.ingredients).toEqual([
+        {
+          name: "flour tipo 00",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "g",
+          },
+          alternatives: new Set([1]),
+        },
+        {
+          name: "flour tipo 1",
+          alternatives: new Set([0]),
+        },
+      ]);
+    });
+
     it("parses grouped altenatives correctly", () => {
       const recipe = `
         Mix @|milk|milk{200%ml} or @|milk|almond milk{200%ml} for a vegan version
@@ -974,6 +1147,37 @@ Another step.
           ],
         ]),
         ingredientItems: new Map(),
+      });
+      // The ingredient items should contain the right fields
+      const firstIngredientItem = result.sections[0]?.content[0];
+      if (firstIngredientItem?.type !== "step") return false;
+      expect(firstIngredientItem.items[1]).toEqual({
+        alternatives: [
+          {
+            displayName: "milk",
+            index: 0,
+            quantity: {
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: {
+                      decimal: 200,
+                      type: "decimal",
+                    },
+                  },
+                  unit: {
+                    name: "ml",
+                  },
+                },
+              ],
+              scalable: true,
+            },
+          },
+        ],
+        group: "milk",
+        id: "ingredient-item-0",
+        type: "ingredient",
       });
     });
   });
