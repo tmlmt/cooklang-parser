@@ -268,7 +268,8 @@ export interface IngredientAlternative {
   displayName: string;
   /** An optional note for this specific choice (e.g., "for a vegan version"). */
   note?: string;
-  /** When used in the {@link Recipe.choices} property, the id of the corresponding ingredient item */
+  /** When used in the {@link Recipe.choices} property for alternatives ingredients
+   * with group keys: the id of the corresponding ingredient item */
   itemId?: string;
 }
 
