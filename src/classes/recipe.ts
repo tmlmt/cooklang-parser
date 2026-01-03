@@ -331,7 +331,7 @@ export class Recipe {
     }
     if (
       (modifiers !== undefined && modifiers.includes("@")) ||
-      groups.ingredientRecipeAnchor
+      groups.gIngredientRecipeAnchor
     ) {
       flags.push("recipe");
     }
