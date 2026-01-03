@@ -1080,10 +1080,10 @@ Another step.
 
     it("parses grouped altenatives correctly", () => {
       const recipe = `
-        Mix @|milk|milk{200%ml} or @|milk|almond milk{200%ml} for a vegan version
+        Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|soy milk{150%ml} for a vegan version
       `;
       const result = new Recipe(recipe);
-      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients).toHaveLength(3);
       // The first ingredient should have a set quantity
       const milkIngredient: Ingredient = {
         name: "milk",
@@ -1091,15 +1091,20 @@ Another step.
           quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: "ml",
         },
-        alternatives: new Set([1]),
+        alternatives: new Set([1, 2]),
       };
       expect(result.ingredients[0]).toEqual(milkIngredient);
       // The alternative should not have a quantity as it is not selected by default
       const almondMilkIngredient: Ingredient = {
         name: "almond milk",
-        alternatives: new Set([0]),
+        alternatives: new Set([0, 2]),
       };
       expect(result.ingredients[1]).toEqual(almondMilkIngredient);
+      const soyMilkIngredient: Ingredient = {
+        name: "soy milk",
+        alternatives: new Set([0, 1]),
+      };
+      expect(result.ingredients[2]).toEqual(soyMilkIngredient);
       // Choices should be those by default
       expect(result.choices).toEqual({
         ingredientGroups: new Map([
@@ -1135,7 +1140,24 @@ Another step.
                       {
                         quantity: {
                           type: "fixed",
-                          value: { type: "decimal", decimal: 200 },
+                          value: { type: "decimal", decimal: 100 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+                {
+                  displayName: "soy milk",
+                  index: 2,
+                  itemId: "ingredient-item-2",
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 150 },
                         },
                         unit: { name: "ml" },
                       },
@@ -1185,10 +1207,10 @@ Another step.
   describe("in-line alternative ingredients", () => {
     it("parses simple in-line alternative ingredients correctly", () => {
       const recipe = `
-        Mix @milk{200%ml}|@almond milk{200%ml}
+        Mix @milk{200%ml}|almond milk{100%ml}|soy milk{150%ml}
       `;
       const result = new Recipe(recipe);
-      expect(result.ingredients).toHaveLength(2);
+      expect(result.ingredients).toHaveLength(3);
       // The first ingredient should have a set quantity
       const milkIngredient: Ingredient = {
         name: "milk",
@@ -1196,15 +1218,21 @@ Another step.
           quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
           unit: "ml",
         },
-        alternatives: new Set([1]),
+        alternatives: new Set([1, 2]),
       };
       expect(result.ingredients[0]).toEqual(milkIngredient);
       // The alternative should not have a quantity as it is not selected by default
       const almondMilkIngredient: Ingredient = {
         name: "almond milk",
-        alternatives: new Set([0]),
+        alternatives: new Set([0, 2]),
       };
       expect(result.ingredients[1]).toEqual(almondMilkIngredient);
+      const soyMilkIngredient: Ingredient = {
+        name: "soy milk",
+        alternatives: new Set([0, 1]),
+      };
+      expect(result.ingredients[2]).toEqual(soyMilkIngredient);
+
       // Choices should be those by default
       expect(result.choices).toEqual({
         ingredientItems: new Map([
@@ -1238,7 +1266,23 @@ Another step.
                       {
                         quantity: {
                           type: "fixed",
-                          value: { type: "decimal", decimal: 200 },
+                          value: { type: "decimal", decimal: 100 },
+                        },
+                        unit: { name: "ml" },
+                      },
+                    ],
+                  },
+                },
+                {
+                  displayName: "soy milk",
+                  index: 2,
+                  quantity: {
+                    scalable: true,
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 150 },
                         },
                         unit: { name: "ml" },
                       },
