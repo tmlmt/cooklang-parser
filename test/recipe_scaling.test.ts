@@ -296,4 +296,117 @@ serves: 2, some
       unit: "g",
     });
   });
+
+  it("should scale choices when scaling by", () => {
+    const recipe = new Recipe(`
+---
+servings: 2
+---
+Use @sugar{100%g}|honey{100%g} in the mix.
+
+Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
+    `);
+    const scaledRecipe = recipe.scaleBy(2);
+    const sugarIngredientChoice =
+      scaledRecipe.choices.ingredientItems.get("ingredient-item-0");
+    expect(sugarIngredientChoice).toEqual({
+      active: 0,
+      alternatives: [
+        {
+          displayName: "sugar",
+          index: 0,
+          quantity: {
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: {
+                    decimal: 200,
+                    type: "decimal",
+                  },
+                },
+                unit: {
+                  name: "g",
+                },
+              },
+            ],
+            scalable: true,
+          },
+        },
+        {
+          displayName: "honey",
+          index: 1,
+          quantity: {
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: {
+                    decimal: 200,
+                    type: "decimal",
+                  },
+                },
+                unit: {
+                  name: "g",
+                },
+              },
+            ],
+            scalable: true,
+          },
+        },
+      ],
+    });
+
+    const milkIngredientChoice =
+      scaledRecipe.choices.ingredientGroups.get("milk");
+    expect(milkIngredientChoice).toEqual({
+      active: 0,
+      alternatives: [
+        {
+          displayName: "milk",
+          index: 2,
+          itemId: "ingredient-item-1",
+          quantity: {
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: {
+                    decimal: 300,
+                    type: "decimal",
+                  },
+                },
+                unit: {
+                  name: "mL",
+                },
+              },
+            ],
+            scalable: true,
+          },
+        },
+        {
+          displayName: "oat milk",
+          index: 3,
+          itemId: "ingredient-item-2",
+          quantity: {
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: {
+                    decimal: 300,
+                    type: "decimal",
+                  },
+                },
+                unit: {
+                  name: "mL",
+                },
+              },
+            ],
+            scalable: true,
+          },
+        },
+      ],
+    });
+  });
 });

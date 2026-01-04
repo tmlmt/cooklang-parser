@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
-import { simpleRecipe, complexRecipe } from "./fixtures/recipes";
+import {
+  simpleRecipe,
+  complexRecipe,
+  recipeToScaleWithAlternatives,
+} from "./fixtures/recipes";
 import {
   InvalidQuantityFormat,
   ReferencedItemCannotBeRedefinedError,
@@ -1398,6 +1402,15 @@ Another step.
           },
         ],
       });
+    });
+  });
+
+  describe("clone", () => {
+    it("creates a deep clone of the recipe", () => {
+      const recipe = new Recipe(recipeToScaleWithAlternatives);
+      const recipeClone = recipe.clone();
+      expect(recipeClone).toEqual(recipe);
+      expect(recipeClone).not.toBe(recipe);
     });
   });
 });
