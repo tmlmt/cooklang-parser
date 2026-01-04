@@ -10,6 +10,7 @@ import {
 import {
   recipeForShoppingList1,
   recipeForShoppingList2,
+  recipeForShoppingList4,
 } from "./fixtures/recipes";
 
 const productCatalog: ProductCatalog = new ProductCatalog();
@@ -44,6 +45,30 @@ productCatalog.products = [
     price: 30,
     size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     unit: "l",
+  },
+  {
+    id: "large-carrots",
+    productName: "Large carrots",
+    ingredientName: "carrots",
+    price: 2,
+    size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+    unit: "large",
+  },
+  {
+    id: "small-carrots",
+    productName: "Small carrots",
+    ingredientName: "carrots",
+    price: 1,
+    size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+    unit: "small",
+  },
+  {
+    id: "carrots-bag",
+    productName: "Carrots (1kg)",
+    ingredientName: "carrots",
+    price: 10,
+    size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+    unit: "kg",
   },
 ];
 
@@ -113,6 +138,7 @@ describe("buildCart", () => {
     expect(shoppingCart.cart).toEqual([]);
   });
 
+  // TODO: correct typo
   it("should handle gracefully ingredient/products with for incompatible units", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
@@ -285,5 +311,61 @@ describe("buildCart", () => {
       ["spices", "noProduct"],
       ["butter", "noProduct"],
     ]);
+  });
+});
+
+describe("alternative quantities", () => {
+  it("should handle ingredients with multiple quantities", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(new Recipe(recipeForShoppingList4));
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    expect(shoppingCart.cart).toEqual([
+      { product: productCatalog.products[4], quantity: 3, totalPrice: 6 }, // 1x
+      { product: productCatalog.products[5], quantity: 2, totalPrice: 2 }, // 1x
+    ]);
+  });
+
+  it("should handle ingredients with alternative units", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(
+      new Recipe(`
+---
+servings: 1
+---
+Cook @carrots{10%large|1%kg}
+`),
+    );
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    expect(shoppingCart.cart).toEqual([
+      { product: productCatalog.products[6], quantity: 1, totalPrice: 10 }, // 1x
+    ]);
+  });
+
+  it("should add to misMatch when no alternatives can be matched", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(
+      new Recipe(`
+---
+servings: 1
+---
+Cook @carrots{three|5%box}
+`),
+    );
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    expect(shoppingCart.match.length).toBe(0);
+    expect(shoppingCart.misMatch.length).toBe(1);
+    expect(shoppingCart.misMatch[0]!.ingredient.name).toBe("carrots");
+    expect(shoppingCart.misMatch[0]!.reason).toBe(
+      "textValue_incompatibleUnits",
+    );
   });
 });

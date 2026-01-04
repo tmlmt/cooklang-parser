@@ -137,6 +137,7 @@ export class ShoppingCart {
     this.productCatalog = catalog;
   }
 
+  // TODO: harmonize recipe name to use underscores
   /**
    * Sets the shopping list to build the cart from.
    * To use if a shopping list was not provided at the creation of the instance
@@ -247,7 +248,12 @@ export class ShoppingCart {
     ): ProductSelection[] {
       if (isAndGroup(normalizedQuantities)) {
         for (const q of normalizedQuantities.quantities) {
-          getOptimumMatchForQuantityParts(q, normalizedOptions, selection);
+          const result = getOptimumMatchForQuantityParts(
+            q,
+            normalizedOptions,
+            selection,
+          );
+          selection.push(...result);
         }
       } else {
         const alternativeUnitsOfQuantity = isOrGroup(normalizedQuantities)
@@ -263,6 +269,7 @@ export class ShoppingCart {
             alternative.quantity.value.type === "text"
           ) {
             errors.add("textValue");
+            continue;
           }
           // At this stage, we know there is a numerical quantity
           // So we scale it to base in order to calculate the correct quantity
@@ -283,34 +290,22 @@ export class ShoppingCart {
                 (opt) => opt.id === matchedOption.id,
               )!;
               // FixedValue
-              if (scaledQuantity.type === "fixed") {
-                const resQuantity = Math.ceil(
-                  getNumericValue(scaledQuantity.value) /
-                    getNumericValue(matchedOption.size.value),
-                );
-                return [
-                  {
-                    product,
-                    quantity: resQuantity,
-                    totalPrice: resQuantity * matchedOption.price,
-                  },
-                ];
-              }
-              // Range
-              else {
-                const targetQuantity = scaledQuantity.min;
-                const resQuantity = Math.ceil(
-                  getNumericValue(targetQuantity) /
-                    getNumericValue(matchedOption.size.value),
-                );
-                solutions.push([
-                  {
-                    product,
-                    quantity: resQuantity,
-                    totalPrice: resQuantity * matchedOption.price,
-                  },
-                ]);
-              }
+              const targetQuantity =
+                scaledQuantity.type === "fixed"
+                  ? scaledQuantity.value
+                  : scaledQuantity.min;
+              const resQuantity = Math.ceil(
+                getNumericValue(targetQuantity) /
+                  getNumericValue(matchedOption.size.value),
+              );
+              solutions.push([
+                {
+                  product,
+                  quantity: resQuantity,
+                  totalPrice: resQuantity * matchedOption.price,
+                },
+              ]);
+              continue;
             }
 
             // More complex problem if there are several options

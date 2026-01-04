@@ -275,6 +275,8 @@ export class Recipe {
       const alternativesIndexes = alternatives.map((alt) => alt.index);
       for (const index of alternativesIndexes) {
         const ingredient = this.ingredients[index];
+        // In practice, the ingredient will always be found
+        /* v8 ignore else -- @preserve */
         if (ingredient) {
           if (!ingredient.alternatives) {
             ingredient.alternatives = new Set(
@@ -413,6 +415,8 @@ export class Recipe {
       newAlternativeIdx: number,
     ) {
       const ingredient = ingredients[ingredientIdx];
+      // In practice, the ingredient will always be found
+      /* v8 ignore else -- @preserve */
       if (ingredient) {
         if (ingredient.alternatives === undefined) {
           ingredient.alternatives = new Set([newAlternativeIdx]);

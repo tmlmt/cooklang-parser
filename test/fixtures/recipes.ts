@@ -114,3 +114,18 @@ servings: 1
 ---
 Add @eggs{1%dozen} and @&eggs{1%half dozen}
 `;
+
+export const recipeForShoppingList4 = `
+---
+servings: 1
+---
+Add @carrots{3%large} and @&carrots{2%small}
+`;
+
+export const recipeToScaleWithAlternatives = `
+---
+servings: 2
+---
+
+Use @sugar{100%g}|brown sugar{100%g}[for a richer flavor] in the mix.
+`;
