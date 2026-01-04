@@ -8,6 +8,7 @@ import type {
   FixedNumericValue,
   Range,
   ProductOptionNormalized,
+  ProductSizeNormalized,
   NoProductMatchErrorCode,
   FlatOrGroup,
   MaybeNestedGroup,
@@ -221,22 +222,24 @@ export class ShoppingCart {
       throw new NoProductMatchError(ingredient.name, "noQuantity");
 
     // Normalize options units and scale size to base
-    const normalizedOptions: ProductOptionNormalized[] = options
-      .map((option) => {
-        return { ...option, unit: resolveUnit(option.unit) };
-      })
-      .map((option) => {
-        return {
-          ...option,
-          size:
-            option.unit && "toBase" in option.unit
-              ? (multiplyQuantityValue(
-                  option.size,
-                  option.unit.toBase,
-                ) as FixedNumericValue)
-              : option.size,
-        };
-      });
+    const normalizedOptions: ProductOptionNormalized[] = options.map(
+      (option) => ({
+        ...option,
+        sizes: option.sizes.map((s): ProductSizeNormalized => {
+          const resolvedUnit = resolveUnit(s.unit);
+          return {
+            size:
+              resolvedUnit && "toBase" in resolvedUnit
+                ? (multiplyQuantityValue(
+                    s.size,
+                    resolvedUnit.toBase,
+                  ) as FixedNumericValue)
+                : s.size,
+            unit: resolvedUnit,
+          };
+        }),
+      }),
+    );
     const normalizedQuantityTotal = normalizeAllUnits(ingredient.quantityTotal);
 
     function getOptimumMatchForQuantityParts(
@@ -279,13 +282,25 @@ export class ShoppingCart {
           ) as FixedNumericValue | Range;
           alternative.quantity = scaledQuantity;
           // Are there compatible product options for that specific unit alternative?
+          // A product is compatible if ANY of its sizes has a compatible unit
           const matchOptions = normalizedOptions.filter((option) =>
-            areUnitsCompatible(alternative.unit, option.unit),
+            option.sizes.some((s) =>
+              areUnitsCompatible(alternative.unit, s.unit),
+            ),
           );
           if (matchOptions.length > 0) {
+            // Helper to find the compatible size for a product option
+            const findCompatibleSize = (
+              option: ProductOptionNormalized,
+            ): ProductSizeNormalized =>
+              option.sizes.find((s) =>
+                areUnitsCompatible(alternative.unit, s.unit),
+              )!;
+
             // Simple minimization exercise if only one product option
             if (matchOptions.length == 1) {
               const matchedOption = matchOptions[0]!;
+              const compatibleSize = findCompatibleSize(matchedOption);
               const product = options.find(
                 (opt) => opt.id === matchedOption.id,
               )!;
@@ -296,7 +311,7 @@ export class ShoppingCart {
                   : scaledQuantity.min;
               const resQuantity = Math.ceil(
                 getNumericValue(targetQuantity) /
-                  getNumericValue(matchedOption.size.value),
+                  getNumericValue(compatibleSize.size.value),
               );
               solutions.push([
                 {
@@ -323,9 +338,10 @@ export class ShoppingCart {
               },
               variables: matchOptions.reduce(
                 (acc, option) => {
+                  const compatibleSize = findCompatibleSize(option);
                   acc[option.id] = {
                     price: option.price,
-                    size: getNumericValue(option.size.value),
+                    size: getNumericValue(compatibleSize.size.value),
                   };
                   return acc;
                 },
