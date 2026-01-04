@@ -484,10 +484,32 @@ export interface Category {
 }
 
 /**
- * Base type for {@link ProductOption}
+ * Represents a single size expression for a product (value + optional unit)
  * @category Types
  */
-export interface ProductOptionBase {
+export interface ProductSize {
+  /** The numeric size value */
+  size: FixedNumericValue;
+  /** The unit of the size (optional) */
+  unit?: string;
+}
+
+/**
+ * Represents a normalized size expression for a product
+ * @category Types
+ */
+export interface ProductSizeNormalized {
+  /** The numeric size value (scaled to base unit) */
+  size: FixedNumericValue;
+  /** The resolved unit definition */
+  unit: UnitDefinitionLike;
+}
+
+/**
+ * Core properties for {@link ProductOption}
+ * @category Types
+ */
+export interface ProductOptionCore {
   /** The ID of the product */
   id: string;
   /** The name of the product */
@@ -496,27 +518,40 @@ export interface ProductOptionBase {
   ingredientName: string;
   /** The aliases of the ingredient it also corresponds to */
   ingredientAliases?: string[];
-  /** The size of the product. */
-  size: FixedNumericValue;
   /** The price of the product */
   price: number;
-  /** Arbitrary additional metadata */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
 }
+
+/**
+ * Base type for {@link ProductOption} allowing arbitrary additional metadata
+ * @category Types
+ */
+export type ProductOptionBase = ProductOptionCore & Record<string, unknown>;
 
 /**
  * Represents a product option in a {@link ProductCatalog}
  * @category Types
  */
-export interface ProductOption extends ProductOptionBase {
-  /** The unit of the product size. */
-  unit?: string;
+export type ProductOption = ProductOptionBase & {
+  /** The size(s) of the product. Multiple sizes allow equivalent expressions (e.g., "1%dozen" and "12") */
+  sizes: ProductSize[];
+};
+
+/**
+ * Core properties for normalized product options
+ * @category Types
+ */
+export interface ProductOptionNormalizedCore extends ProductOptionCore {
+  /** The normalized size(s) of the product with resolved unit definitions */
+  sizes: ProductSizeNormalized[];
 }
 
-export interface ProductOptionNormalized extends ProductOptionBase {
-  unit: UnitDefinitionLike;
-}
+/**
+ * Represents a product option with normalized unit definitions
+ * @category Types
+ */
+export type ProductOptionNormalized = ProductOptionNormalizedCore &
+  Record<string, unknown>;
 
 /**
  * Represents a product option as described in a catalog TOML file
@@ -525,8 +560,8 @@ export interface ProductOptionNormalized extends ProductOptionBase {
 export interface ProductOptionToml {
   /** The name of the product */
   name: string;
-  /** The size and unit of the product separated by % */
-  size: string;
+  /** The size and unit of the product separated by %. Can be an array for multiple equivalent sizes (e.g., ["1%dozen", "12"]) */
+  size: string | string[];
   /** The price of the product */
   price: number;
   /** Arbitrary additional metadata */

@@ -3,6 +3,7 @@ import type {
   FixedNumericValue,
   ProductOption,
   ProductOptionToml,
+  ProductSize,
 } from "../types";
 import type { TomlTable } from "smol-toml";
 import {
@@ -76,25 +77,30 @@ export class ProductCatalog {
         const { name, size, price, ...rest } =
           productData as unknown as ProductOptionToml;
 
-        const sizeAndUnitRaw = size.split("%");
-        const sizeParsed = parseQuantityInput(
-          sizeAndUnitRaw[0]!,
-        ) as FixedNumericValue;
+        // Handle size as string or string[]
+        const sizeStrings = Array.isArray(size) ? size : [size];
+        const sizes: ProductSize[] = sizeStrings.map((sizeStr) => {
+          const sizeAndUnitRaw = sizeStr.split("%");
+          const sizeParsed = parseQuantityInput(
+            sizeAndUnitRaw[0]!,
+          ) as FixedNumericValue;
+          const productSize: ProductSize = { size: sizeParsed };
+          if (sizeAndUnitRaw.length > 1) {
+            productSize.unit = sizeAndUnitRaw[1]!;
+          }
+          return productSize;
+        });
 
         const productOption: ProductOption = {
           id: productId,
           productName: name,
           ingredientName: ingredientName,
           price: price,
-          size: sizeParsed,
+          sizes,
           ...rest,
         };
         if (aliases) {
           productOption.ingredientAliases = aliases;
-        }
-
-        if (sizeAndUnitRaw.length > 1) {
-          productOption.unit = sizeAndUnitRaw[1]!;
         }
 
         this.products.push(productOption);
@@ -116,8 +122,7 @@ export class ProductCatalog {
         id,
         ingredientName,
         ingredientAliases,
-        size,
-        unit,
+        sizes,
         productName,
         ...rest
       } = product;
@@ -127,12 +132,19 @@ export class ProductCatalog {
       if (ingredientAliases && !grouped[ingredientName].aliases) {
         grouped[ingredientName].aliases = ingredientAliases;
       }
+
+      // Stringify each size as "value%unit" or just "value"
+      const sizeStrings = sizes.map((s) =>
+        s.unit
+          ? `${stringifyQuantityValue(s.size)}%${s.unit}`
+          : stringifyQuantityValue(s.size),
+      );
+
       grouped[ingredientName][id] = {
         ...rest,
         name: productName,
-        size: unit
-          ? `${stringifyQuantityValue(size)}%${unit}`
-          : stringifyQuantityValue(size),
+        // Use array if multiple sizes, otherwise single string
+        size: sizeStrings.length === 1 ? sizeStrings[0]! : sizeStrings,
       };
     }
 
@@ -184,7 +196,11 @@ export class ProductCatalog {
           }
 
           const hasProductName = typeof record.name === "string";
-          const hasSize = typeof record.size === "string";
+          // Size can be a string or an array of strings
+          const hasSize =
+            typeof record.size === "string" ||
+            (Array.isArray(record.size) &&
+              record.size.every((s) => typeof s === "string"));
           const hasPrice = typeof record.price === "number";
 
           if (!(hasProductName && hasSize && hasPrice)) {
