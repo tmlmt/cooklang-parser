@@ -846,23 +846,18 @@ export class Recipe {
    */
   clone(): Recipe {
     const newRecipe = new Recipe();
+    newRecipe.choices = deepClone(this.choices);
     newRecipe._itemCount = this._itemCount;
     // deep copy
-    newRecipe.metadata = JSON.parse(JSON.stringify(this.metadata)) as Metadata;
-    newRecipe.ingredients = JSON.parse(
-      JSON.stringify(this.ingredients),
-    ) as Ingredient[];
+    newRecipe.metadata = deepClone(this.metadata);
+    newRecipe.ingredients = deepClone(this.ingredients);
     newRecipe.sections = this.sections.map((section) => {
       const newSection = new Section(section.name);
-      newSection.content = JSON.parse(
-        JSON.stringify(section.content),
-      ) as Section["content"];
+      newSection.content = deepClone(section.content);
       return newSection;
     });
-    newRecipe.cookware = JSON.parse(
-      JSON.stringify(this.cookware),
-    ) as Cookware[];
-    newRecipe.timers = JSON.parse(JSON.stringify(this.timers)) as Timer[];
+    newRecipe.cookware = deepClone(this.cookware);
+    newRecipe.timers = deepClone(this.timers);
     newRecipe.servings = this.servings;
     return newRecipe;
   }
