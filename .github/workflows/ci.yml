@@ -4,6 +4,9 @@ on:
   push:
     branches: [main] # Run tests/lint/build on pushes to main
   pull_request: # Run tests/lint/build on PRs
+    types: [opened, reopened, synchronize]
+    branches-ignore:
+      - "**/graphite-base/**"
   release:
     types: [published] # Trigger publish job when a GitHub release is published
 
