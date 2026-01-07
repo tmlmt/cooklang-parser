@@ -112,16 +112,35 @@ export class Recipe {
    * @see {@link Recipe.scaleBy | scaleBy()} and {@link Recipe.scaleTo | scaleTo()} methods
    */
   servings?: number;
+
   /**
-   * Number of items in the recipe. Used for giving ID numbers to items.
+   * External storage for item count (not a property on instances).
+   * Used for giving ID numbers to items during parsing.
    */
-  private _itemCount: number = 0;
+  private static itemCounts = new WeakMap<Recipe, number>();
+
+  /**
+   * Gets the current item count for this recipe.
+   */
+  private getItemCount(): number {
+    return Recipe.itemCounts.get(this)!;
+  }
+
+  /**
+   * Gets the current item count and increments it.
+   */
+  private getAndIncrementItemCount(): number {
+    const current = this.getItemCount();
+    Recipe.itemCounts.set(this, current + 1);
+    return current;
+  }
 
   /**
    * Creates a new Recipe instance.
    * @param content - The recipe content to parse.
    */
   constructor(content?: string) {
+    Recipe.itemCounts.set(this, 0);
     if (content) {
       this.parse(content);
     }
@@ -294,8 +313,7 @@ export class Recipe {
       }
     }
 
-    const id = `ingredient-item-${this._itemCount}`;
-    this._itemCount++;
+    const id = `ingredient-item-${this.getAndIncrementItemCount()}`;
 
     // Finalize item
     const newItem: IngredientItem = {
@@ -431,8 +449,7 @@ export class Recipe {
         upsertAlternativeToIngredient(this.ingredients, idxInList, alt.index);
       }
     }
-    const id = `ingredient-item-${this._itemCount}`;
-    this._itemCount++;
+    const id = `ingredient-item-${this.getAndIncrementItemCount()}`;
 
     // Finalize item
     const newItem: IngredientItem = {
@@ -851,7 +868,7 @@ export class Recipe {
   clone(): Recipe {
     const newRecipe = new Recipe();
     newRecipe.choices = deepClone(this.choices);
-    newRecipe._itemCount = this._itemCount;
+    Recipe.itemCounts.set(newRecipe, this.getItemCount());
     // deep copy
     newRecipe.metadata = deepClone(this.metadata);
     newRecipe.ingredients = deepClone(this.ingredients);
