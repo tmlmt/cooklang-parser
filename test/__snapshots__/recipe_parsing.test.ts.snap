@@ -166,7 +166,6 @@ exports[`parse function > extracts steps correctly 1`] = `
 
 exports[`parse function > parses complex recipes correctly 1`] = `
 Recipe {
-  "_itemCount": 20,
   "choices": {
     "ingredientGroups": Map {},
     "ingredientItems": Map {},
