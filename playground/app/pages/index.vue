@@ -15,7 +15,26 @@ const desktopItems = ref<TabsItem[]>([
   { label: "Render", slot: "render" },
 ]);
 
-const rawRecipe = ref<string>(`Mix @eggs{2} with @milk{200%mL}`);
+const rawRecipe = ref<string>(`---
+title: Simple Pancakes
+servings: 4
+tags: [breakfast, easy]
+prep time: 10 minutes
+cook time: 15 minutes
+---
+
+Mix @eggs{2} with @milk{200%mL} and @flour{150%g} in a #bowl.
+
+Melt some @butter{20%g} in a #pan{} on medium heat.
+
+Pour batter and cook for ~{2-3%minutes} on each side until golden.
+
+[- Serve with maple syrup or fresh berries -]
+
+== Toppings ==
+
+Add @maple syrup{} or @fresh berries{1%cup} on top.
+`);
 
 const parsedRecipe = computed(() => {
   const recipe = new Recipe(rawRecipe.value);
@@ -49,7 +68,9 @@ const parsedRecipe = computed(() => {
           </template>
 
           <template #render>
-            <div class="w-full text-sm">Rendered output goes here.</div>
+            <div class="w-full text-sm">
+              <RecipeRender :recipe="parsedRecipe" />
+            </div>
           </template>
         </UTabs>
       </div>
@@ -68,7 +89,9 @@ const parsedRecipe = computed(() => {
           </template>
 
           <template #render>
-            <div class="w-full text-sm">Rendered output goes here.</div>
+            <div class="w-full text-sm">
+              <RecipeRender :recipe="parsedRecipe" />
+            </div>
           </template>
         </UTabs>
       </div>
