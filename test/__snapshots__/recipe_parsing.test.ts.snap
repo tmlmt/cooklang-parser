@@ -193,246 +193,300 @@ Recipe {
   "ingredients": [
     {
       "name": "lasagne noodles",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 9,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 9,
+              "type": "decimal",
+            },
           },
         },
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "bulk Italian sausage",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 1.2,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1.2,
+              "type": "decimal",
+            },
           },
+          "unit": "lb",
         },
-        "unit": "lb",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "ground beef",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "den": 4,
-            "num": 3,
-            "type": "fraction",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
+            },
           },
+          "unit": "lb",
         },
-        "unit": "lb",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "onion",
       "preparation": "medium, diced",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 1,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1,
+              "type": "decimal",
+            },
           },
         },
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "garlic",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 3,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 3,
+              "type": "decimal",
+            },
           },
+          "unit": "cloves",
         },
-        "unit": "cloves",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "crushed tomatoes",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 2,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
+            },
           },
+          "unit": "cans",
         },
-        "unit": "cans",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "tomato paste",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 2,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
+            },
           },
+          "unit": "cans",
         },
-        "unit": "cans",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "water",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "den": 3,
-            "num": 2,
-            "type": "fraction",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 3,
+              "num": 2,
+              "type": "fraction",
+            },
           },
+          "unit": "cup",
         },
-        "unit": "cup",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "sugar",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 2,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
+            },
           },
+          "unit": "tbsp",
         },
-        "unit": "tbsp",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "fresh parsley",
       "preparation": "minced, divided",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 0.104,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 0.104,
+              "type": "decimal",
+            },
           },
+          "unit": "l",
         },
-        "unit": "l",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "dried basil",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 2,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
+            },
           },
+          "unit": "tsp",
         },
-        "unit": "tsp",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "fennel seed",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "den": 4,
-            "num": 3,
-            "type": "fraction",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
+            },
           },
+          "unit": "tsp",
         },
-        "unit": "tsp",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "salt",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "den": 4,
-            "num": 3,
-            "type": "fraction",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
+            },
           },
+          "unit": "tsp",
         },
-        "unit": "tsp",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "pepper",
       "preparation": "coarsely ground",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "den": 4,
-            "num": 1,
-            "type": "fraction",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 1,
+              "type": "fraction",
+            },
           },
+          "unit": "tsp",
         },
-        "unit": "tsp",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "egg",
       "preparation": "large, lightly beaten",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 1,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1,
+              "type": "decimal",
+            },
           },
         },
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "ricotta cheese",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 1,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1,
+              "type": "decimal",
+            },
           },
+          "unit": "carton",
         },
-        "unit": "carton",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "mozzarella",
       "preparation": "shredded",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "decimal": 4,
-            "type": "decimal",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 4,
+              "type": "decimal",
+            },
           },
+          "unit": "cups",
         },
-        "unit": "cups",
-      },
+      ],
+      "usedAsPrimary": true,
     },
     {
       "name": "Parmesan",
       "preparation": "grated",
-      "quantityTotal": {
-        "quantity": {
-          "type": "fixed",
-          "value": {
-            "den": 4,
-            "num": 3,
-            "type": "fraction",
+      "quantities": [
+        {
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
+            },
           },
+          "unit": "cup",
         },
-        "unit": "cup",
-      },
+      ],
+      "usedAsPrimary": true,
     },
   ],
   "metadata": {

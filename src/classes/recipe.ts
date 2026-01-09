@@ -13,9 +13,15 @@ import type {
   IngredientFlag,
   CookwareFlag,
   RecipeChoices,
+  RecipeAlternatives,
   IngredientAlternative,
   FlatOrGroup,
   QuantityWithExtendedUnit,
+  ComputedIngredient,
+  IngredientQuantityEntry,
+  IngredientQuantityWithAlternatives,
+  AlternativeIngredientRef,
+  QuantityWithPlainUnit,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -41,6 +47,7 @@ import {
 } from "../utils/parser_helpers";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import { multiplyQuantityValue } from "../quantities/numeric";
+import { addQuantities, toPlainUnit } from "../quantities/mutations";
 import Big from "big.js";
 import { deepClone } from "../utils/general";
 import { InvalidQuantityFormat } from "../errors";
@@ -82,9 +89,10 @@ export class Recipe {
    */
   metadata: Metadata = {};
   /**
-   * The default or manual choice of alternative ingredients
+   * The default or manual choice of alternative ingredients.
+   * Contains the full context including alternatives list and active selection index.
    */
-  choices: RecipeChoices = {
+  choices: RecipeAlternatives = {
     ingredientItems: new Map(),
     ingredientGroups: new Map(),
   };
@@ -324,7 +332,7 @@ export class Recipe {
     items.push(newItem);
 
     if (alternatives.length > 1) {
-      this.choices.ingredientItems.set(id, { alternatives, active: 0 });
+      this.choices.ingredientItems.set(id, alternatives);
     }
   }
 
@@ -444,7 +452,7 @@ export class Recipe {
       }
     }
     if (existingAlternatives) {
-      for (const alt of existingAlternatives.alternatives) {
+      for (const alt of existingAlternatives) {
         upsertAlternativeToIngredient(this.ingredients, alt.index, idxInList);
         upsertAlternativeToIngredient(this.ingredients, idxInList, alt.index);
       }
@@ -465,28 +473,319 @@ export class Recipe {
     choiceAlternative.itemId = id;
     const existingChoice = this.choices.ingredientGroups.get(groupKey);
     if (!existingChoice) {
-      this.choices.ingredientGroups.set(groupKey, {
-        alternatives: [choiceAlternative],
-        active: 0,
-      });
+      this.choices.ingredientGroups.set(groupKey, [choiceAlternative]);
     } else {
-      existingChoice.alternatives.push(choiceAlternative);
+      existingChoice.push(choiceAlternative);
     }
   }
 
-  calc_ingredient_quantities(): void {
-    // Resets quantities
+  /**
+   * Helper to check if two sets of alternative ingredient indices are equal
+   */
+  private _alternativesAreEqual(
+    alts1: AlternativeIngredientRef[],
+    alts2: AlternativeIngredientRef[],
+  ): boolean {
+    /* v8 ignore else -- @preserve */
+    if (alts1.length !== alts2.length) return false;
+    const indices1 = alts1.map((a) => a.index).sort((a, b) => a - b);
+    const indices2 = alts2.map((a) => a.index).sort((a, b) => a - b);
+    return indices1.every((idx, i) => idx === indices2[i]);
+  }
+
+  /**
+   * Helper to check if a quantity entry has alternatives
+   */
+  private _hasAlternatives(
+    entry: IngredientQuantityEntry,
+  ): entry is IngredientQuantityWithAlternatives {
+    return "alternatives" in entry && Array.isArray(entry.alternatives);
+  }
+
+  /**
+   * Tries to add two quantities. Returns undefined if units are incompatible.
+   */
+  private _tryAddQuantities(
+    q1: QuantityWithPlainUnit,
+    q2: QuantityWithPlainUnit,
+  ): QuantityWithPlainUnit | undefined {
+    const extended1: QuantityWithExtendedUnit = {
+      quantity: q1.quantity,
+      unit: q1.unit ? { name: q1.unit } : undefined,
+    };
+    const extended2: QuantityWithExtendedUnit = {
+      quantity: q2.quantity,
+      unit: q2.unit ? { name: q2.unit } : undefined,
+    };
+    // Try to add directly - addQuantities will handle unit conversion if possible
+    try {
+      const sum = addQuantities(extended1, extended2);
+      return toPlainUnit(sum) as QuantityWithPlainUnit;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Populates the `quantities` property for each ingredient based on
+   * how they appear in the recipe preparation. Only primary ingredients
+   * get quantities populated. Primary ingredients get `usedAsPrimary: true` flag.
+   *
+   * For inline alternatives (e.g. `\@a|b|c`), the first alternative is primary.
+   * For grouped alternatives (e.g. `\@|group|a`, `\@|group|b`), the first item in the group is primary.
+   *
+   * Quantities without alternatives are merged opportunistically when units are compatible.
+   * Quantities with alternatives are only merged if the alternatives are exactly the same.
+   * @internal
+   */
+  private _populate_ingredient_quantities(): void {
+    // Reset quantities and usedAsPrimary flag
     this.ingredients = this.ingredients.map((ing) => {
-      if (ing.quantityTotal) {
-        delete ing.quantityTotal;
+      if (ing.quantities) {
+        delete ing.quantities;
+      }
+      if (ing.usedAsPrimary) {
+        delete ing.usedAsPrimary;
       }
       return ing;
     });
+
+    // Track which groups we've already seen (to identify first item in each group)
+    const seenGroups = new Set<string>();
+
+    // Collect raw quantity entries for each PRIMARY ingredient index only
+    const ingredientEntries = new Map<number, IngredientQuantityEntry[]>();
+
+    // Loop through all ingredient items in all sections
+    for (const section of this.sections) {
+      for (const step of section.content.filter(
+        (item) => item.type === "step",
+      )) {
+        for (const item of step.items.filter(
+          (item) => item.type === "ingredient",
+        )) {
+          // For grouped alternatives, only the first item in the group is primary
+          const isGroupedItem = "group" in item && item.group !== undefined;
+          const isFirstInGroup = isGroupedItem && !seenGroups.has(item.group!);
+          if (isGroupedItem) {
+            seenGroups.add(item.group!);
+          }
+
+          // Determine if this item's first alternative is a primary ingredient
+          // - For non-grouped items: always primary (index 0)
+          // - For grouped items: only primary if first in the group
+          const isPrimary = !isGroupedItem || isFirstInGroup;
+
+          // Only process the first alternative (primary ingredient) for quantities
+          const alternative = item.alternatives[0] as IngredientAlternative;
+
+          // Mark this ingredient as used as primary if applicable
+          if (isPrimary) {
+            const primaryIngredient = this.ingredients[alternative.index];
+            /* v8 ignore else -- @preserve */
+            if (primaryIngredient) {
+              primaryIngredient.usedAsPrimary = true;
+            }
+          }
+
+          // Only populate quantities for primary ingredients
+          if (!isPrimary || !alternative.quantity) continue;
+
+          // Get the main quantity (first equivalent)
+          const mainQuantity = alternative.quantity.equivalents[0]!;
+
+          const plainQuantity = toPlainUnit(
+            mainQuantity,
+          ) as QuantityWithPlainUnit;
+
+          // Check if this ingredient item has alternatives (inline or grouped)
+          const hasInlineAlternatives = item.alternatives.length > 1;
+          const hasGroupedAlternatives =
+            isGroupedItem && this.choices.ingredientGroups.has(item.group!);
+
+          let entry: IngredientQuantityEntry;
+
+          if (hasInlineAlternatives) {
+            // Build alternative refs for inline alternatives (e.g. @milk|almond milk|soy milk)
+            const alternativeRefs: AlternativeIngredientRef[] = [];
+            for (let j = 1; j < item.alternatives.length; j++) {
+              const otherAlt = item.alternatives[j] as IngredientAlternative;
+              const otherQuantity = otherAlt.quantity
+                ?.equivalents[0] as QuantityWithExtendedUnit;
+              alternativeRefs.push({
+                index: otherAlt.index,
+                quantity: toPlainUnit(otherQuantity) as QuantityWithPlainUnit,
+              });
+            }
+            entry = {
+              ...plainQuantity,
+              alternatives: alternativeRefs,
+            };
+          } else if (hasGroupedAlternatives) {
+            // Build alternative refs for grouped alternatives (e.g. @|group|milk, @|group|almond milk)
+            const groupAlternatives = this.choices.ingredientGroups.get(
+              item.group!,
+            )!;
+            // Skip the first one (that's the primary, which is this ingredient)
+            const alternativeRefs: AlternativeIngredientRef[] = [];
+            for (let j = 1; j < groupAlternatives.length; j++) {
+              const otherAlt = groupAlternatives[j] as IngredientAlternative;
+              const otherQuantity = otherAlt.quantity
+                ?.equivalents[0] as QuantityWithExtendedUnit;
+              alternativeRefs.push({
+                index: otherAlt.index,
+                quantity: toPlainUnit(otherQuantity) as QuantityWithPlainUnit,
+              });
+            }
+            if (alternativeRefs.length > 0) {
+              entry = {
+                ...plainQuantity,
+                alternatives: alternativeRefs,
+              };
+            } else {
+              entry = plainQuantity;
+            }
+          } else {
+            entry = plainQuantity;
+          }
+
+          // Get existing entries for this ingredient
+          const existingEntries =
+            ingredientEntries.get(alternative.index) || [];
+
+          // Try to merge with an existing entry
+          let merged = false;
+          for (let k = 0; k < existingEntries.length; k++) {
+            const existing = existingEntries[k]!;
+
+            // Both have no alternatives - try to merge
+            if (
+              !this._hasAlternatives(existing) &&
+              !this._hasAlternatives(entry)
+            ) {
+              const summed = this._tryAddQuantities(existing, entry);
+              if (summed) {
+                existingEntries[k] = summed;
+                merged = true;
+                break;
+              }
+            }
+            // Both have alternatives - only merge if alternatives are the same
+            else if (
+              this._hasAlternatives(existing) &&
+              this._hasAlternatives(entry)
+            ) {
+              if (
+                this._alternativesAreEqual(
+                  existing.alternatives,
+                  entry.alternatives,
+                )
+              ) {
+                // Extract plain quantities from both entries
+                const existingPlain: QuantityWithPlainUnit = {
+                  quantity: existing.quantity,
+                  unit: existing.unit,
+                };
+                const entryPlain: QuantityWithPlainUnit = {
+                  quantity: entry.quantity,
+                  unit: entry.unit,
+                };
+                const summed = this._tryAddQuantities(
+                  existingPlain,
+                  entryPlain,
+                );
+                /* If summed is always undefined in the loop, the if(!merged) below will add a new entry instead */
+                /* v8 ignore else -- @preserve */
+                if (summed) {
+                  // Try to add all alternative quantities first (dry run)
+                  const altSums = new Map<number, QuantityWithPlainUnit>();
+                  let allAltsSucceeded = true;
+                  for (const existingAlt of existing.alternatives) {
+                    const entryAlt = entry.alternatives.find(
+                      (a) => a.index === existingAlt.index,
+                    );
+                    /* v8 ignore else -- @preserve */
+                    if (entryAlt) {
+                      const altSummed = this._tryAddQuantities(
+                        existingAlt.quantity,
+                        entryAlt.quantity,
+                      );
+                      if (altSummed) {
+                        altSums.set(existingAlt.index, altSummed);
+                      } else {
+                        allAltsSucceeded = false;
+                        break;
+                      }
+                    }
+                  }
+                  // Only apply changes if all additions succeeded
+                  if (allAltsSucceeded) {
+                    existing.quantity = summed.quantity;
+                    existing.unit = summed.unit;
+                    for (const existingAlt of existing.alternatives) {
+                      const altSummed = altSums.get(existingAlt.index);
+                      /* If altSummed is not defined, the if(!merged) below will add a new entry instead */
+                      /* v8 ignore else -- @preserve */
+                      if (altSummed) {
+                        existingAlt.quantity = altSummed;
+                      }
+                    }
+                    merged = true;
+                    break;
+                  }
+                }
+              }
+            }
+            // Mixed case - don't merge
+          }
+
+          /* This is a fallback solution */
+          /* v8 ignore else -- @preserve */
+          if (!merged) {
+            existingEntries.push(entry);
+          }
+
+          ingredientEntries.set(alternative.index, existingEntries);
+        }
+      }
+    }
+
+    // Assign quantities to ingredients
+    for (const [index, entries] of ingredientEntries) {
+      const ingredient = this.ingredients[index];
+      /* v8 ignore else -- @preserve */
+      if (entries.length > 0) {
+        ingredient!.quantities = entries;
+      }
+    }
+  }
+
+  /**
+   * Calculates ingredient quantities based on the provided choices.
+   * Returns a list of computed ingredients with their total quantities.
+   *
+   * @param choices - The recipe choices to apply when computing quantities.
+   *   If not provided, uses the default choices (first alternative for each item).
+   * @returns An array of ComputedIngredient with quantityTotal calculated based on choices.
+   */
+  calc_ingredient_quantities(choices?: RecipeChoices): ComputedIngredient[] {
+    // Use provided choices or derive default choices (index 0 for all)
+    const effectiveChoices: RecipeChoices = choices || {
+      ingredientItems: new Map(
+        Array.from(this.choices.ingredientItems.keys()).map((k) => [k, 0]),
+      ),
+      ingredientGroups: new Map(
+        Array.from(this.choices.ingredientGroups.keys()).map((k) => [k, 0]),
+      ),
+    };
 
     const ingredientQuantities = new Map<
       number,
       (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[]
     >();
+
+    // Track which ingredient indices are selected (either directly or as part of alternatives)
+    const selectedIngredientIndices = new Set<number>();
 
     // Looping ingredient items
     for (const section of this.sections) {
@@ -500,46 +799,75 @@ export class Recipe {
             const alternative = item.alternatives[i] as IngredientAlternative;
             // Is the ingredient selected (potentially by default)
             const isAlternativeChoiceItem =
-              this.choices.ingredientItems.get(item.id)?.active === i;
+              effectiveChoices.ingredientItems?.get(item.id) === i;
+            const alternativeChoiceGroupIdx = item.group
+              ? effectiveChoices.ingredientGroups?.get(item.group)
+              : undefined;
             const alternativeChoiceGroup = item.group
               ? this.choices.ingredientGroups.get(item.group)
               : undefined;
-            const isAlternativeChoiceGroup = alternativeChoiceGroup
-              ? alternativeChoiceGroup.alternatives[
-                  alternativeChoiceGroup.active
-                ]!.itemId === item.id
-              : false;
-            if (
-              alternative.quantity &&
-              ((!("group" in item) &&
+            const isAlternativeChoiceGroup =
+              alternativeChoiceGroup && alternativeChoiceGroupIdx !== undefined
+                ? alternativeChoiceGroup[alternativeChoiceGroupIdx]?.itemId ===
+                  item.id
+                : false;
+
+            // Determine if this ingredient is selected
+            const isSelected =
+              (!("group" in item) &&
                 (item.alternatives.length === 1 || isAlternativeChoiceItem)) ||
-                isAlternativeChoiceGroup)
-            ) {
-              const equivalents:
-                | QuantityWithExtendedUnit
-                | FlatOrGroup<QuantityWithExtendedUnit> =
-                alternative.quantity.equivalents.length === 1
-                  ? alternative.quantity.equivalents[0]!
-                  : {
-                      type: "or",
-                      quantities: alternative.quantity.equivalents,
-                    };
-              ingredientQuantities.set(alternative.index, [
-                ...(ingredientQuantities.get(alternative.index) || []),
-                equivalents,
-              ]);
+              isAlternativeChoiceGroup;
+
+            if (isSelected) {
+              selectedIngredientIndices.add(alternative.index);
+
+              if (alternative.quantity) {
+                const equivalents:
+                  | QuantityWithExtendedUnit
+                  | FlatOrGroup<QuantityWithExtendedUnit> =
+                  alternative.quantity.equivalents.length === 1
+                    ? alternative.quantity.equivalents[0]!
+                    : {
+                        type: "or",
+                        entries: alternative.quantity.equivalents,
+                      };
+                ingredientQuantities.set(alternative.index, [
+                  ...(ingredientQuantities.get(alternative.index) || []),
+                  equivalents,
+                ]);
+              }
             }
           }
         }
       }
     }
 
-    // The main calculation loop
-    for (const [index, quantities] of ingredientQuantities) {
-      this.ingredients[index]!.quantityTotal = addEquivalentsAndSimplify(
-        ...quantities,
-      );
+    // Build computed ingredients - only include selected ingredients
+    const computedIngredients: ComputedIngredient[] = [];
+    for (let index = 0; index < this.ingredients.length; index++) {
+      if (!selectedIngredientIndices.has(index)) continue;
+
+      const ing = this.ingredients[index]!;
+      const computed: ComputedIngredient = {
+        name: ing.name,
+      };
+      if (ing.preparation) {
+        computed.preparation = ing.preparation;
+      }
+      if (ing.flags) {
+        computed.flags = ing.flags;
+      }
+      if (ing.extras) {
+        computed.extras = ing.extras;
+      }
+      const quantities = ingredientQuantities.get(index);
+      if (quantities && quantities.length > 0) {
+        computed.quantityTotal = addEquivalentsAndSimplify(...quantities);
+      }
+      computedIngredients.push(computed);
     }
+
+    return computedIngredients;
   }
 
   /**
@@ -715,7 +1043,7 @@ export class Recipe {
       this.sections.push(section);
     }
 
-    this.calc_ingredient_quantities();
+    this._populate_ingredient_quantities();
   }
 
   /**
@@ -793,14 +1121,14 @@ export class Recipe {
     }
 
     // Scale Choices
-    for (const choice of newRecipe.choices.ingredientGroups.values()) {
-      scaleAlternativesBy(choice.alternatives, factor);
+    for (const alternatives of newRecipe.choices.ingredientGroups.values()) {
+      scaleAlternativesBy(alternatives, factor);
     }
-    for (const choice of newRecipe.choices.ingredientItems.values()) {
-      scaleAlternativesBy(choice.alternatives, factor);
+    for (const alternatives of newRecipe.choices.ingredientItems.values()) {
+      scaleAlternativesBy(alternatives, factor);
     }
 
-    newRecipe.calc_ingredient_quantities();
+    newRecipe._populate_ingredient_quantities();
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
 

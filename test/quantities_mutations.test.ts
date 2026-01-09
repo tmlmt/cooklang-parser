@@ -28,16 +28,12 @@ describe("extendAllUnits", () => {
     expect(extended).toEqual(expected);
   });
   it("should extend units in a nested group", () => {
-    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = {
-      type: "and",
-      quantities: [
+    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = { type: "and", entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "cup",
         },
-        {
-          type: "or",
-          quantities: [
+        { type: "or", entries: [
             {
               quantity: {
                 type: "fixed",
@@ -57,16 +53,12 @@ describe("extendAllUnits", () => {
       ],
     };
     const extended = extendAllUnits(original);
-    const expected: MaybeNestedAndGroup<QuantityWithExtendedUnit> = {
-      type: "and",
-      quantities: [
+    const expected: MaybeNestedAndGroup<QuantityWithExtendedUnit> = { type: "and", entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "cup" },
         },
-        {
-          type: "or",
-          quantities: [
+        { type: "or", entries: [
             {
               quantity: {
                 type: "fixed",
@@ -109,16 +101,12 @@ describe("normalizeAllUnits", () => {
     expect(normalized).toEqual(expected);
   });
   it("should normalize units in a nested group", () => {
-    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = {
-      type: "and",
-      quantities: [
+    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = { type: "and", entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "cup",
         },
-        {
-          type: "or",
-          quantities: [
+        { type: "or", entries: [
             {
               quantity: {
                 type: "fixed",
@@ -138,9 +126,7 @@ describe("normalizeAllUnits", () => {
       ],
     };
     const normalized = normalizeAllUnits(original);
-    const expected = {
-      type: "and",
-      quantities: [
+    const expected = { type: "and", entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: {
@@ -151,9 +137,7 @@ describe("normalizeAllUnits", () => {
             toBase: 236.588,
           },
         },
-        {
-          type: "or",
-          quantities: [
+        { type: "or", entries: [
             {
               quantity: {
                 type: "fixed",

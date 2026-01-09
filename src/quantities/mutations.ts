@@ -26,7 +26,7 @@ export function extendAllUnits(
   q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
 ): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
   if (isGroup(q)) {
-    return { ...q, quantities: q.quantities.map(extendAllUnits) };
+    return { ...q, entries: q.entries.map(extendAllUnits) };
   } else {
     const newQ: QuantityWithExtendedUnit = {
       quantity: q.quantity,
@@ -42,7 +42,7 @@ export function normalizeAllUnits(
   q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
 ): QuantityWithUnitDef | MaybeNestedGroup<QuantityWithUnitDef> {
   if (isGroup(q)) {
-    return { ...q, quantities: q.quantities.map(normalizeAllUnits) };
+    return { ...q, entries: q.entries.map(normalizeAllUnits) };
   } else {
     const newQ: QuantityWithUnitDef = {
       quantity: q.quantity,
@@ -228,7 +228,7 @@ export function toPlainUnit(
   else {
     return {
       ...quantity,
-      quantities: quantity.quantities.map(toPlainUnit),
+      entries: quantity.entries.map(toPlainUnit),
     } as MaybeNestedGroup<QuantityWithPlainUnit>;
   }
 }

@@ -8,6 +8,7 @@ import type {
   QuantityWithPlainUnit,
   MaybeNestedGroup,
   FlatOrGroup,
+  AddedRecipeOptions,
 } from "../types";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import { extendAllUnits } from "../quantities/mutations";
@@ -80,7 +81,7 @@ export class ShoppingList {
       const quantityTotalExtended = extendAllUnits(quantityTotal);
       const newQuantities = (
         isAndGroup(quantityTotalExtended)
-          ? quantityTotalExtended.quantities
+          ? quantityTotalExtended.entries
           : [quantityTotalExtended]
       ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
       const existing = this.ingredients.find((i) => i.name === name);
@@ -96,7 +97,7 @@ export class ShoppingList {
           );
           const existingQuantities = (
             isAndGroup(existingQuantityTotalExtended)
-              ? existingQuantityTotalExtended.quantities
+              ? existingQuantityTotalExtended.entries
               : [existingQuantityTotalExtended]
           ) as (
             | QuantityWithExtendedUnit
@@ -127,7 +128,12 @@ export class ShoppingList {
         scaledRecipe = addedRecipe.recipe.scaleTo(addedRecipe.servings);
       }
 
-      for (const ingredient of scaledRecipe.ingredients) {
+      // Get computed ingredients with total quantities based on choices (or default)
+      const computedIngredients = scaledRecipe.calc_ingredient_quantities(
+        addedRecipe.choices,
+      );
+
+      for (const ingredient of computedIngredients) {
         // Do not add hidden ingredients to the shopping list
         if (ingredient.flags && ingredient.flags.includes("hidden")) {
           continue;
@@ -147,30 +153,28 @@ export class ShoppingList {
    * recalculates the quantities and recategorize the ingredients.
    * @param recipe - The recipe to add.
    * @param scaling - The scaling option for the recipe. Can be either a factor or a number of servings
+   * @param choices - The choices for alternative ingredients.
    */
-  add_recipe(
-    recipe: Recipe,
-    scaling?: { factor: number } | { servings: number },
-  ): void;
-  /**
-   * Adds a recipe to the shopping list, then automatically
-   * recalculates the quantities and recategorize the ingredients.
-   * @param recipe - The recipe to add.
-   * @param factor - The factor to scale the recipe by.
-   * @deprecated since v2.0.3. Use the other call signature with `scaling` instead. Will be removed in v3
-   */
-  add_recipe(recipe: Recipe, factor?: number): void;
-  add_recipe(
-    recipe: Recipe,
-    scaling?: { factor: number } | { servings: number } | number,
-  ): void {
-    if (typeof scaling === "number" || scaling === undefined) {
-      this.recipes.push({ recipe, factor: scaling ?? 1 });
+  add_recipe(recipe: Recipe, options: AddedRecipeOptions = {}): void {
+    if (!options.scaling) {
+      this.recipes.push({
+        recipe,
+        factor: options.scaling ?? 1,
+        choices: options.choices,
+      });
     } else {
-      if ("factor" in scaling) {
-        this.recipes.push({ recipe, factor: scaling.factor });
+      if ("factor" in options.scaling) {
+        this.recipes.push({
+          recipe,
+          factor: options.scaling.factor,
+          choices: options.choices,
+        });
       } else {
-        this.recipes.push({ recipe, servings: scaling.servings });
+        this.recipes.push({
+          recipe,
+          servings: options.scaling.servings,
+          choices: options.choices,
+        });
       }
     }
     this.calculate_ingredients();

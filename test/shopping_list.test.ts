@@ -7,12 +7,14 @@ import {
   recipeForShoppingList1,
   recipeForShoppingList2,
   recipeForShoppingList3,
+  recipeWithInlineAlternatives,
 } from "./fixtures/recipes";
 
 describe("ShoppingList", () => {
   const recipe1 = new Recipe(recipeForShoppingList1);
   const recipe2 = new Recipe(recipeForShoppingList2);
   const recipe3 = new Recipe(recipeForShoppingList3);
+  const recipeAlt = new Recipe(recipeWithInlineAlternatives);
 
   describe("Adding recipes", () => {
     it("should add a recipe's ingredients", () => {
@@ -77,7 +79,7 @@ describe("ShoppingList", () => {
         name: "eggs",
         quantityTotal: {
           type: "and",
-          quantities: [
+          entries: [
             {
               quantity: {
                 type: "fixed",
@@ -148,7 +150,7 @@ describe("ShoppingList", () => {
           name: "pepper",
           quantityTotal: {
             type: "and",
-            quantities: [
+            entries: [
               {
                 quantity: {
                   type: "fixed",
@@ -188,7 +190,7 @@ describe("ShoppingList", () => {
     it("should scale recipe ingredients (deprecated signature)", () => {
       const shoppingList = new ShoppingList();
       // TODO: Deprecated, to remove in v3
-      shoppingList.add_recipe(recipe1, 2);
+      shoppingList.add_recipe(recipe1, { scaling: { factor: 2 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -241,7 +243,7 @@ describe("ShoppingList", () => {
 
     it("should scale recipe ingredients (using factor)", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1, { factor: 2 });
+      shoppingList.add_recipe(recipe1, { scaling: { factor: 2 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -294,7 +296,7 @@ describe("ShoppingList", () => {
 
     it("should scale recipe ingredients (using servings)", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1, { servings: 3 });
+      shoppingList.add_recipe(recipe1, { scaling: { servings: 3 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -342,6 +344,26 @@ describe("ShoppingList", () => {
           },
         },
         { name: "spices" },
+      ]);
+    });
+
+    it("should take into account ingredient choices when adding a recipe", () => {
+      const shoppingList = new ShoppingList();
+      const choices = {
+        ingredientItems: new Map([["ingredient-item-0", 1]]),
+      };
+      shoppingList.add_recipe(recipeAlt, { choices });
+      expect(shoppingList.ingredients).toEqual([
+        {
+          name: "almond milk",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "ml",
+          },
+        },
       ]);
     });
   });
@@ -482,7 +504,7 @@ sugar
             name: "pepper",
             quantityTotal: {
               type: "and",
-              quantities: [
+              entries: [
                 {
                   quantity: {
                     type: "fixed",
