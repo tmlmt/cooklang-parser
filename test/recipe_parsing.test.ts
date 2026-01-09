@@ -841,6 +841,31 @@ This is another step [- with a block comment -] which continues here.`;
     ]);
   });
 
+  it("detects and identifies correctly new section after any kind of item", () => {
+    const recipeWithSections = `
+= Section 1
+
+This is a preparation step
+
+== Section 2 ==
+
+[- This is a comment -]
+
+= Section 3
+
+> Now a note
+
+=== Section 4  =
+
+And a final step`;
+    const result = new Recipe(recipeWithSections);
+    expect(result.sections).toHaveLength(4);
+    expect(result.sections[0]).toMatchObject({ name: "Section 1" });
+    expect(result.sections[1]).toMatchObject({ name: "Section 2" });
+    expect(result.sections[2]).toMatchObject({ name: "Section 3" });
+    expect(result.sections[3]).toMatchObject({ name: "Section 4" });
+  });
+
   it("parses notes correctly", () => {
     const recipeWithNotes = `
 > This is a note at the beginning.

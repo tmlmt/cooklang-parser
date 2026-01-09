@@ -144,13 +144,13 @@ export class Recipe {
         note = flushPendingNote(section, note);
 
         if (this.sections.length === 0 && section.isBlank()) {
-          section.name = line.substring(1).trim();
+          section.name = line.replace(/^=+|=+$/g, "").trim();
         } else {
           /* v8 ignore else -- @preserve */
           if (!section.isBlank()) {
             this.sections.push(section);
           }
-          section = new Section(line.substring(1).trim());
+          section = new Section(line.replace(/^=+|=+$/g, "").trim());
         }
         blankLineBefore = true;
         inNote = false;
