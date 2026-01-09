@@ -194,7 +194,6 @@ export const commentRegex = createRegex()
   .toRegExp();
 
 export const blockCommentRegex = createRegex()
-  .whitespace().zeroOrMore()
   .literal("[-")
   .anyCharacter().zeroOrMore().lazy()
   .literal("-]")

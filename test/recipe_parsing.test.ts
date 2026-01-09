@@ -811,6 +811,36 @@ describe("parse function", () => {
     expect(() => new Recipe(badInput)).toThrow(/Timer missing unit/);
   });
 
+  it("ignores comments and comments blocks", () => {
+    const recipeWithComments = `
+This is a step.
+      
+-- This is a comment that should be ignored
+
+This is another step [- with a block comment -] which continues here.`;
+    const result = new Recipe(recipeWithComments);
+    expect(result.sections[0]?.content).toEqual([
+      {
+        type: "step",
+        items: [
+          {
+            type: "text",
+            value: "This is a step.",
+          },
+        ],
+      },
+      {
+        type: "step",
+        items: [
+          {
+            type: "text",
+            value: "This is another step which continues here.",
+          },
+        ],
+      },
+    ]);
+  });
+
   it("parses notes correctly", () => {
     const recipeWithNotes = `
 > This is a note at the beginning.
