@@ -29,9 +29,18 @@ const metadataEntries = computed(() => {
 });
 
 const hasMetadata = computed(() => metadataEntries.value.length > 0);
-const hasIngredients = computed(() => props.recipe.ingredients.length > 0);
 const hasCookware = computed(() => props.recipe.cookware.length > 0);
 const hasSections = computed(() => props.recipe.sections.length > 0);
+
+/**
+ * Filter ingredients to only show primary ones (usedAsPrimary: true)
+ * Non-primary ingredients are alternatives that will be shown via the choices system
+ */
+const primaryIngredients = computed(() => {
+  return props.recipe.ingredients.filter((ing) => ing.usedAsPrimary);
+});
+
+const hasIngredients = computed(() => primaryIngredients.value.length > 0);
 
 /**
  * Compute step numbers across all sections
@@ -75,9 +84,10 @@ const sectionsWithStepNumbers = computed(() => {
       <h3 class="mb-2 text-lg font-semibold">Ingredients</h3>
       <ul class="list-inside list-disc space-y-1">
         <RecipeIngredientItem
-          v-for="(ingredient, idx) in recipe.ingredients"
+          v-for="(ingredient, idx) in primaryIngredients"
           :key="idx"
           :ingredient="ingredient"
+          :ingredients="recipe.ingredients"
         />
       </ul>
     </section>
