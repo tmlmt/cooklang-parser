@@ -22,7 +22,10 @@ export default defineConfig(
       },
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["docs/.vitepress/config.mts"],
+          allowDefaultProject: [
+            "docs/.vitepress/config.mts",
+            "playground/eslint.config.mjs",
+          ],
         },
         tsconfigRootDir: import.meta.dirname,
       },
