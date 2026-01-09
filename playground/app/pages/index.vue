@@ -77,9 +77,16 @@ const parsedRecipe = computed(() => {
 
       <!-- Mobile: 3 tabs including Editor -->
       <div class="md:hidden">
-        <UTabs :items="mobileItems">
+        <UTabs
+          :items="mobileItems"
+          :ui="{ content: 'h-[calc(100vh-8rem)] overflow-auto' }"
+        >
           <template #editor>
-            <UTextarea v-model="rawRecipe" class="h-full w-full text-sm" />
+            <UTextarea
+              v-model="rawRecipe"
+              class="h-full w-full text-sm"
+              :ui="{ base: 'h-full' }"
+            />
           </template>
 
           <template #raw>
