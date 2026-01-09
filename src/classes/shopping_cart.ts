@@ -1,7 +1,7 @@
 import type {
   ProductOption,
   ProductSelection,
-  Ingredient,
+  AddedIngredient,
   CartContent,
   CartMatch,
   CartMisMatch,
@@ -194,7 +194,7 @@ export class ShoppingCart {
    * @param ingredient - The ingredient to get the product options for
    * @returns An array of {@link ProductOption}
    */
-  private getProductOptions(ingredient: Ingredient): ProductOption[] {
+  private getProductOptions(ingredient: AddedIngredient): ProductOption[] {
     // this function is only called in buildCart() which starts by checking that a product catalog is present
     return this.productCatalog!.products.filter(
       (product) =>
@@ -211,7 +211,7 @@ export class ShoppingCart {
    * @throws {@link NoProductMatchError} if no match can be found
    */
   private getOptimumMatch(
-    ingredient: Ingredient,
+    ingredient: AddedIngredient,
     options: ProductOption[],
   ): ProductSelection[] {
     // If there's no product option, return an empty match
@@ -250,7 +250,7 @@ export class ShoppingCart {
       selection: ProductSelection[] = [],
     ): ProductSelection[] {
       if (isAndGroup(normalizedQuantities)) {
-        for (const q of normalizedQuantities.quantities) {
+        for (const q of normalizedQuantities.entries) {
           const result = getOptimumMatchForQuantityParts(
             q,
             normalizedOptions,
@@ -260,8 +260,7 @@ export class ShoppingCart {
         }
       } else {
         const alternativeUnitsOfQuantity = isOrGroup(normalizedQuantities)
-          ? (normalizedQuantities as FlatOrGroup<QuantityWithUnitDef>)
-              .quantities
+          ? (normalizedQuantities as FlatOrGroup<QuantityWithUnitDef>).entries
           : [normalizedQuantities];
         const solutions: ProductSelection[][] = [];
         const errors = new Set<NoProductMatchErrorCode>();

@@ -217,13 +217,87 @@ export interface IngredientExtras {
 }
 
 /**
+ * Represents a reference to an alternative ingredient along with its quantity.
+ * Used in IngredientQuantityWithAlternatives to describe what other ingredients
+ * could be used in place of the main ingredient.
+ * @category Types
+ */
+export interface AlternativeIngredientRef {
+  /** The index of the alternative ingredient within the {@link Recipe.ingredients} array. */
+  index: number;
+  /** The quantity of the alternative ingredient */
+  quantity: QuantityWithPlainUnit;
+}
+
+/**
+ * Represents a quantity entry for an ingredient that has alternatives.
+ * Contains the main ingredient's quantity plus references to alternative ingredients.
+ * Extends QuantityWithPlainUnit to include quantity and optional unit at the top level.
+ * @category Types
+ */
+export interface IngredientQuantityWithAlternatives
+  extends QuantityWithPlainUnit {
+  /** References to alternative ingredients and their quantities */
+  alternatives: AlternativeIngredientRef[];
+}
+
+/**
+ * Represents a single quantity entry in an ingredient's quantities list.
+ * Can be either a simple quantity or a quantity with alternatives.
+ * @category Types
+ */
+export type IngredientQuantityEntry =
+  | QuantityWithPlainUnit
+  | IngredientQuantityWithAlternatives;
+
+/**
+ * Represents the quantities list for an ingredient as a simple array.
+ * Each entry is either a plain quantity or a quantity with alternatives.
+ * @category Types
+ */
+export type IngredientQuantities = IngredientQuantityEntry[];
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
 export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
-  /** The total quantity of the ingredient in the recipe. */
+  /**
+   * The quantities of the ingredient as they appear in the recipe preparation.
+   * Only populated for primary ingredients (not alternative-only).
+   * Each entry represents a single use of the ingredient in the recipe.
+   * Quantities without alternatives are merged opportunistically when units are compatible.
+   * Quantities with alternatives are only merged if the alternatives are exactly the same.
+   */
+  quantities?: IngredientQuantities;
+  /** The preparation of the ingredient. */
+  preparation?: string;
+  /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
+  alternatives?: Set<number>;
+  /**
+   * True if this ingredient appears as the primary choice (first in an alternatives list).
+   * Only primary ingredients have quantities populated directly.
+   * Alternative-only ingredients (usedAsPrimary undefined/false) have their quantities
+   * available via the {@link Recipe.choices} structure.
+   */
+  usedAsPrimary?: boolean;
+  /** A list of potential state modifiers or other flags for the ingredient */
+  flags?: IngredientFlag[];
+  /** The collection of potential additional metadata for the ingredient */
+  extras?: IngredientExtras;
+}
+
+/**
+ * Represents a computed ingredient with its total quantity after applying choices.
+ * Used as the return type of {@link Recipe.calc_ingredient_quantities}.
+ * @category Types
+ */
+export interface ComputedIngredient {
+  /** The name of the ingredient. */
+  name: string;
+  /** The total quantity of the ingredient after applying choices. */
   quantityTotal?:
     | QuantityWithPlainUnit
     | MaybeNestedGroup<QuantityWithPlainUnit>;
@@ -296,34 +370,26 @@ export interface IngredientItem {
 }
 
 /**
- * Represents the available alternatives for an ingredient mention together with the
- * current active choice.
- * @category Types
- */
-export interface IngredientChoiceInline {
-  alternatives: IngredientAlternative[];
-  active: number;
-}
-
-/**
- * Represents the available alternatives for a group of ingredient mentions together
- * with the current active choice.
- * @category Types
- */
-export interface IngredientChoiceGrouped {
-  alternatives: IngredientAlternative[];
-  active: number;
-}
-
-/**
  * Represents the choices one can make in a recipe
+ * @category Types
+ */
+export interface RecipeAlternatives {
+  /** Map of choices that can be made at Ingredient Item level */
+  ingredientItems: Map<string, IngredientAlternative[]>;
+  /** Map of choices that can be made for Grouped Ingredient Item's */
+  ingredientGroups: Map<string, IngredientAlternative[]>;
+}
+
+/**
+ * Represents the choices to apply when computing ingredient quantities.
+ * Maps item/group IDs to the index of the selected alternative.
  * @category Types
  */
 export interface RecipeChoices {
   /** Map of choices that can be made at Ingredient Item level */
-  ingredientItems: Map<string, IngredientChoiceInline>;
+  ingredientItems?: Map<string, number>;
   /** Map of choices that can be made for Grouped Ingredient Item's */
-  ingredientGroups: Map<string, IngredientChoiceGrouped>;
+  ingredientGroups?: Map<string, number>;
 }
 
 /**
@@ -424,7 +490,7 @@ export interface Cookware {
  * @category Types
  */
 export interface CategorizedIngredients {
-  [category: string]: Ingredient[];
+  [category: string]: AddedIngredient[];
 }
 
 /**
@@ -436,6 +502,8 @@ export interface RecipeWithFactor {
   recipe: Recipe;
   /** The factor the recipe is scaled by. */
   factor: number;
+  /** The choices for alternative ingredients. */
+  choices?: RecipeChoices;
 }
 
 /**
@@ -447,6 +515,8 @@ export interface RecipeWithServings {
   recipe: Recipe;
   /** The servings the recipe is scaled to */
   servings: number;
+  /** The choices for alternative ingredients. */
+  choices?: RecipeChoices;
 }
 
 /**
@@ -456,10 +526,24 @@ export interface RecipeWithServings {
 export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
 
 /**
+ * Options for adding a recipe to a shopping list
+ * @category Types
+ */
+export type AddedRecipeOptions = {
+  /** The scaling option for the recipe. Can be either a factor or a number of servings */
+  scaling?: { factor: number } | { servings: number };
+  /** The choices for alternative ingredients. */
+  choices?: RecipeChoices;
+};
+
+/**
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name" | "quantityTotal">;
+export type AddedIngredient = Pick<
+  ComputedIngredient,
+  "name" | "quantityTotal"
+>;
 
 /**
  * Represents an ingredient in a category.
@@ -671,21 +755,21 @@ export type QuantityWithUnitLike =
 
 export interface FlatOrGroup<T = QuantityWithUnitLike> {
   type: "or";
-  quantities: T[];
+  entries: T[];
 }
 export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
   type: "or";
-  quantities: (T | MaybeNestedGroup<T>)[];
+  entries: (T | MaybeNestedGroup<T>)[];
 }
 
 export interface FlatAndGroup<T = QuantityWithUnitLike> {
   type: "and";
-  quantities: T[];
+  entries: T[];
 }
 
 export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
   type: "and";
-  quantities: (T | MaybeNestedGroup<T>)[];
+  entries: (T | MaybeNestedGroup<T>)[];
 }
 
 export type FlatGroup<T = QuantityWithUnitLike> =

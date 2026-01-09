@@ -17,8 +17,8 @@ import { qPlain } from "./mocks/quantity";
 import { isValueIntegerLike } from "../src/utils/type_guards";
 
 describe("Type Guards", () => {
-  const andGroup: AndGroup = { type: "and", quantities: [] };
-  const orGroup: OrGroup = { type: "or", quantities: [] };
+  const andGroup: AndGroup = { type: "and", entries: [] };
+  const orGroup: OrGroup = { type: "or", entries: [] };
   const quantity: QuantityWithPlainUnit = qPlain(2, "cup");
 
   describe("isGroup", () => {

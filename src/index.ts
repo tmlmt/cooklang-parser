@@ -56,6 +56,13 @@ import type {
   ProductMisMatch,
   CartMisMatch,
   NoProductMatchErrorCode,
+  ComputedIngredient,
+  IngredientQuantities,
+  IngredientQuantityEntry,
+  IngredientQuantityWithAlternatives,
+  AlternativeIngredientRef,
+  RecipeChoices,
+  RecipeAlternatives,
 } from "./types";
 
 export {
@@ -98,6 +105,13 @@ export {
   ProductMisMatch,
   CartMisMatch,
   NoProductMatchErrorCode,
+  ComputedIngredient,
+  IngredientQuantities,
+  IngredientQuantityEntry,
+  IngredientQuantityWithAlternatives,
+  AlternativeIngredientRef,
+  RecipeChoices,
+  RecipeAlternatives,
 };
 
 import {

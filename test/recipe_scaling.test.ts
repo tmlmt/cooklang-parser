@@ -13,54 +13,54 @@ describe("scaleTo", () => {
   it("should scale up ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleTo(4);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 200 },
       },
       unit: "g",
-    });
-    expect(scaledRecipe.ingredients[1]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 1 },
       },
       unit: "tsp",
-    });
-    expect(scaledRecipe.ingredients[2]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
       quantity: {
         type: "range",
         min: { type: "decimal", decimal: 4 },
         max: { type: "decimal", decimal: 6 },
       },
-    });
-    expect(scaledRecipe.ingredients[3]!.quantityTotal).toBeUndefined();
+    }]);
+    expect(scaledRecipe.ingredients[3]!.quantities).toBeUndefined();
   });
 
   it("should scale down ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleTo(1);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 50 },
       },
       unit: "g",
-    });
-    expect(scaledRecipe.ingredients[1]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "fraction", num: 1, den: 4 },
       },
       unit: "tsp",
-    });
-    expect(scaledRecipe.ingredients[2]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
       quantity: {
         type: "range",
         min: { type: "decimal", decimal: 1 },
         max: { type: "decimal", decimal: 1.5 },
       },
-    });
+    }]);
   });
 
   it("should update the servings property", () => {
@@ -102,10 +102,10 @@ describe("scaleTo", () => {
     recipeWithoutServings.ingredients = [
       {
         name: "water",
-        quantityTotal: {
+        quantities: [{
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "l",
-        },
+        }],
         flags: [],
       },
     ];
@@ -126,13 +126,13 @@ describe("scaleTo", () => {
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleTo(4);
     expect(scaledRecipe.ingredients.length).toBe(1);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 2 },
       },
       unit: "L",
-    });
+    }]);
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
   });
@@ -143,12 +143,12 @@ servings: 3
 ---
 @eggs{6}`);
     const scaledRecipe = recipe.scaleTo(2);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 4 },
       },
-    });
+    }]);
   });
 });
 
@@ -158,54 +158,54 @@ describe("scaleBy", () => {
   it("should scale up ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 200 },
       },
       unit: "g",
-    });
-    expect(scaledRecipe.ingredients[1]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 1 },
       },
       unit: "tsp",
-    });
-    expect(scaledRecipe.ingredients[2]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
       quantity: {
         type: "range",
         min: { type: "decimal", decimal: 4 },
         max: { type: "decimal", decimal: 6 },
       },
-    });
-    expect(scaledRecipe.ingredients[3]!.quantityTotal).toBeUndefined();
+    }]);
+    expect(scaledRecipe.ingredients[3]!.quantities).toBeUndefined();
   });
 
   it("should scale down ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleBy(0.5);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 50 },
       },
       unit: "g",
-    });
-    expect(scaledRecipe.ingredients[1]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "fraction", num: 1, den: 4 },
       },
       unit: "tsp",
-    });
-    expect(scaledRecipe.ingredients[2]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
       quantity: {
         type: "range",
         min: { type: "decimal", decimal: 1 },
         max: { type: "decimal", decimal: 1.5 },
       },
-    });
+    }]);
   });
 
   it("should update the servings property", () => {
@@ -228,10 +228,10 @@ describe("scaleBy", () => {
     recipeWithoutServings.ingredients = [
       {
         name: "water",
-        quantityTotal: {
+        quantities: [{
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "l",
-        },
+        }],
         flags: [],
       },
     ];
@@ -252,13 +252,13 @@ describe("scaleBy", () => {
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(1);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 2 },
       },
       unit: "L",
-    });
+    }]);
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
   });
@@ -281,20 +281,20 @@ serves: 2, some
   it("should not scale fixed quantities", () => {
     const recipe = new Recipe(recipeToScaleSomeFixedQuantities);
     const scaledRecipe = recipe.scaleBy(2);
-    expect(scaledRecipe.ingredients[0]!.quantityTotal).toEqual({
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 100 },
       },
       unit: "g",
-    });
-    expect(scaledRecipe.ingredients[1]!.quantityTotal).toEqual({
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
       quantity: {
         type: "fixed",
         value: { type: "decimal", decimal: 10 },
       },
       unit: "g",
-    });
+    }]);
   });
 
   it("should scale choices when scaling by", () => {
@@ -309,104 +309,98 @@ Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
     const scaledRecipe = recipe.scaleBy(2);
     const sugarIngredientChoice =
       scaledRecipe.choices.ingredientItems.get("ingredient-item-0");
-    expect(sugarIngredientChoice).toEqual({
-      active: 0,
-      alternatives: [
-        {
-          displayName: "sugar",
-          index: 0,
-          quantity: {
-            equivalents: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: {
-                    decimal: 200,
-                    type: "decimal",
-                  },
-                },
-                unit: {
-                  name: "g",
+    expect(sugarIngredientChoice).toEqual([
+      {
+        displayName: "sugar",
+        index: 0,
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 200,
+                  type: "decimal",
                 },
               },
-            ],
-            scalable: true,
-          },
+              unit: {
+                name: "g",
+              },
+            },
+          ],
+          scalable: true,
         },
-        {
-          displayName: "honey",
-          index: 1,
-          quantity: {
-            equivalents: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: {
-                    decimal: 200,
-                    type: "decimal",
-                  },
-                },
-                unit: {
-                  name: "g",
+      },
+      {
+        displayName: "honey",
+        index: 1,
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 200,
+                  type: "decimal",
                 },
               },
-            ],
-            scalable: true,
-          },
+              unit: {
+                name: "g",
+              },
+            },
+          ],
+          scalable: true,
         },
-      ],
-    });
+      },
+    ]);
 
     const milkIngredientChoice =
       scaledRecipe.choices.ingredientGroups.get("milk");
-    expect(milkIngredientChoice).toEqual({
-      active: 0,
-      alternatives: [
-        {
-          displayName: "milk",
-          index: 2,
-          itemId: "ingredient-item-1",
-          quantity: {
-            equivalents: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: {
-                    decimal: 300,
-                    type: "decimal",
-                  },
-                },
-                unit: {
-                  name: "mL",
+    expect(milkIngredientChoice).toEqual([
+      {
+        displayName: "milk",
+        index: 2,
+        itemId: "ingredient-item-1",
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 300,
+                  type: "decimal",
                 },
               },
-            ],
-            scalable: true,
-          },
+              unit: {
+                name: "mL",
+              },
+            },
+          ],
+          scalable: true,
         },
-        {
-          displayName: "oat milk",
-          index: 3,
-          itemId: "ingredient-item-2",
-          quantity: {
-            equivalents: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: {
-                    decimal: 300,
-                    type: "decimal",
-                  },
-                },
-                unit: {
-                  name: "mL",
+      },
+      {
+        displayName: "oat milk",
+        index: 3,
+        itemId: "ingredient-item-2",
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 300,
+                  type: "decimal",
                 },
               },
-            ],
-            scalable: true,
-          },
+              unit: {
+                name: "mL",
+              },
+            },
+          ],
+          scalable: true,
         },
-      ],
-    });
+      },
+    ]);
   });
 });

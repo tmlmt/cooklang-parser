@@ -4,6 +4,8 @@ import {
   simpleRecipe,
   complexRecipe,
   recipeToScaleWithAlternatives,
+  recipeWithGroupedAlternatives,
+  recipeWithInlineAlternatives,
 } from "./fixtures/recipes";
 import {
   InvalidQuantityFormat,
@@ -53,9 +55,15 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
+            },
+          ],
+          usedAsPrimary: true,
         },
       ]);
     });
@@ -70,6 +78,7 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "flour",
+          usedAsPrimary: true,
         },
       ]);
     });
@@ -79,6 +88,7 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "coarse salt",
+          usedAsPrimary: true,
         },
       ]);
     });
@@ -88,13 +98,16 @@ describe("parse function", () => {
       expect(result.ingredients).toEqual([
         {
           name: "butter",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 30 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 30 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
+          usedAsPrimary: true,
         },
       ]);
     });
@@ -129,13 +142,19 @@ describe("parse function", () => {
 
         const expected_dough: Ingredient = {
           name: "pizza dough",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+            },
+          ],
           flags: ["recipe"],
           extras: {
             path: "pizza dough.cook",
           },
+          usedAsPrimary: true,
         };
         const expected_toppings: Ingredient = {
           name: "toppings",
@@ -143,6 +162,7 @@ describe("parse function", () => {
           extras: {
             path: "toppings.cook",
           },
+          usedAsPrimary: true,
         };
 
         expect(result1.ingredients).toHaveLength(2);
@@ -169,13 +189,19 @@ describe("parse function", () => {
 
         const expected_dough: Ingredient = {
           name: "pizza dough",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+            },
+          ],
           flags: ["recipe"],
           extras: {
             path: "some essentials/my.doughs/pizza dough.cook",
           },
+          usedAsPrimary: true,
         };
         const expected_toppings: Ingredient = {
           name: "toppings",
@@ -183,6 +209,7 @@ describe("parse function", () => {
           extras: {
             path: "../some-essentials/toppings.cook",
           },
+          usedAsPrimary: true,
         };
 
         expect(result1.ingredients).toHaveLength(2);
@@ -210,18 +237,27 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0]).toEqual({
         name: "wheat flour",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+          },
+        ],
         preparation: "sifted",
+        usedAsPrimary: true,
       });
       expect(result.ingredients[1]).toEqual({
         name: "eggs",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-        },
+        quantities: [
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          },
+        ],
         preparation: "large, beaten",
+        usedAsPrimary: true,
       });
     });
 
@@ -235,10 +271,12 @@ describe("parse function", () => {
       expect(result.ingredients[0]).toEqual({
         name: "salt",
         flags: ["hidden"],
+        usedAsPrimary: true,
       });
       expect(result.ingredients[1]).toEqual({
         name: "pepper",
         flags: ["optional"],
+        usedAsPrimary: true,
       });
     });
 
@@ -251,6 +289,7 @@ describe("parse function", () => {
       expect(result.ingredients[0]).toEqual({
         name: "salt",
         flags: ["optional", "hidden"],
+        usedAsPrimary: true,
       });
     });
 
@@ -350,23 +389,29 @@ describe("parse function", () => {
       expect(recipe.ingredients).toEqual([
         {
           name: "flour tipo 00",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 150 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 150 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
+          usedAsPrimary: true,
         },
         {
           name: "water",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 300 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 300 },
+              },
+              unit: "mL",
             },
-            unit: "mL",
-          },
+          ],
+          usedAsPrimary: true,
         },
       ]);
     });
@@ -380,12 +425,25 @@ describe("parse function", () => {
       `;
       const result = new Recipe(recipe);
       expect(result.ingredients).toHaveLength(1);
+      // Quantities are merged opportunistically when units are compatible
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
+            unit: "g",
+          },
+        ],
+        usedAsPrimary: true,
+      });
+      // calc_ingredient_quantities returns the same result
+      const computed = result.calc_ingredient_quantities();
+      expect(computed[0]!.quantityTotal).toEqual({
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+        unit: "g",
       });
     });
 
@@ -475,17 +533,29 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+          },
+        ],
+        usedAsPrimary: true,
       });
       expect(result.ingredients[1]).toEqual({
         name: "flour",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 50 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+          },
+        ],
+        usedAsPrimary: true,
       });
     });
 
@@ -495,15 +565,18 @@ describe("parse function", () => {
         {
           name: "eggs",
           preparation: "boiled",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: {
-                type: "decimal",
-                decimal: 2,
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  decimal: 2,
+                },
               },
             },
-          },
+          ],
+          usedAsPrimary: true,
         },
       ]);
       expect(result.sections[0]?.content).toEqual([
@@ -574,10 +647,16 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "Sugar", // Note: original casing is preserved
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
+            unit: "g",
+          },
+        ],
+        usedAsPrimary: true,
       });
     });
 
@@ -590,10 +669,16 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "sugar",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
-          unit: "kg",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1.5 },
+            },
+            unit: "kg",
+          },
+        ],
+        usedAsPrimary: true,
       });
     });
 
@@ -606,13 +691,15 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       const butter = result.ingredients[0]!;
       expect(butter.name).toBe("butter");
-      expect(butter.quantityTotal).toEqual({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 0.704 },
+      expect(butter.quantities).toEqual([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 0.704 },
+          },
+          unit: "kg",
         },
-        unit: "kg",
-      });
+      ]);
       // TODO: 700g would be more elegant
     });
 
@@ -639,25 +726,23 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "water",
-        quantityTotal: {
-          type: "and",
-          quantities: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "l",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "kg",
+            unit: "l",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
-          ],
-        },
+            unit: "kg",
+          },
+        ],
+        usedAsPrimary: true,
       });
     });
   });
@@ -842,13 +927,19 @@ Another step.
 
         const expected_dough: Ingredient = {
           name: "pizza dough",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+            },
+          ],
           flags: ["recipe"],
           extras: {
             path: "pizza dough.cook",
           },
+          usedAsPrimary: true,
         };
         const expected_toppings: Ingredient = {
           name: "toppings",
@@ -856,6 +947,7 @@ Another step.
           extras: {
             path: "toppings.cook",
           },
+          usedAsPrimary: true,
         };
 
         expect(result1.ingredients).toHaveLength(2);
@@ -885,13 +977,19 @@ Another step.
 
         const expected_dough: Ingredient = {
           name: "pizza dough",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+            },
+          ],
           flags: ["recipe"],
           extras: {
             path: "some essentials/my.doughs/pizza dough.cook",
           },
+          usedAsPrimary: true,
         };
         const expected_toppings: Ingredient = {
           name: "toppings",
@@ -899,6 +997,7 @@ Another step.
           extras: {
             path: "../some-essentials/toppings.cook",
           },
+          usedAsPrimary: true,
         };
 
         expect(result1.ingredients).toHaveLength(2);
@@ -927,19 +1026,28 @@ Another step.
       expect(result.choices.ingredientGroups.has("flour")).toBe(true);
       expect(result.ingredients[0]).toEqual({
         name: "wheat flour",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+          },
+        ],
         preparation: "sifted",
+        usedAsPrimary: true,
       });
       expect(result.choices.ingredientGroups.has("eggs")).toBe(true);
       expect(result.ingredients[1]).toEqual({
         name: "eggs",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-        },
+        quantities: [
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          },
+        ],
         preparation: "large, beaten",
+        usedAsPrimary: true,
       });
     });
 
@@ -955,6 +1063,7 @@ Another step.
         name: "salt",
         flags: ["hidden"],
         alternatives: new Set([1]),
+        usedAsPrimary: true,
       });
       expect(result.ingredients[1]).toEqual({
         name: "pepper",
@@ -973,6 +1082,7 @@ Another step.
       expect(result.ingredients[0]).toEqual({
         name: "salt",
         flags: ["optional", "hidden"],
+        usedAsPrimary: true,
       });
     });
 
@@ -1074,14 +1184,36 @@ Another step.
       expect(recipe.ingredients).toEqual([
         {
           name: "flour tipo 00",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "g",
+              alternatives: [
+                {
+                  index: 1,
+                  quantity: {
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 50 },
+                    },
+                    unit: "g",
+                  },
+                },
+              ],
+            },
+          ],
           alternatives: new Set([1]),
+          usedAsPrimary: true,
         },
         {
           name: "flour tipo 1",
@@ -1091,22 +1223,48 @@ Another step.
     });
 
     it("parses grouped altenatives correctly", () => {
-      const recipe = `
-        Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|soy milk{150%ml} for a vegan version
-      `;
-      const result = new Recipe(recipe);
+      const result = new Recipe(recipeWithGroupedAlternatives);
       expect(result.ingredients).toHaveLength(3);
-      // The first ingredient should have a set quantity
+      // All ingredients have their quantities stored as they appear in the recipe
+      // For grouped alternatives, the primary ingredient's quantities field includes alternatives
       const milkIngredient: Ingredient = {
         name: "milk",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
-          unit: "ml",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "ml",
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: "ml",
+                },
+              },
+              {
+                index: 2,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 150 },
+                  },
+                  unit: "ml",
+                },
+              },
+            ],
+          },
+        ],
         alternatives: new Set([1, 2]),
+        usedAsPrimary: true,
       };
       expect(result.ingredients[0]).toEqual(milkIngredient);
-      // The alternative should not have a quantity as it is not selected by default
+      // Non-primary grouped alternatives don't have usedAsPrimary or quantities
       const almondMilkIngredient: Ingredient = {
         name: "almond milk",
         alternatives: new Set([0, 2]),
@@ -1122,62 +1280,59 @@ Another step.
         ingredientGroups: new Map([
           [
             "milk",
-            {
-              active: 0,
-              alternatives: [
-                {
-                  displayName: "milk",
-                  index: 0,
-                  itemId: "ingredient-item-0",
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 200 },
-                        },
-                        unit: { name: "ml" },
+            [
+              {
+                displayName: "milk",
+                index: 0,
+                itemId: "ingredient-item-0",
+                quantity: {
+                  scalable: true,
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 200 },
                       },
-                    ],
-                  },
+                      unit: { name: "ml" },
+                    },
+                  ],
                 },
-                {
-                  displayName: "almond milk",
-                  index: 1,
-                  itemId: "ingredient-item-1",
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 100 },
-                        },
-                        unit: { name: "ml" },
+              },
+              {
+                displayName: "almond milk",
+                index: 1,
+                itemId: "ingredient-item-1",
+                quantity: {
+                  scalable: true,
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
                       },
-                    ],
-                  },
+                      unit: { name: "ml" },
+                    },
+                  ],
                 },
-                {
-                  displayName: "soy milk",
-                  index: 2,
-                  itemId: "ingredient-item-2",
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 150 },
-                        },
-                        unit: { name: "ml" },
+              },
+              {
+                displayName: "soy milk",
+                index: 2,
+                itemId: "ingredient-item-2",
+                quantity: {
+                  scalable: true,
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 150 },
                       },
-                    ],
-                  },
+                      unit: { name: "ml" },
+                    },
+                  ],
                 },
-              ],
-            },
+              },
+            ],
           ],
         ]),
         ingredientItems: new Map(),
@@ -1218,22 +1373,47 @@ Another step.
 
   describe("in-line alternative ingredients", () => {
     it("parses in-line alternative ingredients correctly", () => {
-      const recipe = `
-        Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]
-      `;
-      const result = new Recipe(recipe);
+      const result = new Recipe(recipeWithInlineAlternatives);
       expect(result.ingredients).toHaveLength(3);
-      // The first ingredient should have a set quantity
+      // Only the primary ingredient (milk) has quantities stored and usedAsPrimary flag
       const milkIngredient: Ingredient = {
         name: "milk",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
-          unit: "ml",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "ml",
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: "ml",
+                },
+              },
+              {
+                index: 2,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 150 },
+                  },
+                  unit: "ml",
+                },
+              },
+            ],
+          },
+        ],
         alternatives: new Set([1, 2]),
+        usedAsPrimary: true,
       };
       expect(result.ingredients[0]).toEqual(milkIngredient);
-      // The alternative should not have a quantity as it is not selected by default
+      // Alternative-only ingredients have no usedAsPrimary flag and no quantities
       const almondMilkIngredient: Ingredient = {
         name: "almond milk",
         alternatives: new Set([0, 2]),
@@ -1250,61 +1430,58 @@ Another step.
         ingredientItems: new Map([
           [
             "ingredient-item-0",
-            {
-              active: 0,
-              alternatives: [
-                {
-                  displayName: "milk",
-                  index: 0,
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 200 },
-                        },
-                        unit: { name: "ml" },
+            [
+              {
+                displayName: "milk",
+                index: 0,
+                quantity: {
+                  scalable: true,
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 200 },
                       },
-                    ],
-                  },
+                      unit: { name: "ml" },
+                    },
+                  ],
                 },
-                {
-                  displayName: "almond milk",
-                  index: 1,
-                  note: "vegan version",
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 100 },
-                        },
-                        unit: { name: "ml" },
+              },
+              {
+                displayName: "almond milk",
+                index: 1,
+                note: "vegan version",
+                quantity: {
+                  scalable: true,
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
                       },
-                    ],
-                  },
+                      unit: { name: "ml" },
+                    },
+                  ],
                 },
-                {
-                  displayName: "soy milk",
-                  index: 2,
-                  note: "another vegan option",
-                  quantity: {
-                    scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 150 },
-                        },
-                        unit: { name: "ml" },
+              },
+              {
+                displayName: "soy milk",
+                index: 2,
+                note: "another vegan option",
+                quantity: {
+                  scalable: true,
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 150 },
                       },
-                    ],
-                  },
+                      unit: { name: "ml" },
+                    },
+                  ],
                 },
-              ],
-            },
+              },
+            ],
           ],
         ]),
         ingredientGroups: new Map(),
@@ -1318,13 +1495,231 @@ Another step.
       `;
       const result = new Recipe(recipe);
       expect(result.ingredients).toHaveLength(3);
+      // Sugar ingredient has two quantity entries with different alternatives (not merged)
       const sugarIngredient: Ingredient = {
         name: "sugar",
-        quantityTotal: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
-          unit: "g",
-        },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: "g",
+                },
+              },
+            ],
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+            alternatives: [
+              {
+                index: 2,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 50 },
+                  },
+                  unit: "g",
+                },
+              },
+            ],
+          },
+        ],
         alternatives: new Set([1, 2]),
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(sugarIngredient);
+
+      const recipe2 = `
+        Use @sugar{100%g}|brown sugar{100%g}[for a richer flavor] in the mix.
+        Then sprinkle some more @&sugar{50%g}|powder sugar{50%g}|&brown sugar{50%g} on top before serving.
+      `;
+      const result2 = new Recipe(recipe2);
+      expect(result2.ingredients).toHaveLength(3);
+      // Sugar ingredient has two quantity entries with different alternatives (not merged)
+      const sugarIngredient2: Ingredient = {
+        name: "sugar",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: "g",
+                },
+              },
+            ],
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+            alternatives: [
+              {
+                index: 2,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 50 },
+                  },
+                  unit: "g",
+                },
+              },
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 50 },
+                  },
+                  unit: "g",
+                },
+              },
+            ],
+          },
+        ],
+        alternatives: new Set([1, 2]),
+        usedAsPrimary: true,
+      };
+      expect(result2.ingredients[0]).toEqual(sugarIngredient2);
+    });
+
+    it("should correctly handle alternative ingredients without quantity", () => {
+      const recipe = "Use @salt{}|pepper to spice things up";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      const saltIngredient: Ingredient = {
+        name: "salt",
+        alternatives: new Set([1]),
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(saltIngredient);
+      const pepperIngredient: Ingredient = {
+        name: "pepper",
+        alternatives: new Set([0]),
+      };
+      expect(result.ingredients[1]).toEqual(pepperIngredient);
+    });
+
+    it("should correctly sum up sets of quantities with the same alternative that can't be summed up", () => {
+      const recipe =
+        "Add @aubergine{1}|carrot{1%large} and more this time @&aubergine{1}|&carrot{2%small}";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      // Aubergine ingredient has two quantity entries with different alternatives (not merged)
+      const aubergineIngredient: Ingredient = {
+        name: "aubergine",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: "large",
+                },
+              },
+            ],
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 2 },
+                  },
+                  unit: "small",
+                },
+              },
+            ],
+          },
+        ],
+        usedAsPrimary: true,
+        alternatives: new Set([1]),
+      };
+      expect(result.ingredients[0]).toEqual(aubergineIngredient);
+    });
+
+    it("should correctly sum up sets of quantities with their alternatives if the ingredients involved are the same", () => {
+      const recipe = `
+        Use @sugar{100%g}|brown sugar{100%g}|powder sugar{100%g}[for a richer flavor] in the mix.
+        Then sprinkle some more @&sugar{50%g}|&powder sugar{30%g}|&brown sugar{20%g} on top before serving.
+      `;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(3);
+      // Sugar ingredient has a single quantity entry with summed quantities and alternatives
+      const sugarIngredient: Ingredient = {
+        name: "sugar",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
+            unit: "g",
+            alternatives: [
+              {
+                index: 1,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 120 },
+                  },
+                  unit: "g",
+                },
+              },
+              {
+                index: 2,
+                quantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 130 },
+                  },
+                  unit: "g",
+                },
+              },
+            ],
+          },
+        ],
+        alternatives: new Set([1, 2]),
+        usedAsPrimary: true,
       };
       expect(result.ingredients[0]).toEqual(sugarIngredient);
     });
@@ -1337,32 +1732,16 @@ Another step.
       expect(result.ingredients).toHaveLength(1);
       expect(result.ingredients[0]).toEqual({
         name: "flour",
-        quantityTotal: {
-          quantities: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "bag",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 0.22 },
-              },
-              unit: "lb",
-            },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 3.5 },
-              },
-              unit: "oz",
-            },
-          ],
-          type: "or",
-        },
+            unit: "bag",
+          },
+        ],
+        usedAsPrimary: true,
       });
       const ingredientItem = result.sections[0]?.content[0];
       if (ingredientItem?.type !== "step") return false;
