@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { IngredientItem, Step } from "../src/types";
 import { Recipe } from "../src/classes/recipe";
 import {
   recipeToScale,
@@ -12,38 +13,54 @@ describe("scaleTo", () => {
   it("should scale up ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleTo(4);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 200 },
-    });
-    expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 1 },
-    });
-    expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "range",
-      min: { type: "decimal", value: 4 },
-      max: { type: "decimal", value: 6 },
-    });
-    expect(scaledRecipe.ingredients[3]!.quantity).toBeUndefined();
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 200 },
+      },
+      unit: "g",
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 1 },
+      },
+      unit: "tsp",
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 4 },
+        max: { type: "decimal", decimal: 6 },
+      },
+    }]);
+    expect(scaledRecipe.ingredients[3]!.quantities).toBeUndefined();
   });
 
   it("should scale down ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleTo(1);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 50 },
-    });
-    expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "fraction", num: 1, den: 4 },
-    });
-    expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "range",
-      min: { type: "decimal", value: 1 },
-      max: { type: "decimal", value: 1.5 },
-    });
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 50 },
+      },
+      unit: "g",
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "fraction", num: 1, den: 4 },
+      },
+      unit: "tsp",
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 1.5 },
+      },
+    }]);
   });
 
   it("should update the servings property", () => {
@@ -62,16 +79,20 @@ describe("scaleTo", () => {
 
   it("should also scale individual quantity parts of referenced ingredients", () => {
     const scaledRecipe = baseRecipe.scaleTo(4);
-    expect(scaledRecipe.ingredients[0]!.quantityParts).toEqual([
+    const step = scaledRecipe.sections[0]!.content[0] as Step;
+    const item1 = step.items[1] as IngredientItem;
+    const item3 = step.items[3] as IngredientItem;
+
+    expect(item1.alternatives[0]?.quantity?.equivalents).toEqual([
       {
-        unit: "g",
-        value: { type: "fixed", value: { type: "decimal", value: 100 } },
-        scalable: true,
+        unit: { name: "g" },
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
       },
+    ]);
+    expect(item3.alternatives[0]?.quantity?.equivalents).toEqual([
       {
-        unit: "g",
-        value: { type: "fixed", value: { type: "decimal", value: 100 } },
-        scalable: true,
+        unit: { name: "g" },
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
       },
     ]);
   });
@@ -81,8 +102,10 @@ describe("scaleTo", () => {
     recipeWithoutServings.ingredients = [
       {
         name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
+        quantities: [{
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "l",
+        }],
         flags: [],
       },
     ];
@@ -103,10 +126,13 @@ describe("scaleTo", () => {
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleTo(4);
     expect(scaledRecipe.ingredients.length).toBe(1);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 2 },
-    });
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 2 },
+      },
+      unit: "L",
+    }]);
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
   });
@@ -117,10 +143,12 @@ servings: 3
 ---
 @eggs{6}`);
     const scaledRecipe = recipe.scaleTo(2);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 4 },
-    });
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 4 },
+      },
+    }]);
   });
 });
 
@@ -130,38 +158,54 @@ describe("scaleBy", () => {
   it("should scale up ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 200 },
-    });
-    expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 1 },
-    });
-    expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "range",
-      min: { type: "decimal", value: 4 },
-      max: { type: "decimal", value: 6 },
-    });
-    expect(scaledRecipe.ingredients[3]!.quantity).toBeUndefined();
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 200 },
+      },
+      unit: "g",
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 1 },
+      },
+      unit: "tsp",
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 4 },
+        max: { type: "decimal", decimal: 6 },
+      },
+    }]);
+    expect(scaledRecipe.ingredients[3]!.quantities).toBeUndefined();
   });
 
   it("should scale down ingredient quantities", () => {
     const scaledRecipe = baseRecipe.scaleBy(0.5);
     expect(scaledRecipe.ingredients.length).toBe(4);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 50 },
-    });
-    expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "fraction", num: 1, den: 4 },
-    });
-    expect(scaledRecipe.ingredients[2]!.quantity).toEqual({
-      type: "range",
-      min: { type: "decimal", value: 1 },
-      max: { type: "decimal", value: 1.5 },
-    });
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 50 },
+      },
+      unit: "g",
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "fraction", num: 1, den: 4 },
+      },
+      unit: "tsp",
+    }]);
+    expect(scaledRecipe.ingredients[2]!.quantities).toEqual([{
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 1.5 },
+      },
+    }]);
   });
 
   it("should update the servings property", () => {
@@ -184,8 +228,10 @@ describe("scaleBy", () => {
     recipeWithoutServings.ingredients = [
       {
         name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
+        quantities: [{
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "l",
+        }],
         flags: [],
       },
     ];
@@ -206,10 +252,13 @@ describe("scaleBy", () => {
 
     const scaledRecipe = recipeWithNonNumericMeta.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(1);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 2 },
-    });
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 2 },
+      },
+      unit: "L",
+    }]);
     expect(scaledRecipe.servings).toBe(4);
     expect(scaledRecipe.metadata.servings).toBe("2, a few");
   });
@@ -232,13 +281,126 @@ serves: 2, some
   it("should not scale fixed quantities", () => {
     const recipe = new Recipe(recipeToScaleSomeFixedQuantities);
     const scaledRecipe = recipe.scaleBy(2);
-    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 100 },
-    });
-    expect(scaledRecipe.ingredients[1]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", value: 10 },
-    });
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 100 },
+      },
+      unit: "g",
+    }]);
+    expect(scaledRecipe.ingredients[1]!.quantities).toEqual([{
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 10 },
+      },
+      unit: "g",
+    }]);
+  });
+
+  it("should scale choices when scaling by", () => {
+    const recipe = new Recipe(`
+---
+servings: 2
+---
+Use @sugar{100%g}|honey{100%g} in the mix.
+
+Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
+    `);
+    const scaledRecipe = recipe.scaleBy(2);
+    const sugarIngredientChoice =
+      scaledRecipe.choices.ingredientItems.get("ingredient-item-0");
+    expect(sugarIngredientChoice).toEqual([
+      {
+        displayName: "sugar",
+        index: 0,
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 200,
+                  type: "decimal",
+                },
+              },
+              unit: {
+                name: "g",
+              },
+            },
+          ],
+          scalable: true,
+        },
+      },
+      {
+        displayName: "honey",
+        index: 1,
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 200,
+                  type: "decimal",
+                },
+              },
+              unit: {
+                name: "g",
+              },
+            },
+          ],
+          scalable: true,
+        },
+      },
+    ]);
+
+    const milkIngredientChoice =
+      scaledRecipe.choices.ingredientGroups.get("milk");
+    expect(milkIngredientChoice).toEqual([
+      {
+        displayName: "milk",
+        index: 2,
+        itemId: "ingredient-item-1",
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 300,
+                  type: "decimal",
+                },
+              },
+              unit: {
+                name: "mL",
+              },
+            },
+          ],
+          scalable: true,
+        },
+      },
+      {
+        displayName: "oat milk",
+        index: 3,
+        itemId: "ingredient-item-2",
+        quantity: {
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 300,
+                  type: "decimal",
+                },
+              },
+              unit: {
+                name: "mL",
+              },
+            },
+          ],
+          scalable: true,
+        },
+      },
+    ]);
   });
 });

@@ -1,5 +1,4 @@
 import type { Recipe } from "./classes/recipe";
-import type { Quantity } from "./units";
 
 /**
  * Represents the metadata of a recipe.
@@ -136,7 +135,7 @@ export interface MetadataExtract {
  */
 export interface TextValue {
   type: "text";
-  value: string;
+  text: string;
 }
 
 /**
@@ -145,7 +144,7 @@ export interface TextValue {
  */
 export interface DecimalValue {
   type: "decimal";
-  value: number;
+  decimal: number;
 }
 
 /**
@@ -186,17 +185,6 @@ export interface Range {
 }
 
 /**
- * Represents a contributor to an ingredient's total quantity
- * @category Types
- */
-export interface QuantityPart extends Quantity {
-  /** - If _true_, the quantity will scale
-   * - If _false_, the quantity is fixed
-   */
-  scalable: boolean;
-}
-
-/**
  * Represents a possible state modifier or other flag for an ingredient in a recipe
  * @category Types
  */
@@ -224,24 +212,203 @@ export interface IngredientExtras {
 }
 
 /**
+ * Represents a reference to an alternative ingredient along with its quantity.
+ * Used in IngredientQuantityWithAlternatives to describe what other ingredients
+ * could be used in place of the main ingredient.
+ * @category Types
+ */
+export interface AlternativeIngredientRef {
+  /** The index of the alternative ingredient within the {@link Recipe.ingredients} array. */
+  index: number;
+  /** The quantity of the alternative ingredient */
+  quantity: QuantityWithPlainUnit;
+}
+
+/**
+ * Represents a quantity entry for an ingredient that has alternatives.
+ * Contains the main ingredient's quantity plus references to alternative ingredients.
+ * Extends QuantityWithPlainUnit to include quantity and optional unit at the top level.
+ * @category Types
+ */
+export interface IngredientQuantityWithAlternatives
+  extends QuantityWithPlainUnit {
+  /** References to alternative ingredients and their quantities */
+  alternatives: AlternativeIngredientRef[];
+}
+
+/**
+ * Represents a single quantity entry in an ingredient's quantities list.
+ * Can be either a simple quantity or a quantity with alternatives.
+ * @category Types
+ */
+export type IngredientQuantityEntry =
+  | QuantityWithPlainUnit
+  | IngredientQuantityWithAlternatives;
+
+/**
+ * Represents the quantities list for an ingredient as a simple array.
+ * Each entry is either a plain quantity or a quantity with alternatives.
+ * @category Types
+ */
+export type IngredientQuantities = IngredientQuantityEntry[];
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
 export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
-  /** The quantity of the ingredient. */
-  quantity?: FixedValue | Range;
-  /** The unit of the ingredient. */
-  unit?: string;
-  /** The array of contributors to the ingredient's total quantity. */
-  quantityParts?: QuantityPart[];
+  /**
+   * The quantities of the ingredient as they appear in the recipe preparation.
+   * Only populated for primary ingredients (not alternative-only).
+   * Each entry represents a single use of the ingredient in the recipe.
+   * Quantities without alternatives are merged opportunistically when units are compatible.
+   * Quantities with alternatives are only merged if the alternatives are exactly the same.
+   */
+  quantities?: IngredientQuantities;
   /** The preparation of the ingredient. */
   preparation?: string;
+  /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
+  alternatives?: Set<number>;
+  /**
+   * True if this ingredient appears as the primary choice (first in an alternatives list).
+   * Only primary ingredients have quantities populated directly.
+   * Alternative-only ingredients (usedAsPrimary undefined/false) have their quantities
+   * available via the {@link Recipe.choices} structure.
+   */
+  usedAsPrimary?: boolean;
   /** A list of potential state modifiers or other flags for the ingredient */
   flags?: IngredientFlag[];
   /** The collection of potential additional metadata for the ingredient */
   extras?: IngredientExtras;
+}
+
+/**
+ * Represents a computed ingredient with its total quantity after applying choices.
+ * Used as the return type of {@link Recipe.calc_ingredient_quantities}.
+ * @category Types
+ */
+export interface ComputedIngredient {
+  /** The name of the ingredient. */
+  name: string;
+  /** The total quantity of the ingredient after applying choices. */
+  quantityTotal?:
+    | QuantityWithPlainUnit
+    | MaybeNestedGroup<QuantityWithPlainUnit>;
+  /** The preparation of the ingredient. */
+  preparation?: string;
+  /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
+  alternatives?: Set<number>;
+  /** A list of potential state modifiers or other flags for the ingredient */
+  flags?: IngredientFlag[];
+  /** The collection of potential additional metadata for the ingredient */
+  extras?: IngredientExtras;
+}
+
+/**
+ * Represents a contributor to an ingredient's total quantity, corresponding
+ * to a single mention in the recipe text. It can contain multiple
+ * equivalent quantities (e.g., in different units).
+ * @category Types
+ */
+export interface IngredientItemQuantity {
+  /**
+   * A list of equivalent quantities for this ingredient mention.
+   * The first item is considered the primary quantity.
+   * For `@salt{1%tsp|5%g}`, this would contain two `Quantity` objects.
+   */
+  equivalents: QuantityWithExtendedUnit[];
+  /** Indicates whether this quantity should be scaled when the recipe serving size changes. */
+  scalable: boolean;
+}
+
+/**
+ * Represents a single ingredient choice within an `IngredientItem`. It points
+ * to a specific ingredient and its corresponding quantity information.
+ * @category Types
+ */
+export interface IngredientAlternative {
+  /** The index of the ingredient within the {@link Recipe.ingredients} array. */
+  index: number;
+  /** The quantity of this specific mention of the ingredient */
+  quantity?: IngredientItemQuantity;
+  /** The alias/name of the ingredient as it should be displayed for this occurrence. */
+  displayName: string;
+  /** An optional note for this specific choice (e.g., "for a vegan version"). */
+  note?: string;
+  /** When used in the {@link Recipe.choices} property for alternatives ingredients
+   * with group keys: the id of the corresponding ingredient item */
+  itemId?: string;
+}
+
+/**
+ * Represents an ingredient item in a recipe step.
+ * @category Types
+ */
+export interface IngredientItem {
+  /** The type of the item. */
+  type: "ingredient";
+  /** The item identifier */
+  id: string;
+  /**
+   * A list of alternative ingredient choices. For a standard ingredient,
+   * this array will contain a single element.
+   */
+  alternatives: IngredientAlternative[];
+  /**
+   * An optional identifier for linking distributed alternatives. If multiple
+   * `IngredientItem`s in a recipe share the same `group` ID (e.g., from
+   * `@|group|...` syntax), they represent a single logical choice.
+   */
+  group?: string;
+}
+
+/**
+ * Represents the choices one can make in a recipe
+ * @category Types
+ */
+export interface RecipeAlternatives {
+  /** Map of choices that can be made at Ingredient Item level */
+  ingredientItems: Map<string, IngredientAlternative[]>;
+  /** Map of choices that can be made for Grouped Ingredient Item's */
+  ingredientGroups: Map<string, IngredientAlternative[]>;
+}
+
+/**
+ * Represents the choices to apply when computing ingredient quantities.
+ * Maps item/group IDs to the index of the selected alternative.
+ * @category Types
+ */
+export interface RecipeChoices {
+  /** Map of choices that can be made at Ingredient Item level */
+  ingredientItems?: Map<string, number>;
+  /** Map of choices that can be made for Grouped Ingredient Item's */
+  ingredientGroups?: Map<string, number>;
+}
+
+/**
+ * Represents a cookware item in a recipe step.
+ * @category Types
+ */
+export interface CookwareItem {
+  /** The type of the item. */
+  type: "cookware";
+  /** The index of the cookware, within the {@link Recipe.cookware | list of cookware} */
+  index: number;
+  /** The quantity of this specific mention of the cookware */
+  quantity?: FixedValue | Range;
+}
+
+/**
+ * Represents a timer item in a recipe step.
+ * @category Types
+ */
+export interface TimerItem {
+  /** The type of the item. */
+  type: "timer";
+  /** The index of the timer, within the {@link Recipe.timers | list of timers} */
+  index: number;
 }
 
 /**
@@ -266,48 +433,6 @@ export interface TextItem {
   type: "text";
   /** The content of the text item. */
   value: string;
-}
-
-/**
- * Represents an ingredient item in a recipe step.
- * @category Types
- */
-export interface IngredientItem {
-  /** The type of the item. */
-  type: "ingredient";
-  /** The index of the ingredient, within the {@link Recipe.ingredients | list of ingredients} */
-  index: number;
-  /** Index of the quantity part corresponding to this item / this occurence
-   * of the ingredient, which may be referenced elsewhere. */
-  quantityPartIndex?: number;
-  /** The alias/name of the ingredient as it should be displayed in the preparation
-   * for this occurence */
-  displayName: string;
-}
-
-/**
- * Represents a cookware item in a recipe step.
- * @category Types
- */
-export interface CookwareItem {
-  /** The type of the item. */
-  type: "cookware";
-  /** The index of the cookware, within the {@link Recipe.cookware | list of cookware} */
-  index: number;
-  /** Index of the quantity part corresponding to this item / this occurence
-   * of the cookware, which may be referenced elsewhere. */
-  quantityPartIndex?: number;
-}
-
-/**
- * Represents a timer item in a recipe step.
- * @category Types
- */
-export interface TimerItem {
-  /** The type of the item. */
-  type: "timer";
-  /** The index of the timer, within the {@link Recipe.timers | list of timers} */
-  index: number;
 }
 
 /**
@@ -351,10 +476,8 @@ export interface Cookware {
   name: string;
   /** The quantity of cookware */
   quantity?: FixedValue | Range;
-  /** The array of contributors to the cookware's total quantity. */
-  quantityParts?: (FixedValue | Range)[];
   /** A list of potential state modifiers or other flags for the cookware */
-  flags: CookwareFlag[];
+  flags?: CookwareFlag[];
 }
 
 /**
@@ -362,7 +485,7 @@ export interface Cookware {
  * @category Types
  */
 export interface CategorizedIngredients {
-  [category: string]: Ingredient[];
+  [category: string]: AddedIngredient[];
 }
 
 /**
@@ -374,6 +497,8 @@ export interface RecipeWithFactor {
   recipe: Recipe;
   /** The factor the recipe is scaled by. */
   factor: number;
+  /** The choices for alternative ingredients. */
+  choices?: RecipeChoices;
 }
 
 /**
@@ -385,6 +510,8 @@ export interface RecipeWithServings {
   recipe: Recipe;
   /** The servings the recipe is scaled to */
   servings: number;
+  /** The choices for alternative ingredients. */
+  choices?: RecipeChoices;
 }
 
 /**
@@ -394,10 +521,24 @@ export interface RecipeWithServings {
 export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
 
 /**
+ * Options for adding a recipe to a shopping list
+ * @category Types
+ */
+export type AddedRecipeOptions = {
+  /** The scaling option for the recipe. Can be either a factor or a number of servings */
+  scaling?: { factor: number } | { servings: number };
+  /** The choices for alternative ingredients. */
+  choices?: RecipeChoices;
+};
+
+/**
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name" | "quantity" | "unit">;
+export type AddedIngredient = Pick<
+  ComputedIngredient,
+  "name" | "quantityTotal"
+>;
 
 /**
  * Represents an ingredient in a category.
@@ -422,10 +563,32 @@ export interface Category {
 }
 
 /**
- * Represents a product option in a {@link ProductCatalog}
+ * Represents a single size expression for a product (value + optional unit)
  * @category Types
  */
-export interface ProductOption {
+export interface ProductSize {
+  /** The numeric size value */
+  size: FixedNumericValue;
+  /** The unit of the size (optional) */
+  unit?: string;
+}
+
+/**
+ * Represents a normalized size expression for a product
+ * @category Types
+ */
+export interface ProductSizeNormalized {
+  /** The numeric size value (scaled to base unit) */
+  size: FixedNumericValue;
+  /** The resolved unit definition */
+  unit: UnitDefinitionLike;
+}
+
+/**
+ * Core properties for {@link ProductOption}
+ * @category Types
+ */
+export interface ProductOptionCore {
   /** The ID of the product */
   id: string;
   /** The name of the product */
@@ -434,16 +597,40 @@ export interface ProductOption {
   ingredientName: string;
   /** The aliases of the ingredient it also corresponds to */
   ingredientAliases?: string[];
-  /** The size of the product. */
-  size: FixedNumericValue;
-  /** The unit of the product size. */
-  unit?: string;
   /** The price of the product */
   price: number;
-  /** Arbitrary additional metadata */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
 }
+
+/**
+ * Base type for {@link ProductOption} allowing arbitrary additional metadata
+ * @category Types
+ */
+export type ProductOptionBase = ProductOptionCore & Record<string, unknown>;
+
+/**
+ * Represents a product option in a {@link ProductCatalog}
+ * @category Types
+ */
+export type ProductOption = ProductOptionBase & {
+  /** The size(s) of the product. Multiple sizes allow equivalent expressions (e.g., "1%dozen" and "12") */
+  sizes: ProductSize[];
+};
+
+/**
+ * Core properties for normalized product options
+ * @category Types
+ */
+export interface ProductOptionNormalizedCore extends ProductOptionCore {
+  /** The normalized size(s) of the product with resolved unit definitions */
+  sizes: ProductSizeNormalized[];
+}
+
+/**
+ * Represents a product option with normalized unit definitions
+ * @category Types
+ */
+export type ProductOptionNormalized = ProductOptionNormalizedCore &
+  Record<string, unknown>;
 
 /**
  * Represents a product option as described in a catalog TOML file
@@ -452,8 +639,8 @@ export interface ProductOption {
 export interface ProductOptionToml {
   /** The name of the product */
   name: string;
-  /** The size and unit of the product separated by % */
-  size: string;
+  /** The size and unit of the product separated by %. Can be an array for multiple equivalent sizes (e.g., ["1%dozen", "12"]) */
+  size: string | string[];
   /** The price of the product */
   price: number;
   /** Arbitrary additional metadata */
@@ -497,8 +684,9 @@ export type CartMatch = ProductMatch[];
 
 export type NoProductMatchErrorCode =
   | "incompatibleUnits"
-  | "noProduct"
   | "textValue"
+  | "textValue_incompatibleUnits"
+  | "noProduct"
   | "noQuantity";
 
 /**
@@ -515,3 +703,78 @@ export interface ProductMisMatch {
  * @category Types
  */
 export type CartMisMatch = ProductMisMatch[];
+
+export type UnitType = "mass" | "volume" | "count";
+export type UnitSystem = "metric" | "imperial";
+
+export interface Unit {
+  name: string;
+  integerProtected?: boolean;
+}
+
+export interface UnitDefinition extends Unit {
+  type: UnitType;
+  system: UnitSystem;
+  aliases: string[]; // e.g. ['gram', 'grams']
+  toBase: number; // conversion factor to the base unit of its type
+}
+
+export type UnitDefinitionLike =
+  | UnitDefinition
+  | { name: string; type: "other"; system: "none"; integerProtected?: boolean };
+
+export interface QuantityBase {
+  quantity: FixedValue | Range;
+}
+
+export interface QuantityWithPlainUnit extends QuantityBase {
+  unit?: string;
+}
+
+export interface QuantityWithExtendedUnit extends QuantityBase {
+  unit?: Unit;
+}
+
+export interface QuantityWithUnitDef extends QuantityBase {
+  unit: UnitDefinitionLike;
+}
+
+export type QuantityWithUnitLike =
+  | QuantityWithPlainUnit
+  | QuantityWithExtendedUnit
+  | QuantityWithUnitDef;
+
+export interface FlatOrGroup<T = QuantityWithUnitLike> {
+  type: "or";
+  entries: T[];
+}
+export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
+  type: "or";
+  entries: (T | MaybeNestedGroup<T>)[];
+}
+
+export interface FlatAndGroup<T = QuantityWithUnitLike> {
+  type: "and";
+  entries: T[];
+}
+
+export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
+  type: "and";
+  entries: (T | MaybeNestedGroup<T>)[];
+}
+
+export type FlatGroup<T = QuantityWithUnitLike> =
+  | FlatAndGroup<T>
+  | FlatOrGroup<T>;
+export type MaybeNestedGroup<T = QuantityWithUnitLike> =
+  | MaybeNestedAndGroup<T>
+  | MaybeNestedOrGroup<T>;
+export type Group<T = QuantityWithUnitLike> =
+  | MaybeNestedGroup<T>
+  | FlatGroup<T>;
+export type OrGroup<T = QuantityWithUnitLike> =
+  | MaybeNestedOrGroup<T>
+  | FlatOrGroup<T>;
+export type AndGroup<T = QuantityWithUnitLike> =
+  | MaybeNestedAndGroup<T>
+  | FlatAndGroup<T>;

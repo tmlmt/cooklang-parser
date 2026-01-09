@@ -39,30 +39,42 @@ size = "100%g"
       productName: "Pack of 6 eggs",
       ingredientName: "eggs",
       price: 10,
-      size: { type: "fixed", value: { type: "decimal", value: 6 } },
+      sizes: [
+        { size: { type: "fixed", value: { type: "decimal", decimal: 6 } } },
+      ],
     },
     {
       id: "01123",
       productName: "Single Egg",
       ingredientName: "eggs",
       price: 2,
-      size: { type: "fixed", value: { type: "decimal", value: 1 } },
+      sizes: [
+        { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+      ],
     },
     {
       id: "14141",
       productName: "Big pack",
       ingredientName: "flour",
       price: 10,
-      size: { type: "fixed", value: { type: "decimal", value: 6 } },
-      unit: "kg",
+      sizes: [
+        {
+          size: { type: "fixed", value: { type: "decimal", decimal: 6 } },
+          unit: "kg",
+        },
+      ],
     },
     {
       id: "01124",
       productName: "Small pack",
       ingredientName: "flour",
       price: 1.5,
-      size: { type: "fixed", value: { type: "decimal", value: 100 } },
-      unit: "g",
+      sizes: [
+        {
+          size: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: "g",
+        },
+      ],
     },
   ];
 
@@ -94,7 +106,33 @@ aliases = ["oeuf", "huevo"]
           ingredientName: "eggs",
           ingredientAliases: ["oeuf", "huevo"],
           price: 2,
-          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+          ],
+        },
+      ]);
+    });
+
+    it("should parse a product catalog with multiple sizes", () => {
+      const catalog = new ProductCatalog();
+      const products = catalog.parse(`[eggs]
+11245 = { name = "Pack of 12 eggs", size = ["1%dozen", "12"], price = 18 }`);
+      expect(products.length).toBe(1);
+      expect(products).toEqual([
+        {
+          id: "11245",
+          productName: "Pack of 12 eggs",
+          ingredientName: "eggs",
+          price: 18,
+          sizes: [
+            {
+              size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+              unit: "dozen",
+            },
+            {
+              size: { type: "fixed", value: { type: "decimal", decimal: 12 } },
+            },
+          ],
         },
       ]);
     });
@@ -111,7 +149,9 @@ aliases = ["oeuf", "huevo"]
           productName: "Single Egg",
           ingredientName: "eggs",
           price: 2,
-          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+          ],
         },
       ]);
     });
@@ -167,7 +207,9 @@ aliases = "not an array"`,
           ingredientName: "eggs",
           ingredientAliases: ["oeuf", "huevo"],
           price: 10,
-          size: { type: "fixed", value: { type: "decimal", value: 6 } },
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 6 } } },
+          ],
         },
         {
           id: "01123",
@@ -175,7 +217,9 @@ aliases = "not an array"`,
           ingredientName: "eggs",
           ingredientAliases: ["oeuf", "huevo"],
           price: 2,
-          size: { type: "fixed", value: { type: "decimal", value: 1 } },
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+          ],
         },
       ];
       const stringified = catalog.stringify();
@@ -202,7 +246,9 @@ size = "1"
           productName: "Pack of 6 eggs",
           ingredientName: "eggs",
           price: 10,
-          size: { type: "fixed", value: { type: "decimal", value: 6 } },
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 6 } } },
+          ],
           image: "egg.png",
         },
       ];
@@ -214,6 +260,33 @@ name = "Pack of 6 eggs"
 size = "6"
 `);
     });
+
+    it("should handle products with multiple sizes", () => {
+      const catalog = new ProductCatalog();
+      catalog.products = [
+        {
+          id: "11245",
+          productName: "Pack of 12 eggs",
+          ingredientName: "eggs",
+          price: 18,
+          sizes: [
+            {
+              size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+              unit: "dozen",
+            },
+            {
+              size: { type: "fixed", value: { type: "decimal", decimal: 12 } },
+            },
+          ],
+        },
+      ];
+      const stringified = catalog.stringify();
+      expect(stringified).toBe(`[eggs.11245]
+price = 18
+name = "Pack of 12 eggs"
+size = [ "1%dozen", "12" ]
+`);
+    });
   });
 
   describe("adding", () => {
@@ -223,8 +296,12 @@ size = "6"
         id: "12345",
         productName: "New Product",
         ingredientName: "new-ingredient",
-        size: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "kg",
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "kg",
+          },
+        ],
         price: 10,
       };
       catalog.add(newProduct);
@@ -243,7 +320,9 @@ size = "6"
         productName: "Pack of 6 eggs",
         ingredientName: "eggs",
         price: 10,
-        size: { type: "fixed", value: { type: "decimal", value: 6 } },
+        sizes: [
+          { size: { type: "fixed", value: { type: "decimal", decimal: 6 } } },
+        ],
       });
     });
 
@@ -263,8 +342,12 @@ size = "6"
         productName: "New Product",
         ingredientName: "new-ingredient",
         ingredientAliases: ["alias-1"],
-        size: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "kg",
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "kg",
+          },
+        ],
         price: 10,
       };
       catalog.add(newProduct);

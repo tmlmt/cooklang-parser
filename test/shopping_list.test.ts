@@ -6,11 +6,15 @@ import { Recipe } from "../src/classes/recipe";
 import {
   recipeForShoppingList1,
   recipeForShoppingList2,
+  recipeForShoppingList3,
+  recipeWithInlineAlternatives,
 } from "./fixtures/recipes";
 
 describe("ShoppingList", () => {
   const recipe1 = new Recipe(recipeForShoppingList1);
   const recipe2 = new Recipe(recipeForShoppingList2);
+  const recipe3 = new Recipe(recipeForShoppingList3);
+  const recipeAlt = new Recipe(recipeWithInlineAlternatives);
 
   describe("Adding recipes", () => {
     it("should add a recipe's ingredients", () => {
@@ -19,32 +23,86 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-          unit: "ml",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "ml",
+          },
         },
         {
           name: "pepper",
-          quantity: {
-            type: "fixed",
-            value: { type: "text", value: "to taste" },
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "to taste" },
+            },
           },
         },
         { name: "spices" },
       ]);
+    });
+
+    it("should handle adding a recipe with multiple units for the same ingredient", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.add_recipe(recipe1);
+      shoppingList.add_recipe(recipe3);
+      shoppingList.add_recipe(recipe1); // adding the same one again to check accumulation
+      expect(shoppingList.ingredients.find((i) => i.name === "eggs")).toEqual({
+        name: "eggs",
+        quantityTotal: {
+          type: "and",
+          entries: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 4 },
+              },
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "dozen",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "half dozen",
+            },
+          ],
+        },
+      });
     });
 
     it("should merge ingredients from multiple recipes", () => {
@@ -54,44 +112,77 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 3 } },
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+          },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-          unit: "ml",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "ml",
+          },
         },
         {
           name: "pepper",
-          quantity: {
-            type: "fixed",
-            value: { type: "text", value: "to taste" },
+          quantityTotal: {
+            type: "and",
+            entries: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "text", text: "to taste" },
+                },
+              },
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 1 },
+                },
+                unit: "tsp",
+              },
+            ],
           },
         },
         {
           name: "spices",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "pinch",
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "pinch",
+          },
         },
         {
           name: "butter",
-          quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
-          unit: "g",
-        },
-        {
-          name: "pepper",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "tsp",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 25 },
+            },
+            unit: "g",
+          },
         },
       ]);
     });
@@ -99,32 +190,51 @@ describe("ShoppingList", () => {
     it("should scale recipe ingredients (deprecated signature)", () => {
       const shoppingList = new ShoppingList();
       // TODO: Deprecated, to remove in v3
-      shoppingList.add_recipe(recipe1, 2);
+      shoppingList.add_recipe(recipe1, { scaling: { factor: 2 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 4 } },
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
+          },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
-          unit: "ml",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 400 },
+            },
+            unit: "ml",
+          },
         },
         {
           name: "pepper",
-          quantity: {
-            type: "fixed",
-            value: { type: "text", value: "to taste" },
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "to taste" },
+            },
           },
         },
         { name: "spices" },
@@ -133,32 +243,51 @@ describe("ShoppingList", () => {
 
     it("should scale recipe ingredients (using factor)", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1, { factor: 2 });
+      shoppingList.add_recipe(recipe1, { scaling: { factor: 2 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 4 } },
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
+          },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 400 } },
-          unit: "ml",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 400 },
+            },
+            unit: "ml",
+          },
         },
         {
           name: "pepper",
-          quantity: {
-            type: "fixed",
-            value: { type: "text", value: "to taste" },
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "to taste" },
+            },
           },
         },
         { name: "spices" },
@@ -167,35 +296,74 @@ describe("ShoppingList", () => {
 
     it("should scale recipe ingredients (using servings)", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1, { servings: 3 });
+      shoppingList.add_recipe(recipe1, { scaling: { servings: 3 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 300 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 300 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "sugar",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 6 } },
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 6 } },
+          },
         },
         {
           name: "milk",
-          quantity: { type: "fixed", value: { type: "decimal", value: 600 } },
-          unit: "ml",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 600 },
+            },
+            unit: "ml",
+          },
         },
         {
           name: "pepper",
-          quantity: {
-            type: "fixed",
-            value: { type: "text", value: "to taste" },
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "to taste" },
+            },
           },
         },
         { name: "spices" },
+      ]);
+    });
+
+    it("should take into account ingredient choices when adding a recipe", () => {
+      const shoppingList = new ShoppingList();
+      const choices = {
+        ingredientItems: new Map([["ingredient-item-0", 1]]),
+      };
+      shoppingList.add_recipe(recipeAlt, { choices });
+      expect(shoppingList.ingredients).toEqual([
+        {
+          name: "almond milk",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "ml",
+          },
+        },
       ]);
     });
   });
@@ -281,48 +449,87 @@ sugar
         Bakery: [
           {
             name: "flour",
-            quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-            unit: "g",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 150 },
+              },
+              unit: "g",
+            },
           },
           {
             name: "sugar",
-            quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-            unit: "g",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 50 },
+              },
+              unit: "g",
+            },
           },
         ],
         Dairy: [
           {
             name: "butter",
-            quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
-            unit: "g",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 25 },
+              },
+              unit: "g",
+            },
           },
           {
             name: "milk",
-            quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-            unit: "ml",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 200 },
+              },
+              unit: "ml",
+            },
           },
         ],
         other: [
           {
             name: "eggs",
-            quantity: { type: "fixed", value: { type: "decimal", value: 3 } },
-          },
-          {
-            name: "pepper",
-            quantity: {
-              type: "fixed",
-              value: { type: "text", value: "to taste" },
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
             },
           },
           {
             name: "pepper",
-            quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-            unit: "tsp",
+            quantityTotal: {
+              type: "and",
+              entries: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "text", text: "to taste" },
+                  },
+                },
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: "tsp",
+                },
+              ],
+            },
           },
           {
             name: "spices",
-            quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-            unit: "pinch",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "pinch",
+            },
           },
         ],
       };
@@ -344,28 +551,50 @@ sugar
         other: [
           {
             name: "flour",
-            quantity: { type: "fixed", value: { type: "decimal", value: 100 } },
-            unit: "g",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "g",
+            },
           },
           {
             name: "sugar",
-            quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-            unit: "g",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 50 },
+              },
+              unit: "g",
+            },
           },
           {
             name: "eggs",
-            quantity: { type: "fixed", value: { type: "decimal", value: 2 } },
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+            },
           },
           {
             name: "milk",
-            quantity: { type: "fixed", value: { type: "decimal", value: 200 } },
-            unit: "ml",
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 200 },
+              },
+              unit: "ml",
+            },
           },
           {
             name: "pepper",
-            quantity: {
-              type: "fixed",
-              value: { type: "text", value: "to taste" },
+            quantityTotal: {
+              quantity: {
+                type: "fixed",
+                value: { type: "text", text: "to taste" },
+              },
             },
           },
           { name: "spices" },
@@ -383,27 +612,43 @@ sugar
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "butter",
-          quantity: { type: "fixed", value: { type: "decimal", value: 25 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 25 },
+            },
+            unit: "g",
+          },
         },
         {
           name: "eggs",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          },
         },
         {
           name: "pepper",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "tsp",
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "tsp",
+          },
         },
         {
           name: "spices",
-          quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-          unit: "pinch",
+          quantityTotal: {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "pinch",
+          },
         },
       ]);
     });
@@ -418,16 +663,26 @@ sugar
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
+            },
+            unit: "g",
+          },
         },
       ]);
       shoppingList.remove_recipe(0);
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
-          quantity: { type: "fixed", value: { type: "decimal", value: 50 } },
-          unit: "g",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+          },
         },
       ]);
     });
