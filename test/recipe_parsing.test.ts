@@ -74,6 +74,26 @@ describe("parse function", () => {
       ]);
     });
 
+    it("parses ingredients followed by punctuation correctly", () => {
+      const recipe = `
+      Add @sugar{100%g}, @milk{200%mL}, and @eggs{3%dozen}.
+      Add @sugar{1}, @milk{2}, and @eggs{3}.
+      Add @sugar, @milk, and @eggs.`;
+      const result = new Recipe(recipe);
+      expect(result.ingredients.length).toBe(9);
+      expect(result.ingredients.map((i) => i.name)).toEqual([
+        "sugar",
+        "milk",
+        "eggs",
+        "sugar",
+        "milk",
+        "eggs",
+        "sugar",
+        "milk",
+        "eggs",
+      ]);
+    });
+
     describe("parses ingredients that are other recipes", () => {
       it("parses a recipe in the same directory as the current recipe", () => {
         const recipe1 = `
@@ -703,6 +723,22 @@ describe("parse function", () => {
         name: "pan",
         flags: [],
       });
+    });
+
+    it("parses cookware followed by punctuation correctly", () => {
+      const recipe = `
+      Use #bowl, #spoon, and #pan.
+      Use #bowl{1}, #spoon{2}, and #pan{3}.`;
+      const result = new Recipe(recipe);
+      expect(result.cookware.length).toBe(6);
+      expect(result.cookware.map((i) => i.name)).toEqual([
+        "bowl",
+        "spoon",
+        "pan",
+        "bowl",
+        "spoon",
+        "pan",
+      ]);
     });
 
     it("should correctly track and sum quantities of referenced cookware", () => {
