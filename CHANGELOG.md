@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.1.7
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.6...v2.1.7)
+
+### 🩹 Fixes
+
+- **regex:** Do not capture ending dot following a quantity-less ingredient or cookware ([#81](https://github.com/tmlmt/cooklang-parser/pull/81))
+- **regex:** All whitespaces around comment block removed on both sides ([f883901](https://github.com/tmlmt/cooklang-parser/commit/f883901))
+- **parser:** Section names not parsed correctly with multiple = delimiters ([bd0ea97](https://github.com/tmlmt/cooklang-parser/commit/bd0ea97))
+
+### 🏡 Chore
+
+- Add PR template ([c9fd31d](https://github.com/tmlmt/cooklang-parser/commit/c9fd31d))
+
+### 🤖 CI
+
+- Ignore graphite-base branches ([a24b455](https://github.com/tmlmt/cooklang-parser/commit/a24b455))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.6
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.5...v2.1.6)
