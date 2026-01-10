@@ -2,7 +2,7 @@
 
 A typescript library to parse and manipulate [cooklang](https://cooklang.org/) recipes.
 
-<picture><img src="https://badges.ws/maintenance/yes/2025" /></picture>
+<picture><img src="https://badges.ws/maintenance/yes/2026" /></picture>
 <picture><img src="https://badges.ws/npm/dt/@tmlmt/cooklang-parser" /></picture>
 <picture><img src="https://badges.ws/npm/l/@tmlmt/cooklang-parser" /></picture>
 <picture><img src="https://badges.ws/github/release/tmlmt/cooklang-parser" /></picture>
