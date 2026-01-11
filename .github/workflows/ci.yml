@@ -58,14 +58,38 @@ jobs:
     if: github.event_name == 'release'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: "https://registry.npmjs.org/"
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install
-      - name: Build docs
+          cache: "pnpm"
+      - name: Install dependencies (main branch)
+        run: pnpm install
+      - name: Build v2 docs from main branch
         run: pnpm docs:build
+      - name: Move v2 docs to combined folder
+        run: |
+          mkdir -p combined/v2
+          mv docs/.vitepress/dist/* combined/v2/
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          clean: false
+      - name: Install dependencies (release tag)
+        run: pnpm install
+      - name: Build and move v3 docs if v3 release
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          if [[ "$TAG_NAME" == v3* ]]; then
+            pnpm docs:build
+            mkdir -p combined/v3
+            mv docs/.vitepress/dist/* combined/v3/
+          fi
+      - name: Copy v2 docs to root for default access
+        run: cp -r combined/v2/* combined/
       - name: Deploy docs to production server
         uses: easingthemes/ssh-deploy@main
         env:
@@ -73,5 +97,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          SOURCE: "docs/.vitepress/dist/."
+          SOURCE: "combined/."
           TARGET: ${{ secrets.TARGET_DIR_DOCS }}
