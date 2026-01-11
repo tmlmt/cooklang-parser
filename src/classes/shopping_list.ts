@@ -152,8 +152,7 @@ export class ShoppingList {
    * Adds a recipe to the shopping list, then automatically
    * recalculates the quantities and recategorize the ingredients.
    * @param recipe - The recipe to add.
-   * @param scaling - The scaling option for the recipe. Can be either a factor or a number of servings
-   * @param choices - The choices for alternative ingredients.
+   * @param options - Options for adding the recipe.
    */
   add_recipe(recipe: Recipe, options: AddedRecipeOptions = {}): void {
     if (!options.scaling) {

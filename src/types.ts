@@ -218,7 +218,8 @@ export interface IngredientExtras {
 
 /**
  * Represents a reference to an alternative ingredient along with its quantity.
- * Used in IngredientQuantityWithAlternatives to describe what other ingredients
+ *
+ * Used in {@link IngredientQuantityWithAlternatives} to describe what other ingredients
  * could be used in place of the main ingredient.
  * @category Types
  */
@@ -232,7 +233,6 @@ export interface AlternativeIngredientRef {
 /**
  * Represents a quantity entry for an ingredient that has alternatives.
  * Contains the main ingredient's quantity plus references to alternative ingredients.
- * Extends QuantityWithPlainUnit to include quantity and optional unit at the top level.
  * @category Types
  */
 export interface IngredientQuantityWithAlternatives
@@ -252,7 +252,6 @@ export type IngredientQuantityEntry =
 
 /**
  * Represents the quantities list for an ingredient as a simple array.
- * Each entry is either a plain quantity or a quantity with alternatives.
  * @category Types
  */
 export type IngredientQuantities = IngredientQuantityEntry[];
@@ -274,11 +273,12 @@ export interface Ingredient {
   quantities?: IngredientQuantities;
   /** The preparation of the ingredient. */
   preparation?: string;
-  /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
+  /** The list of indexes of the ingredients mentioned in the preparation as alternatives to this ingredient */
   alternatives?: Set<number>;
   /**
    * True if this ingredient appears as the primary choice (first in an alternatives list).
    * Only primary ingredients have quantities populated directly.
+   *
    * Alternative-only ingredients (usedAsPrimary undefined/false) have their quantities
    * available via the {@link Recipe.choices} structure.
    */
@@ -329,7 +329,7 @@ export interface IngredientItemQuantity {
 }
 
 /**
- * Represents a single ingredient choice within an `IngredientItem`. It points
+ * Represents a single ingredient choice within a single or a group of `IngredientItem`s. It points
  * to a specific ingredient and its corresponding quantity information.
  * @category Types
  */
@@ -342,8 +342,9 @@ export interface IngredientAlternative {
   displayName: string;
   /** An optional note for this specific choice (e.g., "for a vegan version"). */
   note?: string;
-  /** When used in the {@link Recipe.choices} property for alternatives ingredients
-   * with group keys: the id of the corresponding ingredient item */
+  /** When {@link Recipe.choices} is populated for alternatives ingredients
+   * with group keys: the id of the corresponding ingredient item (e.g. "ingredient-item-2").
+   * Can be useful for creating alternative selection UI elements with anchor links */
   itemId?: string;
 }
 
@@ -374,9 +375,15 @@ export interface IngredientItem {
  * @category Types
  */
 export interface RecipeAlternatives {
-  /** Map of choices that can be made at Ingredient Item level */
+  /** Map of choices that can be made at Ingredient Item level
+   * - Keys are the Ingredient Item IDs (e.g. "ingredient-item-2")
+   * - Values are arrays of IngredientAlternative objects representing the choices available for that item
+   */
   ingredientItems: Map<string, IngredientAlternative[]>;
-  /** Map of choices that can be made for Grouped Ingredient Item's */
+  /** Map of choices that can be made for Grouped Ingredient Item's
+   * - Keys are the Group IDs (e.g. "eggs" for `@|eggs|...`)
+   * - Values are arrays of IngredientAlternative objects representing the choices available for that group
+   */
   ingredientGroups: Map<string, IngredientAlternative[]>;
 }
 
@@ -713,77 +720,157 @@ export interface ProductMisMatch {
  */
 export type CartMisMatch = ProductMisMatch[];
 
+/**
+ * Represents the type category of a unit used for quantities
+ * @category Types
+ */
 export type UnitType = "mass" | "volume" | "count";
+/**
+ * Represents the measurement system a unit belongs to
+ * @category Types
+ */
 export type UnitSystem = "metric" | "imperial";
 
+/**
+ * Represents a unit used to describe quantities
+ * @category Types
+ */
 export interface Unit {
   name: string;
+  /** This property is set to true when the unit is prefixed by an `=` sign in the cooklang file, e.g. `=g`
+   * Indicates that quantities with this unit should be treated as integers only (no decimal/fractional values). */
   integerProtected?: boolean;
 }
 
+/**
+ * Represents a fully defined unit with conversion and alias information
+ * @category Types
+ */
 export interface UnitDefinition extends Unit {
   type: UnitType;
   system: UnitSystem;
-  aliases: string[]; // e.g. ['gram', 'grams']
-  toBase: number; // conversion factor to the base unit of its type
+  /** e.g. ['gram', 'grams'] */
+  aliases: string[];
+  /** Conversion factor to the base unit of its type */
+  toBase: number;
 }
 
+/**
+ * Represents a resolved unit definition or a lightweight placeholder for non-standard units
+ * @category Types
+ */
 export type UnitDefinitionLike =
   | UnitDefinition
   | { name: string; type: "other"; system: "none"; integerProtected?: boolean };
 
+/**
+ * Core quantity container holding a fixed value or a range
+ * @category Types
+ */
 export interface QuantityBase {
   quantity: FixedValue | Range;
 }
 
+/**
+ * Represents a quantity with an optional plain (string) unit
+ * @category Types
+ */
 export interface QuantityWithPlainUnit extends QuantityBase {
   unit?: string;
 }
 
+/**
+ * Represents a quantity with an optional extended `Unit` object
+ * @category Types
+ */
 export interface QuantityWithExtendedUnit extends QuantityBase {
   unit?: Unit;
 }
 
+/**
+ * Represents a quantity with a resolved unit definition
+ * @category Types
+ */
 export interface QuantityWithUnitDef extends QuantityBase {
   unit: UnitDefinitionLike;
 }
 
+/**
+ * Represents any quantity shape supported by the parser (plain, extended, or resolved unit)
+ * @category Types
+ */
 export type QuantityWithUnitLike =
   | QuantityWithPlainUnit
   | QuantityWithExtendedUnit
   | QuantityWithUnitDef;
 
+/**
+ * Represents a flat "or" group of alternative quantities (for alternative units)
+ * @category Types
+ */
 export interface FlatOrGroup<T = QuantityWithUnitLike> {
   type: "or";
   entries: T[];
 }
+/**
+ * Represents an "or" group of alternative quantities that may contain nested groups (alternatives with nested structure)
+ * @category Types
+ */
 export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
   type: "or";
   entries: (T | MaybeNestedGroup<T>)[];
 }
 
+/**
+ * Represents a flat "and" group of quantities (combined quantities)
+ * @category Types
+ */
 export interface FlatAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   entries: T[];
 }
 
+/**
+ * Represents an "and" group of quantities that may contain nested groups (combinations with nested structure)
+ * @category Types
+ */
 export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
   type: "and";
   entries: (T | MaybeNestedGroup<T>)[];
 }
 
+/**
+ * Represents any flat group type ("and" or "or")
+ * @category Types
+ */
 export type FlatGroup<T = QuantityWithUnitLike> =
   | FlatAndGroup<T>
   | FlatOrGroup<T>;
+/**
+ * Represents any group type that may include nested groups
+ * @category Types
+ */
 export type MaybeNestedGroup<T = QuantityWithUnitLike> =
   | MaybeNestedAndGroup<T>
   | MaybeNestedOrGroup<T>;
+/**
+ * Represents any group type (flat or nested)
+ * @category Types
+ */
 export type Group<T = QuantityWithUnitLike> =
   | MaybeNestedGroup<T>
   | FlatGroup<T>;
+/**
+ * Represents any "or" group (flat or nested)
+ * @category Types
+ */
 export type OrGroup<T = QuantityWithUnitLike> =
   | MaybeNestedOrGroup<T>
   | FlatOrGroup<T>;
+/**
+ * Represents any "and" group (flat or nested)
+ * @category Types
+ */
 export type AndGroup<T = QuantityWithUnitLike> =
   | MaybeNestedAndGroup<T>
   | FlatAndGroup<T>;
