@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import type {
-  Timer,
-  FixedValue,
-  Range,
-  DecimalValue,
-  FractionValue,
-} from "cooklang-parser";
+import type { Timer, DecimalValue, FractionValue } from "cooklang-parser";
 
 const props = defineProps<{
   timer: Timer;

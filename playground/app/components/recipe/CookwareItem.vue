@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Cookware } from "cooklang-parser";
 
-const props = defineProps<{
+defineProps<{
   cookware: Cookware;
 }>();
 </script>
