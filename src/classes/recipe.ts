@@ -598,6 +598,13 @@ export class Recipe {
             mainQuantity,
           ) as QuantityWithPlainUnit;
 
+          // Store additional equivalents if there are any
+          if (alternative.quantity.equivalents.length > 1) {
+            plainQuantity.equivalents = alternative.quantity.equivalents
+              .slice(1)
+              .map((eq) => toPlainUnit(eq) as QuantityWithPlainUnit);
+          }
+
           // Check if this ingredient item has alternatives (inline or grouped)
           const hasInlineAlternatives = item.alternatives.length > 1;
           const hasGroupedAlternatives =

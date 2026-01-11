@@ -777,6 +777,8 @@ export interface QuantityBase {
  */
 export interface QuantityWithPlainUnit extends QuantityBase {
   unit?: string;
+  /** Optional equivalent quantities in different units (for alternative units like `@flour{100%g|3.5%oz}`) */
+  equivalents?: QuantityWithPlainUnit[];
 }
 
 /**

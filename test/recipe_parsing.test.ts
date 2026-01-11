@@ -1739,6 +1739,22 @@ Another step.
               value: { type: "decimal", decimal: 1 },
             },
             unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.22 },
+                },
+                unit: "lb",
+              },
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 3.5 },
+                },
+                unit: "oz",
+              },
+            ],
           },
         ],
         usedAsPrimary: true,
