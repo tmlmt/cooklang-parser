@@ -170,6 +170,11 @@ export interface FixedValue {
   value: TextValue | DecimalValue | FractionValue;
 }
 
+/**
+ * Represents a single, fixed numeric quantity.
+ * This can be a decimal or fraction.
+ * @category Types
+ */
 export interface FixedNumericValue {
   type: "fixed";
   value: DecimalValue | FractionValue;
@@ -495,6 +500,10 @@ export interface ProductMatch {
  */
 export type CartMatch = ProductMatch[];
 
+/**
+ * Represents the error codes for an ingredient which didn't match with any product in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
 export type NoProductMatchErrorCode =
   | "incompatibleUnits"
   | "noProduct"

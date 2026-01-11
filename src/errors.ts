@@ -14,6 +14,10 @@ You can either remove the reference to create a new ${item_type} defined as ${ne
   }
 }
 
+/**
+ * Error thrown when trying to build a shopping cart without a product catalog
+ * @category Errors
+ */
 export class NoProductCatalogForCartError extends Error {
   constructor() {
     super(
@@ -23,6 +27,10 @@ export class NoProductCatalogForCartError extends Error {
   }
 }
 
+/**
+ * Error thrown when trying to build a shopping cart without a shopping list
+ * @category Errors
+ */
 export class NoShoppingListForCartError extends Error {
   constructor() {
     super(

@@ -13,9 +13,7 @@ import {
 import { InvalidProductCatalogFormat } from "../errors";
 
 /**
- * Product Catalog Manager
- *
- * Used in conjunction with {@link ShoppingCart}
+ * Product Catalog Manager: used in conjunction with {@link ShoppingCart}
  *
  * ## Usage
  *
@@ -28,10 +26,12 @@ import { InvalidProductCatalogFormat } from "../errors";
  * ```typescript
  * import { ProductCatalog } from "@tmlmt/cooklang-parser";
  *
- * const catalog = `[eggs]
+ * const catalog = `
+ * [eggs]
  * aliases = ["oeuf", "huevo"]
  * 01123 = { name = "Single Egg", size = "1", price = 2 }
  * 11244 = { name = "Pack of 6 eggs", size = "6", price = 10 }
+ *
  * [flour]
  * aliases = ["farine", "Mehl"]
  * 01124 = { name = "Small pack", size = "100%g", price = 1.5 }

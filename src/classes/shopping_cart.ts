@@ -53,7 +53,7 @@ export interface ShoppingCartSummary {
 }
 
 /**
- * Shopping Cart Manager: a tool to find the best combination of products to buy to satisfy a shopping list.
+ * Shopping Cart Manager: a tool to find the best combination of products to buy (defined in a {@link ProductCatalog}) to satisfy a {@link ShoppingList}.
  *
  * @example
  * ```ts

@@ -9,6 +9,15 @@ import {
 } from "./classes/shopping_cart";
 import { Section } from "./classes/section";
 
+export {
+  CategoryConfig,
+  ProductCatalog,
+  Recipe,
+  ShoppingList,
+  ShoppingCart,
+  Section,
+};
+
 import type {
   Metadata,
   Ingredient,
@@ -19,6 +28,7 @@ import type {
   DecimalValue,
   FractionValue,
   TextValue,
+  FixedNumericValue,
   Timer,
   TextItem,
   IngredientItem,
@@ -47,13 +57,8 @@ import type {
 } from "./types";
 
 export {
-  Recipe,
-  ShoppingList,
-  ShoppingCart,
   ShoppingCartOptions,
   ShoppingCartSummary,
-  CategoryConfig,
-  ProductCatalog,
   Metadata,
   Ingredient,
   IngredientFlag,
@@ -63,6 +68,7 @@ export {
   DecimalValue,
   FractionValue,
   TextValue,
+  FixedNumericValue,
   Timer,
   TextItem,
   IngredientItem,
@@ -79,7 +85,6 @@ export {
   RecipeWithServings,
   CategoryIngredient,
   Category,
-  Section,
   QuantityPart,
   ProductOption,
   ProductSelection,
@@ -90,3 +95,10 @@ export {
   CartMisMatch,
   NoProductMatchErrorCode,
 };
+
+import {
+  NoProductCatalogForCartError,
+  NoShoppingListForCartError,
+} from "./errors";
+
+export { NoProductCatalogForCartError, NoShoppingListForCartError };
