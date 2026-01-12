@@ -11,7 +11,7 @@ import {
   InvalidQuantityFormat,
   ReferencedItemCannotBeRedefinedError,
 } from "../src/errors";
-import type { Ingredient } from "../src/types";
+import type { Ingredient, IngredientItem, Step } from "../src/types";
 
 describe("parse function", () => {
   it("parses basic metadata correctly", () => {
@@ -1157,7 +1157,7 @@ Another step.
               alternatives: [
                 {
                   index: 1,
-                  quantity: {
+                  alternativeQuantity: {
                     quantity: {
                       type: "fixed",
                       value: { type: "decimal", decimal: 50 },
@@ -1178,7 +1178,7 @@ Another step.
       ]);
     });
 
-    it("parses grouped altenatives correctly", () => {
+    it("parses grouped alternatives correctly", () => {
       const result = new Recipe(recipeWithGroupedAlternatives);
       expect(result.ingredients).toHaveLength(3);
       // All ingredients have their quantities stored as they appear in the recipe
@@ -1195,7 +1195,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 100 },
@@ -1205,7 +1205,7 @@ Another step.
               },
               {
                 index: 2,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 150 },
@@ -1328,7 +1328,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 100 },
@@ -1338,7 +1338,7 @@ Another step.
               },
               {
                 index: 2,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 150 },
@@ -1436,7 +1436,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 100 },
@@ -1455,7 +1455,7 @@ Another step.
             alternatives: [
               {
                 index: 2,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 50 },
@@ -1490,7 +1490,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 100 },
@@ -1509,7 +1509,7 @@ Another step.
             alternatives: [
               {
                 index: 2,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 50 },
@@ -1519,7 +1519,7 @@ Another step.
               },
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 50 },
@@ -1570,7 +1570,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 1 },
@@ -1588,7 +1588,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 2 },
@@ -1625,7 +1625,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 120 },
@@ -1635,7 +1635,7 @@ Another step.
               },
               {
                 index: 2,
-                quantity: {
+                alternativeQuantity: {
                   quantity: {
                     type: "fixed",
                     value: { type: "decimal", decimal: 130 },
@@ -1723,6 +1723,196 @@ Another step.
           },
         ],
       });
+    });
+
+    it("parses inline alternatives with alternative units correctly", () => {
+      const recipe = "Use @flour{1%=bag|0.22%lb}|wheat flour{1%=bag|0.25%lb}";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      const flourIngredient: Ingredient = {
+        name: "flour",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.22 },
+                },
+                unit: "lb",
+              },
+            ],
+            alternatives: [
+              {
+                index: 1,
+                alternativeQuantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: "bag",
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 0.25 },
+                      },
+                      unit: "lb",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        alternatives: new Set([1]),
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(flourIngredient);
+      const wheatFlourIngredient: Ingredient = {
+        name: "wheat flour",
+        alternatives: new Set([0]),
+      };
+      expect(result.ingredients[1]).toEqual(wheatFlourIngredient);
+      const ingredientItem = result.sections[0]?.content[0];
+      if (ingredientItem?.type !== "step") return false;
+      const ingredientItem0: IngredientItem = {
+        type: "ingredient",
+        id: "ingredient-item-0",
+        alternatives: [
+          {
+            displayName: "flour",
+            index: 0,
+            itemQuantity: {
+              scalable: true,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: { name: "bag", integerProtected: true },
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 0.22 },
+                  },
+                  unit: { name: "lb" },
+                },
+              ],
+            },
+          },
+          {
+            displayName: "wheat flour",
+            index: 1,
+            itemQuantity: {
+              scalable: true,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: { name: "bag", integerProtected: true },
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 0.25 },
+                  },
+                  unit: { name: "lb" },
+                },
+              ],
+            },
+          },
+        ],
+      };
+      expect(ingredientItem.items[1]).toEqual(ingredientItem0);
+    });
+
+    it("parses grouped alternatives with alternative units correctly", () => {
+      const recipe =
+        "Add @|flour|wheat flour{1%=bag|0.22%lb} or @|flour|almond flour{1%=bag|0.25%lb}";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      expect(result.choices.ingredientGroups.has("flour")).toBe(true);
+      const ingredient0: Ingredient = {
+        name: "wheat flour",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.22 },
+                },
+                unit: "lb",
+              },
+            ],
+            alternatives: [
+              {
+                index: 1,
+                alternativeQuantity: {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: "bag",
+                  equivalents: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 0.25 },
+                      },
+                      unit: "lb",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        alternatives: new Set([1]),
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(ingredient0);
+      const ingredientItem0: IngredientItem = {
+        type: "ingredient",
+        id: "ingredient-item-0",
+        group: "flour",
+        alternatives: [
+          {
+            index: 0,
+            displayName: "wheat flour",
+            itemQuantity: {
+              scalable: true,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: { name: "bag", integerProtected: true },
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 0.22 },
+                  },
+                  unit: { name: "lb" },
+                },
+              ],
+            },
+          },
+        ],
+      };
+      const step = result.sections[0]?.content[0] as Step;
+      expect(step.items[1]).toEqual(ingredientItem0);
     });
   });
 

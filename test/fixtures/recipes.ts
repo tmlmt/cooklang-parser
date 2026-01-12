@@ -129,6 +129,9 @@ servings: 1
 Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`;
 
 export const recipeWithGroupedAlternatives = `
+---
+servings: 1
+---
 Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|soy milk{150%ml} for a vegan version
 `;
 

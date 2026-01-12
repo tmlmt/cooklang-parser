@@ -227,7 +227,7 @@ export interface AlternativeIngredientRef {
   /** The index of the alternative ingredient within the {@link Recipe.ingredients} array. */
   index: number;
   /** The quantity of the alternative ingredient */
-  quantity: QuantityWithPlainUnit;
+  alternativeQuantity: QuantityWithPlainUnit;
 }
 
 /**

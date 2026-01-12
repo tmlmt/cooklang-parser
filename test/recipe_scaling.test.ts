@@ -323,7 +323,7 @@ serves: 2, some
         alternatives: [
           {
             index: 1,
-            quantity: {
+            alternativeQuantity: {
               quantity: {
                 type: "fixed",
                 value: { type: "decimal", decimal: 200 },
@@ -333,7 +333,7 @@ serves: 2, some
           },
           {
             index: 2,
-            quantity: {
+            alternativeQuantity: {
               quantity: {
                 type: "fixed",
                 value: { type: "decimal", decimal: 300 },
