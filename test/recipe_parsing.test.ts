@@ -1312,7 +1312,7 @@ Another step.
   });
 
   describe("in-line alternative ingredients", () => {
-    it("parses in-line alternative ingredients correctly", () => {
+    it("parses quantified in-line alternative ingredients correctly", () => {
       const result = new Recipe(recipeWithInlineAlternatives);
       expect(result.ingredients).toHaveLength(3);
       // Only the primary ingredient (milk) has quantities stored and usedAsPrimary flag
@@ -1414,6 +1414,36 @@ Another step.
         ]),
         ingredientGroups: new Map(),
       });
+    });
+
+    it("parses unquantified in-line alternative ingredients correctly", () => {
+      const recipe = "Add @sea salt{some}|fleur de sel{}";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      const seaSaltIngredient: Ingredient = {
+        name: "sea salt",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "some" },
+            },
+            alternatives: [
+              {
+                index: 1,
+              },
+            ],
+          },
+        ],
+        alternatives: new Set([1]),
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(seaSaltIngredient);
+      const fleurDeSelIngredient: Ingredient = {
+        name: "fleur de sel",
+        alternatives: new Set([0]),
+      };
+      expect(result.ingredients[1]).toEqual(fleurDeSelIngredient);
     });
 
     it("should correctly show alternatives to ingredients subject of variants multiple times", () => {

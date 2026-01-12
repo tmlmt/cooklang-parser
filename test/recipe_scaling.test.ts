@@ -469,6 +469,36 @@ Use @sugar{100%g|0.5%cups|3.5%oz} in the mix.
     expect(ingredientStep0.items[1]).toEqual(ingredientItem0);
   });
 
+  it("should not scale text quantities of equivalents units", () => {
+    const recipe = new Recipe(`---
+servings: 2
+---
+Use @sugar{100%g|a cup} in the mix.
+    `);
+    const scaledRecipe = recipe.scaleBy(2);
+    expect(scaledRecipe.ingredients.length).toBe(1);
+    const ingredient0Quantities: IngredientQuantities = [
+      {
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 200 },
+        },
+        unit: "g",
+        equivalents: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "a cup" },
+            },
+          },
+        ],
+      },
+    ];
+    expect(scaledRecipe.ingredients[0]!.quantities).toEqual(
+      ingredient0Quantities,
+    );
+  });
+
   it("should not scale fixed quantities", () => {
     const recipe = new Recipe(recipeToScaleSomeFixedQuantities);
     const scaledRecipe = recipe.scaleBy(2);

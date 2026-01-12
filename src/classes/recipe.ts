@@ -429,14 +429,12 @@ export class Recipe {
         groups.gIngredientQuantity,
       );
       const [primary, ...rest] = parsedQuantities;
-      if (primary) {
-        itemQuantity = {
-          ...primary,
-          scalable: groups.gIngredientQuantityModifier !== "=",
-        };
-        if (rest.length > 0) {
-          itemQuantity.equivalents = rest;
-        }
+      itemQuantity = {
+        ...primary!, // there's necessarily a primary quantity as the match group was detected
+        scalable: groups.gIngredientQuantityModifier !== "=",
+      };
+      if (rest.length > 0) {
+        itemQuantity.equivalents = rest;
       }
     }
 
@@ -644,11 +642,15 @@ export class Recipe {
             const alternativeRefs: AlternativeIngredientRef[] = [];
             for (let j = 1; j < item.alternatives.length; j++) {
               const otherAlt = item.alternatives[j] as IngredientAlternative;
+              const newRef: AlternativeIngredientRef = {
+                index: otherAlt.index,
+              };
               if (otherAlt.itemQuantity) {
                 // Build the alternativeQuantity with plain units
                 const altQty: QuantityWithPlainUnit = {
                   quantity: otherAlt.itemQuantity.quantity,
                 };
+                /* v8 ignore else -- @preserve */
                 if (otherAlt.itemQuantity.unit) {
                   altQty.unit = otherAlt.itemQuantity.unit.name;
                 }
@@ -657,11 +659,9 @@ export class Recipe {
                     (eq) => toPlainUnit(eq) as QuantityWithPlainUnit,
                   );
                 }
-                alternativeRefs.push({
-                  index: otherAlt.index,
-                  alternativeQuantity: altQty,
-                });
+                newRef.alternativeQuantity = altQty;
               }
+              alternativeRefs.push(newRef);
             }
             entry = {
               ...plainQuantity,
@@ -676,6 +676,7 @@ export class Recipe {
             const alternativeRefs: AlternativeIngredientRef[] = [];
             for (let j = 1; j < groupAlternatives.length; j++) {
               const otherAlt = groupAlternatives[j] as IngredientAlternative;
+              /* v8 ignore else -- @preserve */
               if (otherAlt.itemQuantity) {
                 // Build the alternativeQuantity with plain units
                 const altQty: QuantityWithPlainUnit = {
@@ -758,15 +759,18 @@ export class Recipe {
                   // Try to add all alternative quantities first (dry run)
                   const altSums = new Map<number, QuantityWithPlainUnit>();
                   let allAltsSucceeded = true;
-                  for (const existingAlt of existing.alternatives) {
+                  const existingQuantifiedAlternatives =
+                    existing.alternatives.filter((a) => a.alternativeQuantity);
+                  for (const existingAlt of existingQuantifiedAlternatives) {
                     const entryAlt = entry.alternatives.find(
-                      (a) => a.index === existingAlt.index,
+                      (a) =>
+                        a.index === existingAlt.index && a.alternativeQuantity,
                     );
                     /* v8 ignore else -- @preserve */
                     if (entryAlt) {
                       const altSummed = this._tryAddQuantities(
-                        existingAlt.alternativeQuantity,
-                        entryAlt.alternativeQuantity,
+                        existingAlt.alternativeQuantity!,
+                        entryAlt.alternativeQuantity!,
                       );
                       if (altSummed) {
                         altSums.set(existingAlt.index, altSummed);
