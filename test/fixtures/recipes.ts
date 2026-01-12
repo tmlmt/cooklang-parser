@@ -122,7 +122,11 @@ servings: 1
 Add @carrots{3%large} and @&carrots{2%small}
 `;
 
-export const recipeWithInlineAlternatives = `Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`;
+export const recipeWithInlineAlternatives = `
+---
+servings: 1
+---
+Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`;
 
 export const recipeWithGroupedAlternatives = `
 Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|soy milk{150%ml} for a vegan version

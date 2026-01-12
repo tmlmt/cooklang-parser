@@ -35,16 +35,12 @@ describe("parse function", () => {
                 {
                   displayName: "eggs",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 3 },
-                        },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 3 },
+                    },
                   },
                 },
               ],
@@ -312,17 +308,13 @@ describe("parse function", () => {
                 {
                   displayName: "flour",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 100 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 100 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -338,17 +330,13 @@ describe("parse function", () => {
                 {
                   displayName: "water",
                   index: 1,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 300 },
-                        },
-                        unit: { name: "mL" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 300 },
+                    },
+                    unit: { name: "mL" },
                   },
                 },
               ],
@@ -368,17 +356,13 @@ describe("parse function", () => {
                 {
                   displayName: "flour",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 50 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 50 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -470,17 +454,13 @@ describe("parse function", () => {
                 {
                   displayName: "flour",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 100 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 100 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -500,17 +480,13 @@ describe("parse function", () => {
                 {
                   displayName: "flour",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 50 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 50 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -594,16 +570,12 @@ describe("parse function", () => {
                 {
                   displayName: "eggs",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 1 },
-                        },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 1 },
+                    },
                   },
                 },
               ],
@@ -619,16 +591,12 @@ describe("parse function", () => {
                 {
                   displayName: "eggs",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 1 },
-                        },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 1 },
+                    },
                   },
                 },
               ],
@@ -1105,17 +1073,13 @@ Another step.
                 {
                   displayName: "flour tipo 00",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 100 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 100 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -1132,17 +1096,13 @@ Another step.
                 {
                   displayName: "same flour",
                   index: 0,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 100 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 100 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -1163,17 +1123,13 @@ Another step.
                 {
                   displayName: "whole wheat flour",
                   index: 1,
-                  quantity: {
+                  itemQuantity: {
                     scalable: true,
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 50 },
-                        },
-                        unit: { name: "g" },
-                      },
-                    ],
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 50 },
+                    },
+                    unit: { name: "g" },
                   },
                 },
               ],
@@ -1285,51 +1241,39 @@ Another step.
                 displayName: "milk",
                 index: 0,
                 itemId: "ingredient-item-0",
-                quantity: {
+                itemQuantity: {
                   scalable: true,
-                  equivalents: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 200 },
-                      },
-                      unit: { name: "ml" },
-                    },
-                  ],
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 200 },
+                  },
+                  unit: { name: "ml" },
                 },
               },
               {
                 displayName: "almond milk",
                 index: 1,
                 itemId: "ingredient-item-1",
-                quantity: {
+                itemQuantity: {
                   scalable: true,
-                  equivalents: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 100 },
-                      },
-                      unit: { name: "ml" },
-                    },
-                  ],
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: { name: "ml" },
                 },
               },
               {
                 displayName: "soy milk",
                 index: 2,
                 itemId: "ingredient-item-2",
-                quantity: {
+                itemQuantity: {
                   scalable: true,
-                  equivalents: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 150 },
-                      },
-                      unit: { name: "ml" },
-                    },
-                  ],
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 150 },
+                  },
+                  unit: { name: "ml" },
                 },
               },
             ],
@@ -1345,21 +1289,17 @@ Another step.
           {
             displayName: "milk",
             index: 0,
-            quantity: {
-              equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: {
-                      decimal: 200,
-                      type: "decimal",
-                    },
-                  },
-                  unit: {
-                    name: "ml",
-                  },
+            itemQuantity: {
+              quantity: {
+                type: "fixed",
+                value: {
+                  decimal: 200,
+                  type: "decimal",
                 },
-              ],
+              },
+              unit: {
+                name: "ml",
+              },
               scalable: true,
             },
           },
@@ -1434,51 +1374,39 @@ Another step.
               {
                 displayName: "milk",
                 index: 0,
-                quantity: {
+                itemQuantity: {
                   scalable: true,
-                  equivalents: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 200 },
-                      },
-                      unit: { name: "ml" },
-                    },
-                  ],
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 200 },
+                  },
+                  unit: { name: "ml" },
                 },
               },
               {
                 displayName: "almond milk",
                 index: 1,
                 note: "vegan version",
-                quantity: {
+                itemQuantity: {
                   scalable: true,
-                  equivalents: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 100 },
-                      },
-                      unit: { name: "ml" },
-                    },
-                  ],
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: { name: "ml" },
                 },
               },
               {
                 displayName: "soy milk",
                 index: 2,
                 note: "another vegan option",
-                quantity: {
+                itemQuantity: {
                   scalable: true,
-                  equivalents: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 150 },
-                      },
-                      unit: { name: "ml" },
-                    },
-                  ],
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 150 },
+                  },
+                  unit: { name: "ml" },
                 },
               },
             ],
@@ -1768,16 +1696,14 @@ Another step.
           {
             displayName: "flour",
             index: 0,
-            quantity: {
+            itemQuantity: {
               scalable: true,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: { name: "bag", integerProtected: true },
               equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 1 },
-                  },
-                  unit: { name: "bag", integerProtected: true },
-                },
                 {
                   quantity: {
                     type: "fixed",

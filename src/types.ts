@@ -317,13 +317,12 @@ export interface ComputedIngredient {
  * equivalent quantities (e.g., in different units).
  * @category Types
  */
-export interface IngredientItemQuantity {
+export interface IngredientItemQuantity extends QuantityWithExtendedUnit {
   /**
-   * A list of equivalent quantities for this ingredient mention.
-   * The first item is considered the primary quantity.
-   * For `@salt{1%tsp|5%g}`, this would contain two `Quantity` objects.
+   * A list of equivalent quantities/units for this ingredient mention besides the primary quantity.
+   * For `@salt{1%tsp|5%g}`, the main quantity is 1 tsp and the equivalents will contain 5 g.
    */
-  equivalents: QuantityWithExtendedUnit[];
+  equivalents?: QuantityWithExtendedUnit[];
   /** Indicates whether this quantity should be scaled when the recipe serving size changes. */
   scalable: boolean;
 }
@@ -337,7 +336,7 @@ export interface IngredientAlternative {
   /** The index of the ingredient within the {@link Recipe.ingredients} array. */
   index: number;
   /** The quantity of this specific mention of the ingredient */
-  quantity?: IngredientItemQuantity;
+  itemQuantity?: IngredientItemQuantity;
   /** The alias/name of the ingredient as it should be displayed for this occurrence. */
   displayName: string;
   /** An optional note for this specific choice (e.g., "for a vegan version"). */

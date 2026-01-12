@@ -15,18 +15,14 @@ exports[`parse function > extracts steps correctly 1`] = `
               {
                 "displayName": "eggs",
                 "index": 0,
-                "quantity": {
-                  "equivalents": [
-                    {
-                      "quantity": {
-                        "type": "fixed",
-                        "value": {
-                          "decimal": 3,
-                          "type": "decimal",
-                        },
-                      },
+                "itemQuantity": {
+                  "quantity": {
+                    "type": "fixed",
+                    "value": {
+                      "decimal": 3,
+                      "type": "decimal",
                     },
-                  ],
+                  },
                   "scalable": true,
                 },
               },
@@ -95,22 +91,18 @@ exports[`parse function > extracts steps correctly 1`] = `
               {
                 "displayName": "butter",
                 "index": 3,
-                "quantity": {
-                  "equivalents": [
-                    {
-                      "quantity": {
-                        "type": "fixed",
-                        "value": {
-                          "decimal": 50,
-                          "type": "decimal",
-                        },
-                      },
-                      "unit": {
-                        "name": "g",
-                      },
+                "itemQuantity": {
+                  "quantity": {
+                    "type": "fixed",
+                    "value": {
+                      "decimal": 50,
+                      "type": "decimal",
                     },
-                  ],
+                  },
                   "scalable": true,
+                  "unit": {
+                    "name": "g",
+                  },
                 },
               },
             ],
@@ -517,18 +509,14 @@ Recipe {
                 {
                   "displayName": "lasagne noodles",
                   "index": 0,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 9,
-                            "type": "decimal",
-                          },
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 9,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
                   },
                 },
@@ -562,22 +550,18 @@ Recipe {
                 {
                   "displayName": "bulk Italian sausage",
                   "index": 1,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 1.2,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "lb",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 1.2,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "lb",
+                    },
                   },
                 },
               ],
@@ -593,23 +577,19 @@ Recipe {
                 {
                   "displayName": "ground beef",
                   "index": 2,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 4,
-                            "num": 3,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "lb",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 4,
+                        "num": 3,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "lb",
+                    },
                   },
                 },
               ],
@@ -625,18 +605,14 @@ Recipe {
                 {
                   "displayName": "onion",
                   "index": 3,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 1,
-                            "type": "decimal",
-                          },
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 1,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
                   },
                 },
@@ -661,22 +637,18 @@ Recipe {
                 {
                   "displayName": "garlic",
                   "index": 4,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 3,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "cloves",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 3,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cloves",
+                    },
                   },
                 },
               ],
@@ -718,22 +690,18 @@ Recipe {
                 {
                   "displayName": "crushed tomatoes",
                   "index": 5,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 2,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "cans",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 2,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cans",
+                    },
                   },
                 },
               ],
@@ -749,22 +717,18 @@ Recipe {
                 {
                   "displayName": "tomato paste",
                   "index": 6,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 2,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "cans",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 2,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cans",
+                    },
                   },
                 },
               ],
@@ -780,23 +744,19 @@ Recipe {
                 {
                   "displayName": "water",
                   "index": 7,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 3,
-                            "num": 2,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "cup",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 3,
+                        "num": 2,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cup",
+                    },
                   },
                 },
               ],
@@ -812,22 +772,18 @@ Recipe {
                 {
                   "displayName": "sugar",
                   "index": 8,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 2,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "tbsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 2,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tbsp",
+                    },
                   },
                 },
               ],
@@ -843,22 +799,18 @@ Recipe {
                 {
                   "displayName": "fresh parsley",
                   "index": 9,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 3,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "tbsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 3,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tbsp",
+                    },
                   },
                 },
               ],
@@ -874,22 +826,18 @@ Recipe {
                 {
                   "displayName": "dried basil",
                   "index": 10,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 2,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "tsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 2,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tsp",
+                    },
                   },
                 },
               ],
@@ -905,23 +853,19 @@ Recipe {
                 {
                   "displayName": "fennel seed",
                   "index": 11,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 4,
-                            "num": 3,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "tsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 4,
+                        "num": 3,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tsp",
+                    },
                   },
                 },
               ],
@@ -937,23 +881,19 @@ Recipe {
                 {
                   "displayName": "salt",
                   "index": 12,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 2,
-                            "num": 1,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "tsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 2,
+                        "num": 1,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tsp",
+                    },
                   },
                 },
               ],
@@ -969,23 +909,19 @@ Recipe {
                 {
                   "displayName": "pepper",
                   "index": 13,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 4,
-                            "num": 1,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "tsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 4,
+                        "num": 1,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tsp",
+                    },
                   },
                 },
               ],
@@ -1040,18 +976,14 @@ Recipe {
                 {
                   "displayName": "egg",
                   "index": 14,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 1,
-                            "type": "decimal",
-                          },
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 1,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
                   },
                 },
@@ -1068,22 +1000,18 @@ Recipe {
                 {
                   "displayName": "ricotta cheese",
                   "index": 15,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 1,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "carton",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 1,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "carton",
+                    },
                   },
                 },
               ],
@@ -1099,23 +1027,19 @@ Recipe {
                 {
                   "displayName": "fresh parsley",
                   "index": 9,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 4,
-                            "num": 1,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "cup",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 4,
+                        "num": 1,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cup",
+                    },
                   },
                 },
               ],
@@ -1131,23 +1055,19 @@ Recipe {
                 {
                   "displayName": "salt",
                   "index": 12,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 4,
-                            "num": 1,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "tsp",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 4,
+                        "num": 1,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "tsp",
+                    },
                   },
                 },
               ],
@@ -1172,22 +1092,18 @@ Recipe {
                 {
                   "displayName": "mozzarella",
                   "index": 16,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "decimal": 4,
-                            "type": "decimal",
-                          },
-                        },
-                        "unit": {
-                          "name": "cups",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "decimal": 4,
+                        "type": "decimal",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cups",
+                    },
                   },
                 },
               ],
@@ -1203,23 +1119,19 @@ Recipe {
                 {
                   "displayName": "Parmesan",
                   "index": 17,
-                  "quantity": {
-                    "equivalents": [
-                      {
-                        "quantity": {
-                          "type": "fixed",
-                          "value": {
-                            "den": 4,
-                            "num": 3,
-                            "type": "fraction",
-                          },
-                        },
-                        "unit": {
-                          "name": "cup",
-                        },
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "den": 4,
+                        "num": 3,
+                        "type": "fraction",
                       },
-                    ],
+                    },
                     "scalable": true,
+                    "unit": {
+                      "name": "cup",
+                    },
                   },
                 },
               ],
@@ -1444,22 +1356,18 @@ exports[`parse function > parses notes correctly 1`] = `
               {
                 "displayName": "flour",
                 "index": 0,
-                "quantity": {
-                  "equivalents": [
-                    {
-                      "quantity": {
-                        "type": "fixed",
-                        "value": {
-                          "decimal": 100,
-                          "type": "decimal",
-                        },
-                      },
-                      "unit": {
-                        "name": "g",
-                      },
+                "itemQuantity": {
+                  "quantity": {
+                    "type": "fixed",
+                    "value": {
+                      "decimal": 100,
+                      "type": "decimal",
                     },
-                  ],
+                  },
                   "scalable": true,
+                  "unit": {
+                    "name": "g",
+                  },
                 },
               },
             ],
