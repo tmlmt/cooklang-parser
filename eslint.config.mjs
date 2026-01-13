@@ -22,7 +22,11 @@ export default defineConfig(
       },
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["docs/.vitepress/config.mts"],
+          allowDefaultProject: [
+            "docs/.vitepress/config.mts",
+            "docs/.vitepress/*/*.ts",
+            "docs/.vitepress/*.ts",
+          ],
         },
         tsconfigRootDir: import.meta.dirname,
       },

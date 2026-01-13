@@ -1,19 +1,31 @@
 import { defineConfig } from "vitepress";
- // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- avoiding error when developing the docs locally
- // @ts-ignore: linting before typedoc is generated will throw an error here
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- avoiding error when developing the docs locally
+// @ts-ignore: linting before typedoc is generated will throw an error here
 import typedocSidebar from "../api/typedoc-sidebar.json";
+import { fullVersion, majorVersion, majorNumber } from "./version";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "@tmlmt/cooklang-parser",
   description: "Documentation for the npm package @tmlmt/cooklang-parser",
+  base: `/${majorVersion}/`,
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: "Home", link: "/" },
-      { text: "Guide", link: "/guide-cooklang-specs"},
+      { text: "Guide", link: "/guide-cooklang-specs" },
       { text: "API", link: "/api/classes/Recipe" },
       { text: "Examples", link: "/examples-scaling-recipes" },
+      {
+        text: fullVersion,
+        items: [
+          { text: fullVersion, link: "/" },
+          {
+            text: majorNumber === 2 ? "v3" : "v2",
+            link: majorNumber === 2 ? "../v3/" : "../v2/",
+          },
+        ],
+      },
     ],
 
     sidebar: [
