@@ -270,7 +270,7 @@ export function deNormalizeQuantity(
   return result;
 }
 
-// Helper function to convert addEquivalentsAndSimplify result to IngredientQuantities format
+// Helper function to convert addEquivalentsAndSimplify result to Ingredient.quantities format
 // Returns either a QuantityWithPlainUnit (for simple/OR groups) or an IngredientQuantityAndGroup (for AND groups)
 export const flattenPlainUnitGroup = (
   summed: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,

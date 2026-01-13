@@ -22,7 +22,6 @@ import type {
   QuantityWithPlainUnit,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
-  IngredientQuantities,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -742,7 +741,10 @@ export class Recipe {
     for (const [index, groupsForIngredient] of ingredientGroups) {
       const ingredient = this.ingredients[index]!;
 
-      const quantityGroups: IngredientQuantities = [];
+      const quantityGroups: (
+        | IngredientQuantityGroup
+        | IngredientQuantityAndGroup
+      )[] = [];
 
       for (const [, group] of groupsForIngredient) {
         // Use addEquivalentsAndSimplify to sum all quantities in this group

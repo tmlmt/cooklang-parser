@@ -273,17 +273,6 @@ export interface IngredientQuantityAndGroup {
 }
 
 /**
- * Represents the quantities list for an ingredient as groups.
- * Each group contains summed quantities that share the same alternative signature.
- * Groups can be either simple (single unit) or AND groups (incompatible primary units with summed equivalents).
- * @category Types
- */
-export type IngredientQuantities = (
-  | IngredientQuantityGroup
-  | IngredientQuantityAndGroup
-)[];
-
-/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -291,13 +280,14 @@ export interface Ingredient {
   /** The name of the ingredient. */
   name: string;
   /**
-   * The quantities of the ingredient as they appear in the recipe preparation.
+   * Represents the quantities list for an ingredient as groups.
+   * Each group contains summed quantities that share the same alternative signature.
+   * Groups can be either simple (single unit) or AND groups (incompatible primary units with summed equivalents).
    * Only populated for primary ingredients (not alternative-only).
-   * Each entry represents a single use of the ingredient in the recipe.
    * Quantities without alternatives are merged opportunistically when units are compatible.
    * Quantities with alternatives are only merged if the alternatives are exactly the same.
    */
-  quantities?: IngredientQuantities;
+  quantities?: (IngredientQuantityGroup | IngredientQuantityAndGroup)[];
   /** The preparation of the ingredient. */
   preparation?: string;
   /** The list of indexes of the ingredients mentioned in the preparation as alternatives to this ingredient */

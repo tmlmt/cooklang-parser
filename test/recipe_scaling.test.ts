@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import type { IngredientItem, IngredientQuantities, Step } from "../src/types";
+import type {
+  IngredientItem,
+  IngredientQuantityGroup,
+  IngredientQuantityAndGroup,
+  Step,
+} from "../src/types";
 import { Recipe } from "../src/classes/recipe";
 import {
   recipeToScale,
@@ -358,7 +363,10 @@ serves: 2, some
     const recipe = new Recipe(recipeWithInlineAlternatives);
     const scaledRecipe = recipe.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(3);
-    const ingredient0Quantities: IngredientQuantities = [
+    const ingredient0Quantities: (
+      | IngredientQuantityGroup
+      | IngredientQuantityAndGroup
+    )[] = [
       {
         groupQuantity: {
           quantity: {
@@ -454,7 +462,10 @@ Use @sugar{100%g|0.5%cups|3.5%oz} in the mix.
     `);
     const scaledRecipe = recipe.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(1);
-    const ingredient0Quantities: IngredientQuantities = [
+    const ingredient0Quantities: (
+      | IngredientQuantityGroup
+      | IngredientQuantityAndGroup
+    )[] = [
       {
         groupQuantity: {
           quantity: {
@@ -530,7 +541,10 @@ Use @sugar{100%g|a cup} in the mix.
     `);
     const scaledRecipe = recipe.scaleBy(2);
     expect(scaledRecipe.ingredients.length).toBe(1);
-    const ingredient0Quantities: IngredientQuantities = [
+    const ingredient0Quantities: (
+      | IngredientQuantityGroup
+      | IngredientQuantityAndGroup
+    )[] = [
       {
         groupQuantity: {
           quantity: {
