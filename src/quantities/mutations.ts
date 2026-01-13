@@ -270,12 +270,60 @@ export function deNormalizeQuantity(
   return result;
 }
 
-// Helper function to convert OR group to QuantityWithPlainUnit (first entry + equivalents)
+// Helper function to convert addEquivalentsAndSimplify result to IngredientQuantities format
+// Returns either a QuantityWithPlainUnit (for simple/OR groups) or an IngredientQuantityAndGroup (for AND groups)
 export const flattenPlainUnitGroup = (
   summed: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
-): QuantityWithPlainUnit[] => {
+): (
+  | { groupQuantity: QuantityWithPlainUnit }
+  | {
+      type: "and";
+      entries: QuantityWithPlainUnit[];
+      equivalents?: QuantityWithPlainUnit[];
+    }
+)[] => {
   if (isOrGroup(summed)) {
+    // OR group: check if first entry is an AND group (nested OR-with-AND case from addEquivalentsAndSimplify)
+    // This happens when we have incompatible integer-protected primaries with compatible equivalents
+    // e.g., { type: "or", entries: [{ type: "and", entries: [large, small] }, cup] }
     const entries = summed.entries;
+    const andGroupEntry = entries.find(
+      (e): e is MaybeNestedGroup<QuantityWithPlainUnit> =>
+        isGroup(e) && e.type === "and",
+    );
+
+    if (andGroupEntry) {
+      // Nested OR-with-AND case: AND group of primaries + equivalents
+      const andEntries: QuantityWithPlainUnit[] = [];
+      for (const entry of andGroupEntry.entries) {
+        if (isQuantity(entry)) {
+          andEntries.push({
+            quantity: entry.quantity,
+            unit: entry.unit,
+          });
+        }
+      }
+
+      // The other entries in the OR group are the equivalents
+      const equivalentsList: QuantityWithPlainUnit[] = entries
+        .filter((e): e is QuantityWithPlainUnit => isQuantity(e))
+        .map((e) => ({ quantity: e.quantity, unit: e.unit }));
+
+      if (equivalentsList.length > 0) {
+        return [
+          {
+            type: "and",
+            entries: andEntries,
+            equivalents: equivalentsList,
+          },
+        ];
+      } else {
+        // No equivalents: flatten to separate entries (shouldn't happen in this branch, but handle it)
+        return andEntries.map((entry) => ({ groupQuantity: entry }));
+      }
+    }
+
+    // Simple OR group: first entry is primary, rest are equivalents
     const simpleEntries = entries.filter((e): e is QuantityWithPlainUnit =>
       isQuantity(e),
     );
@@ -288,21 +336,66 @@ export const flattenPlainUnitGroup = (
       if (simpleEntries.length > 1) {
         result.equivalents = simpleEntries.slice(1);
       }
-      return [result];
+      return [{ groupQuantity: result }];
     }
     // Fallback: use first entry regardless
     else {
       const first = entries[0] as QuantityWithPlainUnit;
-      return [{ quantity: first.quantity, unit: first.unit }];
+      return [
+        { groupQuantity: { quantity: first.quantity, unit: first.unit } },
+      ];
     }
   } else if (isGroup(summed)) {
-    // It's an AND group - return separate entries (incompatible units)
-    return summed.entries.map((e) => ({
-      quantity: (e as QuantityWithPlainUnit).quantity,
-      unit: (e as QuantityWithPlainUnit).unit,
-    }));
+    // AND group: check if entries have OR groups (equivalents that can be extracted)
+    const andEntries: QuantityWithPlainUnit[] = [];
+    const equivalentsList: QuantityWithPlainUnit[] = [];
+
+    for (const entry of summed.entries) {
+      if (isOrGroup(entry)) {
+        // This entry has equivalents: first is primary, rest are equivalents
+        const orEntries = entry.entries.filter(
+          (e): e is QuantityWithPlainUnit => isQuantity(e),
+        );
+        if (orEntries.length > 0) {
+          andEntries.push({
+            quantity: orEntries[0]!.quantity,
+            unit: orEntries[0]!.unit,
+          });
+          // Collect equivalents for later merging
+          equivalentsList.push(...orEntries.slice(1));
+        }
+      } else if (isQuantity(entry)) {
+        // Simple quantity, no equivalents
+        andEntries.push({
+          quantity: entry.quantity,
+          unit: entry.unit,
+        });
+      }
+    }
+
+    // Build the AND group result
+    // If there are no equivalents, flatten to separate groupQuantity entries (water case)
+    // If there are equivalents, return an AND group with the summed equivalents (carrots case)
+    if (equivalentsList.length === 0) {
+      // No equivalents: flatten to separate entries
+      return andEntries.map((entry) => ({ groupQuantity: entry }));
+    }
+
+    const result: {
+      type: "and";
+      entries: QuantityWithPlainUnit[];
+      equivalents?: QuantityWithPlainUnit[];
+    } = {
+      type: "and",
+      entries: andEntries,
+      equivalents: equivalentsList,
+    };
+
+    return [result];
   } else {
-    // It's already a simple QuantityWithPlainUnit
-    return [{ quantity: summed.quantity, unit: summed.unit }];
+    // Simple QuantityWithPlainUnit
+    return [
+      { groupQuantity: { quantity: summed.quantity, unit: summed.unit } },
+    ];
   }
 };

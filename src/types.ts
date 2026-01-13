@@ -251,11 +251,37 @@ export interface IngredientQuantityGroup {
 }
 
 /**
- * Represents the quantities list for an ingredient as groups.
- * Each group contains summed quantities that share the same alternative signature.
+ * Represents an AND group of quantities when primary units are incompatible but equivalents can be summed.
+ * For example: 1 large carrot + 2 small carrots, both with cup equivalents that sum to 5 cups.
  * @category Types
  */
-export type IngredientQuantities = IngredientQuantityGroup[];
+export interface IngredientQuantityAndGroup {
+  type: "and";
+  /**
+   * The incompatible primary quantities (e.g., "1 large" and "2 small").
+   */
+  entries: QuantityWithPlainUnit[];
+  /**
+   * The summed equivalent quantities (e.g., "5 cups" from summing "1.5 cup + 2 cup + 1.5 cup").
+   */
+  equivalents?: QuantityWithPlainUnit[];
+  /**
+   * References to alternative ingredients for this quantity group.
+   * If undefined, this group has no alternatives.
+   */
+  alternatives?: AlternativeIngredientRef[];
+}
+
+/**
+ * Represents the quantities list for an ingredient as groups.
+ * Each group contains summed quantities that share the same alternative signature.
+ * Groups can be either simple (single unit) or AND groups (incompatible primary units with summed equivalents).
+ * @category Types
+ */
+export type IngredientQuantities = (
+  | IngredientQuantityGroup
+  | IngredientQuantityAndGroup
+)[];
 
 /**
  * Represents an ingredient in a recipe.

@@ -2051,6 +2051,149 @@ Another step.
       const step = result.sections[0]?.content[0] as Step;
       expect(step.items[1]).toEqual(ingredientItem0);
     });
+
+    it("parses additions of alternative units correctly", () => {
+      const recipe = `
+        Use @carrots{1%=large|1.5%cup} and @&carrots{2%=small|2%cup} and again @&carrots{1.5%cup}`;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      const carrotIngredient: Ingredient = {
+        name: "carrots",
+        usedAsPrimary: true,
+        quantities: [
+          {
+            type: "and",
+            entries: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 2 },
+                },
+                unit: "large",
+              },
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 2 },
+                },
+                unit: "small",
+              },
+            ],
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 5 },
+                },
+                unit: "cup",
+              },
+            ],
+          },
+        ],
+      };
+      expect(result.ingredients[0]).toEqual(carrotIngredient);
+    });
+
+    it("parses complex combinations of alterantive units and ingredients correctly", () => {
+      const recipe = `
+        Use @|flour-0|all-purpose flour{2%=bag|0.5%lb} or @|flour-0|whole wheat flour{1.5%=bag|0.4%lb}
+        and add @&all-purpose flour{1%=bag|0.25%lb} once mixed to lighten the structure.
+        Add another @|flour-1|&all-purpose flour{1%pinch} or @|flour-1|&whole wheat flour{1%pinch} just cause we're fancy`;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(2);
+      // Three separate quantity entries because:
+      // - "bag" (integer-protected) can't be summed with "pinch" (incompatible units)
+      // - "pinch" has no lb equivalent, so it can't share equivalents with bag
+      expect(result.ingredients[0]).toEqual({
+        alternatives: new Set([1]),
+        name: "all-purpose flour",
+        quantities: [
+          {
+            groupQuantity: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "bag",
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 0.5 },
+                  },
+                  unit: "lb",
+                },
+              ],
+            },
+            alternatives: [
+              {
+                index: 1,
+                alternativeQuantities: [
+                  {
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 1.5 },
+                    },
+                    unit: "bag",
+                    equivalents: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 0.4 },
+                        },
+                        unit: "lb",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            groupQuantity: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "bag",
+              equivalents: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 0.25 },
+                  },
+                  unit: "lb",
+                },
+              ],
+            },
+          },
+          {
+            groupQuantity: {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "pinch",
+            },
+            alternatives: [
+              {
+                index: 1,
+                alternativeQuantities: [
+                  {
+                    quantity: {
+                      type: "fixed",
+                      value: { type: "decimal", decimal: 1 },
+                    },
+                    unit: "pinch",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        usedAsPrimary: true,
+      });
+    });
   });
 
   describe("clone", () => {

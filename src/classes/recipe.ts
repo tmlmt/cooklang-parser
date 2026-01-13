@@ -21,6 +21,8 @@ import type {
   AlternativeIngredientRef,
   QuantityWithPlainUnit,
   IngredientQuantityGroup,
+  IngredientQuantityAndGroup,
+  IngredientQuantities,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -672,7 +674,11 @@ export class Recipe {
           const groupsForIngredient = ingredientGroups.get(alternative.index)!;
 
           // Get the alternative signature for grouping
-          const signature = getAlternativeSignature(alternativeRefs);
+          // Include the group name to keep quantities from different choice groups separate
+          const baseSignature = getAlternativeSignature(alternativeRefs);
+          const signature = isGroupedItem
+            ? `group:${item.group}|${baseSignature ?? ""}`
+            : baseSignature;
 
           // Get or create the group for this signature
           if (!groupsForIngredient.has(signature)) {
@@ -736,15 +742,14 @@ export class Recipe {
     for (const [index, groupsForIngredient] of ingredientGroups) {
       const ingredient = this.ingredients[index]!;
 
-      const quantityGroups: IngredientQuantityGroup[] = [];
+      const quantityGroups: IngredientQuantities = [];
 
       for (const [, group] of groupsForIngredient) {
         // Use addEquivalentsAndSimplify to sum all quantities in this group
         const summedGroupQuantity = addEquivalentsAndSimplify(
           ...group.quantities,
         );
-
-        // Convert to array of QuantityWithPlainUnit (multiple if AND group)
+        // Convert to proper format (IngredientQuantityGroup or IngredientQuantityAndGroup)
         const groupQuantities = flattenPlainUnitGroup(summedGroupQuantity);
 
         // Process alternatives - they need to be converted similarly
@@ -759,23 +764,45 @@ export class Recipe {
                 ...altQuantities,
               );
               // Convert to array of QuantityWithPlainUnit
-              ref.alternativeQuantities =
-                flattenPlainUnitGroup(summedAltQuantity);
+              const flattenedAlt = flattenPlainUnitGroup(summedAltQuantity);
+              // Extract quantities from the flattened result
+              ref.alternativeQuantities = flattenedAlt.flatMap((item) => {
+                if ("groupQuantity" in item) {
+                  return [item.groupQuantity];
+                } else {
+                  // AND group: return entries (could also include equivalents if needed)
+                  return item.entries;
+                }
+              });
             }
             alternatives.push(ref);
           }
         }
 
-        // Create separate IngredientQuantityGroup for each groupQuantity
-        // (typically just one, but multiple if units were incompatible)
+        // Add quantity groups with alternatives
         for (const gq of groupQuantities) {
-          const quantityGroup: IngredientQuantityGroup = {
-            groupQuantity: gq,
-          };
-          if (alternatives && alternatives.length > 0) {
-            quantityGroup.alternatives = alternatives;
+          if ("type" in gq && gq.type === "and") {
+            // AND group
+            const andGroup: IngredientQuantityAndGroup = {
+              type: "and",
+              entries: gq.entries,
+            };
+            if (gq.equivalents && gq.equivalents.length > 0) {
+              andGroup.equivalents = gq.equivalents;
+            }
+            if (alternatives && alternatives.length > 0) {
+              andGroup.alternatives = alternatives;
+            }
+            quantityGroups.push(andGroup);
+          } else {
+            // Simple group
+            const quantityGroup: IngredientQuantityGroup =
+              gq as IngredientQuantityGroup;
+            if (alternatives && alternatives.length > 0) {
+              quantityGroup.alternatives = alternatives;
+            }
+            quantityGroups.push(quantityGroup);
           }
-          quantityGroups.push(quantityGroup);
         }
       }
 

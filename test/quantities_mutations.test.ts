@@ -796,8 +796,10 @@ describe("flattenPlainUnitGroup", () => {
     };
     expect(flattenPlainUnitGroup(input)).toEqual([
       {
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
-        unit: "g",
+        groupQuantity: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+          unit: "g",
+        },
       },
     ]);
   });
@@ -817,17 +819,19 @@ describe("flattenPlainUnitGroup", () => {
     };
     expect(flattenPlainUnitGroup(input)).toEqual([
       {
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-        unit: "cup",
-        equivalents: [
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 250 },
+        groupQuantity: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 250 },
+              },
+              unit: "mL",
             },
-            unit: "mL",
-          },
-        ],
+          ],
+        },
       },
     ]);
   });
@@ -847,12 +851,16 @@ describe("flattenPlainUnitGroup", () => {
     };
     expect(flattenPlainUnitGroup(input)).toEqual([
       {
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-        unit: "egg",
+        groupQuantity: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: "egg",
+        },
       },
       {
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
-        unit: "g",
+        groupQuantity: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: "g",
+        },
       },
     ]);
   });
@@ -868,8 +876,10 @@ describe("flattenPlainUnitGroup", () => {
     };
     expect(flattenPlainUnitGroup(input)).toEqual([
       {
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-        unit: "cup",
+        groupQuantity: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+        },
       },
     ]);
   });
