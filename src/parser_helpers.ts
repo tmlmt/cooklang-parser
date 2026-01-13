@@ -256,6 +256,21 @@ export const parseFixedValue = (
   return { type: "decimal", value: Number(s) };
 };
 
+export function stringifyQuantityValue(quantity: FixedValue | Range): string {
+  if (quantity.type === "fixed") {
+    return stringifyFixedValue(quantity);
+  } else {
+    return `${stringifyFixedValue({ type: "fixed", value: quantity.min })}-${stringifyFixedValue({ type: "fixed", value: quantity.max })}`;
+  }
+}
+
+function stringifyFixedValue(quantity: FixedValue): string {
+  if (quantity.value.type === "fraction")
+    return `${quantity.value.num}/${quantity.value.den}`;
+  else return String(quantity.value.value);
+}
+
+// TODO: rename to parseQuantityValue
 export function parseQuantityInput(input_str: string): FixedValue | Range {
   const clean_str = String(input_str).trim();
 
@@ -408,4 +423,8 @@ export function extractMetadata(content: string): MetadataExtract {
   }
 
   return { metadata, servings };
+}
+
+export function isPositiveIntegerString(str: string): boolean {
+  return /^\d+$/.test(str);
 }

@@ -171,6 +171,16 @@ export interface FixedValue {
 }
 
 /**
+ * Represents a single, fixed numeric quantity.
+ * This can be a decimal or fraction.
+ * @category Types
+ */
+export interface FixedNumericValue {
+  type: "fixed";
+  value: DecimalValue | FractionValue;
+}
+
+/**
  * Represents a range of quantities, e.g. "1-2"
  * @category Types
  */
@@ -415,3 +425,102 @@ export interface Category {
   /** The ingredients in the category. */
   ingredients: CategoryIngredient[];
 }
+
+/**
+ * Represents a product option in a {@link ProductCatalog}
+ * @category Types
+ */
+export interface ProductOption {
+  /** The ID of the product */
+  id: string;
+  /** The name of the product */
+  productName: string;
+  /** The name of the ingredient it corresponds to */
+  ingredientName: string;
+  /** The aliases of the ingredient it also corresponds to */
+  ingredientAliases?: string[];
+  /** The size of the product. */
+  size: FixedNumericValue;
+  /** The unit of the product size. */
+  unit?: string;
+  /** The price of the product */
+  price: number;
+  /** Arbitrary additional metadata */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+/**
+ * Represents a product option as described in a catalog TOML file
+ * @category Types
+ */
+export interface ProductOptionToml {
+  /** The name of the product */
+  name: string;
+  /** The size and unit of the product separated by % */
+  size: string;
+  /** The price of the product */
+  price: number;
+  /** Arbitrary additional metadata */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+/**
+ * Represents a product selection in a {@link ShoppingCart}
+ * @category Types
+ */
+export interface ProductSelection {
+  /** The selected product */
+  product: ProductOption;
+  /** The quantity of the selected product */
+  quantity: number;
+  /** The total price for this selected product */
+  totalPrice: number;
+}
+
+/**
+ * Represents the content of the actual cart of the {@link ShoppingCart}
+ * @category Types
+ */
+export type CartContent = ProductSelection[];
+
+/**
+ * Represents a successful match between a ingredient and product(s) in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
+export interface ProductMatch {
+  ingredient: Ingredient;
+  selection: ProductSelection[];
+}
+
+/**
+ * Represents all successful matches between ingredients and the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
+export type CartMatch = ProductMatch[];
+
+/**
+ * Represents the error codes for an ingredient which didn't match with any product in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
+export type NoProductMatchErrorCode =
+  | "incompatibleUnits"
+  | "noProduct"
+  | "textValue"
+  | "noQuantity";
+
+/**
+ * Represents an ingredient which didn't match with any product in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
+export interface ProductMisMatch {
+  ingredient: Ingredient;
+  reason: NoProductMatchErrorCode;
+}
+
+/**
+ * Represents all ingredients which didn't match with any product in the product catalog, in a {@link ShoppingCart}
+ * @category Types
+ */
+export type CartMisMatch = ProductMisMatch[];

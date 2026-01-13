@@ -1,7 +1,22 @@
 import { CategoryConfig } from "./classes/category_config";
+import { ProductCatalog } from "./classes/product_catalog";
 import { Recipe } from "./classes/recipe";
 import { ShoppingList } from "./classes/shopping_list";
+import {
+  ShoppingCart,
+  type ShoppingCartOptions,
+  type ShoppingCartSummary,
+} from "./classes/shopping_cart";
 import { Section } from "./classes/section";
+
+export {
+  CategoryConfig,
+  ProductCatalog,
+  Recipe,
+  ShoppingList,
+  ShoppingCart,
+  Section,
+};
 
 import type {
   Metadata,
@@ -13,6 +28,7 @@ import type {
   DecimalValue,
   FractionValue,
   TextValue,
+  FixedNumericValue,
   Timer,
   TextItem,
   IngredientItem,
@@ -30,12 +46,19 @@ import type {
   CategoryIngredient,
   Category,
   QuantityPart,
+  ProductOption,
+  ProductSelection,
+  CartContent,
+  ProductMatch,
+  CartMatch,
+  ProductMisMatch,
+  CartMisMatch,
+  NoProductMatchErrorCode,
 } from "./types";
 
 export {
-  Recipe,
-  ShoppingList,
-  CategoryConfig,
+  ShoppingCartOptions,
+  ShoppingCartSummary,
   Metadata,
   Ingredient,
   IngredientFlag,
@@ -45,6 +68,7 @@ export {
   DecimalValue,
   FractionValue,
   TextValue,
+  FixedNumericValue,
   Timer,
   TextItem,
   IngredientItem,
@@ -61,6 +85,20 @@ export {
   RecipeWithServings,
   CategoryIngredient,
   Category,
-  Section,
   QuantityPart,
+  ProductOption,
+  ProductSelection,
+  CartContent,
+  ProductMatch,
+  CartMatch,
+  ProductMisMatch,
+  CartMisMatch,
+  NoProductMatchErrorCode,
 };
+
+import {
+  NoProductCatalogForCartError,
+  NoShoppingListForCartError,
+} from "./errors";
+
+export { NoProductCatalogForCartError, NoShoppingListForCartError };

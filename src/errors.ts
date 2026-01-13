@@ -1,4 +1,4 @@
-import { IngredientFlag, CookwareFlag } from "./types";
+import { IngredientFlag, CookwareFlag, NoProductMatchErrorCode } from "./types";
 
 export class ReferencedItemCannotBeRedefinedError extends Error {
   constructor(
@@ -11,5 +11,55 @@ export class ReferencedItemCannotBeRedefinedError extends Error {
 You can either remove the reference to create a new ${item_type} defined as ${new_modifier} or add the ${new_modifier} flag to the original definition of the ${item_type}`,
     );
     this.name = "ReferencedItemCannotBeRedefinedError";
+  }
+}
+
+/**
+ * Error thrown when trying to build a shopping cart without a product catalog
+ * @category Errors
+ */
+export class NoProductCatalogForCartError extends Error {
+  constructor() {
+    super(
+      `Cannot build a cart without a product catalog. Please set one using setProductCatalog()`,
+    );
+    this.name = "NoProductCatalogForCartError";
+  }
+}
+
+/**
+ * Error thrown when trying to build a shopping cart without a shopping list
+ * @category Errors
+ */
+export class NoShoppingListForCartError extends Error {
+  constructor() {
+    super(
+      `Cannot build a cart without a shopping list. Please set one using setShoppingList()`,
+    );
+    this.name = "NoShoppingListForCartError";
+  }
+}
+
+export class NoProductMatchError extends Error {
+  code: NoProductMatchErrorCode;
+
+  constructor(item_name: string, code: NoProductMatchErrorCode) {
+    const messageMap: Record<NoProductMatchErrorCode, string> = {
+      incompatibleUnits: `The units of the products in the catalogue are incompatible with ingredient ${item_name} in the shopping list.`,
+      noProduct:
+        "No product was found linked to ingredient name ${item_name} in the shopping list",
+      textValue: `Ingredient ${item_name} has a text value as quantity and can therefore not be matched with any product in the catalogue.`,
+      noQuantity: `Ingredient ${item_name} has no quantity and can therefore not be matched with any product in the catalogue.`,
+    };
+    super(messageMap[code]);
+    this.code = code;
+    this.name = "NoProductMatchError";
+  }
+}
+
+export class InvalidProductCatalogFormat extends Error {
+  constructor() {
+    super("Invalid product catalog format.");
+    this.name = "InvalidProductCatalogFormat";
   }
 }
