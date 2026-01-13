@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --color-royal-50: #7997fa;
+  --color-royal-100: #6282ea;
+  --color-royal-200: #5777df;
+  --color-royal-300: #4061d0;
+  --color-royal-400: #3858c1;
+  --color-royal-500: #3451b2;
+  --color-royal-600: #2c469c;
+  --color-royal-700: #253c87;
+  --color-royal-800: #1e3270;
+  --color-royal-900: #18285a;
+  --color-royal-950: #111c40;
+}
