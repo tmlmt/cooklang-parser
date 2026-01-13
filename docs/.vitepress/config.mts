@@ -4,6 +4,9 @@ import { defineConfig } from "vitepress";
 import typedocSidebar from "../api/typedoc-sidebar.json";
 import { fullVersion, majorVersion, majorNumber } from "./version";
 
+const isProd = process.env.NODE_ENV === "production";
+const siteUrl = "https://cooklang-parser.tmlmt.com";
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "@tmlmt/cooklang-parser",
@@ -22,7 +25,9 @@ export default defineConfig({
           { text: fullVersion, link: "/" },
           {
             text: majorNumber === 2 ? "v3" : "v2",
-            link: majorNumber === 2 ? "../v3/" : "../v2/",
+            link: isProd
+              ? `${siteUrl}/${majorNumber === 2 ? "v3" : "v2"}/`
+              : `/${majorNumber === 2 ? "v3" : "v2"}/`,
           },
         ],
       },
