@@ -267,7 +267,7 @@ async function main() {
   log.info("Creating GitHub release...");
   // Re-extract the changelog, which may have been edited in the review step
   releaseNotes = extractReleaseNotes();
-  await run("gh", [
+  const releaseArgs = [
     "release",
     "create",
     tag,
@@ -275,7 +275,15 @@ async function main() {
     tag,
     "--notes",
     releaseNotes,
-  ]);
+  ];
+
+  // Add --prerelease flag if version contains a dash (alpha, beta, rc, etc.)
+  if (version.includes("-")) {
+    releaseArgs.push("--prerelease");
+    log.info("Pre-release detected. Adding --prerelease flag.");
+  }
+
+  await run("gh", releaseArgs);
 
   if (DRY_RUN) {
     await execa("git", ["checkout", "package.json", "CHANGELOG.md"], {
