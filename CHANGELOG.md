@@ -1,5 +1,34 @@
 # Changelog
 
+## v3.0.0-alpha.3
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.2...v3.0.0-alpha.3)
+
+### 🩹 Fixes
+
+- **playground:** Use absolute urls to enable navigation between major version in production ([bbcadfa](https://github.com/tmlmt/cooklang-parser/commit/bbcadfa))
+
+### 💅 Refactors
+
+- **types:** Replace IngredientQuantities type with explicit union ([17454b6](https://github.com/tmlmt/cooklang-parser/commit/17454b6))
+
+### 📖 Documentation
+
+- **playground:** Get version number from parser package ([cc945e0](https://github.com/tmlmt/cooklang-parser/commit/cc945e0))
+
+### 🏡 Chore
+
+- **playground:** Remove package version and add description ([e56ed20](https://github.com/tmlmt/cooklang-parser/commit/e56ed20))
+
+### 🤖 CI
+
+- **deploy-playground:** Add base url via env variable ([ffde4d5](https://github.com/tmlmt/cooklang-parser/commit/ffde4d5))
+- **publish-npm:** Disable git checks to enable publishing from any branch or tag ([6ac3594](https://github.com/tmlmt/cooklang-parser/commit/6ac3594))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.2
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.1...v3.0.0-alpha.2)
