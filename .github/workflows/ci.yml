@@ -9,6 +9,7 @@ on:
       - "**/graphite-base/**"
   release:
     types: [published] # Trigger publish job when a GitHub release is published
+  workflow_dispatch: # Allow manual runs
 
 permissions:
   contents: read
@@ -112,3 +113,36 @@ jobs:
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
           SOURCE: "combined/."
           TARGET: ${{ secrets.TARGET_DIR_DOCS }}
+
+  deploy-playground:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - name: Install and build parent package
+        run: |
+          pnpm install
+          pnpm build
+      - name: Install playground dependencies
+        working-directory: playground
+        run: pnpm install
+      - name: Build playground in static mode
+        working-directory: playground
+        run: pnpm generate
+      - name: Deploy playground to production server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          SOURCE: "playground/.output/public/."
+          TARGET: ${{ secrets.TARGET_DIR_PLAYGROUND }}
