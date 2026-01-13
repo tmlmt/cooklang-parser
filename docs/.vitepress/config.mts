@@ -4,8 +4,8 @@ import { defineConfig } from "vitepress";
 import typedocSidebar from "../api/typedoc-sidebar.json";
 import { fullVersion, majorVersion, majorNumber } from "./version";
 
-const isProd = process.env.NODE_ENV === "production";
-const siteUrl = "https://cooklang-parser.tmlmt.com";
+export const isProd = process.env.NODE_ENV === "production";
+export const siteUrl = "https://cooklang-parser.tmlmt.com";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
