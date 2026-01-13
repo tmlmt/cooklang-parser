@@ -9,7 +9,7 @@ defineProps<{
 <template>
   <li class="cookware-item">
     <span v-if="cookware.quantity" class="font-bold">
-      <RecipeQuantityDisplay :quantity="cookware.quantity" />
+      <RecipeSingleQuantity :quantity="cookware.quantity" />
     </span>
     {{ " " }}
     <span class="cookware-name">{{ cookware.name }}</span>

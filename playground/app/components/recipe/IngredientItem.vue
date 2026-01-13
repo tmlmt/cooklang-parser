@@ -4,7 +4,6 @@ import type {
   QuantityWithPlainUnit,
   IngredientQuantityEntry,
   IngredientQuantityWithAlternatives,
-  AlternativeIngredientRef,
 } from "cooklang-parser";
 
 const props = defineProps<{
@@ -71,18 +70,6 @@ const displayMode = computed<DisplayMode>(() => {
 
   return { type: "complex", entries: quantities };
 });
-
-/**
- * Get alternative info (quantity + name) for display
- */
-function getAlternativesInfo(
-  alts: AlternativeIngredientRef[],
-): { quantity: QuantityWithPlainUnit; name: string }[] {
-  return alts.map((alt) => ({
-    quantity: alt.quantity,
-    name: getIngredientName(alt.index),
-  }));
-}
 </script>
 
 <template>
@@ -90,10 +77,7 @@ function getAlternativesInfo(
     <!-- Mode 1: Single plain quantity -->
     <template v-if="displayMode.type === 'single'">
       <span>
-        <RecipeQuantityDisplay
-          :quantity="displayMode.entry.quantity"
-          :unit="displayMode.entry.unit"
-        />
+        <RecipeQuantityWithEquivalents :quantity="displayMode.entry" />
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
@@ -105,15 +89,9 @@ function getAlternativesInfo(
     <!-- Mode 2: Two plain quantities -->
     <template v-else-if="displayMode.type === 'two-plain'">
       <span>
-        <RecipeQuantityDisplay
-          :quantity="displayMode.entries[0].quantity"
-          :unit="displayMode.entries[0].unit"
-        />
+        <RecipeQuantityWithEquivalents :quantity="displayMode.entries[0]" />
         and
-        <RecipeQuantityDisplay
-          :quantity="displayMode.entries[1].quantity"
-          :unit="displayMode.entries[1].unit"
-        />
+        <RecipeQuantityWithEquivalents :quantity="displayMode.entries[1]" />
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
@@ -125,10 +103,7 @@ function getAlternativesInfo(
     <!-- Mode 3: Single quantity with alternatives -->
     <template v-else-if="displayMode.type === 'single-with-alts'">
       <span>
-        <RecipeQuantityDisplay
-          :quantity="displayMode.entry.quantity"
-          :unit="displayMode.entry.unit"
-        />
+        <RecipeQuantityWithEquivalents :quantity="displayMode.entry" />
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
@@ -138,17 +113,17 @@ function getAlternativesInfo(
       <span class="text-gray-500">
         (or
         <template
-          v-for="(alt, idx) in getAlternativesInfo(
-            displayMode.entry.alternatives,
-          )"
+          v-for="(alt, idx) in displayMode.entry.alternatives"
           :key="idx"
         >
           <template v-if="idx > 0">, </template>
-          <RecipeQuantityDisplay
-            :quantity="alt.quantity.quantity"
-            :unit="alt.quantity.unit"
+          <RecipeQuantityWithEquivalents
+            v-if="alt.alternativeQuantity"
+            :quantity="alt.alternativeQuantity"
+            wrapper-start="["
+            wrapper-end="]"
           />
-          {{ " " }}{{ alt.name }} </template
+          {{ " " }}{{ getIngredientName(alt.index) }} </template
         >)
       </span>
     </template>
@@ -160,10 +135,7 @@ function getAlternativesInfo(
       <ul class="ml-4 list-inside list-disc">
         <li v-for="(entry, idx) in displayMode.entries" :key="idx">
           <span>
-            <RecipeQuantityDisplay
-              :quantity="entry.quantity"
-              :unit="entry.unit"
-            />
+            <RecipeQuantityWithEquivalents :quantity="entry" />
           </span>
           <span v-if="ingredient.preparation" class="text-gray-500">
             , {{ ingredient.preparation }}
@@ -172,15 +144,15 @@ function getAlternativesInfo(
             <span class="text-gray-500">
               (or
               <template
-                v-for="(alt, altIdx) in getAlternativesInfo(entry.alternatives)"
+                v-for="(alt, altIdx) in entry.alternatives"
                 :key="altIdx"
               >
                 <template v-if="altIdx > 0">, </template>
-                <RecipeQuantityDisplay
-                  :quantity="alt.quantity.quantity"
-                  :unit="alt.quantity.unit"
+                <RecipeQuantityWithEquivalents
+                  v-if="alt.alternativeQuantity"
+                  :quantity="alt.alternativeQuantity"
                 />
-                {{ " " }}{{ alt.name }} </template
+                {{ " " }}{{ getIngredientName(alt.index) }} </template
               >)
             </span>
           </template>

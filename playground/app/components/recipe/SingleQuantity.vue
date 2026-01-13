@@ -8,7 +8,7 @@ import type {
 } from "cooklang-parser";
 
 const props = defineProps<{
-  quantity: FixedValue | Range;
+  quantity?: FixedValue | Range;
   unit?: string;
 }>();
 
@@ -29,6 +29,9 @@ function formatSingleValue(
 }
 
 const formattedQuantity = computed(() => {
+  if (!props.quantity) {
+    return "";
+  }
   if (props.quantity.type === "fixed") {
     return formatSingleValue(props.quantity.value);
   }
