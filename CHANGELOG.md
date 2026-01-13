@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.0.0-alpha.2
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.1...v3.0.0-alpha.2)
+
+### 📖 Documentation
+
+- **types:** Include IngredientItemQuantity ([c0573b2](https://github.com/tmlmt/cooklang-parser/commit/c0573b2))
+
+### 🏡 Chore
+
+- Refresh pnpm-lock file ([664dd37](https://github.com/tmlmt/cooklang-parser/commit/664dd37))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.1
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.0...v3.0.0-alpha.1)
