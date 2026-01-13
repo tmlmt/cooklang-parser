@@ -1,5 +1,39 @@
 # Changelog
 
+## v3.0.0-alpha.0
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.7...v3.0.0-alpha.0)
+
+### 🚀 Enhancements
+
+- New class `ShoppingCart` to assing ingredients in a shopping list to products from a catalog ([#83](https://github.com/tmlmt/cooklang-parser/pull/83))
+- ⚠️ Alternative units and ingredients ([#80](https://github.com/tmlmt/cooklang-parser/pull/80))
+
+### 📖 Documentation
+
+- Generate and deploy for both v2 and v3 ([#85](https://github.com/tmlmt/cooklang-parser/pull/85))
+- Add playground ([#82](https://github.com/tmlmt/cooklang-parser/pull/82))
+
+### 🏡 Chore
+
+- **README:** Bump year to 2026 ([b45e021](https://github.com/tmlmt/cooklang-parser/commit/b45e021))
+- Remove patched version of human-regex use new v2.2.0 instead ([#84](https://github.com/tmlmt/cooklang-parser/pull/84))
+
+### 🤖 CI
+
+- **release:** Publish release with pre-release tag for pre-release version numbers ([#86](https://github.com/tmlmt/cooklang-parser/pull/86))
+- **release:** Enable providing a specific release version number ([a957dee](https://github.com/tmlmt/cooklang-parser/commit/a957dee))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️ Alternative units and ingredients ([#80](https://github.com/tmlmt/cooklang-parser/pull/80))
+
+This new major feature completely restructures the Recipe `sections` and `ingredients` properties resulting from parsing recipes. Refer to the documentation (work in progress for details)
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.7
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.6...v2.1.7)
