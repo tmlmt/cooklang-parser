@@ -8,6 +8,19 @@ const CHANGELOG_PATH = path.resolve(process.cwd(), "CHANGELOG.md");
 const DRY_RUN = process.argv.includes("--dry-run");
 const SKIP_BUILDTEST = process.argv.includes("--skip-buildtest");
 
+// Parse release version from --release or -r argument
+function getReleaseVersion() {
+  const args = process.argv;
+  const releaseIndex = args.findIndex(
+    (arg) => arg === "--release" || arg === "-r",
+  );
+  if (releaseIndex !== -1 && args[releaseIndex + 1]) {
+    return args[releaseIndex + 1];
+  }
+  return null;
+}
+const RELEASE_VERSION = getReleaseVersion();
+
 // --- Helper Functions ---
 const log = {
   info: (msg) => console.log(`\x1b[34mINFO\x1b[0m: ${msg}`),
@@ -114,11 +127,23 @@ async function main() {
 
   // 1. Run changelogen to bump version and update changelog
   log.info("Bumping version and generating changelog with changelogen...");
+  if (RELEASE_VERSION) {
+    log.info(`Using manually specified version: ${RELEASE_VERSION}`);
+  }
+
+  // Build changelogen arguments
+  const changelogPreviewArgs = ["changelogen@latest", "--no-output"];
+  const changelogBumpArgs = ["changelogen@latest", "--bump"];
+  if (RELEASE_VERSION) {
+    changelogPreviewArgs.push("-r", RELEASE_VERSION);
+    changelogBumpArgs.push("-r", RELEASE_VERSION);
+  }
+
   if (DRY_RUN) {
     log.info("Previewing changelog generation...");
     // We use execa directly here to bypass the dry-run logic of our `run` helper
     // and show a preview of what changelogen will do.
-    await execa("pnpx", ["changelogen@latest", "--no-output"], {
+    await execa("pnpx", changelogPreviewArgs, {
       stdio: "inherit",
     });
     const continueAnswer = await askForConfirmation(
@@ -129,9 +154,9 @@ async function main() {
       process.exit(0);
     }
     log.info("Applying changelog changes to proceed with dry-run...");
-    await execa("pnpx", ["changelogen@latest", "--bump"], { stdio: "inherit" });
+    await execa("pnpx", changelogBumpArgs, { stdio: "inherit" });
   } else {
-    await run("pnpx", ["changelogen@latest", "--bump"]);
+    await run("pnpx", changelogBumpArgs);
   }
 
   // 2. Get version from the updated package.json
