@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { TabsItem } from "@nuxt/ui";
 import { Recipe } from "cooklang-parser";
+import pkg from "~~/package.json";
+
+const version = pkg.version;
+const fullVersion = `v${version}`;
 
 // Mobile: 3 tabs including Editor
 const mobileItems = ref<TabsItem[]>([
@@ -44,7 +48,9 @@ const parsedRecipe = computed(() => {
 
 <template>
   <div class="h-screen w-full p-4">
-    <h1 class="mb-4 text-3xl font-bold">@tmlmt/cooklang-parser Playground</h1>
+    <h1 class="mb-4 text-3xl">
+      <b>@tmlmt/cooklang-parser Playground</b> (version: {{ fullVersion }})
+    </h1>
     <div class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2">
       <!-- Desktop: Editor on the left half -->
       <div class="hidden h-[calc(100vh-8rem)] md:block">
