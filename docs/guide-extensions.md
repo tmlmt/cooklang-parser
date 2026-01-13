@@ -96,11 +96,54 @@ When referencing ingredients, the added quantities will be converted to [Decimal
 ```
 
 Also works with Cookware and Timers
-  
+
 ## Cookware quantities
 
 - Cookware can also be quantified (without any unit, e.g. `#bowls{2}`)
 - Quantities will be added similarly as ingredients if cookware is referenced, e.g. `#&bowls{2}`
+
+## Alternative units
+
+You can define equivalent quantities in different units for the same ingredient using the pipe `|` separator within the curly braces.
+
+Usage: `@flour{100%g|3.5%oz}`
+
+This is useful for providing multiple units (e.g. metric and imperial) simultaneously for the same ingredient. The first unit is considered the primary unit.
+
+## Ingredient alternatives
+
+### Inline alternatives
+
+You can specify alternative ingredients directly in the ingredient syntax using pipes: `@baseName{quantity}|altName{altQuantity}[note]|...`
+
+This allows users to select from multiple alternatives when computing recipe quantities.
+
+Use cases:
+- `@milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`
+- `@sugar{100%g}|brown sugar{100%g}[for a richer flavor]`
+
+When inline alternatives are defined, the recipe's [`choices`](/api/interfaces/RecipeChoices) property will be populated. You can then use the `calc_ingredient_quantities()` method to compute quantities corresponding to the user's choices.
+
+All modifiers (`&`, `-`, `?`) work with inline alternatives:
+`@&milk{200%ml}|-almond milk{100%ml}[vegan version]|?soy milk{150%ml}[another vegan option]`
+
+### Grouped alternatives
+
+Ingredients can also have alternatives by grouping them with the same group key using the syntax: `@|groupKey|ingredientName{}`
+
+This is useful when you want to provide alternative choices in your recipe text naturally:
+
+Use cases:
+- `Add @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|oat milk{150%ml} for a vegan version`
+- `Add some @|spices|salt{} or maybe some @|spices|pepper{}`
+
+When grouped alternatives are defined, the recipe's [`choices`](/api/interfaces/RecipeChoices) property will be populated with available alternatives for each group. You can then use the `calc_ingredient_quantities()` method to compute quantities corresponding to the user's choices.
+
+All modifiers (`&`, `-`, `?`) work with grouped alternatives:
+```
+Add @|flour|&flour tipo 00{100%g} or @|flour|flour tipo 1{50%g}
+Add @|spices|-salt{} or @|spices|?pepper{}
+```
 
 ## Ingredient aliases
 

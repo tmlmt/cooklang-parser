@@ -107,3 +107,42 @@ Mix @flour{50%g}, @butter{25%g} and @eggs{1}
 
 Add @pepper{1%tsp} and @spices{1%pinch}
 `;
+
+export const recipeForShoppingList3 = `
+---
+servings: 1
+---
+Add @eggs{1%dozen} and @&eggs{1%half dozen}
+`;
+
+export const recipeForShoppingList4 = `
+---
+servings: 1
+---
+Add @carrots{3%large} and @&carrots{2%small}
+`;
+
+export const recipeWithInlineAlternatives = `
+---
+servings: 1
+---
+Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`;
+
+export const recipeWithGroupedAlternatives = `
+---
+servings: 1
+---
+Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|soy milk{150%ml} for a vegan version
+`;
+
+export const recipeWithComplexAlternatives = `
+Use @|dough|./dough{1}(defrosted) or @|dough|@store-bought dough{1} to make the base.
+`;
+
+export const recipeToScaleWithAlternatives = `
+---
+servings: 2
+---
+
+Use @sugar{100%g}|brown sugar{100%g}[for a richer flavor] in the mix.
+`;

@@ -1,12 +1,18 @@
 import { CategoryConfig } from "./category_config";
 import { Recipe } from "./recipe";
 import type {
-  Ingredient,
   CategorizedIngredients,
   AddedRecipe,
   AddedIngredient,
+  QuantityWithExtendedUnit,
+  QuantityWithPlainUnit,
+  MaybeNestedGroup,
+  FlatOrGroup,
+  AddedRecipeOptions,
 } from "../types";
-import { addQuantities, type Quantity } from "../units";
+import { addEquivalentsAndSimplify } from "../quantities/alternatives";
+import { extendAllUnits } from "../quantities/mutations";
+import { isAndGroup } from "../utils/type_guards";
 
 /**
  * Shopping List generator.
@@ -35,10 +41,11 @@ import { addQuantities, type Quantity } from "../units";
  * @category Classes
  */
 export class ShoppingList {
+  // TODO: backport type change
   /**
    * The ingredients in the shopping list.
    */
-  ingredients: Ingredient[] = [];
+  ingredients: AddedIngredient[] = [];
   /**
    * The recipes in the shopping list.
    */
@@ -64,6 +71,54 @@ export class ShoppingList {
 
   private calculate_ingredients() {
     this.ingredients = [];
+
+    const addIngredientQuantity = (
+      name: string,
+      quantityTotal:
+        | QuantityWithPlainUnit
+        | MaybeNestedGroup<QuantityWithPlainUnit>,
+    ) => {
+      const quantityTotalExtended = extendAllUnits(quantityTotal);
+      const newQuantities = (
+        isAndGroup(quantityTotalExtended)
+          ? quantityTotalExtended.entries
+          : [quantityTotalExtended]
+      ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
+      const existing = this.ingredients.find((i) => i.name === name);
+
+      if (existing) {
+        if (!existing.quantityTotal) {
+          existing.quantityTotal = quantityTotal;
+          return;
+        }
+        try {
+          const existingQuantityTotalExtended = extendAllUnits(
+            existing.quantityTotal,
+          );
+          const existingQuantities = (
+            isAndGroup(existingQuantityTotalExtended)
+              ? existingQuantityTotalExtended.entries
+              : [existingQuantityTotalExtended]
+          ) as (
+            | QuantityWithExtendedUnit
+            | FlatOrGroup<QuantityWithExtendedUnit>
+          )[];
+          existing.quantityTotal = addEquivalentsAndSimplify(
+            ...existingQuantities,
+            ...newQuantities,
+          );
+          return;
+        } catch {
+          // Incompatible
+        }
+      }
+
+      this.ingredients.push({
+        name,
+        quantityTotal,
+      });
+    };
+
     for (const addedRecipe of this.recipes) {
       let scaledRecipe: Recipe;
       if ("factor" in addedRecipe) {
@@ -73,57 +128,21 @@ export class ShoppingList {
         scaledRecipe = addedRecipe.recipe.scaleTo(addedRecipe.servings);
       }
 
-      for (const ingredient of scaledRecipe.ingredients) {
+      // Get computed ingredients with total quantities based on choices (or default)
+      const computedIngredients = scaledRecipe.calc_ingredient_quantities(
+        addedRecipe.choices,
+      );
+
+      for (const ingredient of computedIngredients) {
         // Do not add hidden ingredients to the shopping list
         if (ingredient.flags && ingredient.flags.includes("hidden")) {
           continue;
         }
 
-        const existingIngredient = this.ingredients.find(
-          (i) => i.name === ingredient.name,
-        );
-
-        let addSeparate = false;
-        try {
-          if (existingIngredient && ingredient.quantity) {
-            if (existingIngredient.quantity) {
-              const newQuantity: Quantity = addQuantities(
-                {
-                  value: existingIngredient.quantity,
-                  unit: existingIngredient.unit ?? "",
-                },
-                {
-                  value: ingredient.quantity,
-                  unit: ingredient.unit ?? "",
-                },
-              );
-              existingIngredient.quantity = newQuantity.value;
-              if (newQuantity.unit) {
-                existingIngredient.unit = newQuantity.unit;
-              }
-            } else {
-              existingIngredient.quantity = ingredient.quantity;
-
-              /* v8 ignore else -- only set unit if it is given -- @preserve */
-              if (ingredient.unit) {
-                existingIngredient.unit = ingredient.unit;
-              }
-            }
-          }
-        } catch {
-          // Cannot add quantities, adding as separate ingredients
-          addSeparate = true;
-        }
-
-        if (!existingIngredient || addSeparate) {
-          const newIngredient: AddedIngredient = { name: ingredient.name };
-          if (ingredient.quantity) {
-            newIngredient.quantity = ingredient.quantity;
-          }
-          if (ingredient.unit) {
-            newIngredient.unit = ingredient.unit;
-          }
-          this.ingredients.push(newIngredient);
+        if (ingredient.quantityTotal) {
+          addIngredientQuantity(ingredient.name, ingredient.quantityTotal);
+        } else if (!this.ingredients.some((i) => i.name === ingredient.name)) {
+          this.ingredients.push({ name: ingredient.name });
         }
       }
     }
@@ -133,31 +152,28 @@ export class ShoppingList {
    * Adds a recipe to the shopping list, then automatically
    * recalculates the quantities and recategorize the ingredients.
    * @param recipe - The recipe to add.
-   * @param scaling - The scaling option for the recipe. Can be either a factor or a number of servings
+   * @param options - Options for adding the recipe.
    */
-  add_recipe(
-    recipe: Recipe,
-    scaling?: { factor: number } | { servings: number },
-  ): void;
-  /**
-   * Adds a recipe to the shopping list, then automatically
-   * recalculates the quantities and recategorize the ingredients.
-   * @param recipe - The recipe to add.
-   * @param factor - The factor to scale the recipe by.
-   * @deprecated since v2.0.3. Use the other call signature with `scaling` instead. Will be removed in v3
-   */
-  add_recipe(recipe: Recipe, factor?: number): void;
-  add_recipe(
-    recipe: Recipe,
-    scaling?: { factor: number } | { servings: number } | number,
-  ): void {
-    if (typeof scaling === "number" || scaling === undefined) {
-      this.recipes.push({ recipe, factor: scaling ?? 1 });
+  add_recipe(recipe: Recipe, options: AddedRecipeOptions = {}): void {
+    if (!options.scaling) {
+      this.recipes.push({
+        recipe,
+        factor: options.scaling ?? 1,
+        choices: options.choices,
+      });
     } else {
-      if ("factor" in scaling) {
-        this.recipes.push({ recipe, factor: scaling.factor });
+      if ("factor" in options.scaling) {
+        this.recipes.push({
+          recipe,
+          factor: options.scaling.factor,
+          choices: options.choices,
+        });
       } else {
-        this.recipes.push({ recipe, servings: scaling.servings });
+        this.recipes.push({
+          recipe,
+          servings: options.scaling.servings,
+          choices: options.choices,
+        });
       }
     }
     this.calculate_ingredients();

@@ -10,6 +10,7 @@ import {
 import {
   recipeForShoppingList1,
   recipeForShoppingList2,
+  recipeForShoppingList4,
 } from "./fixtures/recipes";
 
 const productCatalog: ProductCatalog = new ProductCatalog();
@@ -19,31 +20,81 @@ productCatalog.products = [
     productName: "Flour (80g)",
     ingredientName: "flour",
     price: 25,
-    size: { type: "fixed", value: { type: "decimal", value: 80 } },
-    unit: "g",
+    sizes: [
+      {
+        size: { type: "fixed", value: { type: "decimal", decimal: 80 } },
+        unit: "g",
+      },
+    ],
   },
   {
     id: "flour-40g",
     productName: "Flour (40g)",
     ingredientName: "flour",
     price: 15,
-    size: { type: "fixed", value: { type: "decimal", value: 40 } },
-    unit: "g",
+    sizes: [
+      {
+        size: { type: "fixed", value: { type: "decimal", decimal: 40 } },
+        unit: "g",
+      },
+    ],
   },
   {
     id: "eggs-1",
     productName: "Single Egg",
     ingredientName: "eggs",
     price: 20,
-    size: { type: "fixed", value: { type: "decimal", value: 1 } },
+    sizes: [
+      { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+    ],
   },
   {
     id: "milk-1L",
     productName: "Milk (1L)",
     ingredientName: "milk",
     price: 30,
-    size: { type: "fixed", value: { type: "decimal", value: 1 } },
-    unit: "l",
+    sizes: [
+      {
+        size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "l",
+      },
+    ],
+  },
+  {
+    id: "large-carrots",
+    productName: "Large carrots",
+    ingredientName: "carrots",
+    price: 2,
+    sizes: [
+      {
+        size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "large",
+      },
+    ],
+  },
+  {
+    id: "small-carrots",
+    productName: "Small carrots",
+    ingredientName: "carrots",
+    price: 1,
+    sizes: [
+      {
+        size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "small",
+      },
+    ],
+  },
+  {
+    id: "carrots-bag",
+    productName: "Carrots (1kg)",
+    ingredientName: "carrots",
+    price: 10,
+    sizes: [
+      {
+        size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "kg",
+      },
+    ],
   },
 ];
 
@@ -113,6 +164,7 @@ describe("buildCart", () => {
     expect(shoppingCart.cart).toEqual([]);
   });
 
+  // TODO: correct typo
   it("should handle gracefully ingredient/products with for incompatible units", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
@@ -135,8 +187,12 @@ describe("buildCart", () => {
       productName: "Pack of 12 eggs",
       ingredientName: "eggs",
       price: 20,
-      size: { type: "fixed", value: { type: "decimal", value: 1 } },
-      unit: "dozen",
+      sizes: [
+        {
+          size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "dozen",
+        },
+      ],
     });
     shoppingList2.add_recipe(recipe2);
     shoppingCart2.setShoppingList(shoppingList2);
@@ -156,7 +212,9 @@ describe("buildCart", () => {
       productName: "Single Egg",
       ingredientName: "eggs",
       price: 20,
-      size: { type: "fixed", value: { type: "decimal", value: 1 } },
+      sizes: [
+        { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+      ],
     });
     shoppingList3.add_recipe(recipe3);
     shoppingCart3.setShoppingList(shoppingList3);
@@ -176,8 +234,12 @@ describe("buildCart", () => {
       productName: "Peeled Tomatoes",
       ingredientName: "peeled tomatoes",
       price: 20,
-      size: { type: "fixed", value: { type: "decimal", value: 400 } },
-      unit: "g",
+      sizes: [
+        {
+          size: { type: "fixed", value: { type: "decimal", decimal: 400 } },
+          unit: "g",
+        },
+      ],
     });
     shoppingList4.add_recipe(recipe4);
     shoppingCart4.setShoppingList(shoppingList4);
@@ -187,6 +249,76 @@ describe("buildCart", () => {
     expect(shoppingCart4.misMatch.length).toBe(1);
     expect(shoppingCart4.misMatch[0]!.ingredient.name).toBe("peeled tomatoes");
     expect(shoppingCart4.misMatch[0]!.reason).toBe("incompatibleUnits");
+  });
+
+  it("should match products with multiple sizes using different units", () => {
+    // Product defined with both "1%dozen" and "12" sizes should match both units
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    const recipe = new Recipe("@eggs{2%dozen}");
+    shoppingList.add_recipe(recipe);
+
+    const catalog = new ProductCatalog();
+    catalog.products = [
+      {
+        id: "eggs-12pack",
+        productName: "Pack of 12 eggs",
+        ingredientName: "eggs",
+        price: 18,
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "dozen",
+          },
+          { size: { type: "fixed", value: { type: "decimal", decimal: 12 } } },
+        ],
+      },
+    ];
+
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(catalog);
+    shoppingCart.buildCart();
+
+    expect(shoppingCart.match.length).toBe(1);
+    expect(shoppingCart.misMatch.length).toBe(0);
+    expect(shoppingCart.cart.length).toBe(1);
+    expect(shoppingCart.cart[0]!.product.id).toBe("eggs-12pack");
+    expect(shoppingCart.cart[0]!.quantity).toBe(2); // 2 dozen = 2 packs of 12
+  });
+
+  it("should match products with multiple sizes using unitless quantity", () => {
+    // Same product, but recipe asks for unitless quantity
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    const recipe = new Recipe("@eggs{24}"); // 24 eggs = 2 packs of 12
+    shoppingList.add_recipe(recipe);
+
+    const catalog = new ProductCatalog();
+    catalog.products = [
+      {
+        id: "eggs-12pack",
+        productName: "Pack of 12 eggs",
+        ingredientName: "eggs",
+        price: 18,
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "dozen",
+          },
+          { size: { type: "fixed", value: { type: "decimal", decimal: 12 } } },
+        ],
+      },
+    ];
+
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(catalog);
+    shoppingCart.buildCart();
+
+    expect(shoppingCart.match.length).toBe(1);
+    expect(shoppingCart.misMatch.length).toBe(0);
+    expect(shoppingCart.cart.length).toBe(1);
+    expect(shoppingCart.cart[0]!.product.id).toBe("eggs-12pack");
+    expect(shoppingCart.cart[0]!.quantity).toBe(2); // 24 / 12 = 2 packs
   });
 
   it("should choose the cheapest option", () => {
@@ -202,16 +334,24 @@ describe("buildCart", () => {
         productName: "Flour (1kg)",
         ingredientName: "flour",
         price: 10,
-        size: { type: "fixed", value: { type: "decimal", value: 1000 } },
-        unit: "g",
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 1000 } },
+            unit: "g",
+          },
+        ],
       },
       {
         id: "flour-500g",
         productName: "Flour (500g)",
         ingredientName: "flour",
         price: 6,
-        size: { type: "fixed", value: { type: "decimal", value: 500 } },
-        unit: "g",
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+            unit: "g",
+          },
+        ],
       },
     ];
     shoppingCart.setProductCatalog(catalog);
@@ -284,7 +424,62 @@ describe("buildCart", () => {
       ["pepper", "noProduct"],
       ["spices", "noProduct"],
       ["butter", "noProduct"],
-      ["pepper", "noProduct"],
     ]);
+  });
+});
+
+describe("alternative quantities", () => {
+  it("should handle ingredients with multiple quantities", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(new Recipe(recipeForShoppingList4));
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    expect(shoppingCart.cart).toEqual([
+      { product: productCatalog.products[4], quantity: 3, totalPrice: 6 }, // 1x
+      { product: productCatalog.products[5], quantity: 2, totalPrice: 2 }, // 1x
+    ]);
+  });
+
+  it("should handle ingredients with alternative units", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(
+      new Recipe(`
+---
+servings: 1
+---
+Cook @carrots{10%large|1%kg}
+`),
+    );
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    expect(shoppingCart.cart).toEqual([
+      { product: productCatalog.products[6], quantity: 1, totalPrice: 10 }, // 1x
+    ]);
+  });
+
+  it("should add to misMatch when no alternatives can be matched", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    shoppingList.add_recipe(
+      new Recipe(`
+---
+servings: 1
+---
+Cook @carrots{three|5%box}
+`),
+    );
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    expect(shoppingCart.match.length).toBe(0);
+    expect(shoppingCart.misMatch.length).toBe(1);
+    expect(shoppingCart.misMatch[0]!.ingredient.name).toBe("carrots");
+    expect(shoppingCart.misMatch[0]!.reason).toBe(
+      "textValue_incompatibleUnits",
+    );
   });
 });

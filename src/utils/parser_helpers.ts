@@ -6,24 +6,20 @@ import type {
   TextValue,
   DecimalValue,
   FractionValue,
-} from "./types";
+} from "../types";
 import {
   metadataRegex,
   rangeRegex,
   numberLikeRegex,
   scalingMetaValueRegex,
-} from "./regex";
-import { Section as SectionObject } from "./classes/section";
-import type { Ingredient, Note, Step, Cookware } from "./types";
+} from "../regex";
+import { Section as SectionObject } from "../classes/section";
+import type { Ingredient, Note, Step, Cookware } from "../types";
+import { addQuantityValues } from "../quantities/mutations";
 import {
-  addQuantities,
-  getDefaultQuantityValue,
   CannotAddTextValueError,
-  IncompatibleUnitsError,
-  Quantity,
-  addQuantityValues,
-} from "./units";
-import { ReferencedItemCannotBeRedefinedError } from "./errors";
+  ReferencedItemCannotBeRedefinedError,
+} from "../errors";
 
 /**
  * Pushes a pending note to the section content if it's not empty.
@@ -73,13 +69,9 @@ export function findAndUpsertIngredient(
   ingredients: Ingredient[],
   newIngredient: Ingredient,
   isReference: boolean,
-): {
-  ingredientIndex: number;
-  quantityPartIndex: number | undefined;
-} {
-  const { name, quantity, unit } = newIngredient;
+): number {
+  const { name } = newIngredient;
 
-  // New ingredient
   if (isReference) {
     const indexFind = ingredients.findIndex(
       (i) => i.name.toLowerCase() === name.toLowerCase(),
@@ -91,75 +83,50 @@ export function findAndUpsertIngredient(
       );
     }
 
-    // Ingredient already exists, update it
+    // Ingredient already exists
     const existingIngredient = ingredients[indexFind]!;
 
     // Checking whether any provided flags are the same as the original ingredient
-    for (const flag of newIngredient.flags!) {
-      /* v8 ignore else -- @preserve */
-      if (!existingIngredient.flags!.includes(flag)) {
+    // TODO: backport fix (check on array length) to v2
+    if (!newIngredient.flags) {
+      if (
+        Array.isArray(existingIngredient.flags) &&
+        existingIngredient.flags.length > 0
+      ) {
         throw new ReferencedItemCannotBeRedefinedError(
           "ingredient",
           existingIngredient.name,
-          flag,
+          existingIngredient.flags[0]!,
         );
+      }
+    } else {
+      for (const flag of newIngredient.flags) {
+        /* v8 ignore else -- @preserve */
+        if (
+          existingIngredient.flags === undefined ||
+          !existingIngredient.flags.includes(flag)
+        ) {
+          throw new ReferencedItemCannotBeRedefinedError(
+            "ingredient",
+            existingIngredient.name,
+            flag,
+          );
+        }
       }
     }
 
-    let quantityPartIndex = undefined;
-    if (quantity !== undefined) {
-      const currentQuantity: Quantity = {
-        value: existingIngredient.quantity ?? getDefaultQuantityValue(),
-        unit: existingIngredient.unit ?? "",
-      };
-      const newQuantity = { value: quantity, unit: unit ?? "" };
-      try {
-        const total = addQuantities(currentQuantity, newQuantity);
-        existingIngredient.quantity = total.value;
-        existingIngredient.unit = total.unit || undefined;
-        if (existingIngredient.quantityParts) {
-          existingIngredient.quantityParts.push(
-            ...newIngredient.quantityParts!,
-          );
-        } else {
-          existingIngredient.quantityParts = newIngredient.quantityParts;
-        }
-        quantityPartIndex = existingIngredient.quantityParts!.length - 1;
-      } catch (e) {
-        /* v8 ignore else -- expliciting error types -- @preserve */
-        if (
-          e instanceof IncompatibleUnitsError ||
-          e instanceof CannotAddTextValueError
-        ) {
-          // Addition not possible, so add as a new ingredient.
-          return {
-            ingredientIndex: ingredients.push(newIngredient) - 1,
-            quantityPartIndex: 0,
-          };
-        }
-      }
-    }
-    return {
-      ingredientIndex: indexFind,
-      quantityPartIndex,
-    };
+    return indexFind;
   }
 
   // Not a reference, so add as a new ingredient.
-  return {
-    ingredientIndex: ingredients.push(newIngredient) - 1,
-    quantityPartIndex: newIngredient.quantity ? 0 : undefined,
-  };
+  return ingredients.push(newIngredient) - 1;
 }
 
 export function findAndUpsertCookware(
   cookware: Cookware[],
   newCookware: Cookware,
   isReference: boolean,
-): {
-  cookwareIndex: number;
-  quantityPartIndex: number | undefined;
-} {
+): number {
   const { name, quantity } = newCookware;
 
   if (isReference) {
@@ -176,59 +143,55 @@ export function findAndUpsertCookware(
     const existingCookware = cookware[index]!;
 
     // Checking whether any provided flags are the same as the original cookware
-    for (const flag of newCookware.flags) {
-      /* v8 ignore else -- @preserve */
-      if (!existingCookware.flags.includes(flag)) {
+    // TODO: backport fix (if/else) + check on array length to v2
+    if (!newCookware.flags) {
+      if (
+        Array.isArray(existingCookware.flags) &&
+        existingCookware.flags.length > 0
+      ) {
         throw new ReferencedItemCannotBeRedefinedError(
           "cookware",
           existingCookware.name,
-          flag,
+          existingCookware.flags[0]!,
         );
+      }
+    } else {
+      for (const flag of newCookware.flags) {
+        /* v8 ignore else -- @preserve */
+        if (
+          existingCookware.flags === undefined ||
+          !existingCookware.flags.includes(flag)
+        ) {
+          throw new ReferencedItemCannotBeRedefinedError(
+            "cookware",
+            existingCookware.name,
+            flag,
+          );
+        }
       }
     }
 
-    let quantityPartIndex = undefined;
     if (quantity !== undefined) {
       if (!existingCookware.quantity) {
         existingCookware.quantity = quantity;
-        existingCookware.quantityParts = newCookware.quantityParts;
-        quantityPartIndex = 0;
       } else {
         try {
           existingCookware.quantity = addQuantityValues(
             existingCookware.quantity,
             quantity,
           );
-          if (!existingCookware.quantityParts) {
-            existingCookware.quantityParts = newCookware.quantityParts;
-            quantityPartIndex = 0;
-          } else {
-            quantityPartIndex =
-              existingCookware.quantityParts.push(
-                ...newCookware.quantityParts!,
-              ) - 1;
-          }
         } catch (e) {
           /* v8 ignore else -- expliciting error type -- @preserve */
           if (e instanceof CannotAddTextValueError) {
-            return {
-              cookwareIndex: cookware.push(newCookware) - 1,
-              quantityPartIndex: 0,
-            };
+            return cookware.push(newCookware) - 1;
           }
         }
       }
     }
-    return {
-      cookwareIndex: index,
-      quantityPartIndex,
-    };
+    return index;
   }
 
-  return {
-    cookwareIndex: cookware.push(newCookware) - 1,
-    quantityPartIndex: quantity ? 0 : undefined,
-  };
+  return cookware.push(newCookware) - 1;
 }
 
 // Parser when we know the input is either a number-like value
@@ -236,7 +199,7 @@ export const parseFixedValue = (
   input_str: string,
 ): TextValue | DecimalValue | FractionValue => {
   if (!numberLikeRegex.test(input_str)) {
-    return { type: "text", value: input_str };
+    return { type: "text", text: input_str };
   }
 
   // After this we know that s is either a fraction or a decimal value
@@ -253,7 +216,7 @@ export const parseFixedValue = (
   }
 
   // decimal
-  return { type: "decimal", value: Number(s) };
+  return { type: "decimal", decimal: Number(s) };
 };
 
 export function stringifyQuantityValue(quantity: FixedValue | Range): string {
@@ -267,7 +230,9 @@ export function stringifyQuantityValue(quantity: FixedValue | Range): string {
 function stringifyFixedValue(quantity: FixedValue): string {
   if (quantity.value.type === "fraction")
     return `${quantity.value.num}/${quantity.value.den}`;
-  else return String(quantity.value.value);
+  else if (quantity.value.type === "decimal")
+    return String(quantity.value.decimal);
+  else return quantity.value.text;
 }
 
 // TODO: rename to parseQuantityValue
@@ -427,4 +392,28 @@ export function extractMetadata(content: string): MetadataExtract {
 
 export function isPositiveIntegerString(str: string): boolean {
   return /^\d+$/.test(str);
+}
+
+export function unionOfSets<T>(s1: Set<T>, s2: Set<T>): Set<T> {
+  const result = new Set(s1);
+  for (const item of s2) {
+    result.add(item);
+  }
+  return result;
+}
+
+/**
+ * Returns a canonical string key from sorted alternative indices for grouping quantities.
+ * Used to determine if two ingredient items have the same alternatives and can be summed together.
+ * @param alternatives - Array of alternative ingredient references
+ * @returns A string of sorted indices (e.g., "0,2,5") or null if no alternatives
+ */
+export function getAlternativeSignature(
+  alternatives: { index: number }[] | undefined,
+): string | null {
+  if (!alternatives || alternatives.length === 0) return null;
+  return alternatives
+    .map((a) => a.index)
+    .sort((a, b) => a - b)
+    .join(",");
 }

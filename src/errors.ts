@@ -50,6 +50,7 @@ export class NoProductMatchError extends Error {
         "No product was found linked to ingredient name ${item_name} in the shopping list",
       textValue: `Ingredient ${item_name} has a text value as quantity and can therefore not be matched with any product in the catalogue.`,
       noQuantity: `Ingredient ${item_name} has no quantity and can therefore not be matched with any product in the catalogue.`,
+      textValue_incompatibleUnits: `Multiple alternative quantities were provided for ingredient ${item_name} in the shopping list but they were either text values or no product in catalog were found to have compatible units`,
     };
     super(messageMap[code]);
     this.code = code;
@@ -61,5 +62,28 @@ export class InvalidProductCatalogFormat extends Error {
   constructor() {
     super("Invalid product catalog format.");
     this.name = "InvalidProductCatalogFormat";
+  }
+}
+
+export class CannotAddTextValueError extends Error {
+  constructor() {
+    super("Cannot add a quantity with a text value.");
+    this.name = "CannotAddTextValueError";
+  }
+}
+
+export class IncompatibleUnitsError extends Error {
+  constructor(unit1: string, unit2: string) {
+    super(
+      `Cannot add quantities with incompatible or unknown units: ${unit1} and ${unit2}`,
+    );
+    this.name = "IncompatibleUnitsError";
+  }
+}
+
+export class InvalidQuantityFormat extends Error {
+  constructor(value: string) {
+    super(`Invalid quantity format found in: ${value}`);
+    this.name = "InvalidQuantityFormat";
   }
 }

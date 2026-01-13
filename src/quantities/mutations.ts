@@ -1,0 +1,401 @@
+import type {
+  FixedValue,
+  Range,
+  DecimalValue,
+  FractionValue,
+  Unit,
+  UnitDefinition,
+  QuantityWithPlainUnit,
+  QuantityWithExtendedUnit,
+  QuantityWithUnitDef,
+  MaybeNestedGroup,
+} from "../types";
+import {
+  units,
+  normalizeUnit,
+  resolveUnit,
+  isNoUnit,
+} from "../units/definitions";
+import { addNumericValues, multiplyQuantityValue } from "./numeric";
+import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
+import { isGroup, isOrGroup, isQuantity } from "../utils/type_guards";
+
+// `deNormalizeQuantity` is provided by `./math` and re-exported below.
+
+export function extendAllUnits(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
+  if (isGroup(q)) {
+    return { ...q, entries: q.entries.map(extendAllUnits) };
+  } else {
+    const newQ: QuantityWithExtendedUnit = {
+      quantity: q.quantity,
+    };
+    if (q.unit) {
+      newQ.unit = { name: q.unit };
+    }
+    return newQ;
+  }
+}
+
+export function normalizeAllUnits(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithUnitDef | MaybeNestedGroup<QuantityWithUnitDef> {
+  if (isGroup(q)) {
+    return { ...q, entries: q.entries.map(normalizeAllUnits) };
+  } else {
+    const newQ: QuantityWithUnitDef = {
+      quantity: q.quantity,
+      unit: resolveUnit(q.unit),
+    };
+    return newQ;
+  }
+}
+
+export const convertQuantityValue = (
+  value: FixedValue | Range,
+  def: UnitDefinition,
+  targetDef: UnitDefinition,
+): FixedValue | Range => {
+  if (def.name === targetDef.name) return value;
+
+  const factor = def.toBase / targetDef.toBase;
+
+  return multiplyQuantityValue(value, factor);
+};
+
+/**
+ * Get the default / neutral quantity which can be provided to addQuantity
+ * for it to return the other value as result
+ *
+ * @return zero
+ */
+export function getDefaultQuantityValue(): FixedValue {
+  return { type: "fixed", value: { type: "decimal", decimal: 0 } };
+}
+
+/**
+ * Adds two quantity values together.
+ *
+ * - Adding two {@link FixedValue}s returns a new {@link FixedValue}.
+ * - Adding a {@link Range} to any value returns a {@link Range}.
+ *
+ * @param v1 - The first quantity value.
+ * @param v2 - The second quantity value.
+ * @returns A new quantity value representing the sum.
+ */
+export function addQuantityValues(v1: FixedValue, v2: FixedValue): FixedValue;
+export function addQuantityValues(
+  v1: FixedValue | Range,
+  v2: FixedValue | Range,
+): Range;
+
+export function addQuantityValues(
+  v1: FixedValue | Range,
+  v2: FixedValue | Range,
+): FixedValue | Range {
+  if (
+    (v1.type === "fixed" && v1.value.type === "text") ||
+    (v2.type === "fixed" && v2.value.type === "text")
+  ) {
+    throw new CannotAddTextValueError();
+  }
+
+  if (v1.type === "fixed" && v2.type === "fixed") {
+    const res = addNumericValues(
+      v1.value as DecimalValue | FractionValue,
+      v2.value as DecimalValue | FractionValue,
+    );
+    return { type: "fixed", value: res };
+  }
+  const r1 =
+    v1.type === "range" ? v1 : { type: "range", min: v1.value, max: v1.value };
+  const r2 =
+    v2.type === "range" ? v2 : { type: "range", min: v2.value, max: v2.value };
+  const newMin = addNumericValues(
+    r1.min as DecimalValue | FractionValue,
+    r2.min as DecimalValue | FractionValue,
+  );
+  const newMax = addNumericValues(
+    r1.max as DecimalValue | FractionValue,
+    r2.max as DecimalValue | FractionValue,
+  );
+  return { type: "range", min: newMin, max: newMax };
+}
+
+/**
+ * Adds two quantities, returning the result in the most appropriate unit.
+ */
+export function addQuantities(
+  q1: QuantityWithExtendedUnit,
+  q2: QuantityWithExtendedUnit,
+): QuantityWithExtendedUnit {
+  const v1 = q1.quantity;
+  const v2 = q2.quantity;
+  // Case 1: one of the two values is a text, we throw an error we can catch on the other end
+  if (
+    (v1.type === "fixed" && v1.value.type === "text") ||
+    (v2.type === "fixed" && v2.value.type === "text")
+  ) {
+    throw new CannotAddTextValueError();
+  }
+
+  const unit1Def = normalizeUnit(q1.unit?.name);
+  const unit2Def = normalizeUnit(q2.unit?.name);
+
+  const addQuantityValuesAndSetUnit = (
+    val1: FixedValue | Range,
+    val2: FixedValue | Range,
+    unit?: Unit,
+  ): QuantityWithExtendedUnit => ({
+    quantity: addQuantityValues(val1, val2),
+    unit,
+  });
+
+  // Case 2: one of the two values doesn't have a unit, we preserve its value and consider its unit to be that of the other one
+  // If at least one of the two units is "", this preserves it versus setting the resulting unit as undefined
+  if (
+    (q1.unit?.name === "" || q1.unit === undefined) &&
+    q2.unit !== undefined
+  ) {
+    return addQuantityValuesAndSetUnit(v1, v2, q2.unit); // Prefer q2's unit
+  }
+  if (
+    (q2.unit?.name === "" || q2.unit === undefined) &&
+    q1.unit !== undefined
+  ) {
+    return addQuantityValuesAndSetUnit(v1, v2, q1.unit); // Prefer q1's unit
+  }
+
+  // Case 3: the two quantities have the exact same unit
+  if (
+    (!q1.unit && !q2.unit) ||
+    (q1.unit &&
+      q2.unit &&
+      q1.unit.name.toLowerCase() === q2.unit.name.toLowerCase())
+  ) {
+    return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
+  }
+
+  // Case 4: the two quantities have different units of known type
+  if (unit1Def && unit2Def) {
+    // Case 4.1: different unit type => we can't add quantities
+    if (unit1Def.type !== unit2Def.type) {
+      throw new IncompatibleUnitsError(
+        `${unit1Def.type} (${q1.unit?.name})`,
+        `${unit2Def.type} (${q2.unit?.name})`,
+      );
+    }
+
+    let targetUnitDef: UnitDefinition;
+
+    // Case 4.2: same unit type but different system => we convert to metric
+    if (unit1Def.system !== unit2Def.system) {
+      const metricUnitDef = unit1Def.system === "metric" ? unit1Def : unit2Def;
+      targetUnitDef = units
+        .filter((u) => u.type === metricUnitDef.type && u.system === "metric")
+        .reduce((prev, current) =>
+          prev.toBase > current.toBase ? prev : current,
+        );
+    }
+    // Case 4.3: same unit type, same system but different unit => we use the biggest unit of the two
+    else {
+      targetUnitDef = unit1Def.toBase >= unit2Def.toBase ? unit1Def : unit2Def;
+    }
+    const convertedV1 = convertQuantityValue(v1, unit1Def, targetUnitDef);
+    const convertedV2 = convertQuantityValue(v2, unit2Def, targetUnitDef);
+    const targetUnit: Unit = { name: targetUnitDef.name };
+
+    return addQuantityValuesAndSetUnit(convertedV1, convertedV2, targetUnit);
+  }
+
+  // Case 5: the two quantities have different units of unknown type
+  throw new IncompatibleUnitsError(
+    q1.unit?.name as string,
+    q2.unit?.name as string,
+  );
+}
+
+export function toPlainUnit(
+  quantity:
+    | QuantityWithExtendedUnit
+    | MaybeNestedGroup<QuantityWithExtendedUnit>,
+): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {
+  if (isQuantity(quantity))
+    return quantity.unit
+      ? { ...quantity, unit: quantity.unit.name }
+      : (quantity as QuantityWithPlainUnit);
+  else {
+    return {
+      ...quantity,
+      entries: quantity.entries.map(toPlainUnit),
+    } as MaybeNestedGroup<QuantityWithPlainUnit>;
+  }
+}
+
+// Convert plain unit to extended unit format for addEquivalentsAndSimplify
+// Overloads for precise return types
+export function toExtendedUnit(
+  q: QuantityWithPlainUnit,
+): QuantityWithExtendedUnit;
+export function toExtendedUnit(
+  q: MaybeNestedGroup<QuantityWithPlainUnit>,
+): MaybeNestedGroup<QuantityWithExtendedUnit>;
+export function toExtendedUnit(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
+  if (isQuantity(q)) {
+    return q.unit
+      ? { ...q, unit: { name: q.unit } }
+      : (q as QuantityWithExtendedUnit);
+  } else {
+    return {
+      ...q,
+      entries: q.entries.map((entry) =>
+        isQuantity(entry) ? toExtendedUnit(entry) : toExtendedUnit(entry),
+      ),
+    };
+  }
+}
+
+export function deNormalizeQuantity(
+  q: QuantityWithUnitDef,
+): QuantityWithExtendedUnit {
+  const result: QuantityWithExtendedUnit = {
+    quantity: q.quantity,
+  };
+  if (!isNoUnit(q.unit)) {
+    result.unit = { name: q.unit.name };
+  }
+  return result;
+}
+
+// Helper function to convert addEquivalentsAndSimplify result to IngredientQuantities format
+// Returns either a QuantityWithPlainUnit (for simple/OR groups) or an IngredientQuantityAndGroup (for AND groups)
+export const flattenPlainUnitGroup = (
+  summed: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): (
+  | { groupQuantity: QuantityWithPlainUnit }
+  | {
+      type: "and";
+      entries: QuantityWithPlainUnit[];
+      equivalents?: QuantityWithPlainUnit[];
+    }
+)[] => {
+  if (isOrGroup(summed)) {
+    // OR group: check if first entry is an AND group (nested OR-with-AND case from addEquivalentsAndSimplify)
+    // This happens when we have incompatible integer-protected primaries with compatible equivalents
+    // e.g., { type: "or", entries: [{ type: "and", entries: [large, small] }, cup] }
+    const entries = summed.entries;
+    const andGroupEntry = entries.find(
+      (e): e is MaybeNestedGroup<QuantityWithPlainUnit> =>
+        isGroup(e) && e.type === "and",
+    );
+
+    if (andGroupEntry) {
+      // Nested OR-with-AND case: AND group of primaries + equivalents
+      const andEntries: QuantityWithPlainUnit[] = [];
+      for (const entry of andGroupEntry.entries) {
+        if (isQuantity(entry)) {
+          andEntries.push({
+            quantity: entry.quantity,
+            unit: entry.unit,
+          });
+        }
+      }
+
+      // The other entries in the OR group are the equivalents
+      const equivalentsList: QuantityWithPlainUnit[] = entries
+        .filter((e): e is QuantityWithPlainUnit => isQuantity(e))
+        .map((e) => ({ quantity: e.quantity, unit: e.unit }));
+
+      if (equivalentsList.length > 0) {
+        return [
+          {
+            type: "and",
+            entries: andEntries,
+            equivalents: equivalentsList,
+          },
+        ];
+      } else {
+        // No equivalents: flatten to separate entries (shouldn't happen in this branch, but handle it)
+        return andEntries.map((entry) => ({ groupQuantity: entry }));
+      }
+    }
+
+    // Simple OR group: first entry is primary, rest are equivalents
+    const simpleEntries = entries.filter((e): e is QuantityWithPlainUnit =>
+      isQuantity(e),
+    );
+    /* v8 ignore else -- @preserve */
+    if (simpleEntries.length > 0) {
+      const result: QuantityWithPlainUnit = {
+        quantity: simpleEntries[0]!.quantity,
+        unit: simpleEntries[0]!.unit,
+      };
+      if (simpleEntries.length > 1) {
+        result.equivalents = simpleEntries.slice(1);
+      }
+      return [{ groupQuantity: result }];
+    }
+    // Fallback: use first entry regardless
+    else {
+      const first = entries[0] as QuantityWithPlainUnit;
+      return [
+        { groupQuantity: { quantity: first.quantity, unit: first.unit } },
+      ];
+    }
+  } else if (isGroup(summed)) {
+    // AND group: check if entries have OR groups (equivalents that can be extracted)
+    const andEntries: QuantityWithPlainUnit[] = [];
+    const equivalentsList: QuantityWithPlainUnit[] = [];
+
+    for (const entry of summed.entries) {
+      if (isOrGroup(entry)) {
+        // This entry has equivalents: first is primary, rest are equivalents
+        const orEntries = entry.entries.filter(
+          (e): e is QuantityWithPlainUnit => isQuantity(e),
+        );
+        if (orEntries.length > 0) {
+          andEntries.push({
+            quantity: orEntries[0]!.quantity,
+            unit: orEntries[0]!.unit,
+          });
+          // Collect equivalents for later merging
+          equivalentsList.push(...orEntries.slice(1));
+        }
+      } else if (isQuantity(entry)) {
+        // Simple quantity, no equivalents
+        andEntries.push({
+          quantity: entry.quantity,
+          unit: entry.unit,
+        });
+      }
+    }
+
+    // Build the AND group result
+    // If there are no equivalents, flatten to separate groupQuantity entries (water case)
+    // If there are equivalents, return an AND group with the summed equivalents (carrots case)
+    if (equivalentsList.length === 0) {
+      // No equivalents: flatten to separate entries
+      return andEntries.map((entry) => ({ groupQuantity: entry }));
+    }
+
+    const result: {
+      type: "and";
+      entries: QuantityWithPlainUnit[];
+      equivalents?: QuantityWithPlainUnit[];
+    } = {
+      type: "and",
+      entries: andEntries,
+      equivalents: equivalentsList,
+    };
+
+    return [result];
+  } else {
+    // Simple QuantityWithPlainUnit
+    return [
+      { groupQuantity: { quantity: summed.quantity, unit: summed.unit } },
+    ];
+  }
+};
