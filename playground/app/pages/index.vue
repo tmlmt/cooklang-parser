@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TabsItem } from "@nuxt/ui";
 import { Recipe } from "cooklang-parser";
-import pkg from "~~/package.json";
+import pkg from "~~/../package.json";
 
 const version = pkg.version;
 const fullVersion = `v${version}`;
