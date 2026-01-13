@@ -136,6 +136,8 @@ jobs:
         run: pnpm install
       - name: Build playground in static mode
         working-directory: playground
+        env:
+          NUXT_APP_BASE_URL: ${{ secrets.PLAYGROUND_BASE_URL }}
         run: pnpm generate
       - name: Deploy playground to production server
         uses: easingthemes/ssh-deploy@main
