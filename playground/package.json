@@ -1,7 +1,6 @@
 {
   "name": "cooklang-playground",
-  "version": "0.1.0-dev.1",
-  "description": "",
+  "description": "Playground for the @tmlmt/cooklang-parser library",
   "author": "Thomas Lamant <tom@tmlmt.com>",
   "packageManager": "pnpm@10.27.0",
   "private": true,
