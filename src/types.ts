@@ -217,44 +217,45 @@ export interface IngredientExtras {
 }
 
 /**
- * Represents a reference to an alternative ingredient along with its quantity.
+ * Represents a reference to an alternative ingredient along with its quantities.
  *
- * Used in {@link IngredientQuantityWithAlternatives} to describe what other ingredients
+ * Used in {@link IngredientQuantityGroup} to describe what other ingredients
  * could be used in place of the main ingredient.
  * @category Types
  */
 export interface AlternativeIngredientRef {
   /** The index of the alternative ingredient within the {@link Recipe.ingredients} array. */
   index: number;
-  /** The quantity of the alternative ingredient */
-  alternativeQuantity?: QuantityWithPlainUnit;
+  /** The quantities of the alternative ingredient. Multiple entries when units are incompatible. */
+  alternativeQuantities?: QuantityWithPlainUnit[];
 }
 
 /**
- * Represents a quantity entry for an ingredient that has alternatives.
- * Contains the main ingredient's quantity plus references to alternative ingredients.
+ * Represents a group of summed quantities for an ingredient, optionally with alternatives.
+ * Quantities with the same alternative signature are summed together into a single group.
+ * When units are incompatible, separate IngredientQuantityGroup entries are created instead of merging.
  * @category Types
  */
-export interface IngredientQuantityWithAlternatives
-  extends QuantityWithPlainUnit {
-  /** References to alternative ingredients and their quantities */
-  alternatives: AlternativeIngredientRef[];
+export interface IngredientQuantityGroup {
+  /**
+   * References to alternative ingredients for this quantity group.
+   * If undefined, this group has no alternatives.
+   */
+  alternatives?: AlternativeIngredientRef[];
+  /**
+   * The summed quantity for this group, potentially with equivalents.
+   * OR groups from addEquivalentsAndSimplify are converted back to QuantityWithPlainUnit
+   * (first entry as main, rest as equivalents).
+   */
+  groupQuantity: QuantityWithPlainUnit;
 }
 
 /**
- * Represents a single quantity entry in an ingredient's quantities list.
- * Can be either a simple quantity or a quantity with alternatives.
+ * Represents the quantities list for an ingredient as groups.
+ * Each group contains summed quantities that share the same alternative signature.
  * @category Types
  */
-export type IngredientQuantityEntry =
-  | QuantityWithPlainUnit
-  | IngredientQuantityWithAlternatives;
-
-/**
- * Represents the quantities list for an ingredient as a simple array.
- * @category Types
- */
-export type IngredientQuantities = IngredientQuantityEntry[];
+export type IngredientQuantities = IngredientQuantityGroup[];
 
 /**
  * Represents an ingredient in a recipe.

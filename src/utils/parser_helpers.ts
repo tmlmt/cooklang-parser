@@ -401,3 +401,19 @@ export function unionOfSets<T>(s1: Set<T>, s2: Set<T>): Set<T> {
   }
   return result;
 }
+
+/**
+ * Returns a canonical string key from sorted alternative indices for grouping quantities.
+ * Used to determine if two ingredient items have the same alternatives and can be summed together.
+ * @param alternatives - Array of alternative ingredient references
+ * @returns A string of sorted indices (e.g., "0,2,5") or null if no alternatives
+ */
+export function getAlternativeSignature(
+  alternatives: { index: number }[] | undefined,
+): string | null {
+  if (!alternatives || alternatives.length === 0) return null;
+  return alternatives
+    .map((a) => a.index)
+    .sort((a, b) => a - b)
+    .join(",");
+}

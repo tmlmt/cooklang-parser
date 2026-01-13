@@ -6,9 +6,14 @@ import {
   addQuantities,
   getDefaultQuantityValue,
   normalizeAllUnits,
+  toExtendedUnit,
+  flattenPlainUnitGroup,
 } from "../src/quantities/mutations";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../src/errors";
 import {
+  AndGroup,
+  FlatAndGroup,
+  FlatOrGroup,
   MaybeNestedAndGroup,
   QuantityWithExtendedUnit,
   QuantityWithPlainUnit,
@@ -28,12 +33,16 @@ describe("extendAllUnits", () => {
     expect(extended).toEqual(expected);
   });
   it("should extend units in a nested group", () => {
-    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = { type: "and", entries: [
+    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "cup",
         },
-        { type: "or", entries: [
+        {
+          type: "or",
+          entries: [
             {
               quantity: {
                 type: "fixed",
@@ -53,12 +62,16 @@ describe("extendAllUnits", () => {
       ],
     };
     const extended = extendAllUnits(original);
-    const expected: MaybeNestedAndGroup<QuantityWithExtendedUnit> = { type: "and", entries: [
+    const expected: MaybeNestedAndGroup<QuantityWithExtendedUnit> = {
+      type: "and",
+      entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: { name: "cup" },
         },
-        { type: "or", entries: [
+        {
+          type: "or",
+          entries: [
             {
               quantity: {
                 type: "fixed",
@@ -101,12 +114,16 @@ describe("normalizeAllUnits", () => {
     expect(normalized).toEqual(expected);
   });
   it("should normalize units in a nested group", () => {
-    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = { type: "and", entries: [
+    const original: MaybeNestedAndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: "cup",
         },
-        { type: "or", entries: [
+        {
+          type: "or",
+          entries: [
             {
               quantity: {
                 type: "fixed",
@@ -126,7 +143,9 @@ describe("normalizeAllUnits", () => {
       ],
     };
     const normalized = normalizeAllUnits(original);
-    const expected = { type: "and", entries: [
+    const expected = {
+      type: "and",
+      entries: [
         {
           quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
           unit: {
@@ -137,7 +156,9 @@ describe("normalizeAllUnits", () => {
             toBase: 236.588,
           },
         },
-        { type: "or", entries: [
+        {
+          type: "or",
+          entries: [
             {
               quantity: {
                 type: "fixed",
@@ -605,5 +626,251 @@ describe("getDefaultQuantityValue + addQuantities", () => {
       },
       unit: { name: "" },
     });
+  });
+});
+
+describe("toExtendedUnit", () => {
+  it("should convert a simple QuantityWithPlainUnit", () => {
+    const input: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+      unit: "g",
+    };
+    const result = toExtendedUnit(input);
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+      unit: { name: "g" },
+    });
+  });
+
+  it("should convert an OR group of quantities", () => {
+    const input: FlatOrGroup<QuantityWithPlainUnit> = {
+      type: "or",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 250 } },
+          unit: "mL",
+        },
+      ],
+    };
+    const result = toExtendedUnit(input);
+    expect(result).toEqual({
+      type: "or",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "cup" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 250 } },
+          unit: { name: "mL" },
+        },
+      ],
+    });
+  });
+
+  it("should convert an AND group of quantities", () => {
+    const input: AndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: "egg",
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: "g",
+        },
+      ],
+    };
+    const result = toExtendedUnit(input);
+    expect(result).toEqual({
+      type: "and",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: { name: "egg" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+      ],
+    });
+  });
+
+  it("should convert nested groups", () => {
+    const input: AndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      entries: [
+        {
+          type: "or",
+          entries: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "cup",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 250 },
+              },
+              unit: "mL",
+            },
+          ],
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: "g",
+        },
+      ],
+    };
+    const result = toExtendedUnit(input);
+    expect(result).toEqual({
+      type: "and",
+      entries: [
+        {
+          type: "or",
+          entries: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: { name: "cup" },
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 250 },
+              },
+              unit: { name: "mL" },
+            },
+          ],
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "g" },
+        },
+      ],
+    });
+  });
+
+  it("should preserve equivalents array", () => {
+    const input: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: "cup",
+      equivalents: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 250 } },
+          unit: "mL",
+        },
+      ],
+    };
+    const result = toExtendedUnit(input);
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "cup" },
+      equivalents: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 250 } },
+          unit: "mL",
+        },
+      ],
+    });
+  });
+});
+
+describe("flattenPlainUnitGroup", () => {
+  // flattenPlainUnitGroup is imported at the top
+  it("should flatten a simple quantity", () => {
+    const input: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+      unit: "g",
+    };
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+        unit: "g",
+      },
+    ]);
+  });
+  it("should flatten an OR group to one with equivalents", () => {
+    const input: FlatOrGroup<QuantityWithPlainUnit> = {
+      type: "or",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 250 } },
+          unit: "mL",
+        },
+      ],
+    };
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "cup",
+        equivalents: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 250 },
+            },
+            unit: "mL",
+          },
+        ],
+      },
+    ]);
+  });
+  it("should flatten an AND group to separate entries", () => {
+    const input: FlatAndGroup<QuantityWithPlainUnit> = {
+      type: "and",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: "egg",
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: "g",
+        },
+      ],
+    };
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: "egg",
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: "g",
+      },
+    ]);
+  });
+  it("should flatten a nested OR group with only one entry", () => {
+    const input: FlatOrGroup<QuantityWithPlainUnit> = {
+      type: "or",
+      entries: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: "cup",
+        },
+      ],
+    };
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "cup",
+      },
+    ]);
   });
 });

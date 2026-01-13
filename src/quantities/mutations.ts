@@ -18,7 +18,7 @@ import {
 } from "../units/definitions";
 import { addNumericValues, multiplyQuantityValue } from "./numeric";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
-import { isGroup, isQuantity } from "../utils/type_guards";
+import { isGroup, isOrGroup, isQuantity } from "../utils/type_guards";
 
 // `deNormalizeQuantity` is provided by `./math` and re-exported below.
 
@@ -233,6 +233,31 @@ export function toPlainUnit(
   }
 }
 
+// Convert plain unit to extended unit format for addEquivalentsAndSimplify
+// Overloads for precise return types
+export function toExtendedUnit(
+  q: QuantityWithPlainUnit,
+): QuantityWithExtendedUnit;
+export function toExtendedUnit(
+  q: MaybeNestedGroup<QuantityWithPlainUnit>,
+): MaybeNestedGroup<QuantityWithExtendedUnit>;
+export function toExtendedUnit(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
+  if (isQuantity(q)) {
+    return q.unit
+      ? { ...q, unit: { name: q.unit } }
+      : (q as QuantityWithExtendedUnit);
+  } else {
+    return {
+      ...q,
+      entries: q.entries.map((entry) =>
+        isQuantity(entry) ? toExtendedUnit(entry) : toExtendedUnit(entry),
+      ),
+    };
+  }
+}
+
 export function deNormalizeQuantity(
   q: QuantityWithUnitDef,
 ): QuantityWithExtendedUnit {
@@ -244,3 +269,40 @@ export function deNormalizeQuantity(
   }
   return result;
 }
+
+// Helper function to convert OR group to QuantityWithPlainUnit (first entry + equivalents)
+export const flattenPlainUnitGroup = (
+  summed: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithPlainUnit[] => {
+  if (isOrGroup(summed)) {
+    const entries = summed.entries;
+    const simpleEntries = entries.filter((e): e is QuantityWithPlainUnit =>
+      isQuantity(e),
+    );
+    /* v8 ignore else -- @preserve */
+    if (simpleEntries.length > 0) {
+      const result: QuantityWithPlainUnit = {
+        quantity: simpleEntries[0]!.quantity,
+        unit: simpleEntries[0]!.unit,
+      };
+      if (simpleEntries.length > 1) {
+        result.equivalents = simpleEntries.slice(1);
+      }
+      return [result];
+    }
+    // Fallback: use first entry regardless
+    else {
+      const first = entries[0] as QuantityWithPlainUnit;
+      return [{ quantity: first.quantity, unit: first.unit }];
+    }
+  } else if (isGroup(summed)) {
+    // It's an AND group - return separate entries (incompatible units)
+    return summed.entries.map((e) => ({
+      quantity: (e as QuantityWithPlainUnit).quantity,
+      unit: (e as QuantityWithPlainUnit).unit,
+    }));
+  } else {
+    // It's already a simple QuantityWithPlainUnit
+    return [{ quantity: summed.quantity, unit: summed.unit }];
+  }
+};
