@@ -1,5 +1,22 @@
 # Changelog
 
+## v3.0.0-alpha.1
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.0...v3.0.0-alpha.1)
+
+### 🏡 Chore
+
+- **ci:** Remove obsolete git-checks config from .npmrc ([e96f3e1](https://github.com/tmlmt/cooklang-parser/commit/e96f3e1))
+
+### 🤖 CI
+
+- **publish-npm:** Add pre-release tag when publishing pre-releases on npm ([b43470f](https://github.com/tmlmt/cooklang-parser/commit/b43470f))
+- Add deployment of playground ([cf42d0c](https://github.com/tmlmt/cooklang-parser/commit/cf42d0c))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.7...v3.0.0-alpha.0)
