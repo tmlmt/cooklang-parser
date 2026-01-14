@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.0.0-alpha.4
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.3...v3.0.0-alpha.4)
+
+### 🩹 Fixes
+
+- **playground:** Use absolute url on pre-release banner too ([4719ff9](https://github.com/tmlmt/cooklang-parser/commit/4719ff9))
+
+### 📖 Documentation
+
+- **playground:** Add color mode and improve header style ([844a00c](https://github.com/tmlmt/cooklang-parser/commit/844a00c))
+- **playground:** Improve color palette for dark mode ([0e4127c](https://github.com/tmlmt/cooklang-parser/commit/0e4127c))
+- **playground:** Propose better showcase recipe ([01c9032](https://github.com/tmlmt/cooklang-parser/commit/01c9032))
+- **playground:** Various rendering fixes ([7d46ece](https://github.com/tmlmt/cooklang-parser/commit/7d46ece))
+- Fix build by moving constants to a separate file and avoid bundler crash ([5a51c06](https://github.com/tmlmt/cooklang-parser/commit/5a51c06))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.3
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.2...v3.0.0-alpha.3)
