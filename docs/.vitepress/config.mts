@@ -3,7 +3,6 @@ import { defineConfig } from "vitepress";
 // @ts-ignore: linting before typedoc is generated will throw an error here
 import typedocSidebar from "../api/typedoc-sidebar.json";
 import { fullVersion, majorVersion, majorNumber } from "./version";
-import { isProd, siteUrl } from "./constants";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -24,9 +23,8 @@ export default defineConfig({
           { text: fullVersion, link: "/" },
           {
             text: majorNumber === 2 ? "v3" : "v2",
-            link: isProd
-              ? `${siteUrl}/${majorNumber === 2 ? "v3" : "v2"}/`
-              : `/${majorNumber === 2 ? "v3" : "v2"}/`,
+            link: `../${majorNumber === 2 ? "v3" : "v2"}/`,
+            target: "_self",
           },
         ],
       },

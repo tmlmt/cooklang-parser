@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import DefaultTheme from "vitepress/theme";
 import { isPrerelease, majorVersion } from "../version";
-import { isProd, siteUrl } from "../constants";
 
 const { Layout } = DefaultTheme;
 </script>
@@ -11,7 +10,7 @@ const { Layout } = DefaultTheme;
     <template #layout-top>
       <div v-if="isPrerelease" class="prerelease-banner top-banner">
         ⚠️ This is pre-release documentation for {{ majorVersion }}. For stable docs,
-        visit <a :href="isProd ? `${siteUrl}/v2/` : `/v2/`">v2</a>.
+        visit <a href="../v2/`" target="_self">v2</a>.
       </div>
       <component v-if="isPrerelease" :is="'style'">
         :root { --vp-layout-top-height: 37px; }
