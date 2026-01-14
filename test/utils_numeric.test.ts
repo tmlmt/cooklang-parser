@@ -8,6 +8,7 @@ import {
   getAverageValue,
 } from "../src/quantities/numeric";
 import type { DecimalValue, FractionValue, FixedValue } from "../src/types";
+import Big from "big.js";
 
 describe("simplifyFraction", () => {
   it("should throw an error when the denominator is zero", () => {
@@ -137,6 +138,21 @@ describe("multiplyNumericValue", () => {
     expect(multiplyNumericValue(val, 3)).toEqual({
       type: "decimal",
       decimal: 3.6,
+    });
+  });
+
+  it("should round correctly when result is a long decimal", () => {
+    const val: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 5 },
+    };
+    const factor = Big(1).div(3);
+    expect(multiplyQuantityValue(val, factor)).toEqual({
+      type: "fixed",
+      value: {
+        type: "decimal",
+        decimal: 1.667,
+      },
     });
   });
 });

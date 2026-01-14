@@ -114,8 +114,10 @@ export function multiplyQuantityValue(
       Big(factor),
     );
     if (
-      factor === parseInt(factor.toString()) || // e.g. 2 === int
-      Big(1).div(factor).toNumber() === parseInt(Big(1).div(factor).toString()) // e.g. 0.25 => 4 === int
+      newValue.type === "fraction" &&
+      (Big(factor).toNumber() === parseInt(Big(factor).toString()) || // e.g. 2 === int
+        Big(1).div(factor).toNumber() ===
+          parseInt(Big(1).div(factor).toString())) // e.g. 0.25 => 4 === int
     ) {
       // Preserve fractions
       return {
