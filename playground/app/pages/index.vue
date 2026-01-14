@@ -20,24 +20,31 @@ const desktopItems = ref<TabsItem[]>([
 ]);
 
 const rawRecipe = ref<string>(`---
-title: Simple Pancakes
-servings: 4
-tags: [breakfast, easy]
-prep time: 10 minutes
-cook time: 15 minutes
+title: Vegan-Friendly Banana Bread
+servings: 8
+tags: [baking, vegan-option]
 ---
 
-Mix @eggs{2} with @milk{200%mL} and @flour{150%g} in a #bowl.
+Preheat oven to ~{10%minutes}.
 
-Melt some @butter{20%g} in a #pan{} on medium heat.
+Mash @ripe bananas{1%=large|1.5%cup} and @&ripe bananas{2%=small|1%cup} in a #large bowl{}.
 
-Pour batter and cook for ~{2-3%minutes} on each side until golden.
+Add @butter{115%g|4%oz}|coconut oil{100%g}[vegan] and mix well.
 
-[- Serve with maple syrup or fresh berries -]
+Whisk in @eggs{2%large}|flax eggs{2}[vegan].
 
-== Toppings ==
+In a #separate bowl{}, combine @flour{280%g|2%cups}, @sugar{150%g}, and @-salt{1/4%tsp}.
 
-Add @maple syrup{} or @fresh berries{1%cup} on top.
+Fold dry ingredients into wet mixture.
+
+Add @?walnuts{100%g}(chopped) or @?chocolate chips{150%g}.
+
+Grease a #loaf pan{} with @&butter{15%g} and pour in batter.
+
+Beat @&eggs{2%small} for the glaze and brush on top.
+
+Bake for ~{55-60%minutes} until golden.
+
 `);
 
 const parsedRecipe = computed(() => {
