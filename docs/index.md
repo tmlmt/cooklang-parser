@@ -18,6 +18,9 @@ hero:
     - theme: alt
       text: Examples
       link: /examples-scaling-recipes
+    - theme: alt
+      text: Playground
+      link: /playground
 
 features:
   - title: Cooklang + Typescript
