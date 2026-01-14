@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import type { Recipe, Step, Item, Timer } from "cooklang-parser";
+import type {
+  Recipe,
+  Step,
+  Item,
+  Timer,
+  IngredientAlternative,
+  IngredientItemQuantity,
+  QuantityWithPlainUnit,
+} from "cooklang-parser";
 
 const props = defineProps<{
   step: Step;
@@ -7,14 +15,44 @@ const props = defineProps<{
 }>();
 
 /**
- * Get the display name for an ingredient item
+ * Convert an IngredientItemQuantity to a QuantityWithPlainUnit for the component
  */
-function getIngredientDisplayName(item: Item & { type: "ingredient" }): string {
-  // Use the first alternative's display name
-  if (item.alternatives.length > 0 && item.alternatives[0]) {
-    return item.alternatives[0].displayName;
-  }
-  return "";
+function toQuantityWithPlainUnit(
+  itemQty: IngredientItemQuantity,
+): QuantityWithPlainUnit {
+  return {
+    quantity: itemQty.quantity,
+    unit: itemQty.unit?.name,
+    equivalents: itemQty.equivalents?.map((eq) => ({
+      quantity: eq.quantity,
+      unit: eq.unit?.name,
+    })),
+  };
+}
+
+/**
+ * Get the first (primary) alternative for an ingredient item
+ */
+function getPrimaryAlternative(
+  item: Item & { type: "ingredient" },
+): IngredientAlternative | undefined {
+  return item.alternatives[0];
+}
+
+/**
+ * Get the other alternatives (excluding the primary one)
+ */
+function getOtherAlternatives(
+  item: Item & { type: "ingredient" },
+): IngredientAlternative[] {
+  return item.alternatives.slice(1);
+}
+
+/**
+ * Check if an ingredient item has alternatives
+ */
+function hasAlternatives(item: Item & { type: "ingredient" }): boolean {
+  return item.alternatives.length > 1;
 }
 
 /**
@@ -37,9 +75,46 @@ function getTimer(index: number): Timer | undefined {
     <template v-for="(item, idx) in step.items" :key="idx">
       <template v-if="item.type === 'text'">{{ item.value }}</template>
       <template v-else-if="item.type === 'ingredient'">
-        <span class="font-medium text-green-600 dark:text-green-400">{{
-          getIngredientDisplayName(item)
-        }}</span>
+        <span class="font-medium text-green-600 dark:text-green-400">
+          <!-- Primary ingredient with quantity -->
+          <template v-if="getPrimaryAlternative(item)?.itemQuantity">
+            <RecipeQuantityWithEquivalents
+              :quantity="
+                toQuantityWithPlainUnit(
+                  getPrimaryAlternative(item)!.itemQuantity!,
+                )
+              "
+            />
+            {{ " " }}
+          </template>
+          {{ getPrimaryAlternative(item)?.displayName }}
+        </span>
+        <!-- Alternatives -->
+        <template v-if="hasAlternatives(item)">
+          <span class="text-gray-500 dark:text-gray-300">
+            {{ " " }}(or
+            <template
+              v-for="(alt, altIdx) in getOtherAlternatives(item)"
+              :key="altIdx"
+            >
+              <template v-if="altIdx > 0">, or </template>
+              <template v-if="alt.itemQuantity">
+                <RecipeQuantityWithEquivalents
+                  :quantity="toQuantityWithPlainUnit(alt.itemQuantity)"
+                  wrapper-start="["
+                  wrapper-end="]"
+                />
+                {{ " " }}
+              </template>
+              <span class="font-medium text-green-600 dark:text-green-400">{{
+                alt.displayName
+              }}</span>
+              <template v-if="alt.note">
+                <span class="italic"> - {{ alt.note }}</span>
+              </template> </template
+            >)
+          </span>
+        </template>
       </template>
       <template v-else-if="item.type === 'cookware'">
         <span class="font-medium text-blue-600 dark:text-blue-300">{{

@@ -34,11 +34,21 @@ const hasSections = computed(() => props.recipe.sections.length > 0);
 
 /**
  * Filter ingredients to only show primary ones (usedAsPrimary: true)
+ * and exclude hidden ingredients (flags includes "hidden")
  * Non-primary ingredients are alternatives that will be shown via the choices system
  */
 const primaryIngredients = computed(() => {
-  return props.recipe.ingredients.filter((ing) => ing.usedAsPrimary);
+  return props.recipe.ingredients.filter(
+    (ing) => ing.usedAsPrimary && !ing.flags?.includes("hidden"),
+  );
 });
+
+/**
+ * Check if an ingredient is optional
+ */
+function isOptional(ingredient: (typeof props.recipe.ingredients)[0]) {
+  return ingredient.flags?.includes("optional");
+}
 
 const hasIngredients = computed(() => primaryIngredients.value.length > 0);
 
@@ -90,6 +100,7 @@ const sectionsWithStepNumbers = computed(() => {
           :key="idx"
           :ingredient="ingredient"
           :ingredients="recipe.ingredients"
+          :is-optional="isOptional(ingredient)"
         />
       </ul>
     </section>

@@ -13,7 +13,10 @@ type IngredientQuantityEntry =
 const props = defineProps<{
   ingredient: Ingredient;
   ingredients: Ingredient[];
+  isOptional?: boolean;
 }>();
+
+const optionalPrefix = computed(() => (props.isOptional ? "(optional) " : ""));
 
 /**
  * Get ingredient name by index
@@ -121,6 +124,7 @@ const displayMode = computed<DisplayMode>(() => {
   <li class="ingredient-item">
     <!-- Mode 1: Single simple quantity -->
     <template v-if="displayMode.type === 'single'">
+      {{ optionalPrefix }}
       <span>
         <RecipeQuantityWithEquivalents
           :quantity="displayMode.entry.groupQuantity"
@@ -160,6 +164,7 @@ const displayMode = computed<DisplayMode>(() => {
     <!-- Mode 3: Single entry with alternatives -->
     <template v-else-if="displayMode.type === 'single-with-alts'">
       <!-- Handle AND group with alternatives -->
+      {{ optionalPrefix }}
       <template v-if="isAndGroup(displayMode.entry)">
         <span>
           <template v-for="(qty, idx) in displayMode.entry.entries" :key="idx">
@@ -225,6 +230,7 @@ const displayMode = computed<DisplayMode>(() => {
 
     <!-- Mode 4: AND group without alternatives (e.g., "2 large + 2 small carrots ≈ 5 cups") -->
     <template v-else-if="displayMode.type === 'and-group'">
+      {{ optionalPrefix }}
       <span>
         <template v-for="(qty, idx) in displayMode.entry.entries" :key="idx">
           <template v-if="idx > 0"> + </template>
@@ -256,7 +262,7 @@ const displayMode = computed<DisplayMode>(() => {
 
     <!-- Mode 5: Complex case - bullet list -->
     <template v-else-if="displayMode.type === 'complex'">
-      <span class="font-bold">{{ ingredient.name }}</span
+      <span class="font-bold">{{ optionalPrefix }}{{ ingredient.name }}</span
       >:
       <ul class="ml-4 list-inside list-disc">
         <li v-for="(entry, idx) in displayMode.entries" :key="idx">
@@ -322,7 +328,7 @@ const displayMode = computed<DisplayMode>(() => {
 
     <!-- No quantities -->
     <template v-else>
-      <span class="font-bold">{{ ingredient.name }}</span>
+      <span class="font-bold">{{ optionalPrefix }}{{ ingredient.name }}</span>
       <span
         v-if="ingredient.preparation"
         class="text-gray-500 dark:text-gray-300"
