@@ -209,11 +209,8 @@ const displayMode = computed<DisplayMode>(() => {
           :key="idx"
         >
           <template v-if="idx > 0">, or </template>
-          <template v-if="alt.alternativeQuantities?.length">
-            <template
-              v-for="(altQty, qtyIdx) in alt.alternativeQuantities"
-              :key="qtyIdx"
-            >
+          <template v-if="alt.quantities?.length">
+            <template v-for="(altQty, qtyIdx) in alt.quantities" :key="qtyIdx">
               <template v-if="qtyIdx > 0"> + </template>
               <RecipeQuantityWithEquivalents
                 :quantity="altQty"
@@ -308,9 +305,9 @@ const displayMode = computed<DisplayMode>(() => {
                 :key="altIdx"
               >
                 <template v-if="altIdx > 0">, </template>
-                <template v-if="alt.alternativeQuantities?.length">
+                <template v-if="alt.quantities?.length">
                   <template
-                    v-for="(altQty, qtyIdx) in alt.alternativeQuantities"
+                    v-for="(altQty, qtyIdx) in alt.quantities"
                     :key="qtyIdx"
                   >
                     <template v-if="qtyIdx > 0"> + </template>

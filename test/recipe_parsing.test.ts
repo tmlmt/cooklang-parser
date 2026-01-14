@@ -1217,7 +1217,7 @@ Another step.
               alternatives: [
                 {
                   index: 1,
-                  alternativeQuantities: [
+                  quantities: [
                     {
                       quantity: {
                         type: "fixed",
@@ -1259,7 +1259,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1271,7 +1271,7 @@ Another step.
               },
               {
                 index: 2,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1398,7 +1398,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1410,7 +1410,7 @@ Another step.
               },
               {
                 index: 2,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1545,7 +1545,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1568,7 +1568,7 @@ Another step.
             alternatives: [
               {
                 index: 2,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1607,7 +1607,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1630,7 +1630,7 @@ Another step.
             alternatives: [
               {
                 index: 2,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1642,7 +1642,7 @@ Another step.
               },
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1699,7 +1699,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1748,7 +1748,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1760,7 +1760,7 @@ Another step.
               },
               {
                 index: 2,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1881,7 +1881,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -1994,7 +1994,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -2128,7 +2128,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",
@@ -2178,7 +2178,7 @@ Another step.
             alternatives: [
               {
                 index: 1,
-                alternativeQuantities: [
+                quantities: [
                   {
                     quantity: {
                       type: "fixed",

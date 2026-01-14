@@ -361,7 +361,7 @@ serves: 2, some
         alternatives: [
           {
             index: 1,
-            alternativeQuantities: [
+            quantities: [
               {
                 quantity: {
                   type: "fixed",
@@ -373,7 +373,7 @@ serves: 2, some
           },
           {
             index: 2,
-            alternativeQuantities: [
+            quantities: [
               {
                 quantity: {
                   type: "fixed",

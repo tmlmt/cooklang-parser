@@ -615,7 +615,7 @@ export class Recipe {
                 index: otherAlt.index,
               };
               if (otherAlt.itemQuantity) {
-                // Build the alternativeQuantities with plain units
+                // Build the alternative quantities with plain units
                 const altQty: QuantityWithPlainUnit = {
                   quantity: otherAlt.itemQuantity.quantity,
                 };
@@ -628,7 +628,7 @@ export class Recipe {
                     (eq) => toPlainUnit(eq) as QuantityWithPlainUnit,
                   );
                 }
-                newRef.alternativeQuantities = [altQty];
+                newRef.quantities = [altQty];
               }
               alternativeRefs.push(newRef);
             }
@@ -643,7 +643,7 @@ export class Recipe {
               const otherAlt = groupAlternatives[j] as IngredientAlternative;
               /* v8 ignore else -- @preserve */
               if (otherAlt.itemQuantity) {
-                // Build the alternativeQuantities with plain units
+                // Build the alternative quantities with plain units
                 const altQty: QuantityWithPlainUnit = {
                   quantity: otherAlt.itemQuantity.quantity,
                 };
@@ -657,7 +657,7 @@ export class Recipe {
                 }
                 alternativeRefs.push({
                   index: otherAlt.index,
-                  alternativeQuantities: [altQty],
+                  quantities: [altQty],
                 });
               }
             }
@@ -705,11 +705,8 @@ export class Recipe {
                 group.alternativeQuantities.set(ref.index, []);
               }
 
-              if (
-                ref.alternativeQuantities &&
-                ref.alternativeQuantities.length > 0
-              ) {
-                for (const altQty of ref.alternativeQuantities) {
+              if (ref.quantities && ref.quantities.length > 0) {
+                for (const altQty of ref.quantities) {
                   if (altQty.equivalents && altQty.equivalents.length > 0) {
                     const entries: QuantityWithExtendedUnit[] = [
                       toExtendedUnit({
@@ -768,7 +765,7 @@ export class Recipe {
               // Convert to array of QuantityWithPlainUnit
               const flattenedAlt = flattenPlainUnitGroup(summedAltQuantity);
               // Extract quantities from the flattened result
-              ref.alternativeQuantities = flattenedAlt.flatMap((item) => {
+              ref.quantities = flattenedAlt.flatMap((item) => {
                 if ("groupQuantity" in item) {
                   return [item.groupQuantity];
                 } else {
