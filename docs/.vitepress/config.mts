@@ -3,9 +3,7 @@ import { defineConfig } from "vitepress";
 // @ts-ignore: linting before typedoc is generated will throw an error here
 import typedocSidebar from "../api/typedoc-sidebar.json";
 import { fullVersion, majorVersion, majorNumber } from "./version";
-
-export const isProd = process.env.NODE_ENV === "production";
-export const siteUrl = "https://cooklang-parser.tmlmt.com";
+import { isProd, siteUrl } from "./constants";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
