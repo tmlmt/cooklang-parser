@@ -48,12 +48,22 @@ const parsedRecipe = computed(() => {
 
 <template>
   <div class="h-screen w-full p-4">
-    <h1 class="mb-4 text-3xl">
-      <b>@tmlmt/cooklang-parser Playground</b> (version: {{ fullVersion }})
-    </h1>
+    <div class="mb-2 flex justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="text-2xl font-bold md:text-3xl">
+          <b>@tmlmt/cooklang-parser</b>
+        </h1>
+        <div class="text-lg font-semibold">Playground</div>
+      </div>
+      <div class="flex flex-col items-end justify-around gap-1">
+        <UColorModeButton />
+        <div class="mb-1 text-xs md:text-sm">{{ fullVersion }}</div>
+      </div>
+    </div>
+
     <div class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2">
       <!-- Desktop: Editor on the left half -->
-      <div class="hidden h-[calc(100vh-8rem)] md:block">
+      <div class="hidden h-[calc(100vh-9rem)] md:block">
         <UButton class="my-1 w-full" color="primary">Editor</UButton>
         <UTextarea
           v-model="rawRecipe"
@@ -65,7 +75,7 @@ const parsedRecipe = computed(() => {
       <div class="hidden md:block">
         <UTabs
           :items="desktopItems"
-          :ui="{ content: 'h-[calc(100vh-8rem)] overflow-auto' }"
+          :ui="{ content: 'h-[calc(100vh-9.5rem)] overflow-auto' }"
         >
           <template #raw>
             <div class="w-full">
@@ -85,7 +95,7 @@ const parsedRecipe = computed(() => {
       <div class="md:hidden">
         <UTabs
           :items="mobileItems"
-          :ui="{ content: 'h-[calc(100vh-8rem)] overflow-auto' }"
+          :ui="{ content: 'h-[calc(100vh-9.5rem)] overflow-auto' }"
         >
           <template #editor>
             <UTextarea
