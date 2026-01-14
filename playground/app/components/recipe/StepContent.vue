@@ -37,12 +37,12 @@ function getTimer(index: number): Timer | undefined {
     <template v-for="(item, idx) in step.items" :key="idx">
       <template v-if="item.type === 'text'">{{ item.value }}</template>
       <template v-else-if="item.type === 'ingredient'">
-        <span class="font-medium text-green-600">{{
+        <span class="font-medium text-green-600 dark:text-green-400">{{
           getIngredientDisplayName(item)
         }}</span>
       </template>
       <template v-else-if="item.type === 'cookware'">
-        <span class="font-medium text-blue-600">{{
+        <span class="font-medium text-blue-600 dark:text-blue-300">{{
           getCookware(item.index)?.name
         }}</span>
       </template>

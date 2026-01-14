@@ -31,6 +31,8 @@ const formattedDuration = computed(() => {
 <template>
   <span class="timer-item">
     <span class="font-bold">{{ formattedDuration }} {{ timer.unit }}</span>
-    <span v-if="timer.name" class="text-gray-500"> ({{ timer.name }})</span>
+    <span v-if="timer.name" class="text-gray-500 dark:text-gray-300">
+      ({{ timer.name }})</span
+    >
   </span>
 </template>

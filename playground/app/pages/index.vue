@@ -64,7 +64,11 @@ const parsedRecipe = computed(() => {
     <div class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2">
       <!-- Desktop: Editor on the left half -->
       <div class="hidden h-[calc(100vh-9rem)] md:block">
-        <UButton class="my-1 w-full" color="primary">Editor</UButton>
+        <UButton
+          class="my-1 w-full dark:text-gray-300 dark:hover:text-white"
+          color="primary"
+          >Editor</UButton
+        >
         <UTextarea
           v-model="rawRecipe"
           class="h-full w-full text-sm"
@@ -75,7 +79,10 @@ const parsedRecipe = computed(() => {
       <div class="hidden md:block">
         <UTabs
           :items="desktopItems"
-          :ui="{ content: 'h-[calc(100vh-9.5rem)] overflow-auto' }"
+          :ui="{
+            label: 'dark:text-gray-300 dark:hover:text-white',
+            content: 'h-[calc(100vh-9.5rem)] overflow-auto',
+          }"
         >
           <template #raw>
             <div class="w-full">
@@ -95,7 +102,10 @@ const parsedRecipe = computed(() => {
       <div class="md:hidden">
         <UTabs
           :items="mobileItems"
-          :ui="{ content: 'h-[calc(100vh-9.5rem)] overflow-auto' }"
+          :ui="{
+            label: 'dark:text-gray-300 dark:hover:text-white',
+            content: 'h-[calc(100vh-9.5rem)] overflow-auto',
+          }"
         >
           <template #editor>
             <UTextarea

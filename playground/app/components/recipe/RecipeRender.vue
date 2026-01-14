@@ -73,7 +73,9 @@ const sectionsWithStepNumbers = computed(() => {
       <h3 class="mb-2 text-lg font-semibold">Metadata</h3>
       <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
         <template v-for="entry in metadataEntries" :key="entry.key">
-          <div class="font-medium text-gray-600">{{ entry.key }}</div>
+          <div class="font-medium text-gray-600 dark:text-gray-300">
+            {{ entry.key }}
+          </div>
           <div>{{ entry.value }}</div>
         </template>
       </div>
@@ -116,9 +118,9 @@ const sectionsWithStepNumbers = computed(() => {
           <!-- Section Name (if any) -->
           <h4
             v-if="section.name"
-            class="text-md mb-2 font-semibold text-gray-700"
+            class="text-md mb-2 font-semibold text-gray-700 dark:text-gray-200"
           >
-            {{ section.name }}
+            === {{ section.name }} ===
           </h4>
 
           <!-- Steps and Notes -->
@@ -135,7 +137,7 @@ const sectionsWithStepNumbers = computed(() => {
               <!-- Note -->
               <div
                 v-else-if="item.type === 'note'"
-                class="note ml-4 text-gray-600 italic"
+                class="note ml-4 text-gray-600 italic dark:text-gray-300"
               >
                 Note: {{ item.note }}
               </div>

@@ -128,7 +128,10 @@ const displayMode = computed<DisplayMode>(() => {
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
-      <span v-if="ingredient.preparation" class="text-gray-500">
+      <span
+        v-if="ingredient.preparation"
+        class="text-gray-500 dark:text-gray-300"
+      >
         , {{ ingredient.preparation }}
       </span>
     </template>
@@ -146,7 +149,10 @@ const displayMode = computed<DisplayMode>(() => {
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
-      <span v-if="ingredient.preparation" class="text-gray-500">
+      <span
+        v-if="ingredient.preparation"
+        class="text-gray-500 dark:text-gray-300"
+      >
         , {{ ingredient.preparation }}
       </span>
     </template>
@@ -185,10 +191,13 @@ const displayMode = computed<DisplayMode>(() => {
       </template>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
-      <span v-if="ingredient.preparation" class="text-gray-500">
+      <span
+        v-if="ingredient.preparation"
+        class="text-gray-500 dark:text-gray-300"
+      >
         , {{ ingredient.preparation }}
       </span>
-      <span class="text-gray-500">
+      <span class="text-gray-500 dark:text-gray-300">
         {{ " " }}(or
         <template
           v-for="(alt, idx) in displayMode.entry.alternatives"
@@ -237,7 +246,10 @@ const displayMode = computed<DisplayMode>(() => {
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
-      <span v-if="ingredient.preparation" class="text-gray-500">
+      <span
+        v-if="ingredient.preparation"
+        class="text-gray-500 dark:text-gray-300"
+      >
         , {{ ingredient.preparation }}
       </span>
     </template>
@@ -274,13 +286,16 @@ const displayMode = computed<DisplayMode>(() => {
             </span>
           </template>
 
-          <span v-if="ingredient.preparation" class="text-gray-500">
+          <span
+            v-if="ingredient.preparation"
+            class="text-gray-500 dark:text-gray-300"
+          >
             , {{ ingredient.preparation }}
           </span>
 
           <!-- Show alternatives if present -->
           <template v-if="hasAlternatives(entry)">
-            <span class="text-gray-500">
+            <span class="text-gray-500 dark:text-gray-300">
               {{ " " }}(or
               <template
                 v-for="(alt, altIdx) in entry.alternatives"
@@ -308,7 +323,10 @@ const displayMode = computed<DisplayMode>(() => {
     <!-- No quantities -->
     <template v-else>
       <span class="font-bold">{{ ingredient.name }}</span>
-      <span v-if="ingredient.preparation" class="text-gray-500">
+      <span
+        v-if="ingredient.preparation"
+        class="text-gray-500 dark:text-gray-300"
+      >
         , {{ ingredient.preparation }}
       </span>
     </template>
