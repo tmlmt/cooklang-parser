@@ -123,7 +123,7 @@ Usage: `@flour{100%g|3.5%oz}`
 
 This is useful for providing multiple units (e.g. metric and imperial) simultaneously for the same ingredient. The first unit is considered the primary unit.
 
-## Ingredient alternatives
+## Alternative ingredients
 
 ### Inline alternatives
 
