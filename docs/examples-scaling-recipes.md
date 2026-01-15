@@ -28,7 +28,10 @@ const recipe = Recipe(`...`)
 const scaledRecipe = recipe.scaleBy(2)
 ```
 
-All the ingredients with numerical quantities have their quantities multiplied by 2, and the metadata and `servings` value will also be multiplied by 2
+In the above example, will be multiplied by 2:
+- All the ingredients (including alternative units and alternative ingredients) with scalable numerical quantities
+- The scaling metadata and `servings` value
+- [Arbitrary scalable quantities](/guide-extensions.html#arbitrary-scalable-quantities)
 
 ## Scaling to a specific number of servings
 
@@ -41,4 +44,7 @@ const scaledRecipe = recipe.scaleTo(4)
 // const scaledRecipe = recipe.scaleBy(2)
 ```
 
-All the ingredients with scalable numerical quantities have their quantities adjusted by a factor of 4/2 in this case, and the scaling metadata (if expressed as numbers) and `servings` property value will also be multiplied by the same factor.
+In the above example, will be adjusted by a factor of 4/2: 
+- All the ingredients (including alternative units and alternative ingredients) with scalable numerical quantities have their quantities adjusted by a factor of 4/2 in this case
+- The scaling metadata and `servings` value
+- [Arbitrary scalable quantities](/guide-extensions.html#arbitrary-scalable-quantities)

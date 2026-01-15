@@ -102,6 +102,19 @@ Also works with Cookware and Timers
 - Cookware can also be quantified (without any unit, e.g. `#bowls{2}`)
 - Quantities will be added similarly as ingredients if cookware is referenced, e.g. `#&bowls{2}`
 
+## Arbitrary scalable quantities
+
+Usage: <code v-pre>{{name:quantity%unit}}</code>
+
+These quantities can be added to any step or note and will be scaled but not added to the ingredients list.
+
+The `name` and `unit` are optional. 
+
+Examples: 
+- <code v-pre>{{5}}</code>
+- <code v-pre>{{2%kcal}}</code>
+- <code v-pre>{{factor}}</code>
+
 ## Alternative units
 
 You can define equivalent quantities in different units for the same ingredient using the pipe `|` separator within the curly braces.
