@@ -236,18 +236,12 @@ export interface AlternativeIngredientRef {
  * When units are incompatible, separate IngredientQuantityGroup entries are created instead of merging.
  * @category Types
  */
-export interface IngredientQuantityGroup {
+export interface IngredientQuantityGroup extends QuantityWithPlainUnit {
   /**
    * References to alternative ingredients for this quantity group.
    * If undefined, this group has no alternatives.
    */
   alternatives?: AlternativeIngredientRef[];
-  /**
-   * The summed quantity for this group, potentially with equivalents.
-   * OR groups from addEquivalentsAndSimplify are converted back to QuantityWithPlainUnit
-   * (first entry as main, rest as equivalents).
-   */
-  groupQuantity: QuantityWithPlainUnit;
 }
 
 /**

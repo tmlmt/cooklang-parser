@@ -15,19 +15,15 @@ const props = defineProps<{
 }>();
 
 /**
- * Convert an IngredientItemQuantity to a QuantityWithPlainUnit for the component
+ * Convert IngredientItemQuantity equivalents to QuantityWithPlainUnit array
  */
-function toQuantityWithPlainUnit(
+function toPlainEquivalents(
   itemQty: IngredientItemQuantity,
-): QuantityWithPlainUnit {
-  return {
-    quantity: itemQty.quantity,
-    unit: itemQty.unit?.name,
-    equivalents: itemQty.equivalents?.map((eq) => ({
-      quantity: eq.quantity,
-      unit: eq.unit?.name,
-    })),
-  };
+): QuantityWithPlainUnit[] | undefined {
+  return itemQty.equivalents?.map((eq) => ({
+    quantity: eq.quantity,
+    unit: eq.unit?.name,
+  }));
 }
 
 /**
@@ -79,11 +75,9 @@ function getTimer(index: number): Timer | undefined {
           <!-- Primary ingredient with quantity -->
           <template v-if="getPrimaryAlternative(item)?.itemQuantity">
             <RecipeQuantityWithEquivalents
-              :quantity="
-                toQuantityWithPlainUnit(
-                  getPrimaryAlternative(item)!.itemQuantity!,
-                )
-              "
+              :quantity="getPrimaryAlternative(item)!.itemQuantity!.quantity"
+              :unit="getPrimaryAlternative(item)!.itemQuantity!.unit?.name"
+              :equivalents="toPlainEquivalents(getPrimaryAlternative(item)!.itemQuantity!)"
             />
             {{ " " }}
           </template>
@@ -100,7 +94,9 @@ function getTimer(index: number): Timer | undefined {
               <template v-if="altIdx > 0">, or </template>
               <template v-if="alt.itemQuantity">
                 <RecipeQuantityWithEquivalents
-                  :quantity="toQuantityWithPlainUnit(alt.itemQuantity)"
+                  :quantity="alt.itemQuantity.quantity"
+                  :unit="alt.itemQuantity.unit?.name"
+                  :equivalents="toPlainEquivalents(alt.itemQuantity)"
                   wrapper-start="["
                   wrapper-end="]"
                 />

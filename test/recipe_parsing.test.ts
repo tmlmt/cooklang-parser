@@ -53,13 +53,11 @@ describe("parse function", () => {
           name: "eggs",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 3 },
-                },
-                unit: undefined,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
               },
+              unit: undefined,
             },
           ],
           usedAsPrimary: true,
@@ -99,13 +97,11 @@ describe("parse function", () => {
           name: "butter",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 30 },
-                },
-                unit: "g",
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 30 },
               },
+              unit: "g",
             },
           ],
           usedAsPrimary: true,
@@ -145,13 +141,11 @@ describe("parse function", () => {
           name: "pizza dough",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 1 },
-                },
-                unit: undefined,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
               },
+              unit: undefined,
             },
           ],
           flags: ["recipe"],
@@ -195,13 +189,11 @@ describe("parse function", () => {
           name: "pizza dough",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 1 },
-                },
-                unit: undefined,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
               },
+              unit: undefined,
             },
           ],
           flags: ["recipe"],
@@ -246,13 +238,11 @@ describe("parse function", () => {
         name: "wheat flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
             },
+            unit: "g",
           },
         ],
         preparation: "sifted",
@@ -262,13 +252,11 @@ describe("parse function", () => {
         name: "eggs",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 2 },
-              },
-              unit: undefined,
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
             },
+            unit: undefined,
           },
         ],
         preparation: "large, beaten",
@@ -394,13 +382,11 @@ describe("parse function", () => {
           name: "flour tipo 00",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 150 },
-                },
-                unit: "g",
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 150 },
               },
+              unit: "g",
             },
           ],
           usedAsPrimary: true,
@@ -409,13 +395,11 @@ describe("parse function", () => {
           name: "water",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 300 },
-                },
-                unit: "mL",
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 300 },
               },
+              unit: "mL",
             },
           ],
           usedAsPrimary: true,
@@ -437,13 +421,11 @@ describe("parse function", () => {
         name: "flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 150 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
             },
+            unit: "g",
           },
         ],
         usedAsPrimary: true,
@@ -536,13 +518,11 @@ describe("parse function", () => {
         name: "flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
             },
+            unit: "g",
           },
         ],
         usedAsPrimary: true,
@@ -551,13 +531,11 @@ describe("parse function", () => {
         name: "flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 50 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
             },
+            unit: "g",
           },
         ],
         usedAsPrimary: true,
@@ -572,16 +550,14 @@ describe("parse function", () => {
           preparation: "boiled",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: {
-                    type: "decimal",
-                    decimal: 2,
-                  },
+              quantity: {
+                type: "fixed",
+                value: {
+                  type: "decimal",
+                  decimal: 2,
                 },
-                unit: undefined,
               },
+              unit: undefined,
             },
           ],
           usedAsPrimary: true,
@@ -649,13 +625,11 @@ describe("parse function", () => {
         name: "Sugar", // Note: original casing is preserved
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 150 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
             },
+            unit: "g",
           },
         ],
         usedAsPrimary: true,
@@ -673,13 +647,11 @@ describe("parse function", () => {
         name: "sugar",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1.5 },
-              },
-              unit: "kg",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1.5 },
             },
+            unit: "kg",
           },
         ],
         usedAsPrimary: true,
@@ -697,13 +669,11 @@ describe("parse function", () => {
       expect(butter.name).toBe("butter");
       expect(butter.quantities).toEqual([
         {
-          groupQuantity: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 0.704 },
-            },
-            unit: "kg",
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 0.704 },
           },
+          unit: "kg",
         },
       ]);
       // TODO: 700g would be more elegant
@@ -734,22 +704,18 @@ describe("parse function", () => {
         name: "water",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "l",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "l",
           },
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "kg",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "kg",
           },
         ],
         usedAsPrimary: true,
@@ -939,13 +905,11 @@ Another step.
           name: "pizza dough",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 1 },
-                },
-                unit: undefined,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
               },
+              unit: undefined,
             },
           ],
           flags: ["recipe"],
@@ -992,13 +956,11 @@ Another step.
           name: "pizza dough",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 1 },
-                },
-                unit: undefined,
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
               },
+              unit: undefined,
             },
           ],
           flags: ["recipe"],
@@ -1044,13 +1006,11 @@ Another step.
         name: "wheat flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
             },
+            unit: "g",
           },
         ],
         preparation: "sifted",
@@ -1061,13 +1021,11 @@ Another step.
         name: "eggs",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 2 },
-              },
-              unit: undefined,
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
             },
+            unit: undefined,
           },
         ],
         preparation: "large, beaten",
@@ -1198,22 +1156,18 @@ Another step.
           name: "flour tipo 00",
           quantities: [
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 100 },
-                },
-                unit: "g",
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
               },
+              unit: "g",
             },
             {
-              groupQuantity: {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 100 },
-                },
-                unit: "g",
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
               },
+              unit: "g",
               alternatives: [
                 {
                   index: 1,
@@ -1249,13 +1203,11 @@ Another step.
         name: "milk",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 200 },
-              },
-              unit: "ml",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
             },
+            unit: "ml",
             alternatives: [
               {
                 index: 1,
@@ -1388,13 +1340,11 @@ Another step.
         name: "milk",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 200 },
-              },
-              unit: "ml",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
             },
+            unit: "ml",
             alternatives: [
               {
                 index: 1,
@@ -1498,13 +1448,11 @@ Another step.
         name: "sea salt",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "text", text: "some" },
-              },
-              unit: undefined,
+            quantity: {
+              type: "fixed",
+              value: { type: "text", text: "some" },
             },
+            unit: undefined,
             alternatives: [
               {
                 index: 1,
@@ -1535,13 +1483,11 @@ Another step.
         name: "sugar",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
             },
+            unit: "g",
             alternatives: [
               {
                 index: 1,
@@ -1558,13 +1504,11 @@ Another step.
             ],
           },
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 50 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
             },
+            unit: "g",
             alternatives: [
               {
                 index: 2,
@@ -1597,13 +1541,11 @@ Another step.
         name: "sugar",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
             },
+            unit: "g",
             alternatives: [
               {
                 index: 1,
@@ -1620,13 +1562,11 @@ Another step.
             ],
           },
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 50 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
             },
+            unit: "g",
             alternatives: [
               {
                 index: 2,
@@ -1689,13 +1629,11 @@ Another step.
         name: "aubergine",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 2 },
-              },
-              unit: undefined,
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
             },
+            unit: undefined,
             alternatives: [
               {
                 index: 1,
@@ -1738,13 +1676,11 @@ Another step.
         name: "sugar",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 150 },
-              },
-              unit: "g",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 150 },
             },
+            unit: "g",
             alternatives: [
               {
                 index: 1,
@@ -1789,29 +1725,27 @@ Another step.
         name: "flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "bag",
-              equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 0.22 },
-                  },
-                  unit: "lb",
-                },
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 3.5 },
-                  },
-                  unit: "oz",
-                },
-              ],
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.22 },
+                },
+                unit: "lb",
+              },
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 3.5 },
+                },
+                unit: "oz",
+              },
+            ],
           },
         ],
         usedAsPrimary: true,
@@ -1862,22 +1796,20 @@ Another step.
         name: "flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "bag",
-              equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 0.22 },
-                  },
-                  unit: "lb",
-                },
-              ],
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.22 },
+                },
+                unit: "lb",
+              },
+            ],
             alternatives: [
               {
                 index: 1,
@@ -1975,22 +1907,20 @@ Another step.
         name: "wheat flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "bag",
-              equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 0.22 },
-                  },
-                  unit: "lb",
-                },
-              ],
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.22 },
+                },
+                unit: "lb",
+              },
+            ],
             alternatives: [
               {
                 index: 1,
@@ -2109,22 +2039,20 @@ Another step.
         name: "all-purpose flour",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 2 },
-              },
-              unit: "bag",
-              equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 0.5 },
-                  },
-                  unit: "lb",
-                },
-              ],
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
             },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.5 },
+                },
+                unit: "lb",
+              },
+            ],
             alternatives: [
               {
                 index: 1,
@@ -2150,31 +2078,27 @@ Another step.
             ],
           },
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "bag",
-              equivalents: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 0.25 },
-                  },
-                  unit: "lb",
-                },
-              ],
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "bag",
+            equivalents: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 0.25 },
+                },
+                unit: "lb",
+              },
+            ],
           },
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "pinch",
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
+            unit: "pinch",
             alternatives: [
               {
                 index: 1,

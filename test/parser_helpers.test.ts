@@ -396,9 +396,7 @@ describe("findAndUpsertIngredient", () => {
       name: "eggs",
       quantities: [
         {
-          groupQuantity: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       ],
     };
@@ -414,11 +412,9 @@ describe("findAndUpsertIngredient", () => {
         name: "eggs",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
           },
         ],
@@ -428,9 +424,7 @@ describe("findAndUpsertIngredient", () => {
       name: "eggs",
       quantities: [
         {
-          groupQuantity: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-          },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
         },
       ],
     };
@@ -439,9 +433,7 @@ describe("findAndUpsertIngredient", () => {
     );
     expect(ingredients[0]!.quantities).toEqual([
       {
-        groupQuantity: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-        },
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       },
     ]);
 
@@ -459,9 +451,7 @@ describe("findAndUpsertIngredient", () => {
         name: "eggs",
         quantities: [
           {
-            groupQuantity: {
-              quantity: { type: "fixed", value: { type: "text", text: "one" } },
-            },
+            quantity: { type: "fixed", value: { type: "text", text: "one" } },
           },
         ],
       },
@@ -470,9 +460,7 @@ describe("findAndUpsertIngredient", () => {
       name: "eggs",
       quantities: [
         {
-          groupQuantity: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         },
       ],
     };
@@ -488,11 +476,9 @@ describe("findAndUpsertIngredient", () => {
         name: "eggs",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
           },
         ],
@@ -502,13 +488,11 @@ describe("findAndUpsertIngredient", () => {
       name: "unreferenced-ingredient",
       quantities: [
         {
-          groupQuantity: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 100 },
-            },
-            unit: "g",
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
           },
+          unit: "g",
         },
       ],
       flags: [],
@@ -526,11 +510,9 @@ describe("findAndUpsertIngredient", () => {
         name: "eggs",
         quantities: [
           {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
           },
         ],
@@ -541,9 +523,7 @@ describe("findAndUpsertIngredient", () => {
       name: "eggs",
       quantities: [
         {
-          groupQuantity: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-          },
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
         },
       ],
     };

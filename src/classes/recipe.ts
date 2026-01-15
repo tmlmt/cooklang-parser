@@ -766,8 +766,8 @@ export class Recipe {
               const flattenedAlt = flattenPlainUnitGroup(summedAltQuantity);
               // Extract quantities from the flattened result
               ref.quantities = flattenedAlt.flatMap((item) => {
-                if ("groupQuantity" in item) {
-                  return [item.groupQuantity];
+                if ("quantity" in item) {
+                  return [item];
                 } else {
                   // AND group: return entries (could also include equivalents if needed)
                   return item.entries;
