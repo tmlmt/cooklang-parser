@@ -624,4 +624,23 @@ Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
       },
     ]);
   });
+
+  it("should scale arbitraries when scaling by", () => {
+    const recipe = new Recipe(`
+---
+servings: 2
+---
+Add {{sauce:100%g}} of sauce.
+    `);
+    const scaledRecipe = recipe.scaleBy(2);
+    expect(scaledRecipe.arbitraries.length).toBe(1);
+    expect(scaledRecipe.arbitraries[0]!).toEqual({
+      name: "sauce",
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 200 },
+      },
+      unit: "g",
+    });
+  });
 });

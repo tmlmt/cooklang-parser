@@ -6,7 +6,7 @@ import type {
   IngredientItemQuantity,
   Timer,
   Step,
-  Note,
+  NoteItem,
   Cookware,
   MetadataExtract,
   CookwareItem,
@@ -22,6 +22,9 @@ import type {
   QuantityWithPlainUnit,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
+  ArbitraryScalable,
+  FixedNumericValue,
+  StepItem,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -35,6 +38,7 @@ import {
   floatRegex,
   quantityAlternativeRegex,
   inlineIngredientAlternativesRegex,
+  arbitraryScalableRegex,
 } from "../regex";
 import {
   flushPendingItems,
@@ -118,6 +122,10 @@ export class Recipe {
    */
   timers: Timer[] = [];
   /**
+   * The parsed arbitrary quantities.
+   */
+  arbitraries: ArbitraryScalable[] = [];
+  /**
    * The parsed recipe servings. Used for scaling. Parsed from one of
    * {@link Metadata.servings}, {@link Metadata.yield} or {@link Metadata.serves}
    * metadata fields.
@@ -159,16 +167,82 @@ export class Recipe {
     }
   }
 
+  /**
+   * Parses a matched arbitrary scalable quantity and adds it to the given array.
+   * @private
+   * @param regexMatchGroups - The regex match groups from arbitrary scalable regex.
+   * @param intoArray - The array to push the parsed arbitrary scalable item into.
+   */
+  private _parseArbitraryScalable(
+    regexMatchGroups: RegExpMatchArray["groups"],
+    intoArray: Array<NoteItem | StepItem>,
+  ): void {
+    if (!regexMatchGroups || !regexMatchGroups.arbitraryQuantity) return;
+    const quantityMatch = regexMatchGroups.arbitraryQuantity
+      ?.trim()
+      .match(quantityAlternativeRegex);
+    if (quantityMatch?.groups) {
+      const value = quantityMatch.groups.quantity
+        ? parseQuantityInput(quantityMatch.groups.quantity)
+        : undefined;
+      const unit = quantityMatch.groups.unit;
+      const name = regexMatchGroups.arbitraryName || undefined;
+      if (!value || (value.type === "fixed" && value.value.type === "text")) {
+        throw new InvalidQuantityFormat(
+          regexMatchGroups.arbitraryQuantity?.trim(),
+          "Arbitrary quantities must have a numerical value",
+        );
+      }
+      const arbitrary: ArbitraryScalable = {
+        quantity: value as FixedNumericValue,
+      };
+      if (name) arbitrary.name = name;
+      if (unit) arbitrary.unit = unit;
+      intoArray.push({
+        type: "arbitrary",
+        index: this.arbitraries.push(arbitrary) - 1,
+      });
+    }
+  }
+
+  /**
+   * Parses text for arbitrary scalables and returns NoteItem array.
+   * @param text - The text to parse for arbitrary scalables.
+   * @returns Array of NoteItem (text and arbitrary scalable items).
+   */
+  private _parseNoteText(text: string): NoteItem[] {
+    const noteItems: NoteItem[] = [];
+    let cursor = 0;
+    const globalRegex = new RegExp(arbitraryScalableRegex.source, "g");
+
+    for (const match of text.matchAll(globalRegex)) {
+      const idx = match.index;
+      /* v8 ignore else -- @preserve */
+      if (idx > cursor) {
+        noteItems.push({ type: "text", value: text.slice(cursor, idx) });
+      }
+
+      this._parseArbitraryScalable(match.groups, noteItems);
+      cursor = idx + match[0].length;
+    }
+
+    if (cursor < text.length) {
+      noteItems.push({ type: "text", value: text.slice(cursor) });
+    }
+
+    return noteItems;
+  }
+
   private _parseQuantityRecursive(
     quantityRaw: string,
   ): QuantityWithExtendedUnit[] {
     let quantityMatch = quantityRaw.match(quantityAlternativeRegex);
     const quantities: QuantityWithExtendedUnit[] = [];
     while (quantityMatch?.groups) {
-      const value = quantityMatch.groups.ingredientQuantityValue
-        ? parseQuantityInput(quantityMatch.groups.ingredientQuantityValue)
+      const value = quantityMatch.groups.quantity
+        ? parseQuantityInput(quantityMatch.groups.quantity)
         : undefined;
-      const unit = quantityMatch.groups.ingredientUnit;
+      const unit = quantityMatch.groups.unit;
       if (value) {
         const newQuantity: QuantityWithExtendedUnit = { quantity: value };
         if (unit) {
@@ -185,10 +259,8 @@ export class Recipe {
       } else {
         throw new InvalidQuantityFormat(quantityRaw);
       }
-      quantityMatch = quantityMatch.groups.ingredientAltQuantity
-        ? quantityMatch.groups.ingredientAltQuantity.match(
-            quantityAlternativeRegex,
-          )
+      quantityMatch = quantityMatch.groups.alternative
+        ? quantityMatch.groups.alternative.match(quantityAlternativeRegex)
         : null;
     }
     return quantities;
@@ -954,7 +1026,7 @@ export class Recipe {
     let blankLineBefore = true;
     let section: Section = new Section();
     const items: Step["items"] = [];
-    let note: Note["note"] = "";
+    let noteText = "";
     let inNote = false;
 
     // We parse content line by line
@@ -962,7 +1034,11 @@ export class Recipe {
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
         flushPendingItems(section, items);
-        note = flushPendingNote(section, note);
+        flushPendingNote(
+          section,
+          noteText ? this._parseNoteText(noteText) : [],
+        );
+        noteText = "";
         blankLineBefore = true;
         inNote = false;
         continue;
@@ -971,7 +1047,11 @@ export class Recipe {
       // New section
       if (line.startsWith("=")) {
         flushPendingItems(section, items);
-        note = flushPendingNote(section, note);
+        flushPendingNote(
+          section,
+          noteText ? this._parseNoteText(noteText) : [],
+        );
+        noteText = "";
 
         if (this.sections.length === 0 && section.isBlank()) {
           section.name = line.replace(/^=+|=+$/g, "").trim();
@@ -990,8 +1070,11 @@ export class Recipe {
       // New note
       if (blankLineBefore && line.startsWith(">")) {
         flushPendingItems(section, items);
-        note = flushPendingNote(section, note);
-        note += line.substring(1).trim();
+        flushPendingNote(
+          section,
+          noteText ? this._parseNoteText(noteText) : [],
+        );
+        noteText = line.substring(1).trim();
         inNote = true;
         blankLineBefore = false;
         continue;
@@ -1000,14 +1083,15 @@ export class Recipe {
       // Continue note
       if (inNote) {
         if (line.startsWith(">")) {
-          note += " " + line.substring(1).trim();
+          noteText += " " + line.substring(1).trim();
         } else {
-          note += " " + line.trim();
+          noteText += " " + line.trim();
         }
         blankLineBefore = false;
         continue;
       }
-      note = flushPendingNote(section, note);
+      flushPendingNote(section, noteText ? this._parseNoteText(noteText) : []);
+      noteText = "";
 
       // Detecting items
       let cursor = 0;
@@ -1071,6 +1155,10 @@ export class Recipe {
           }
           items.push(newItem);
         }
+        // Arbitrary scalable quantities
+        else if (groups.arbitraryQuantity) {
+          this._parseArbitraryScalable(groups, items);
+        }
         // Then it's necessarily a timer which was matched
         else {
           const durationStr = groups.timerQuantity!.trim();
@@ -1100,7 +1188,7 @@ export class Recipe {
 
     // End of content reached: pushing all temporarily saved elements
     flushPendingItems(section, items);
-    note = flushPendingNote(section, note);
+    flushPendingNote(section, noteText ? this._parseNoteText(noteText) : []);
     if (!section.isBlank()) {
       this.sections.push(section);
     }
@@ -1210,6 +1298,14 @@ export class Recipe {
       scaleAlternativesBy(alternatives, factor);
     }
 
+    // Scale Arbitraries
+    for (const arbitrary of newRecipe.arbitraries) {
+      arbitrary.quantity = multiplyQuantityValue(
+        arbitrary.quantity,
+        factor,
+      ) as FixedNumericValue;
+    }
+
     newRecipe._populate_ingredient_quantities();
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
@@ -1289,6 +1385,7 @@ export class Recipe {
     });
     newRecipe.cookware = deepClone(this.cookware);
     newRecipe.timers = deepClone(this.timers);
+    newRecipe.arbitraries = deepClone(this.arbitraries);
     newRecipe.servings = this.servings;
     return newRecipe;
   }

@@ -11,7 +11,7 @@ import {
   InvalidQuantityFormat,
   ReferencedItemCannotBeRedefinedError,
 } from "../src/errors";
-import type { Ingredient, IngredientItem, Step } from "../src/types";
+import type { Ingredient, IngredientItem, Note, Step } from "../src/types";
 
 describe("parse function", () => {
   it("parses basic metadata correctly", () => {
@@ -2117,6 +2117,76 @@ Another step.
         ],
         usedAsPrimary: true,
       });
+    });
+  });
+
+  describe("arbitrary scalable quantities", () => {
+    it("parses arbitrary scalable quantities correctly", () => {
+      const recipe = "{{2}} {{1.5%cup}} {{calory-factor:5}}";
+      const result = new Recipe(recipe);
+      expect(result.arbitraries).toHaveLength(3);
+      expect(result.arbitraries[0]).toEqual({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 2 },
+        },
+      });
+      expect(result.arbitraries[1]).toEqual({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 1.5 },
+        },
+        unit: "cup",
+      });
+      expect(result.arbitraries[2]).toEqual({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 5 },
+        },
+        name: "calory-factor",
+      });
+      const step = result.sections[0]?.content[0] as Step;
+      expect(step.items[0]).toEqual({
+        type: "arbitrary",
+        index: 0,
+      });
+      expect(step.items[2]).toEqual({
+        type: "arbitrary",
+        index: 1,
+      });
+      expect(step.items[4]).toEqual({
+        type: "arbitrary",
+        index: 2,
+      });
+    });
+
+    it("parses notes containing arbitrary scalable quantities correctly", () => {
+      const recipe = `
+        > This is a note with an arbitrary quantity {{3%tbsp}} inside
+      `;
+      const result = new Recipe(recipe);
+      expect(result.arbitraries).toHaveLength(1);
+      expect(result.arbitraries[0]).toEqual({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 3 },
+        },
+        unit: "tbsp",
+      });
+      const note = result.sections[0]?.content[0] as Note;
+      expect(note).toEqual({
+        type: "note",
+        items: [
+          { type: "text", value: "This is a note with an arbitrary quantity " },
+          { type: "arbitrary", index: 0 },
+          { type: "text", value: " inside" },
+        ],
+      });
+    });
+
+    it("throws an error if arbitrary scalable quantity has no numeric value", () => {
+      const recipe = "{{calory-factor}}";
+      expect(() => new Recipe(recipe)).toThrowError(InvalidQuantityFormat);
     });
   });
 

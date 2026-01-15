@@ -150,7 +150,8 @@ const sectionsWithStepNumbers = computed(() => {
                 v-else-if="item.type === 'note'"
                 class="note ml-4 text-gray-600 italic dark:text-gray-300"
               >
-                Note: {{ item.note }}
+                Note:
+                <RecipeNoteContent :note="item" :recipe="recipe" />
               </div>
             </template>
           </div>

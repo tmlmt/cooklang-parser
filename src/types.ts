@@ -385,12 +385,12 @@ export interface IngredientItem {
  * @category Types
  */
 export interface RecipeAlternatives {
-  /** Map of choices that can be made at Ingredient Item level
-   * - Keys are the Ingredient Item IDs (e.g. "ingredient-item-2")
+  /** Map of choices that can be made at Ingredient StepItem level
+   * - Keys are the Ingredient StepItem IDs (e.g. "ingredient-item-2")
    * - Values are arrays of IngredientAlternative objects representing the choices available for that item
    */
   ingredientItems: Map<string, IngredientAlternative[]>;
-  /** Map of choices that can be made for Grouped Ingredient Item's
+  /** Map of choices that can be made for Grouped Ingredient StepItem's
    * - Keys are the Group IDs (e.g. "eggs" for `@|eggs|...`)
    * - Values are arrays of IngredientAlternative objects representing the choices available for that group
    */
@@ -403,9 +403,9 @@ export interface RecipeAlternatives {
  * @category Types
  */
 export interface RecipeChoices {
-  /** Map of choices that can be made at Ingredient Item level */
+  /** Map of choices that can be made at Ingredient StepItem level */
   ingredientItems?: Map<string, number>;
-  /** Map of choices that can be made for Grouped Ingredient Item's */
+  /** Map of choices that can be made for Grouped Ingredient StepItem's */
   ingredientGroups?: Map<string, number>;
 }
 
@@ -458,10 +458,39 @@ export interface TextItem {
 }
 
 /**
+ * Represents an arbitrary scalable quantity in a recipe.
+ * @category Types
+ */
+export interface ArbitraryScalable {
+  /** The name of the arbitrary scalable quantity. */
+  name?: string;
+  /** The numerical value of the arbitrary scalable quantity. */
+  quantity: FixedNumericValue;
+  /** The unit of the arbitrary scalable quantity. */
+  unit?: string;
+}
+
+/**
+ * Represents an arbitrary scalable quantity item in a recipe step.
+ * @category Types
+ */
+export interface ArbitraryScalableItem {
+  /** The type of the item. */
+  type: "arbitrary";
+  /** The index of the arbitrary scalable quantity, within the {@link Recipe.arbitraries | list of arbitrary scalable quantities} */
+  index: number;
+}
+
+/**
  * Represents an item in a recipe step.
  * @category Types
  */
-export type Item = TextItem | IngredientItem | CookwareItem | TimerItem;
+export type StepItem =
+  | TextItem
+  | IngredientItem
+  | CookwareItem
+  | TimerItem
+  | ArbitraryScalableItem;
 
 /**
  * Represents a step in a recipe.
@@ -470,8 +499,14 @@ export type Item = TextItem | IngredientItem | CookwareItem | TimerItem;
 export interface Step {
   type: "step";
   /** The items in the step. */
-  items: Item[];
+  items: StepItem[];
 }
+
+/**
+ * Represents an item in a note (can be text or arbitrary scalable).
+ * @category Types
+ */
+export type NoteItem = TextItem | ArbitraryScalableItem;
 
 /**
  * Represents a note in a recipe.
@@ -479,8 +514,8 @@ export interface Step {
  */
 export interface Note {
   type: "note";
-  /** The content of the note. */
-  note: string;
+  /** The items in the note. */
+  items: NoteItem[];
 }
 
 /**

@@ -149,18 +149,18 @@ export const ingredientWithAlternativeRegex = createRegex()
 export const inlineIngredientAlternativesRegex = new RegExp("\\|" + ingredientWithAlternativeRegex.source.slice(1))
 
 export const quantityAlternativeRegex = createRegex()
-  .startNamedGroup("ingredientQuantityValue")
+  .startNamedGroup("quantity")
     .notAnyOf("}|%").oneOrMore()
   .endGroup().optional()
   .startGroup()
     .literal("%")
-    .startNamedGroup("ingredientUnit")
+    .startNamedGroup("unit")
       .notAnyOf("|}").oneOrMore()
     .endGroup()
   .endGroup().optional()
   .startGroup()
     .literal("|")
-    .startNamedGroup("ingredientAltQuantity")
+    .startNamedGroup("alternative")
       .startGroup()
         .notAnyOf("}").oneOrMore()
       .endGroup().zeroOrMore()
@@ -284,12 +284,37 @@ const timerRegex = createRegex()
   .literal("}")
   .toRegExp()
 
+export const arbitraryScalableRegex = createRegex()
+  .literal("{{")
+  .startGroup()
+    .startNamedGroup("arbitraryName")
+      .notAnyOf("}:%").oneOrMore()
+    .endGroup()
+    .literal(":")
+  .endGroup().optional()
+  .startNamedGroup("arbitraryQuantity")
+    .startGroup()
+      .notAnyOf("}|%").oneOrMore()
+    .endGroup().optional()
+    .startGroup()
+      .literal("%")
+      .notAnyOf("|}").oneOrMore().lazy()
+    .endGroup().optional()
+    .startGroup()
+      .literal("|")
+      .notAnyOf("}").oneOrMore().lazy()
+    .endGroup().zeroOrMore()
+  .endGroup()
+  .literal("}}")
+  .toRegExp();
+
 export const tokensRegex = new RegExp(
   [
     ingredientWithGroupKeyRegex,
     ingredientWithAlternativeRegex,
     cookwareRegex,
     timerRegex,
+    arbitraryScalableRegex
   ]
     .map((r) => r.source)
     .join("|"),

@@ -158,6 +158,7 @@ exports[`parse function > extracts steps correctly 1`] = `
 
 exports[`parse function > parses complex recipes correctly 1`] = `
 Recipe {
+  "arbitraries": [],
   "choices": {
     "ingredientGroups": Map {},
     "ingredientItems": Map {},
@@ -674,7 +675,12 @@ Recipe {
           "type": "step",
         },
         {
-          "note": "Editor’s Tip: To ensure the noodles will not stick to each other, stir the water like a whirlpool when you add the pasta sheets.",
+          "items": [
+            {
+              "type": "text",
+              "value": "Editor’s Tip: To ensure the noodles will not stick to each other, stir the water like a whirlpool when you add the pasta sheets.",
+            },
+          ],
           "type": "note",
         },
       ],
@@ -1149,7 +1155,12 @@ Recipe {
           "type": "step",
         },
         {
-          "note": "Editor’s Tip: For the freshest, creamiest taste, grate your own cheese at home.",
+          "items": [
+            {
+              "type": "text",
+              "value": "Editor’s Tip: For the freshest, creamiest taste, grate your own cheese at home.",
+            },
+          ],
           "type": "note",
         },
       ],
@@ -1345,7 +1356,12 @@ exports[`parse function > parses notes correctly 1`] = `
   Section {
     "content": [
       {
-        "note": "This is a note at the beginning.",
+        "items": [
+          {
+            "type": "text",
+            "value": "This is a note at the beginning.",
+          },
+        ],
         "type": "note",
       },
       {
@@ -1385,7 +1401,12 @@ exports[`parse function > parses notes correctly 1`] = `
         "type": "step",
       },
       {
-        "note": "This is a note in the middle which continues on the next line.",
+        "items": [
+          {
+            "type": "text",
+            "value": "This is a note in the middle which continues on the next line.",
+          },
+        ],
         "type": "note",
       },
       {
@@ -1398,11 +1419,21 @@ exports[`parse function > parses notes correctly 1`] = `
         "type": "step",
       },
       {
-        "note": "Another note on multiple lines starting with > for readability",
+        "items": [
+          {
+            "type": "text",
+            "value": "Another note on multiple lines starting with > for readability",
+          },
+        ],
         "type": "note",
       },
       {
-        "note": "A final note.",
+        "items": [
+          {
+            "type": "text",
+            "value": "A final note.",
+          },
+        ],
         "type": "note",
       },
     ],

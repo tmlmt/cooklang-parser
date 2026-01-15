@@ -25,6 +25,8 @@ servings: 8
 tags: [baking, vegan-option]
 ---
 
+> This recipe has an energy content of {{250%kcal}}
+
 Preheat oven to ~{10%minutes}.
 
 Mash @ripe bananas{1%=large|1.5%cup} and @&ripe bananas{2%=small|1%cup} in a #large bowl{}.
