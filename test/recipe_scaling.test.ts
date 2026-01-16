@@ -76,20 +76,14 @@ describe("scaleTo", () => {
     ]);
   });
 
-  it("should throw an error if no initial servings information", () => {
-    const recipeWithoutServings = new Recipe();
-    recipeWithoutServings.ingredients = [
-      {
-        name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
-        flags: [],
-      },
-    ];
-
-    expect(() => recipeWithoutServings.scaleTo(4)).toThrowError(
-      "Error scaling recipe: no initial servings value set",
-    );
+  it("should default servings to 1 if no initial servings information", () => {
+    const recipeWithoutServings = new Recipe("@water{1%L}");
+    const scaledRecipe = recipeWithoutServings.scaleTo(4);
+    expect(scaledRecipe.servings).toBe(4);
+    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 4 },
+    });
   });
 
   it("should not modify the original recipe", () => {
@@ -178,21 +172,14 @@ describe("scaleBy", () => {
     expect(scaledRecipe.metadata.yield).toBe("4");
   });
 
-  it("should throw an error if no initial serving information", () => {
-    const recipeWithoutServings = new Recipe();
-    recipeWithoutServings.metadata = {};
-    recipeWithoutServings.ingredients = [
-      {
-        name: "water",
-        quantity: { type: "fixed", value: { type: "decimal", value: 1 } },
-        unit: "l",
-        flags: [],
-      },
-    ];
-
-    expect(() => recipeWithoutServings.scaleBy(2)).toThrowError(
-      "Error scaling recipe: no initial servings value set",
-    );
+  it("should default servings to 1 if no initial serving information", () => {
+    const recipeWithoutServings = new Recipe("@water{1%L}");
+    const scaledRecipe = recipeWithoutServings.scaleBy(2);
+    expect(scaledRecipe.ingredients[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", value: 2 },
+    });
+    expect(scaledRecipe.servings).toBe(2);
   });
 
   it("should not modify the original recipe", () => {

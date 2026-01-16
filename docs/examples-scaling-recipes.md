@@ -6,7 +6,7 @@ outline: deep
 
 ## Pre-requisite
 
-To be able to scale, a `Recipe` must have its [`servings`](/api/classes/Recipe.html#servings) property set, which is done by the parser when it encounters
+To be able to scale, `Recipe` uses its [`servings`](/api/classes/Recipe.html#servings) property, which is done by the parser when it encounters
 one of the following tags in the recipe's frontmatter: [`servings`](/api/interfaces/Metadata.html#servings), [`serves`](/api/interfaces/Metadata.html#serves) or [`yield`](/api/interfaces/Metadata.html#yield):
 
 ```json
@@ -17,7 +17,7 @@ servings: 2
 ---
 ```
 
-The rest of this guide assumes that you have set one of the above, and will assume a `servings` value of `2`
+If none of those are found and the `servings` property is undefined, it will default to 1 when scaling. The rest of this guide assumes that you have set one of the above, and will assume a `servings` value of `2`
 
 ## Scaling by a factor
 
