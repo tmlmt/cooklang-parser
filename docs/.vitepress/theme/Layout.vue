@@ -13,14 +13,19 @@ const { Layout } = DefaultTheme;
         visit <a href="../v2/`" target="_self">v2</a>.
       </div>
       <component v-if="isPrerelease" :is="'style'">
-        :root { --vp-layout-top-height: 37px; }
-        .VPHome { margin-bottom: 96px !important; }
+        :root { --vp-layout-top-height: 65px; }
+        .VPHome { margin-bottom: 80px !important; }
+        @media (min-width: 769px) {
+          :root { --vp-layout-top-height: 37px; }
+          .VPHome { margin-bottom: 96px !important; }
+        }
       </component>
     </template>
   </Layout>
 </template>
 
 <style scoped>
+
 .prerelease-banner.top-banner {
   background: #fff3cd;
   border-bottom: 1px solid #ffc107;
