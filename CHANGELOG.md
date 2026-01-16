@@ -1,5 +1,36 @@
 # Changelog
 
+## v2.1.8
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.7...v2.1.8)
+
+### 🩹 Fixes
+
+- **scaling:** Default servings 1 if no servings defined ([5d93797](https://github.com/tmlmt/cooklang-parser/commit/5d93797))
+
+### 📖 Documentation
+
+- **playground (v3):** Use absolute urls to enable navigation between major version in production ([d8eb80d](https://github.com/tmlmt/cooklang-parser/commit/d8eb80d))
+- Generate and deploy for both v2 and v3 ([#85](https://github.com/tmlmt/cooklang-parser/pull/85))
+- Fix build by moving constants to a separate file and avoid bundler crash (backport) ([6145071](https://github.com/tmlmt/cooklang-parser/commit/6145071))
+
+### 🏡 Chore
+
+- **README:** Bump year to 2026 ([b45e021](https://github.com/tmlmt/cooklang-parser/commit/b45e021))
+- **ci:** Remove obsolete git-checks config from .npmrc ([37968e8](https://github.com/tmlmt/cooklang-parser/commit/37968e8))
+- **gitignore:** Ignore playground on main/v2 branch ([e10cc51](https://github.com/tmlmt/cooklang-parser/commit/e10cc51))
+
+### 🤖 CI
+
+- **publish-npm:** Add pre-release tag when publishing pre-releases on npm ([e087376](https://github.com/tmlmt/cooklang-parser/commit/e087376))
+- Add deployment of playground ([a4d79a1](https://github.com/tmlmt/cooklang-parser/commit/a4d79a1))
+- **deploy-playground:** Add base url via env variable ([9aa0efb](https://github.com/tmlmt/cooklang-parser/commit/9aa0efb))
+- **publish-npm:** Disable git checks to enable publishing from any branch or tag ([2e80685](https://github.com/tmlmt/cooklang-parser/commit/2e80685))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v2.1.7
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v2.1.6...v2.1.7)
