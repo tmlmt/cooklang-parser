@@ -59,13 +59,31 @@ const parsedRecipe = computed(() => {
   <div class="h-screen w-full p-4">
     <div class="mb-2 flex justify-between">
       <div class="flex flex-col gap-1">
-        <h1 class="text-2xl font-bold md:text-3xl">
+        <h1 class="text-xl font-bold md:text-3xl">
           <b>@tmlmt/cooklang-parser</b>
         </h1>
         <div class="text-lg font-semibold">Playground</div>
       </div>
       <div class="flex flex-col items-end justify-around gap-1">
-        <UColorModeButton />
+        <div class="flex items-center">
+          <UButton
+            to="https://github.com/tmlmt/cooklang-parser"
+            target="_blank"
+            class="hover:bg-elevated active:bg-accented h-8 w-6 bg-transparent md:w-7 dark:bg-neutral-900"
+            ><UIcon
+              name="mdi:github"
+              class="dark:focus:bg-royal-800 size-5 shrink-0 bg-gray-700 dark:bg-white"
+          /></UButton>
+          <UButton
+            to="https://cooklang-parser.tmlmt.com/v3"
+            target="_blank"
+            class="hover:bg-elevated active:bg-accented h-8 w-7 bg-transparent md:w-8 dark:bg-neutral-900"
+            ><UIcon
+              name="material-symbols:docs"
+              class="size-5 shrink-0 bg-gray-700 dark:bg-white"
+          /></UButton>
+          <UColorModeButton />
+        </div>
         <div class="mb-1 text-xs md:text-sm">{{ fullVersion }}</div>
       </div>
     </div>
