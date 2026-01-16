@@ -275,7 +275,7 @@ export function deNormalizeQuantity(
 export const flattenPlainUnitGroup = (
   summed: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
 ): (
-  | { groupQuantity: QuantityWithPlainUnit }
+  | QuantityWithPlainUnit
   | {
       type: "and";
       entries: QuantityWithPlainUnit[];
@@ -319,7 +319,7 @@ export const flattenPlainUnitGroup = (
         ];
       } else {
         // No equivalents: flatten to separate entries (shouldn't happen in this branch, but handle it)
-        return andEntries.map((entry) => ({ groupQuantity: entry }));
+        return andEntries;
       }
     }
 
@@ -336,14 +336,12 @@ export const flattenPlainUnitGroup = (
       if (simpleEntries.length > 1) {
         result.equivalents = simpleEntries.slice(1);
       }
-      return [{ groupQuantity: result }];
+      return [result];
     }
     // Fallback: use first entry regardless
     else {
       const first = entries[0] as QuantityWithPlainUnit;
-      return [
-        { groupQuantity: { quantity: first.quantity, unit: first.unit } },
-      ];
+      return [{ quantity: first.quantity, unit: first.unit }];
     }
   } else if (isGroup(summed)) {
     // AND group: check if entries have OR groups (equivalents that can be extracted)
@@ -378,7 +376,7 @@ export const flattenPlainUnitGroup = (
     // If there are equivalents, return an AND group with the summed equivalents (carrots case)
     if (equivalentsList.length === 0) {
       // No equivalents: flatten to separate entries
-      return andEntries.map((entry) => ({ groupQuantity: entry }));
+      return andEntries;
     }
 
     const result: {
@@ -394,8 +392,6 @@ export const flattenPlainUnitGroup = (
     return [result];
   } else {
     // Simple QuantityWithPlainUnit
-    return [
-      { groupQuantity: { quantity: summed.quantity, unit: summed.unit } },
-    ];
+    return [{ quantity: summed.quantity, unit: summed.unit }];
   }
 };

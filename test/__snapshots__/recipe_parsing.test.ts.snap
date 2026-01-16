@@ -187,16 +187,14 @@ Recipe {
       "name": "lasagne noodles",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 9,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 9,
+              "type": "decimal",
             },
-            "unit": undefined,
           },
+          "unit": undefined,
         },
       ],
       "usedAsPrimary": true,
@@ -205,16 +203,14 @@ Recipe {
       "name": "bulk Italian sausage",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 1.2,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1.2,
+              "type": "decimal",
             },
-            "unit": "lb",
           },
+          "unit": "lb",
         },
       ],
       "usedAsPrimary": true,
@@ -223,17 +219,15 @@ Recipe {
       "name": "ground beef",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "den": 4,
-                "num": 3,
-                "type": "fraction",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
             },
-            "unit": "lb",
           },
+          "unit": "lb",
         },
       ],
       "usedAsPrimary": true,
@@ -243,16 +237,14 @@ Recipe {
       "preparation": "medium, diced",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 1,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1,
+              "type": "decimal",
             },
-            "unit": undefined,
           },
+          "unit": undefined,
         },
       ],
       "usedAsPrimary": true,
@@ -261,16 +253,14 @@ Recipe {
       "name": "garlic",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 3,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 3,
+              "type": "decimal",
             },
-            "unit": "cloves",
           },
+          "unit": "cloves",
         },
       ],
       "usedAsPrimary": true,
@@ -279,16 +269,14 @@ Recipe {
       "name": "crushed tomatoes",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 2,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
             },
-            "unit": "cans",
           },
+          "unit": "cans",
         },
       ],
       "usedAsPrimary": true,
@@ -297,16 +285,14 @@ Recipe {
       "name": "tomato paste",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 2,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
             },
-            "unit": "cans",
           },
+          "unit": "cans",
         },
       ],
       "usedAsPrimary": true,
@@ -315,17 +301,15 @@ Recipe {
       "name": "water",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "den": 3,
-                "num": 2,
-                "type": "fraction",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 3,
+              "num": 2,
+              "type": "fraction",
             },
-            "unit": "cup",
           },
+          "unit": "cup",
         },
       ],
       "usedAsPrimary": true,
@@ -334,16 +318,14 @@ Recipe {
       "name": "sugar",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 2,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
             },
-            "unit": "tbsp",
           },
+          "unit": "tbsp",
         },
       ],
       "usedAsPrimary": true,
@@ -353,16 +335,14 @@ Recipe {
       "preparation": "minced, divided",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 0.104,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 0.104,
+              "type": "decimal",
             },
-            "unit": "l",
           },
+          "unit": "l",
         },
       ],
       "usedAsPrimary": true,
@@ -371,16 +351,14 @@ Recipe {
       "name": "dried basil",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 2,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 2,
+              "type": "decimal",
             },
-            "unit": "tsp",
           },
+          "unit": "tsp",
         },
       ],
       "usedAsPrimary": true,
@@ -389,17 +367,15 @@ Recipe {
       "name": "fennel seed",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "den": 4,
-                "num": 3,
-                "type": "fraction",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
             },
-            "unit": "tsp",
           },
+          "unit": "tsp",
         },
       ],
       "usedAsPrimary": true,
@@ -408,17 +384,15 @@ Recipe {
       "name": "salt",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "den": 4,
-                "num": 3,
-                "type": "fraction",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
             },
-            "unit": "tsp",
           },
+          "unit": "tsp",
         },
       ],
       "usedAsPrimary": true,
@@ -428,17 +402,15 @@ Recipe {
       "preparation": "coarsely ground",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "den": 4,
-                "num": 1,
-                "type": "fraction",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 1,
+              "type": "fraction",
             },
-            "unit": "tsp",
           },
+          "unit": "tsp",
         },
       ],
       "usedAsPrimary": true,
@@ -448,16 +420,14 @@ Recipe {
       "preparation": "large, lightly beaten",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 1,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1,
+              "type": "decimal",
             },
-            "unit": undefined,
           },
+          "unit": undefined,
         },
       ],
       "usedAsPrimary": true,
@@ -466,16 +436,14 @@ Recipe {
       "name": "ricotta cheese",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 1,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 1,
+              "type": "decimal",
             },
-            "unit": "carton",
           },
+          "unit": "carton",
         },
       ],
       "usedAsPrimary": true,
@@ -485,16 +453,14 @@ Recipe {
       "preparation": "shredded",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "decimal": 4,
-                "type": "decimal",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "decimal": 4,
+              "type": "decimal",
             },
-            "unit": "cups",
           },
+          "unit": "cups",
         },
       ],
       "usedAsPrimary": true,
@@ -504,17 +470,15 @@ Recipe {
       "preparation": "grated",
       "quantities": [
         {
-          "groupQuantity": {
-            "quantity": {
-              "type": "fixed",
-              "value": {
-                "den": 4,
-                "num": 3,
-                "type": "fraction",
-              },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "den": 4,
+              "num": 3,
+              "type": "fraction",
             },
-            "unit": "cup",
           },
+          "unit": "cup",
         },
       ],
       "usedAsPrimary": true,
