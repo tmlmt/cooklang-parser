@@ -82,8 +82,10 @@ export class IncompatibleUnitsError extends Error {
 }
 
 export class InvalidQuantityFormat extends Error {
-  constructor(value: string) {
-    super(`Invalid quantity format found in: ${value}`);
+  constructor(value: string, extra?: string) {
+    super(
+      `Invalid quantity format found in: ${value}${extra ? ` (${extra})` : ""}`,
+    );
     this.name = "InvalidQuantityFormat";
   }
 }

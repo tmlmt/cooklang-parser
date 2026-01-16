@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { Section as SectionObject } from "../src/classes/section";
-import type { Step, MetadataExtract, Cookware, Ingredient } from "../src/types";
+import type {
+  Step,
+  MetadataExtract,
+  Cookware,
+  Ingredient,
+  NoteItem,
+} from "../src/types";
 import {
   flushPendingNote,
   flushPendingItems,
@@ -252,26 +258,26 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
 describe("flushPendingNote", () => {
   it("should add a note to the section if the note is not empty", () => {
     const section = new SectionObject("Test Section");
-    const note = "This is a test note.";
+    const note: NoteItem[] = [{ type: "text", value: "This is a test note." }];
 
     const result = flushPendingNote(section, note);
 
     expect(section.content).toHaveLength(1);
     expect(section.content[0]).toEqual({
       type: "note",
-      note: "This is a test note.",
+      items: [{ type: "text", value: "This is a test note." }],
     });
-    expect(result).toBe("");
+    expect(result).toEqual([]);
   });
 
-  it("should not add a note if it is empty and return an empty string", () => {
+  it("should not add a note if it is empty and return an empty array", () => {
     const section = new SectionObject("Test Section");
-    const note = "";
+    const note: NoteItem[] = [];
 
     const result = flushPendingNote(section, note);
 
     expect(section.content).toHaveLength(0);
-    expect(result).toBe("");
+    expect(result).toEqual([]);
   });
 });
 

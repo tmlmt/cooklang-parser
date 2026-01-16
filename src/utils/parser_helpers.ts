@@ -6,6 +6,7 @@ import type {
   TextValue,
   DecimalValue,
   FractionValue,
+  NoteItem,
 } from "../types";
 import {
   metadataRegex,
@@ -14,7 +15,7 @@ import {
   scalingMetaValueRegex,
 } from "../regex";
 import { Section as SectionObject } from "../classes/section";
-import type { Ingredient, Note, Step, Cookware } from "../types";
+import type { Ingredient, Step, Cookware } from "../types";
 import { addQuantityValues } from "../quantities/mutations";
 import {
   CannotAddTextValueError,
@@ -22,20 +23,20 @@ import {
 } from "../errors";
 
 /**
- * Pushes a pending note to the section content if it's not empty.
+ * Pushes a pending note to the section content if it has items.
  * @param section - The current section object.
- * @param note - The note content.
- * @returns An empty string if the note was pushed, otherwise the original note.
+ * @param noteItems - The note items array.
+ * @returns An empty array if the note was pushed, otherwise the original items.
  */
 export function flushPendingNote(
   section: SectionObject,
-  note: Note["note"],
-): Note["note"] {
-  if (note.length > 0) {
-    section.content.push({ type: "note", note });
-    return "";
+  noteItems: NoteItem[],
+): NoteItem[] {
+  if (noteItems.length > 0) {
+    section.content.push({ type: "note", items: [...noteItems] });
+    return [];
   }
-  return note;
+  return noteItems;
 }
 
 /**

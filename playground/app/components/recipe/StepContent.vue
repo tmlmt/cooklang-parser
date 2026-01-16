@@ -2,11 +2,12 @@
 import type {
   Recipe,
   Step,
-  Item,
+  StepItem,
   Timer,
   IngredientAlternative,
   IngredientItemQuantity,
   QuantityWithPlainUnit,
+  ArbitraryScalable,
 } from "cooklang-parser";
 
 const props = defineProps<{
@@ -30,7 +31,7 @@ function toPlainEquivalents(
  * Get the first (primary) alternative for an ingredient item
  */
 function getPrimaryAlternative(
-  item: Item & { type: "ingredient" },
+  item: StepItem & { type: "ingredient" },
 ): IngredientAlternative | undefined {
   return item.alternatives[0];
 }
@@ -39,7 +40,7 @@ function getPrimaryAlternative(
  * Get the other alternatives (excluding the primary one)
  */
 function getOtherAlternatives(
-  item: Item & { type: "ingredient" },
+  item: StepItem & { type: "ingredient" },
 ): IngredientAlternative[] {
   return item.alternatives.slice(1);
 }
@@ -47,7 +48,7 @@ function getOtherAlternatives(
 /**
  * Check if an ingredient item has alternatives
  */
-function hasAlternatives(item: Item & { type: "ingredient" }): boolean {
+function hasAlternatives(item: StepItem & { type: "ingredient" }): boolean {
   return item.alternatives.length > 1;
 }
 
@@ -64,6 +65,13 @@ function getCookware(index: number) {
 function getTimer(index: number): Timer | undefined {
   return props.recipe.timers[index];
 }
+
+/**
+ * Get the arbitrary scalable by index
+ */
+function getArbitrary(index: number): ArbitraryScalable | undefined {
+  return props.recipe.arbitraries[index];
+}
 </script>
 
 <template>
@@ -77,7 +85,9 @@ function getTimer(index: number): Timer | undefined {
             <RecipeQuantityWithEquivalents
               :quantity="getPrimaryAlternative(item)!.itemQuantity!.quantity"
               :unit="getPrimaryAlternative(item)!.itemQuantity!.unit?.name"
-              :equivalents="toPlainEquivalents(getPrimaryAlternative(item)!.itemQuantity!)"
+              :equivalents="
+                toPlainEquivalents(getPrimaryAlternative(item)!.itemQuantity!)
+              "
             />
             {{ " " }}
           </template>
@@ -122,6 +132,20 @@ function getTimer(index: number): Timer | undefined {
           v-if="getTimer(item.index)"
           :timer="getTimer(item.index)!"
         />
+      </template>
+      <template v-else-if="item.type === 'arbitrary'">
+        <span
+          v-if="getArbitrary(item.index)"
+          class="font-medium text-purple-600 dark:text-purple-400"
+        >
+          <RecipeSingleQuantity
+            :quantity="getArbitrary(item.index)!.quantity"
+            :unit="getArbitrary(item.index)!.unit"
+          />
+          <template v-if="getArbitrary(item.index)!.name">
+            {{ " " }}{{ getArbitrary(item.index)!.name }}
+          </template>
+        </span>
       </template>
     </template>
   </span>
