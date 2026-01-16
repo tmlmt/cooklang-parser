@@ -1,5 +1,39 @@
 # Changelog
 
+## v3.0.0-alpha.5
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.4...v3.0.0-alpha.5)
+
+### 🚀 Enhancements
+
+- Add arbitrary scalable quantities ([#92](https://github.com/tmlmt/cooklang-parser/pull/92))
+- **playground:** Add GitHub and docs links to header ([#94](https://github.com/tmlmt/cooklang-parser/pull/94))
+
+### 🩹 Fixes
+
+- **numeric:** Lack of rounding due to incorrect detection of long decimal as a fraction ([cbd4f5e](https://github.com/tmlmt/cooklang-parser/commit/cbd4f5e))
+- **scaling:** Default servings 1 if no servings defined ([13efe7a](https://github.com/tmlmt/cooklang-parser/commit/13efe7a))
+
+### 📖 Documentation
+
+- Add links to playground ([186d254](https://github.com/tmlmt/cooklang-parser/commit/186d254))
+- Fix link in banner and refactor version links ([5302155](https://github.com/tmlmt/cooklang-parser/commit/5302155))
+- **extensions:** Refine wording and update ingredient alias example ([#93](https://github.com/tmlmt/cooklang-parser/pull/93))
+- **playground:** Add page title and description ([322b6bb](https://github.com/tmlmt/cooklang-parser/commit/322b6bb))
+
+### 🏡 Chore
+
+- **pull_requests_template:** Various improvements ([79bfa9a](https://github.com/tmlmt/cooklang-parser/commit/79bfa9a))
+
+### 🎨 Styles
+
+- **types:** Remove unnecessary layer 'groupQuantity' and rename alternativeQuantities into 'quantities' ([#91](https://github.com/tmlmt/cooklang-parser/pull/91))
+- **docs-v3:** Fix banner and header overlap on mobile ([94227bf](https://github.com/tmlmt/cooklang-parser/commit/94227bf))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.4
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.3...v3.0.0-alpha.4)
