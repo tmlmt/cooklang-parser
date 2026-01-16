@@ -4,7 +4,7 @@ outline: deep
 
 # Guide: language extensions
 
-This parser library introduces multiple extensions of the original [cooklang language](/guide-cooklang-specs). Most of them are directly inspired by / in line with the extensions proposed by the official ([cooklang-rs](https://github.com/cooklang/cooklang-rs/blob/main/extensions.md)) Rust parser.
+This parser library introduces multiple extensions of the original [cooklang language](/guide-cooklang-specs). Half of them are directly inspired by / in line with the extensions proposed by the official ([cooklang-rs](https://github.com/cooklang/cooklang-rs/blob/main/extensions.md)) Rust parser.
 
 List of extensions:
 
@@ -123,7 +123,7 @@ Usage: `@flour{100%g|3.5%oz}`
 
 This is useful for providing multiple units (e.g. metric and imperial) simultaneously for the same ingredient. The first unit is considered the primary unit.
 
-## Ingredient alternatives
+## Alternative ingredients
 
 ### Inline alternatives
 
@@ -167,44 +167,102 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
 
 ```json
 {
-  metadata: {},
-  ingredients: [
-    {
-      name: "wheat flour",
-      quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-      quantityParts: [{ value: { type: "fixed", value: { type: "decimal", value: 100 } }, unit: "g", scalable: true},{ value: { type: "fixed", value: { type: "decimal", value: 50 } }, unit: "g", scalable: true}]
-      unit: "g",
-      flags: []
+  "metadata": {},
+  "choices": {
+    "ingredientItems": {
+      "Map(0)": {}
     },
-  ],
-  sections: [
+    "ingredientGroups": {
+      "Map(0)": {}
+    }
+  },
+  "ingredients": [
     {
-      name: "",
-      content: [
+      "name": "wheat flour",
+      "usedAsPrimary": true,
+      "quantities": [
         {
-          type: "step",
-          items: [
-            { type: "text", value: "Mix " },
-            {
-              type: "ingredient",
-              index: 0,
-              quantityPartIndex: 0
-              displayName: "wheat flour",
-            },
-            { type: "text", value: " with additional " },
-            {
-              type: "ingredient",
-              index: 0,
-              quantityPartIndex: 1,
-              displayName: "flour",
-            },
-          ],
-        },
-      ],
-    },
+          "quantity": {
+            "type": "fixed",
+            "value": {
+              "type": "decimal",
+              "decimal": 150
+            }
+          },
+          "unit": "g"
+        }
+      ]
+    }
   ],
-  cookware: [],
-  timers: [],
-};
+  "sections": [
+    {
+      "name": "",
+      "content": [
+        {
+          "type": "step",
+          "items": [
+            {
+              "type": "text",
+              "value": "Mix "
+            },
+            {
+              "type": "ingredient",
+              "id": "ingredient-item-0",
+              "alternatives": [
+                {
+                  "index": 0,
+                  "displayName": "wheat flour",
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "type": "decimal",
+                        "decimal": 100
+                      }
+                    },
+                    "unit": {
+                      "name": "g"
+                    },
+                    "scalable": true
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "value": " with additional "
+            },
+            {
+              "type": "ingredient",
+              "id": "ingredient-item-1",
+              "alternatives": [
+                {
+                  "index": 0,
+                  "displayName": "flour",
+                  "itemQuantity": {
+                    "quantity": {
+                      "type": "fixed",
+                      "value": {
+                        "type": "decimal",
+                        "decimal": 50
+                      }
+                    },
+                    "unit": {
+                      "name": "g"
+                    },
+                    "scalable": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cookware": [],
+  "timers": [],
+  "arbitraries": []
+}
 ```
 
