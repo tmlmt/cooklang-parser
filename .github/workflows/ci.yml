@@ -117,7 +117,7 @@ jobs:
   deploy-playground:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'release' || github.event_name == 'workflow_dispatch') && github.ref != 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
         with:
