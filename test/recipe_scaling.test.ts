@@ -125,29 +125,21 @@ describe("scaleTo", () => {
     });
   });
 
-  it("should throw an error if no initial servings information", () => {
-    const recipeWithoutServings = new Recipe();
-    recipeWithoutServings.ingredients = [
-      {
-        name: "water",
-        quantities: [
-          {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "l",
-            },
-          },
-        ],
-        flags: [],
+  it("should default servings to 1 if no initial servings information", () => {
+    const recipeWithoutServings = new Recipe("@water{1%L}");
+    const scaledRecipe = recipeWithoutServings.scaleTo(4);
+    expect(scaledRecipe.servings).toBe(4);
+    const water = scaledRecipe.ingredients[0]!.quantities;
+    if (!water) throw new Error("No quantities found for water ingredient");
+    expect(water[0]).toEqual({
+      groupQuantity: {
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 4 },
+        },
+        unit: "L",
       },
-    ];
-
-    expect(() => recipeWithoutServings.scaleTo(4)).toThrowError(
-      "Error scaling recipe: no initial servings value set",
-    );
+    });
   });
 
   it("should not modify the original recipe", () => {
@@ -292,30 +284,21 @@ describe("scaleBy", () => {
     expect(scaledRecipe.metadata.yield).toBe("4");
   });
 
-  it("should throw an error if no initial serving information", () => {
-    const recipeWithoutServings = new Recipe();
-    recipeWithoutServings.metadata = {};
-    recipeWithoutServings.ingredients = [
-      {
-        name: "water",
-        quantities: [
-          {
-            groupQuantity: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "l",
-            },
-          },
-        ],
-        flags: [],
+  it("should default servings to 1 if no initial serving information", () => {
+    const recipeWithoutServings = new Recipe("@water{1%L}");
+    const scaledRecipe = recipeWithoutServings.scaleBy(2);
+    expect(scaledRecipe.servings).toBe(2);
+    const water = scaledRecipe.ingredients[0]!.quantities;
+    if (!water) throw new Error("No quantities found for water ingredient");
+    expect(water[0]).toEqual({
+      groupQuantity: {
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 2 },
+        },
+        unit: "L",
       },
-    ];
-
-    expect(() => recipeWithoutServings.scaleBy(2)).toThrowError(
-      "Error scaling recipe: no initial servings value set",
-    );
+    });
   });
 
   it("should not modify the original recipe", () => {

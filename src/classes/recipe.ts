@@ -1120,10 +1120,11 @@ export class Recipe {
    * @throws `Error` if the recipe does not contains an initial {@link Recipe.servings | servings} value
    */
   scaleTo(newServings: number): Recipe {
-    const originalServings = this.getServings();
+    let originalServings = this.getServings();
 
+    // Default to 1 if no servings defined
     if (originalServings === undefined || originalServings === 0) {
-      throw new Error("Error scaling recipe: no initial servings value set");
+      originalServings = 1;
     }
 
     const factor = Big(newServings).div(originalServings);
@@ -1139,10 +1140,11 @@ export class Recipe {
   scaleBy(factor: number | Big): Recipe {
     const newRecipe = this.clone();
 
-    const originalServings = newRecipe.getServings();
+    let originalServings = newRecipe.getServings();
 
+    // Default to 1 if no servings defined
     if (originalServings === undefined || originalServings === 0) {
-      throw new Error("Error scaling recipe: no initial servings value set");
+      originalServings = 1;
     }
 
     function scaleAlternativesBy(
