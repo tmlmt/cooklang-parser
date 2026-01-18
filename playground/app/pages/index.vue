@@ -6,17 +6,22 @@ import pkg from "~~/../package.json";
 const version = pkg.version;
 const fullVersion = `v${version}`;
 
-// Mobile: 3 tabs including Editor
+// Mobile: 4 tabs including Editor
 const mobileItems = ref<TabsItem[]>([
   { label: "Editor", slot: "editor" },
-  { label: "Raw", slot: "raw" },
   { label: "Render", slot: "render" },
+  { label: "Choices", slot: "choices" },
+  { label: "Raw", slot: "raw" },
 ]);
 
-// Desktop: 2 tabs (Editor is separate on the left)
-const desktopItems = ref<TabsItem[]>([
-  { label: "Raw", slot: "raw" },
+// Desktop: 2 tabs left and 2 tabs right
+const desktopItemsLeft = ref<TabsItem[]>([
+  { label: "Editor", slot: "editor" },
+  { label: "Choices", slot: "choices" },
+]);
+const desktopItemsRight = ref<TabsItem[]>([
   { label: "Render", slot: "render" },
+  { label: "Raw", slot: "raw" },
 ]);
 
 const rawRecipe = ref<string>(`---
@@ -52,6 +57,31 @@ Bake for ~{55-60%minutes} until golden.
 const parsedRecipe = computed(() => {
   const recipe = new Recipe(rawRecipe.value);
   return recipe;
+});
+
+// Servings state for scaling - initialize from parsed recipe
+const servings = ref<number>(1);
+
+// Initialize and reset servings when recipe servings change
+watch(
+  () => parsedRecipe.value.servings,
+  (newServings) => {
+    if (newServings !== undefined) {
+      servings.value = newServings;
+    }
+  },
+  { immediate: true },
+);
+
+// Scaled recipe based on servings selection
+const scaledRecipe = computed(() => {
+  if (
+    parsedRecipe.value.servings &&
+    servings.value !== parsedRecipe.value.servings
+  ) {
+    return parsedRecipe.value.scaleTo(servings.value);
+  }
+  return parsedRecipe.value;
 });
 </script>
 
@@ -91,41 +121,50 @@ const parsedRecipe = computed(() => {
     <div class="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2">
       <!-- Desktop: Editor on the left half -->
       <div class="hidden h-[calc(100vh-9rem)] md:block">
-        <UButton
-          class="my-1 w-full dark:text-gray-300 dark:hover:text-white"
-          color="primary"
-          >Editor</UButton
-        >
-        <UTextarea
-          v-model="rawRecipe"
-          class="h-full w-full text-sm"
-          :ui="{ base: 'h-full' }"
-        />
-      </div>
-      <!-- Desktop: 2 tabs on the right half -->
-      <div class="hidden md:block">
         <UTabs
-          :items="desktopItems"
+          :items="desktopItemsLeft"
           :ui="{
             label: 'dark:text-gray-300 dark:hover:text-white',
             content: 'h-[calc(100vh-9.5rem)] overflow-auto',
           }"
         >
-          <template #raw>
-            <div class="w-full">
-              <pre class="text-xs">{{ parsedRecipe }}</pre>
+          <template #editor>
+            <UTextarea
+              v-model="rawRecipe"
+              class="h-full w-full text-sm"
+              :ui="{ base: 'h-full' }"
+            />
+          </template>
+
+          <template #choices>
+            <RecipeChoices v-model:servings="servings" :recipe="parsedRecipe" />
+          </template>
+        </UTabs>
+      </div>
+      <!-- Desktop: 2 tabs on the right half -->
+      <div class="hidden md:block">
+        <UTabs
+          :items="desktopItemsRight"
+          :ui="{
+            label: 'dark:text-gray-300 dark:hover:text-white',
+            content: 'h-[calc(100vh-9.5rem)] overflow-auto',
+          }"
+        >
+          <template #render>
+            <div class="w-full text-sm">
+              <RecipeRender :recipe="scaledRecipe" />
             </div>
           </template>
 
-          <template #render>
-            <div class="w-full text-sm">
-              <RecipeRender :recipe="parsedRecipe" />
+          <template #raw>
+            <div class="w-full">
+              <pre class="text-xs">{{ scaledRecipe }}</pre>
             </div>
           </template>
         </UTabs>
       </div>
 
-      <!-- Mobile: 3 tabs including Editor -->
+      <!-- Mobile: 4 tabs including Editor -->
       <div class="md:hidden">
         <UTabs
           :items="mobileItems"
@@ -144,13 +183,17 @@ const parsedRecipe = computed(() => {
 
           <template #raw>
             <div class="w-full">
-              <pre class="text-xs">{{ parsedRecipe }}</pre>
+              <pre class="text-xs">{{ scaledRecipe }}</pre>
             </div>
+          </template>
+
+          <template #choices>
+            <RecipeChoices v-model:servings="servings" :recipe="parsedRecipe" />
           </template>
 
           <template #render>
             <div class="w-full text-sm">
-              <RecipeRender :recipe="parsedRecipe" />
+              <RecipeRender :recipe="scaledRecipe" />
             </div>
           </template>
         </UTabs>
