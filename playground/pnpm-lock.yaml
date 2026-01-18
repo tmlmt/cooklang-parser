@@ -27,8 +27,8 @@ importers:
         specifier: 4.2.2
         version: 4.2.2(@parcel/watcher@2.5.4)(@vue/compiler-sfc@3.5.26)(cac@6.7.14)(db0@0.3.4)(eslint@9.39.2(jiti@2.6.1))(ioredis@5.9.1)(lightningcss@1.30.2)(magicast@0.5.1)(optionator@0.9.4)(rollup@4.55.1)(terser@5.44.1)(typescript@5.9.3)(vite@7.3.1(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.2))(yaml@2.8.2)
       smol-toml:
-        specifier: 1.5.2
-        version: 1.5.2
+        specifier: 1.6.0
+        version: 1.6.0
       tailwindcss:
         specifier: 4.1.18
         version: 4.1.18
@@ -36,9 +36,12 @@ importers:
         specifier: 3.5.26
         version: 3.5.26(typescript@5.9.3)
       yalps:
-        specifier: 0.6.3
-        version: 0.6.3
+        specifier: 0.6.4
+        version: 0.6.4
     devDependencies:
+      '@iconify-json/lucide':
+        specifier: 1.2.86
+        version: 1.2.86
       '@nuxt/eslint':
         specifier: 1.12.1
         version: 1.12.1(@typescript-eslint/utils@8.53.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.26)(eslint@9.39.2(jiti@2.6.1))(magicast@0.5.1)(typescript@5.9.3)(vite@7.3.1(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.2))
@@ -49,11 +52,11 @@ importers:
         specifier: 9.39.2
         version: 9.39.2(jiti@2.6.1)
       prettier:
-        specifier: 3.7.4
-        version: 3.7.4
+        specifier: 3.8.0
+        version: 3.8.0
       prettier-plugin-tailwindcss:
         specifier: 0.7.2
-        version: 0.7.2(prettier@3.7.4)
+        version: 0.7.2(prettier@3.8.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -643,6 +646,9 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@iconify-json/lucide@1.2.86':
+    resolution: {integrity: sha512-W/Jz7/gGOkI9u43r+UHmQtZtcyw2YLvMwiHa01WV6V4DYltrPNXiD+bCa+djV8LZB1uwF8CiympOMIbgiQ74nA==}
 
   '@iconify/collections@1.0.638':
     resolution: {integrity: sha512-QP163IfZcCxwEghlKGzVZzYS2VZtdBkyc16LbqQ5s92VgL5oZ/9iQKBwLAPZihJxQb2gWtFQir5Fp25Rfs9YFw==}
@@ -4311,8 +4317,8 @@ packages:
       prettier-plugin-svelte:
         optional: true
 
-  prettier@3.7.4:
-    resolution: {integrity: sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==}
+  prettier@3.8.0:
+    resolution: {integrity: sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -4618,8 +4624,8 @@ packages:
   smob@1.5.0:
     resolution: {integrity: sha512-g6T+p7QO8npa+/hNx9ohv1E5pVCmWrVCUzUXJyLdMmftX6ER0oiWY/w9knEonLpnOp6b6FenKnMfR8gqwWdwig==}
 
-  smol-toml@1.5.2:
-    resolution: {integrity: sha512-QlaZEqcAH3/RtNyet1IPIYPsEWAaYyXXv1Krsi+1L/QHppjX4Ifm8MQsBISz9vE8cHicIq3clogsheili5vhaQ==}
+  smol-toml@1.6.0:
+    resolution: {integrity: sha512-4zemZi0HvTnYwLfrpk/CF9LOd9Lt87kAt50GnqhMpyF9U3poDAP2+iukq2bZsO/ufegbYehBkqINbsWxj4l4cw==}
     engines: {node: '>= 18'}
 
   source-map-js@1.2.1:
@@ -5258,8 +5264,8 @@ packages:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
     engines: {node: '>=18'}
 
-  yalps@0.6.3:
-    resolution: {integrity: sha512-XS1Sb3uejyNMu/Bl+3ZdI4VZGJKT6JSoSDYcLFlapOUy0wJPN9h+XDXAY8xeFk0bQFdEMIOGNAN2/jht4XSJKA==}
+  yalps@0.6.4:
+    resolution: {integrity: sha512-PfOgB86E32G89K4IPiKZDCd9is2tQCSV89/t5HWdbAzbVPAL8vJ8es6Z1Ox6oN8d1k2mM/dqIQJDoaooFxIc+w==}
 
   yaml@2.8.2:
     resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
@@ -5806,6 +5812,10 @@ snapshots:
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/retry@0.4.3': {}
+
+  '@iconify-json/lucide@1.2.86':
+    dependencies:
+      '@iconify/types': 2.0.0
 
   '@iconify/collections@1.0.638':
     dependencies:
@@ -9952,11 +9962,11 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-tailwindcss@0.7.2(prettier@3.7.4):
+  prettier-plugin-tailwindcss@0.7.2(prettier@3.8.0):
     dependencies:
-      prettier: 3.7.4
+      prettier: 3.8.0
 
-  prettier@3.7.4: {}
+  prettier@3.8.0: {}
 
   pretty-bytes@7.1.0: {}
 
@@ -10350,7 +10360,7 @@ snapshots:
 
   smob@1.5.0: {}
 
-  smol-toml@1.5.2: {}
+  smol-toml@1.6.0: {}
 
   source-map-js@1.2.1: {}
 
@@ -10972,7 +10982,7 @@ snapshots:
 
   yallist@5.0.0: {}
 
-  yalps@0.6.3:
+  yalps@0.6.4:
     dependencies:
       heap: 0.2.7
 
