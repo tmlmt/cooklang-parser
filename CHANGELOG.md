@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.8
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.7...v3.0.0-alpha.8)
+
+### 📖 Documentation
+
+- **v3, home:** Fix link to playground ([08262a5](https://github.com/tmlmt/cooklang-parser/commit/08262a5))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.7
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.6...v3.0.0-alpha.7)
