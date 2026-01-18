@@ -1,5 +1,20 @@
 # Changelog
 
+## v3.0.0-alpha.6
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.5...v3.0.0-alpha.6)
+
+### 📖 Documentation
+
+- **playground:** Fix missing display of units and equivalents ([89b300e](https://github.com/tmlmt/cooklang-parser/commit/89b300e))
+- **playground:** Bump all deps ([c143a28](https://github.com/tmlmt/cooklang-parser/commit/c143a28))
+- **playground:** Add Choices tab to play with scaling ([1babbd5](https://github.com/tmlmt/cooklang-parser/commit/1babbd5))
+- **v3, home:** Fix link to playground ([89b9ae5](https://github.com/tmlmt/cooklang-parser/commit/89b9ae5))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.5
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.4...v3.0.0-alpha.5)
