@@ -126,7 +126,11 @@ const displayMode = computed<DisplayMode>(() => {
     <template v-if="displayMode.type === 'single'">
       {{ optionalPrefix }}
       <span>
-        <RecipeQuantityWithEquivalents :quantity="displayMode.entry.quantity" />
+        <RecipeQuantityWithEquivalents
+          :quantity="displayMode.entry.quantity"
+          :unit="displayMode.entry.unit"
+          :equivalents="displayMode.entry.equivalents"
+        />
       </span>
       {{ " " }}
       <span class="font-bold">{{ ingredient.name }}</span>
@@ -143,10 +147,14 @@ const displayMode = computed<DisplayMode>(() => {
       <span>
         <RecipeQuantityWithEquivalents
           :quantity="displayMode.entries[0].quantity"
+          :unit="displayMode.entries[0].unit"
+          :equivalents="displayMode.entries[0].equivalents"
         />
         and
         <RecipeQuantityWithEquivalents
           :quantity="displayMode.entries[1].quantity"
+          :unit="displayMode.entries[1].unit"
+          :equivalents="displayMode.entries[1].equivalents"
         />
       </span>
       {{ " " }}
@@ -183,6 +191,7 @@ const displayMode = computed<DisplayMode>(() => {
               <RecipeSingleQuantity
                 :quantity="eq.quantity"
                 :unit="eq.unit"
+                :equivalents="eq.equivalents"
               /> </template
             >)
           </template>
@@ -193,6 +202,8 @@ const displayMode = computed<DisplayMode>(() => {
         <span>
           <RecipeQuantityWithEquivalents
             :quantity="displayMode.entry.quantity"
+            :unit="displayMode.entry.unit"
+            :equivalents="displayMode.entry.equivalents"
           />
         </span>
       </template>
@@ -251,6 +262,7 @@ const displayMode = computed<DisplayMode>(() => {
             <RecipeSingleQuantity
               :quantity="eq.quantity"
               :unit="eq.unit"
+              :equivalents="eq.equivalents"
             /> </template
           >)
         </template>
@@ -289,6 +301,7 @@ const displayMode = computed<DisplayMode>(() => {
                   <RecipeSingleQuantity
                     :quantity="eq.quantity"
                     :unit="eq.unit"
+                    :equivalents="eq.equivalents"
                   /> </template
                 >)
               </template>
@@ -297,7 +310,11 @@ const displayMode = computed<DisplayMode>(() => {
           <!-- Render simple group entry -->
           <template v-else-if="isSimpleGroup(entry)">
             <span>
-              <RecipeQuantityWithEquivalents :quantity="entry.quantity" />
+              <RecipeQuantityWithEquivalents
+                :quantity="entry.quantity"
+                :unit="entry.unit"
+                :equivalents="entry.equivalents"
+              />
             </span>
           </template>
 
