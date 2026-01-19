@@ -53,7 +53,7 @@
     "human-regex": "2.1.5",
     "prettier": "3.6.2",
     "rimraf": "6.1.0",
-    "tsup": "8.5.0",
+    "tsup": "8.5.1",
     "typedoc": "0.28.14",
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
