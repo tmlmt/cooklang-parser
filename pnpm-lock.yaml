@@ -30,8 +30,8 @@ importers:
         specifier: 6.2.2
         version: 6.2.2
       '@types/node':
-        specifier: 22.19.0
-        version: 22.19.0
+        specifier: 22.19.7
+        version: 22.19.7
       '@vitest/coverage-v8':
         specifier: 4.0.8
         version: 4.0.8(vitest@4.0.8)
@@ -82,10 +82,10 @@ importers:
         version: 8.46.4(eslint@9.39.1)(typescript@5.9.3)
       vitepress:
         specifier: 2.0.0-alpha.15
-        version: 2.0.0-alpha.15(@algolia/client-search@5.46.2)(@types/node@22.19.0)(postcss@8.5.6)(react@19.2.3)(search-insights@2.17.3)(typescript@5.9.3)(yaml@2.8.1)
+        version: 2.0.0-alpha.15(@algolia/client-search@5.46.2)(@types/node@22.19.7)(postcss@8.5.6)(react@19.2.3)(search-insights@2.17.3)(typescript@5.9.3)(yaml@2.8.1)
       vitest:
         specifier: 4.0.8
-        version: 4.0.8(@types/node@22.19.0)(@vitest/ui@4.0.8)(yaml@2.8.1)
+        version: 4.0.8(@types/node@22.19.7)(@vitest/ui@4.0.8)(yaml@2.8.1)
       vue:
         specifier: 3.5.26
         version: 3.5.26(typescript@5.9.3)
@@ -974,8 +974,8 @@ packages:
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
 
-  '@types/node@22.19.0':
-    resolution: {integrity: sha512-xpr/lmLPQEj+TUnHmR+Ab91/glhJvsqcjB+yY0Ix9GO70H6Lb4FHH5GeqdOE5btAx7eIMwuHkp4H2MSkLcqWbA==}
+  '@types/node@22.19.7':
+    resolution: {integrity: sha512-MciR4AKGHWl7xwxkBa6xUGxQJ4VBOmPTF7sL+iGzuahOFaO0jHCsuEfS80pan1ef4gWId1oWOweIhrDEYLuaOw==}
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
@@ -3174,7 +3174,7 @@ snapshots:
 
   '@types/mdurl@2.0.0': {}
 
-  '@types/node@22.19.0':
+  '@types/node@22.19.7':
     dependencies:
       undici-types: 6.21.0
 
@@ -3279,10 +3279,10 @@ snapshots:
 
   '@vercel/oidc@3.0.5': {}
 
-  '@vitejs/plugin-vue@6.0.1(vite@7.3.1(@types/node@22.19.0)(yaml@2.8.1))(vue@3.5.26(typescript@5.9.3))':
+  '@vitejs/plugin-vue@6.0.1(vite@7.3.1(@types/node@22.19.7)(yaml@2.8.1))(vue@3.5.26(typescript@5.9.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-beta.29
-      vite: 7.3.1(@types/node@22.19.0)(yaml@2.8.1)
+      vite: 7.3.1(@types/node@22.19.7)(yaml@2.8.1)
       vue: 3.5.26(typescript@5.9.3)
 
   '@vitest/coverage-v8@4.0.8(vitest@4.0.8)':
@@ -3298,7 +3298,7 @@ snapshots:
       magicast: 0.5.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@22.19.0)(@vitest/ui@4.0.8)(yaml@2.8.1)
+      vitest: 4.0.8(@types/node@22.19.7)(@vitest/ui@4.0.8)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -3311,13 +3311,13 @@ snapshots:
       chai: 6.2.0
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.8(vite@7.1.4(@types/node@22.19.0)(yaml@2.8.1))':
+  '@vitest/mocker@4.0.8(vite@7.1.4(@types/node@22.19.7)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 4.0.8
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.1.4(@types/node@22.19.0)(yaml@2.8.1)
+      vite: 7.1.4(@types/node@22.19.7)(yaml@2.8.1)
 
   '@vitest/pretty-format@4.0.8':
     dependencies:
@@ -3345,7 +3345,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@22.19.0)(@vitest/ui@4.0.8)(yaml@2.8.1)
+      vitest: 4.0.8(@types/node@22.19.7)(@vitest/ui@4.0.8)(yaml@2.8.1)
 
   '@vitest/utils@4.0.8':
     dependencies:
@@ -4599,7 +4599,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite@7.1.4(@types/node@22.19.0)(yaml@2.8.1):
+  vite@7.1.4(@types/node@22.19.7)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.9
       fdir: 6.5.0(picomatch@4.0.3)
@@ -4608,11 +4608,11 @@ snapshots:
       rollup: 4.50.0
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 22.19.0
+      '@types/node': 22.19.7
       fsevents: 2.3.3
       yaml: 2.8.1
 
-  vite@7.3.1(@types/node@22.19.0)(yaml@2.8.1):
+  vite@7.3.1(@types/node@22.19.7)(yaml@2.8.1):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.3)
@@ -4621,11 +4621,11 @@ snapshots:
       rollup: 4.50.0
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 22.19.0
+      '@types/node': 22.19.7
       fsevents: 2.3.3
       yaml: 2.8.1
 
-  vitepress@2.0.0-alpha.15(@algolia/client-search@5.46.2)(@types/node@22.19.0)(postcss@8.5.6)(react@19.2.3)(search-insights@2.17.3)(typescript@5.9.3)(yaml@2.8.1):
+  vitepress@2.0.0-alpha.15(@algolia/client-search@5.46.2)(@types/node@22.19.7)(postcss@8.5.6)(react@19.2.3)(search-insights@2.17.3)(typescript@5.9.3)(yaml@2.8.1):
     dependencies:
       '@docsearch/css': 4.4.0
       '@docsearch/js': 4.4.0(@algolia/client-search@5.46.2)(react@19.2.3)(search-insights@2.17.3)
@@ -4634,7 +4634,7 @@ snapshots:
       '@shikijs/transformers': 3.21.0
       '@shikijs/types': 3.21.0
       '@types/markdown-it': 14.1.2
-      '@vitejs/plugin-vue': 6.0.1(vite@7.3.1(@types/node@22.19.0)(yaml@2.8.1))(vue@3.5.26(typescript@5.9.3))
+      '@vitejs/plugin-vue': 6.0.1(vite@7.3.1(@types/node@22.19.7)(yaml@2.8.1))(vue@3.5.26(typescript@5.9.3))
       '@vue/devtools-api': 8.0.5
       '@vue/shared': 3.5.26
       '@vueuse/core': 14.1.0(vue@3.5.26(typescript@5.9.3))
@@ -4643,7 +4643,7 @@ snapshots:
       mark.js: 8.11.1
       minisearch: 7.2.0
       shiki: 3.21.0
-      vite: 7.3.1(@types/node@22.19.0)(yaml@2.8.1)
+      vite: 7.3.1(@types/node@22.19.7)(yaml@2.8.1)
       vue: 3.5.26(typescript@5.9.3)
     optionalDependencies:
       postcss: 8.5.6
@@ -4677,10 +4677,10 @@ snapshots:
       - universal-cookie
       - yaml
 
-  vitest@4.0.8(@types/node@22.19.0)(@vitest/ui@4.0.8)(yaml@2.8.1):
+  vitest@4.0.8(@types/node@22.19.7)(@vitest/ui@4.0.8)(yaml@2.8.1):
     dependencies:
       '@vitest/expect': 4.0.8
-      '@vitest/mocker': 4.0.8(vite@7.1.4(@types/node@22.19.0)(yaml@2.8.1))
+      '@vitest/mocker': 4.0.8(vite@7.1.4(@types/node@22.19.7)(yaml@2.8.1))
       '@vitest/pretty-format': 4.0.8
       '@vitest/runner': 4.0.8
       '@vitest/snapshot': 4.0.8
@@ -4697,10 +4697,10 @@ snapshots:
       tinyexec: 0.3.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.1.4(@types/node@22.19.0)(yaml@2.8.1)
+      vite: 7.1.4(@types/node@22.19.7)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.19.0
+      '@types/node': 22.19.7
       '@vitest/ui': 4.0.8(vitest@4.0.8)
     transitivePeerDependencies:
       - jiti
