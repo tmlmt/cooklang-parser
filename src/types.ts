@@ -250,11 +250,10 @@ export interface IngredientQuantityGroup extends QuantityWithPlainUnit {
  * @category Types
  */
 export interface IngredientQuantityAndGroup {
-  type: "and";
   /**
    * The incompatible primary quantities (e.g., "1 large" and "2 small").
    */
-  entries: QuantityWithPlainUnit[];
+  and: QuantityWithPlainUnit[];
   /**
    * The summed equivalent quantities (e.g., "5 cups" from summing "1.5 cup + 2 cup + 1.5 cup").
    */
@@ -856,16 +855,14 @@ export type QuantityWithUnitLike =
  * @category Types
  */
 export interface FlatOrGroup<T = QuantityWithUnitLike> {
-  type: "or";
-  entries: T[];
+  or: T[];
 }
 /**
  * Represents an "or" group of alternative quantities that may contain nested groups (alternatives with nested structure)
  * @category Types
  */
 export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
-  type: "or";
-  entries: (T | MaybeNestedGroup<T>)[];
+  or: (T | MaybeNestedGroup<T>)[];
 }
 
 /**
@@ -873,8 +870,7 @@ export interface MaybeNestedOrGroup<T = QuantityWithUnitLike> {
  * @category Types
  */
 export interface FlatAndGroup<T = QuantityWithUnitLike> {
-  type: "and";
-  entries: T[];
+  and: T[];
 }
 
 /**
@@ -882,8 +878,7 @@ export interface FlatAndGroup<T = QuantityWithUnitLike> {
  * @category Types
  */
 export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
-  type: "and";
-  entries: (T | MaybeNestedGroup<T>)[];
+  and: (T | MaybeNestedGroup<T>)[];
 }
 
 /**

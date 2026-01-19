@@ -14,6 +14,7 @@ import { resolveUnit } from "../units/definitions";
 import { multiplyQuantityValue, getAverageValue } from "./numeric";
 import Big from "big.js";
 import {
+  isAndGroup,
   isGroup,
   isOrGroup,
   isQuantity,
@@ -43,12 +44,12 @@ export function getEquivalentUnitsLists(
 
   const OrGroups = (
     quantitiesCopy.filter(isOrGroup) as FlatOrGroup<QuantityWithExtendedUnit>[]
-  ).filter((q) => q.entries.length > 1);
+  ).filter((q) => q.or.length > 1);
 
   const unitLists: QuantityWithUnitDef[][] = [];
   const normalizeOrGroup = (og: FlatOrGroup<QuantityWithExtendedUnit>) => ({
     ...og,
-    entries: og.entries.map((q) => ({
+    or: og.or.map((q) => ({
       ...q,
       unit: resolveUnit(q.unit?.name, q.unit?.integerProtected),
     })),
@@ -84,7 +85,7 @@ export function getEquivalentUnitsLists(
         unit: resolveUnit(v.unit?.name, v.unit?.integerProtected),
       };
 
-      const commonQuantity = og.entries.find(
+      const commonQuantity = og.or.find(
         (q) => isQuantity(q) && areUnitsCompatible(q.unit, normalizedV.unit),
       );
       if (commonQuantity) {
@@ -94,7 +95,7 @@ export function getEquivalentUnitsLists(
       return acc;
     }, [] as QuantityWithUnitDef[]);
 
-    for (const newQ of og.entries) {
+    for (const newQ of og.or) {
       if (commonUnitList.some((q) => areUnitsCompatible(q.unit, newQ.unit))) {
         continue;
       } else {
@@ -106,10 +107,10 @@ export function getEquivalentUnitsLists(
 
   for (const orGroup of OrGroups) {
     const orGroupModified = normalizeOrGroup(orGroup);
-    const units = orGroupModified.entries.map((q) => q.unit);
+    const units = orGroupModified.or.map((q) => q.unit);
     const linkIndex = findLinkIndexForUnits(unitLists, units);
     if (linkIndex === -1) {
-      unitLists.push(orGroupModified.entries);
+      unitLists.push(orGroupModified.or);
     } else {
       mergeOrGroupIntoList(unitLists, linkIndex, orGroupModified);
     }
@@ -238,7 +239,7 @@ export function reduceOrsToFirstEquivalent(
     // Now, q is necessarily an OR group
     // We normalize units and sort them to get integerProtected elements first, then no units, then the rest
     const qListModified = sortUnitList(
-      q.entries.map((qq) => ({
+      q.or.map((qq) => ({
         ...qq,
         unit: resolveUnit(qq.unit?.name, qq.unit?.integerProtected),
       })),
@@ -298,14 +299,18 @@ export function addQuantitiesOrGroups(
   if (sum.length === 1) {
     return { sum: sum[0]!, unitsLists };
   }
-  return { sum: { type: "and", entries: sum }, unitsLists };
+  return { sum: { and: sum }, unitsLists };
 }
 
 export function regroupQuantitiesAndExpandEquivalents(
   sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>,
   unitsLists: QuantityWithUnitDef[][],
 ): (QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>)[] {
-  const sumQuantities = isGroup(sum) ? sum.entries : [sum];
+  const sumQuantities = isGroup(sum)
+    ? isAndGroup(sum)
+      ? sum.and
+      : sum.or
+    : [sum];
   const result: (
     | QuantityWithExtendedUnit
     | MaybeNestedOrGroup<QuantityWithExtendedUnit>
@@ -363,13 +368,11 @@ export function regroupQuantitiesAndExpandEquivalents(
         | FlatAndGroup<QuantityWithExtendedUnit> =
         main.length > 1
           ? {
-              type: "and",
-              entries: main.map(deNormalizeQuantity),
+              and: main.map(deNormalizeQuantity),
             }
           : deNormalizeQuantity(main[0]!);
       result.push({
-        type: "or",
-        entries: [resultMain, ...equivalents],
+        or: [resultMain, ...equivalents],
       });
     }
     // Processing a UnitList with only 1 quantity is purely theoretical and won't happen in practice
@@ -402,6 +405,6 @@ export function addEquivalentsAndSimplify(
   if (regrouped.length === 1) {
     return toPlainUnit(regrouped[0]!);
   } else {
-    return { type: "and", entries: regrouped.map(toPlainUnit) };
+    return { and: regrouped.map(toPlainUnit) };
   }
 }

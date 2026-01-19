@@ -669,7 +669,7 @@ export class Recipe {
             | FlatOrGroup<QuantityWithExtendedUnit> =
             allQuantities.length === 1
               ? allQuantities[0]!
-              : { type: "or", entries: allQuantities };
+              : { or: allQuantities };
 
           // Check if this ingredient item has alternatives (inline or grouped)
           const hasInlineAlternatives = item.alternatives.length > 1;
@@ -789,7 +789,7 @@ export class Recipe {
                     ];
                     group.alternativeQuantities
                       .get(ref.index)!
-                      .push({ type: "or", entries });
+                      .push({ or: entries });
                   } else {
                     group.alternativeQuantities.get(ref.index)!.push(
                       toExtendedUnit({
@@ -842,7 +842,7 @@ export class Recipe {
                   return [item];
                 } else {
                   // AND group: return entries (could also include equivalents if needed)
-                  return item.entries;
+                  return item.and;
                 }
               });
             }
@@ -852,11 +852,10 @@ export class Recipe {
 
         // Add quantity groups with alternatives
         for (const gq of groupQuantities) {
-          if ("type" in gq && gq.type === "and") {
+          if ("and" in gq) {
             // AND group
             const andGroup: IngredientQuantityAndGroup = {
-              type: "and",
-              entries: gq.entries,
+              and: gq.and,
             };
             if (gq.equivalents && gq.equivalents.length > 0) {
               andGroup.equivalents = gq.equivalents;
@@ -962,8 +961,7 @@ export class Recipe {
                   allQuantities.length === 1
                     ? allQuantities[0]!
                     : {
-                        type: "or",
-                        entries: allQuantities,
+                        or: allQuantities,
                       };
                 ingredientQuantities.set(alternative.index, [
                   ...(ingredientQuantities.get(alternative.index) || []),

@@ -11,13 +11,13 @@ import type {
 
 // Helper type-checks (as before)
 export function isGroup(x: QuantityWithUnitLike | Group): x is Group {
-  return x && "type" in x;
+  return "and" in x || "or" in x;
 }
 export function isOrGroup(x: QuantityWithUnitLike | Group): x is OrGroup {
-  return isGroup(x) && x.type === "or";
+  return isGroup(x) && "or" in x;
 }
 export function isAndGroup(x: QuantityWithUnitLike | Group): x is AndGroup {
-  return isGroup(x) && x.type === "and";
+  return isGroup(x) && "and" in x;
 }
 export function isQuantity(
   x: QuantityWithUnitLike | Group,

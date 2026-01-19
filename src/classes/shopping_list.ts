@@ -81,7 +81,7 @@ export class ShoppingList {
       const quantityTotalExtended = extendAllUnits(quantityTotal);
       const newQuantities = (
         isAndGroup(quantityTotalExtended)
-          ? quantityTotalExtended.entries
+          ? quantityTotalExtended.and
           : [quantityTotalExtended]
       ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
       const existing = this.ingredients.find((i) => i.name === name);
@@ -97,7 +97,7 @@ export class ShoppingList {
           );
           const existingQuantities = (
             isAndGroup(existingQuantityTotalExtended)
-              ? existingQuantityTotalExtended.entries
+              ? existingQuantityTotalExtended.and
               : [existingQuantityTotalExtended]
           ) as (
             | QuantityWithExtendedUnit

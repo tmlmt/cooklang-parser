@@ -1992,8 +1992,7 @@ Another step.
         usedAsPrimary: true,
         quantities: [
           {
-            type: "and",
-            entries: [
+            and: [
               {
                 quantity: {
                   type: "fixed",

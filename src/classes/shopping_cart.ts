@@ -250,7 +250,7 @@ export class ShoppingCart {
       selection: ProductSelection[] = [],
     ): ProductSelection[] {
       if (isAndGroup(normalizedQuantities)) {
-        for (const q of normalizedQuantities.entries) {
+        for (const q of normalizedQuantities.and) {
           const result = getOptimumMatchForQuantityParts(
             q,
             normalizedOptions,
@@ -260,7 +260,7 @@ export class ShoppingCart {
         }
       } else {
         const alternativeUnitsOfQuantity = isOrGroup(normalizedQuantities)
-          ? (normalizedQuantities as FlatOrGroup<QuantityWithUnitDef>).entries
+          ? (normalizedQuantities as FlatOrGroup<QuantityWithUnitDef>).or
           : [normalizedQuantities];
         const solutions: ProductSelection[][] = [];
         const errors = new Set<NoProductMatchErrorCode>();

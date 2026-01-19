@@ -78,8 +78,7 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients.find((i) => i.name === "eggs")).toEqual({
         name: "eggs",
         quantityTotal: {
-          type: "and",
-          entries: [
+          and: [
             {
               quantity: {
                 type: "fixed",
@@ -149,8 +148,7 @@ describe("ShoppingList", () => {
         {
           name: "pepper",
           quantityTotal: {
-            type: "and",
-            entries: [
+            and: [
               {
                 quantity: {
                   type: "fixed",
@@ -503,8 +501,7 @@ sugar
           {
             name: "pepper",
             quantityTotal: {
-              type: "and",
-              entries: [
+              and: [
                 {
                   quantity: {
                     type: "fixed",
