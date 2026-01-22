@@ -23,6 +23,7 @@ After:
 {
     or: [ ... ] // or and: [ ... ]
 }
+```
 
 ### 🚀 Enhancements
 
