@@ -364,6 +364,61 @@ describe("ShoppingList", () => {
         },
       ]);
     });
+
+    it("should handle ingredients with AND groups in quantities", () => {
+      // Recipe with incompatible units that form AND groups (large + small with cup equivalents)
+      const recipeWithAndGroups = new Recipe(`
+Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
+`);
+      const shoppingList = new ShoppingList();
+      shoppingList.add_recipe(recipeWithAndGroups);
+      // Potato should have quantities combined from the AND group
+      const potato = shoppingList.ingredients.find((i) => i.name === "potato");
+      expect(potato).toBeDefined();
+      // The AND group (1 large + 1 small) with equivalents (1.5 cup + 0.5 cup = 2 cup) should be processed
+      expect(potato?.quantityTotal).toBeDefined();
+    });
+
+    it("should throw an error when adding a recipe with inline alternatives without choices", () => {
+      const shoppingList = new ShoppingList();
+      // recipeAlt has inline alternatives (ingredient-item-0)
+      expect(() => shoppingList.add_recipe(recipeAlt)).toThrowError(
+        /Recipe has unresolved alternatives.*ingredientItems.*ingredient-item-0/,
+      );
+    });
+
+    it("should throw an error when adding a recipe with grouped alternatives without choices", () => {
+      const shoppingList = new ShoppingList();
+      const recipeWithGroups = new Recipe(`
+Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
+`);
+      expect(() => shoppingList.add_recipe(recipeWithGroups)).toThrowError(
+        /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
+      );
+    });
+
+    it("should accept grouped alternatives with proper choices", () => {
+      const shoppingList = new ShoppingList();
+      const recipeWithGroups = new Recipe(`
+Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
+`);
+      const choices = {
+        ingredientGroups: new Map([["milk", 1]]), // Choose almond milk (index 1)
+      };
+      shoppingList.add_recipe(recipeWithGroups, { choices });
+      expect(shoppingList.ingredients).toEqual([
+        {
+          name: "almond milk",
+          quantityTotal: {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "ml",
+          },
+        },
+      ]);
+    });
   });
 
   describe("Association with CategoryConfig", () => {
