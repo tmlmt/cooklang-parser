@@ -16,7 +16,7 @@ export default defineConfig({
       { text: "Guide", link: "/guide-cooklang-specs" },
       { text: "API", link: "/api/classes/Recipe" },
       { text: "Examples", link: "/examples-scaling-recipes" },
-      { text: "Playground", link: "../playground/", target: "_self" },
+      { text: "Playground", link: "/../playground/", target: "_self" },
       {
         text: fullVersion,
         items: [
