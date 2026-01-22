@@ -301,28 +301,6 @@ export interface Ingredient {
 }
 
 /**
- * Represents a computed ingredient with its total quantity after applying choices.
- * Used as the return type of {@link Recipe.calc_ingredient_quantities}.
- * @category Types
- */
-export interface ComputedIngredient {
-  /** The name of the ingredient. */
-  name: string;
-  /** The total quantity of the ingredient after applying choices. */
-  quantityTotal?:
-    | QuantityWithPlainUnit
-    | MaybeNestedGroup<QuantityWithPlainUnit>;
-  /** The preparation of the ingredient. */
-  preparation?: string;
-  /** The list of ingredients mentioned in the preparation as alternatives to this ingredient */
-  alternatives?: Set<number>;
-  /** A list of potential state modifiers or other flags for the ingredient */
-  flags?: IngredientFlag[];
-  /** The collection of potential additional metadata for the ingredient */
-  extras?: IngredientExtras;
-}
-
-/**
  * Represents a contributor to an ingredient's total quantity, corresponding
  * to a single mention in the recipe text. It can contain multiple
  * equivalent quantities (e.g., in different units).
@@ -614,10 +592,12 @@ export type AddedRecipeOptions = {
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<
-  ComputedIngredient,
-  "name" | "quantityTotal"
->;
+export type AddedIngredient = Pick<Ingredient, "name"> & {
+  /** The total quantity of the ingredient after applying choices. */
+  quantityTotal?:
+    | QuantityWithPlainUnit
+    | MaybeNestedGroup<QuantityWithPlainUnit>;
+};
 
 /**
  * Represents an ingredient in a category.
