@@ -223,10 +223,6 @@
       "syntaxKind": "modifier"
     },
     {
-      "tagName": "@jsx",
-      "syntaxKind": "block"
-    },
-    {
       "tagName": "@summary",
       "syntaxKind": "block"
     },
