@@ -40,7 +40,7 @@
   "devDependencies": {
     "@eslint/compat": "1.4.1",
     "@eslint/js": "9.39.1",
-    "@iconify-json/material-symbols": "1.2.44",
+    "@iconify-json/material-symbols": "1.2.53",
     "@types/big.js": "6.2.2",
     "@types/node": "22.19.0",
     "@vitest/coverage-v8": "4.0.8",
