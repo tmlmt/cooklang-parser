@@ -242,13 +242,13 @@ export function isAlternativeSelected(
 ): boolean {
   // Grouped alternatives: check ingredientGroups map
   if (item.group) {
-    // Get the selected index in the group (default to 0)
+    // Get the selected index in the group
     const selectedIndex = choices?.ingredientGroups?.get(item.group);
     // Get the alternatives array for this group
     const groupAlternatives = recipe.choices.ingredientGroups.get(item.group);
     if (
       groupAlternatives &&
-      selectedIndex &&
+      selectedIndex !== undefined &&
       selectedIndex < groupAlternatives.length
     ) {
       // Check if the selected alternative's itemId matches this item's id

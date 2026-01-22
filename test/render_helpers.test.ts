@@ -337,4 +337,22 @@ describe("isAlternativeSelected", () => {
     expect(isAlternativeSelected(recipe, {}, item0)).toBe(false);
     expect(isAlternativeSelected(recipe, {}, item1)).toBe(false);
   });
+
+  it("should return true for first grouped alternative when selected index is 0", () => {
+    const recipe = new Recipe(recipeWithGroupedAlternatives);
+    const choicesGrouped: RecipeChoices = {
+      ingredientGroups: new Map([
+        ["milk", 0], // Select first (index 0) alternative in group
+      ]),
+    };
+    const step = recipe.sections[0]!.content[0] as Step;
+    const item0 = step.items.find(
+      (i) => i.type === "ingredient" && i.id === "ingredient-item-0",
+    ) as IngredientItem;
+    const item1 = step.items.find(
+      (i) => i.type === "ingredient" && i.id === "ingredient-item-1",
+    ) as IngredientItem;
+    expect(isAlternativeSelected(recipe, choicesGrouped, item0)).toBe(true);
+    expect(isAlternativeSelected(recipe, choicesGrouped, item1)).toBe(false);
+  });
 });
