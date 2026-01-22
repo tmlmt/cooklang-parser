@@ -430,12 +430,14 @@ describe("parse function", () => {
         ],
         usedAsPrimary: true,
       });
-      // calc_ingredient_quantities returns the same result
-      const computed = result.calc_ingredient_quantities();
-      expect(computed[0]!.quantityTotal).toEqual({
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
-        unit: "g",
-      });
+      // getIngredientQuantities returns the same result
+      const ingredients = result.getIngredientQuantities();
+      expect(ingredients[0]!.quantities).toEqual([
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+          unit: "g",
+        },
+      ]);
     });
 
     it("should keep track of individual quantities in the preparation steps", () => {
@@ -881,7 +883,10 @@ Another step.
 > on multiple lines starting with >
 > for readability
 
-> A final note.
+> Another note.
+= Section directly after note
+
+> A final note at the end of the recipe.
 `;
     const result = new Recipe(recipeWithNotes);
     expect(result.sections).toMatchSnapshot();
@@ -2161,10 +2166,10 @@ Another step.
 
     it("parses notes containing arbitrary scalable quantities correctly", () => {
       const recipe = `
-        > This is a note with an arbitrary quantity {{3%tbsp}} inside
+        > This is a note with an arbitrary quantity {{3%tbsp}} inside and actually {{2}}
       `;
       const result = new Recipe(recipe);
-      expect(result.arbitraries).toHaveLength(1);
+      expect(result.arbitraries).toHaveLength(2);
       expect(result.arbitraries[0]).toEqual({
         quantity: {
           type: "fixed",
@@ -2172,13 +2177,20 @@ Another step.
         },
         unit: "tbsp",
       });
+      expect(result.arbitraries[1]).toEqual({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 2 },
+        },
+      });
       const note = result.sections[0]?.content[0] as Note;
       expect(note).toEqual({
         type: "note",
         items: [
           { type: "text", value: "This is a note with an arbitrary quantity " },
           { type: "arbitrary", index: 0 },
-          { type: "text", value: " inside" },
+          { type: "text", value: " inside and actually " },
+          { type: "arbitrary", index: 1 },
         ],
       });
     });

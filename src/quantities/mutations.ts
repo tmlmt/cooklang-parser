@@ -9,6 +9,7 @@ import type {
   QuantityWithExtendedUnit,
   QuantityWithUnitDef,
   MaybeNestedGroup,
+  MaybeNestedAndGroup,
 } from "../types";
 import {
   units,
@@ -52,6 +53,15 @@ export function normalizeAllUnits(
       quantity: q.quantity,
       unit: resolveUnit(q.unit),
     };
+    // If the quantity has equivalents, convert them to an OR group
+    if (q.equivalents && q.equivalents.length > 0) {
+      const equivalentsNormalized = q.equivalents.map((eq) =>
+        normalizeAllUnits(eq),
+      );
+      return {
+        or: [newQ, ...equivalentsNormalized] as QuantityWithUnitDef[],
+      };
+    }
     return newQ;
   }
 }
@@ -250,23 +260,18 @@ export function toExtendedUnit(
 ): MaybeNestedGroup<QuantityWithExtendedUnit>;
 export function toExtendedUnit(
   q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit>;
+export function toExtendedUnit(
+  q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
 ): QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit> {
   if (isQuantity(q)) {
     return q.unit
       ? { ...q, unit: { name: q.unit } }
       : (q as QuantityWithExtendedUnit);
   } else if (isOrGroup(q)) {
-    return {
-      or: q.or.map((entry) =>
-        isQuantity(entry) ? toExtendedUnit(entry) : toExtendedUnit(entry),
-      ),
-    };
+    return { or: q.or.map(toExtendedUnit) };
   } else {
-    return {
-      and: q.and.map((entry) =>
-        isQuantity(entry) ? toExtendedUnit(entry) : toExtendedUnit(entry),
-      ),
-    };
+    return { and: q.and.map(toExtendedUnit) };
   }
 }
 
@@ -305,16 +310,17 @@ export const flattenPlainUnitGroup = (
     if (andGroupEntry) {
       // Nested OR-with-AND case: AND group of primaries + equivalents
       const andEntries: QuantityWithPlainUnit[] = [];
-      const addGroupEntryContent = isAndGroup(andGroupEntry)
-        ? andGroupEntry.and
-        : andGroupEntry.or;
+      // Double casting due to:
+      // - Nested ORs are flattened already
+      // - Double nesting is not possible in this context
+      const addGroupEntryContent = (
+        andGroupEntry as MaybeNestedAndGroup<QuantityWithPlainUnit>
+      ).and as QuantityWithPlainUnit[];
       for (const entry of addGroupEntryContent) {
-        if (isQuantity(entry)) {
-          andEntries.push({
-            quantity: entry.quantity,
-            unit: entry.unit,
-          });
-        }
+        andEntries.push({
+          quantity: entry.quantity,
+          ...(entry.unit && { unit: entry.unit }),
+        });
       }
 
       // The other entries in the OR group are the equivalents
@@ -359,26 +365,23 @@ export const flattenPlainUnitGroup = (
     // AND group: check if entries have OR groups (equivalents that can be extracted)
     const andEntries: QuantityWithPlainUnit[] = [];
     const equivalentsList: QuantityWithPlainUnit[] = [];
-
     for (const entry of summed.and) {
+      // Double-nesting is not possible in this context
+      // v8 ignore else -- @preserve
       if (isOrGroup(entry)) {
         // This entry has equivalents: first is primary, rest are equivalents
-        const orEntries = entry.or.filter((e): e is QuantityWithPlainUnit =>
-          isQuantity(e),
-        );
-        if (orEntries.length > 0) {
-          andEntries.push({
-            quantity: orEntries[0]!.quantity,
-            unit: orEntries[0]!.unit,
-          });
-          // Collect equivalents for later merging
-          equivalentsList.push(...orEntries.slice(1));
-        }
+        const orEntries = entry.or as QuantityWithPlainUnit[];
+        andEntries.push({
+          quantity: orEntries[0]!.quantity,
+          ...(orEntries[0]!.unit && { unit: orEntries[0]!.unit }),
+        });
+        // Collect equivalents for later merging
+        equivalentsList.push(...orEntries.slice(1));
       } else if (isQuantity(entry)) {
         // Simple quantity, no equivalents
         andEntries.push({
           quantity: entry.quantity,
-          unit: entry.unit,
+          ...(entry.unit && { unit: entry.unit }),
         });
       }
     }
@@ -402,6 +405,8 @@ export const flattenPlainUnitGroup = (
     return [result];
   } else {
     // Simple QuantityWithPlainUnit
-    return [{ quantity: summed.quantity, unit: summed.unit }];
+    return [
+      { quantity: summed.quantity, ...(summed.unit && { unit: summed.unit }) },
+    ];
   }
 };

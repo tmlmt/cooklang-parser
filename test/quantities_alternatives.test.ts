@@ -228,6 +228,7 @@ describe("regroupQuantitiesAndExpandEquivalents", () => {
       q(1, "kg"),
     ]);
   });
+
   it("does not process more unit lists if a match has been found", () => {
     const sum = qWithUnitDef(4, "large");
     const unitsLists: QuantityWithUnitDef[][] = [
@@ -243,7 +244,6 @@ describe("regroupQuantitiesAndExpandEquivalents", () => {
       { or: [q(4, "large"), q(6, "small"), q(2, NO_UNIT), q(3, "cup")] },
     ]);
   });
-  it("adds units to the same ");
 });
 
 describe("addEquivalentsAndSimplify", () => {

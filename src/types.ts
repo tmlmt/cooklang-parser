@@ -1,4 +1,5 @@
 import type { Recipe } from "./classes/recipe";
+import { Section } from "./classes/section";
 
 /**
  * Represents the metadata of a recipe.
@@ -406,6 +407,28 @@ export interface RecipeChoices {
   ingredientItems?: Map<string, number>;
   /** Map of choices that can be made for Grouped Ingredient StepItem's */
   ingredientGroups?: Map<string, number>;
+}
+
+/**
+ * Options for the {@link Recipe.getIngredientQuantities | getIngredientQuantities()} method.
+ * @category Types
+ */
+export interface GetIngredientQuantitiesOptions {
+  /**
+   * Filter ingredients to only those appearing in a specific section.
+   * Can be a Section object or section index (0-based).
+   */
+  section?: Section | number;
+  /**
+   * Filter ingredients to only those appearing in a specific step.
+   * Can be a Step object or step index (0-based within the section, or global if no section specified).
+   */
+  step?: Step | number;
+  /**
+   * The choices to apply when computing quantities.
+   * If not provided, uses primary alternatives (index 0 for all).
+   */
+  choices?: RecipeChoices;
 }
 
 /**

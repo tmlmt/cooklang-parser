@@ -7,7 +7,6 @@ import type {
   FlatOrGroup,
   MaybeNestedOrGroup,
   FlatAndGroup,
-  FlatGroup,
   MaybeNestedGroup,
 } from "../types";
 import { resolveUnit } from "../units/definitions";
@@ -15,7 +14,6 @@ import { multiplyQuantityValue, getAverageValue } from "./numeric";
 import Big from "big.js";
 import {
   isAndGroup,
-  isGroup,
   isOrGroup,
   isQuantity,
   isValueIntegerLike,
@@ -255,7 +253,7 @@ export function addQuantitiesOrGroups(
     | FlatOrGroup<QuantityWithExtendedUnit>
   )[]
 ): {
-  sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>;
+  sum: QuantityWithUnitDef | FlatAndGroup<QuantityWithUnitDef>;
   unitsLists: QuantityWithUnitDef[][];
 } {
   if (quantities.length === 0)
@@ -303,14 +301,10 @@ export function addQuantitiesOrGroups(
 }
 
 export function regroupQuantitiesAndExpandEquivalents(
-  sum: QuantityWithUnitDef | FlatGroup<QuantityWithUnitDef>,
+  sum: QuantityWithUnitDef | FlatAndGroup<QuantityWithUnitDef>,
   unitsLists: QuantityWithUnitDef[][],
 ): (QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>)[] {
-  const sumQuantities = isGroup(sum)
-    ? isAndGroup(sum)
-      ? sum.and
-      : sum.or
-    : [sum];
+  const sumQuantities = isAndGroup(sum) ? sum.and : [sum];
   const result: (
     | QuantityWithExtendedUnit
     | MaybeNestedOrGroup<QuantityWithExtendedUnit>

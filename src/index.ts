@@ -1,3 +1,5 @@
+// Classes
+
 import { CategoryConfig } from "./classes/category_config";
 import { ProductCatalog } from "./classes/product_catalog";
 import { Recipe } from "./classes/recipe";
@@ -17,6 +19,8 @@ export {
   ShoppingCart,
   Section,
 };
+
+// Types
 
 import type {
   Metadata,
@@ -82,6 +86,7 @@ import type {
   AlternativeIngredientRef,
   RecipeChoices,
   RecipeAlternatives,
+  GetIngredientQuantitiesOptions,
 } from "./types";
 
 export {
@@ -150,7 +155,10 @@ export {
   AlternativeIngredientRef,
   RecipeChoices,
   RecipeAlternatives,
+  GetIngredientQuantitiesOptions,
 };
+
+// Errors
 
 import {
   NoProductCatalogForCartError,

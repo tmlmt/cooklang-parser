@@ -785,6 +785,18 @@ describe("flattenPlainUnitGroup", () => {
       },
     ]);
   });
+
+  it("should return simple quantity without unit", () => {
+    const input: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+    };
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+      },
+    ]);
+  });
+
   it("should flatten an OR group to one with equivalents", () => {
     const input: FlatOrGroup<QuantityWithPlainUnit> = {
       or: [
@@ -814,6 +826,7 @@ describe("flattenPlainUnitGroup", () => {
       },
     ]);
   });
+
   it("should flatten an AND group to separate entries", () => {
     const input: FlatAndGroup<QuantityWithPlainUnit> = {
       and: [
@@ -838,6 +851,124 @@ describe("flattenPlainUnitGroup", () => {
       },
     ]);
   });
+
+  it("should flatten an AND group with OR entries (entries with equivalents)", () => {
+    // This tests lines 375-384: AND group where entries are OR groups
+    // We need to use 'as unknown as' because the type system doesn't allow this directly
+    // but the function handles it at runtime
+    const input = {
+      and: [
+        {
+          or: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "cups",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 500 },
+              },
+              unit: "mL",
+            },
+          ],
+        },
+        {
+          or: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "tbsp",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 15 },
+              },
+              unit: "bips",
+            },
+          ],
+        },
+      ],
+    } as unknown as FlatAndGroup<QuantityWithPlainUnit>;
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        and: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
+            },
+            unit: "cups",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "tbsp",
+          },
+        ],
+        equivalents: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 500 },
+            },
+            unit: "mL",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 15 },
+            },
+            unit: "bips",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("should flatten an OR group containing an AND group without equivalents", () => {
+    const input = {
+      or: [
+        {
+          and: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "large",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "small",
+            },
+          ],
+        },
+      ],
+    } as unknown as FlatOrGroup<QuantityWithPlainUnit>;
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: "large",
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: "small",
+      },
+    ]);
+  });
+
   it("should flatten a nested OR group with only one entry", () => {
     const input: FlatOrGroup<QuantityWithPlainUnit> = {
       or: [

@@ -195,7 +195,6 @@ Recipe {
               "type": "decimal",
             },
           },
-          "unit": undefined,
         },
       ],
       "usedAsPrimary": true,
@@ -245,7 +244,6 @@ Recipe {
               "type": "decimal",
             },
           },
-          "unit": undefined,
         },
       ],
       "usedAsPrimary": true,
@@ -428,7 +426,6 @@ Recipe {
               "type": "decimal",
             },
           },
-          "unit": undefined,
         },
       ],
       "usedAsPrimary": true,
@@ -1431,13 +1428,27 @@ exports[`parse function > parses notes correctly 1`] = `
         "items": [
           {
             "type": "text",
-            "value": "A final note.",
+            "value": "Another note.",
           },
         ],
         "type": "note",
       },
     ],
     "name": "",
+  },
+  Section {
+    "content": [
+      {
+        "items": [
+          {
+            "type": "text",
+            "value": "A final note at the end of the recipe.",
+          },
+        ],
+        "type": "note",
+      },
+    ],
+    "name": "Section directly after note",
   },
 ]
 `;

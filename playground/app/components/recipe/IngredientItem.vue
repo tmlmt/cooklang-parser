@@ -31,7 +31,7 @@ function getIngredientName(index: number): string {
 function isAndGroup(
   entry: IngredientQuantityEntry,
 ): entry is IngredientQuantityAndGroup {
-  return "type" in entry && entry.type === "and";
+  return "and" in entry;
 }
 
 /**
@@ -173,7 +173,7 @@ const displayMode = computed<DisplayMode>(() => {
       {{ optionalPrefix }}
       <template v-if="isAndGroup(displayMode.entry)">
         <span>
-          <template v-for="(qty, idx) in displayMode.entry.entries" :key="idx">
+          <template v-for="(qty, idx) in displayMode.entry.and" :key="idx">
             <template v-if="idx > 0"> + </template>
             <RecipeQuantityWithEquivalents
               :quantity="qty.quantity"
@@ -244,7 +244,7 @@ const displayMode = computed<DisplayMode>(() => {
     <template v-else-if="displayMode.type === 'and-group'">
       {{ optionalPrefix }}
       <span>
-        <template v-for="(qty, idx) in displayMode.entry.entries" :key="idx">
+        <template v-for="(qty, idx) in displayMode.entry.and" :key="idx">
           <template v-if="idx > 0"> + </template>
           <RecipeQuantityWithEquivalents
             :quantity="qty.quantity"
@@ -286,7 +286,7 @@ const displayMode = computed<DisplayMode>(() => {
           <!-- Render AND group entry -->
           <template v-if="isAndGroup(entry)">
             <span>
-              <template v-for="(qty, qtyIdx) in entry.entries" :key="qtyIdx">
+              <template v-for="(qty, qtyIdx) in entry.and" :key="qtyIdx">
                 <template v-if="qtyIdx > 0"> + </template>
                 <RecipeQuantityWithEquivalents
                   :quantity="qty.quantity"
