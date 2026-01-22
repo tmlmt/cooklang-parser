@@ -247,14 +247,10 @@ export interface IngredientQuantityGroup extends QuantityWithPlainUnit {
 
 /**
  * Represents an AND group of quantities when primary units are incompatible but equivalents can be summed.
- * For example: 1 large carrot + 2 small carrots, both with cup equivalents that sum to 5 cups.
+ * For example: 1 large carrot + 2 small carrots, both with cup equivalents (resp. 2 cup and 1.5 cup) that sum to 5 cups.
  * @category Types
  */
-export interface IngredientQuantityAndGroup {
-  /**
-   * The incompatible primary quantities (e.g., "1 large" and "2 small").
-   */
-  and: QuantityWithPlainUnit[];
+export interface IngredientQuantityAndGroup extends FlatAndGroup<QuantityWithPlainUnit> {
   /**
    * The summed equivalent quantities (e.g., "5 cups" from summing "1.5 cup + 2 cup + 1.5 cup").
    */
