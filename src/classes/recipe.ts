@@ -98,8 +98,7 @@ export class Recipe {
    */
   metadata: Metadata = {};
   /**
-   * The default or manual choice of alternative ingredients.
-   * Contains the full context including alternatives list and active selection index.
+   * The possible choices of alternative ingredients for this recipe.
    */
   choices: RecipeAlternatives = {
     ingredientItems: new Map(),
