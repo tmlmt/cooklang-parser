@@ -20,6 +20,12 @@ export {
   Section,
 };
 
+// Helpers
+
+import { isAlternativeSelected } from "./utils/render_helpers";
+
+export { isAlternativeSelected };
+
 // Types
 
 import type {
