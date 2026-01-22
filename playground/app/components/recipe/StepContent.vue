@@ -2,40 +2,22 @@
 import type {
   Recipe,
   Step,
-  Timer,
   IngredientAlternative,
-  IngredientItemQuantity,
-  QuantityWithPlainUnit,
-  ArbitraryScalable,
   RecipeChoices,
   IngredientItem,
+  IngredientItemQuantity,
+  QuantityWithPlainUnit,
 } from "cooklang-parser";
-import { isAlternativeSelected } from "cooklang-parser";
+import {
+  isAlternativeSelected,
+  isGroupedItem,
+} from "cooklang-parser";
 
 const props = defineProps<{
   step: Step;
   recipe: Recipe;
   choices?: RecipeChoices;
 }>();
-
-/**
- * Convert IngredientItemQuantity equivalents to QuantityWithPlainUnit array
- */
-function toPlainEquivalents(
-  itemQty: IngredientItemQuantity,
-): QuantityWithPlainUnit[] | undefined {
-  return itemQty.equivalents?.map((eq) => ({
-    quantity: eq.quantity,
-    unit: eq.unit?.name,
-  }));
-}
-
-/**
- * Check if this is a grouped alternative (vs inline)
- */
-function isGroupedItem(item: IngredientItem): boolean {
-  return item.group !== undefined;
-}
 
 /**
  * For inline alternatives: check if a choice has been made for this item
@@ -62,6 +44,18 @@ function isGroupedItemSelected(item: IngredientItem): boolean {
 }
 
 /**
+ * Convert IngredientItemQuantity equivalents to a QuantityWithPlainUnit array.
+ */
+function toPlainEquivalents(
+  itemQuantity: IngredientItemQuantity,
+): QuantityWithPlainUnit[] | undefined {
+  return itemQuantity.equivalents?.map((eq) => ({
+    quantity: eq.quantity,
+    unit: eq.unit?.name,
+  }));
+}
+
+/**
  * Get visible alternatives for an inline item based on choices
  * Returns all alternatives if no choice made, otherwise only the selected one
  */
@@ -83,27 +77,6 @@ function getVisibleAlternatives(
         originalIndex,
       ),
     );
-}
-
-/**
- * Get the cookware by index
- */
-function getCookware(index: number) {
-  return props.recipe.cookware[index];
-}
-
-/**
- * Get the timer by index
- */
-function getTimer(index: number): Timer | undefined {
-  return props.recipe.timers[index];
-}
-
-/**
- * Get the arbitrary scalable by index
- */
-function getArbitrary(index: number): ArbitraryScalable | undefined {
-  return props.recipe.arbitraries[index];
 }
 </script>
 
@@ -185,26 +158,26 @@ function getArbitrary(index: number): ArbitraryScalable | undefined {
       </template>
       <template v-else-if="item.type === 'cookware'">
         <span class="font-medium text-blue-600 dark:text-blue-300">{{
-          getCookware(item.index)?.name
+          props.recipe.cookware[item.index]?.name
         }}</span>
       </template>
       <template v-else-if="item.type === 'timer'">
         <RecipeTimerItem
-          v-if="getTimer(item.index)"
-          :timer="getTimer(item.index)!"
+          v-if="props.recipe.timers[item.index]"
+          :timer="props.recipe.timers[item.index]!"
         />
       </template>
       <template v-else-if="item.type === 'arbitrary'">
         <span
-          v-if="getArbitrary(item.index)"
+          v-if="props.recipe.arbitraries[item.index]"
           class="font-medium text-purple-600 dark:text-purple-400"
         >
           <RecipeSingleQuantity
-            :quantity="getArbitrary(item.index)!.quantity"
-            :unit="getArbitrary(item.index)!.unit"
+            :quantity="props.recipe.arbitraries[item.index]!.quantity"
+            :unit="props.recipe.arbitraries[item.index]!.unit"
           />
-          <template v-if="getArbitrary(item.index)!.name">
-            {{ " " }}{{ getArbitrary(item.index)!.name }}
+          <template v-if="props.recipe.arbitraries[item.index]!.name">
+            {{ " " }}{{ props.recipe.arbitraries[item.index]!.name }}
           </template>
         </span>
       </template>

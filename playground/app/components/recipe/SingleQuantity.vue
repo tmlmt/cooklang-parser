@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { FixedValue, Range } from "cooklang-parser";
-
-const { formatQuantityWithUnit } = useQuantityFormat();
+import { formatQuantityWithUnit } from "cooklang-parser";
 
 const props = defineProps<{
   quantity?: FixedValue | Range;

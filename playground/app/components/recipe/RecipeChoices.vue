@@ -4,8 +4,7 @@ import type {
   RecipeChoices,
   IngredientAlternative,
 } from "cooklang-parser";
-
-const { formatItemQuantity } = useQuantityFormat();
+import { formatItemQuantity } from "cooklang-parser";
 
 const props = defineProps<{
   recipe: Recipe;

@@ -5,6 +5,7 @@ import type {
   IngredientQuantityAndGroup,
   AlternativeIngredientRef,
 } from "cooklang-parser";
+import { isAndGroup, isSimpleGroup, hasAlternatives } from "cooklang-parser";
 
 type IngredientQuantityEntry =
   | IngredientQuantityGroup
@@ -23,39 +24,6 @@ const optionalPrefix = computed(() => (props.isOptional ? "(optional) " : ""));
  */
 function getIngredientName(index: number): string {
   return props.ingredients[index]?.name ?? "unknown";
-}
-
-/**
- * Type guard: checks if entry is an AND group (incompatible primaries with shared equivalents)
- */
-function isAndGroup(
-  entry: IngredientQuantityEntry,
-): entry is IngredientQuantityAndGroup {
-  return "and" in entry;
-}
-
-/**
- * Type guard: checks if entry is a simple group with a single quantity
- */
-function isSimpleGroup(
-  entry: IngredientQuantityEntry,
-): entry is IngredientQuantityGroup {
-  return "quantity" in entry;
-}
-
-/**
- * Checks if an entry has alternatives
- */
-function hasAlternatives(
-  entry: IngredientQuantityEntry,
-): entry is IngredientQuantityEntry & {
-  alternatives: AlternativeIngredientRef[];
-} {
-  return (
-    "alternatives" in entry &&
-    Array.isArray(entry.alternatives) &&
-    entry.alternatives.length > 0
-  );
 }
 
 /**

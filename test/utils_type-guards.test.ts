@@ -6,15 +6,19 @@ import type {
   OrGroup,
   QuantityWithPlainUnit,
   Range,
+  IngredientQuantityGroup,
+  IngredientQuantityAndGroup,
 } from "../src/types";
 import {
   isGroup,
   isAndGroup,
   isOrGroup,
   isQuantity,
+  isSimpleGroup,
+  hasAlternatives,
+  isValueIntegerLike,
 } from "../src/utils/type_guards";
 import { qPlain } from "./mocks/quantity";
-import { isValueIntegerLike } from "../src/utils/type_guards";
 
 describe("Type Guards", () => {
   const andGroup: AndGroup = { and: [] };
@@ -101,6 +105,73 @@ describe("Type Guards", () => {
         },
       };
       expect(isValueIntegerLike(fixedText)).toBe(false);
+    });
+  });
+
+  describe("isSimpleGroup", () => {
+    it("should return true for simple groups with quantity", () => {
+      const simpleGroup: IngredientQuantityGroup = {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: "g",
+      };
+      expect(isSimpleGroup(simpleGroup)).toBe(true);
+    });
+
+    it("should return false for AND groups", () => {
+      const andGroup: IngredientQuantityAndGroup = {
+        and: [
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "cup",
+          },
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+            unit: "tbsp",
+          },
+        ],
+      };
+      expect(isSimpleGroup(andGroup)).toBe(false);
+    });
+  });
+
+  describe("hasAlternatives", () => {
+    it("should return true for entries with alternatives", () => {
+      const entryWithAlternatives: IngredientQuantityGroup = {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: "g",
+        alternatives: [{ index: 1 }],
+      };
+      expect(hasAlternatives(entryWithAlternatives)).toBe(true);
+    });
+
+    it("should return false for entries without alternatives", () => {
+      const entryWithoutAlternatives: IngredientQuantityGroup = {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: "g",
+      };
+      expect(hasAlternatives(entryWithoutAlternatives)).toBe(false);
+    });
+
+    it("should return false for entries with empty alternatives array", () => {
+      const entryWithEmptyAlternatives: IngredientQuantityGroup = {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: "g",
+        alternatives: [],
+      };
+      expect(hasAlternatives(entryWithEmptyAlternatives)).toBe(false);
+    });
+
+    it("should work with AND groups that have alternatives", () => {
+      const andGroupWithAlts: IngredientQuantityAndGroup = {
+        and: [
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "cup",
+          },
+        ],
+        alternatives: [{ index: 2 }],
+      };
+      expect(hasAlternatives(andGroupWithAlts)).toBe(true);
     });
   });
 });

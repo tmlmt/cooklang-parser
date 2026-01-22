@@ -22,9 +22,37 @@ export {
 
 // Helpers
 
-import { isAlternativeSelected } from "./utils/render_helpers";
+import {
+  isAlternativeSelected,
+  isGroupedItem,
+  formatNumericValue,
+  formatSingleValue,
+  formatQuantity,
+  formatUnit,
+  formatQuantityWithUnit,
+  formatExtendedQuantity,
+  formatItemQuantity,
+} from "./utils/render_helpers";
+import {
+  isAndGroup,
+  isSimpleGroup,
+  hasAlternatives,
+} from "./utils/type_guards";
 
-export { isAlternativeSelected };
+export {
+  isAlternativeSelected,
+  isGroupedItem,
+  formatNumericValue,
+  formatSingleValue,
+  formatQuantity,
+  formatUnit,
+  formatQuantityWithUnit,
+  formatExtendedQuantity,
+  formatItemQuantity,
+  isAndGroup,
+  isSimpleGroup,
+  hasAlternatives,
+};
 
 // Types
 
@@ -84,6 +112,12 @@ import type {
   UnitType,
   UnitDefinition,
   UnitDefinitionLike,
+  AndGroup,
+  OrGroup,
+  Group,
+  FlatAndGroup,
+  FlatOrGroup,
+  FlatGroup,
   MaybeNestedGroup,
   MaybeNestedAndGroup,
   MaybeNestedOrGroup,
@@ -153,6 +187,12 @@ export {
   UnitType,
   UnitDefinition,
   UnitDefinitionLike,
+  AndGroup,
+  OrGroup,
+  Group,
+  FlatAndGroup,
+  FlatOrGroup,
+  FlatGroup,
   MaybeNestedGroup,
   MaybeNestedAndGroup,
   MaybeNestedOrGroup,
