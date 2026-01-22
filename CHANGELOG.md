@@ -1,17 +1,57 @@
 # Changelog
 
+## v3.0.0-alpha.10
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.9...v3.0.0-alpha.10)
+
+### 🚀 Enhancements
+
+- Add multiple type-guard and render helper functions ([05584f5](https://github.com/tmlmt/cooklang-parser/commit/05584f5))
+
+  List of functions introduced:
+  - isAlternativeSelected
+  - isGroupedItem
+  - formatNumericValue
+  - formatSingleValue
+  - formatQuantity
+  - formatUnit
+  - formatQuantityWithUnit
+  - formatExtendedQuantity
+  - formatItemQuantity
+  - isAndGroup
+  - isSimpleGroup
+  - hasAlternatives
+
+### 🩹 Fixes
+
+- **isAlternativeSelected:** Return true for first alternative when selected index is 0 ([4e9b1dd](https://github.com/tmlmt/cooklang-parser/commit/4e9b1dd))
+- **docs, v3:** Link to playground in top menubar ([361a676](https://github.com/tmlmt/cooklang-parser/commit/361a676))
+
+### 🏡 Chore
+
+- **CHANGELOG:** Fix missing end of code block ([00f27b3](https://github.com/tmlmt/cooklang-parser/commit/00f27b3))
+
+### 🎨 Styles
+
+- **types:** Remove unnecessary ComputedIngredient type ([f35f2f0](https://github.com/tmlmt/cooklang-parser/commit/f35f2f0))
+- **types:** Make IngredientQuantityAndGroup extend AndGroup ([6647039](https://github.com/tmlmt/cooklang-parser/commit/6647039))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.9
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.8...v3.0.0-alpha.9)
 
 ### ⚠️ Breaking Changes
 
-- **types:** ⚠️  Flatten And & Or groups by directly using and/or as property name ([ec80478](https://github.com/tmlmt/cooklang-parser/commit/ec80478))
+- **types:** ⚠️ Flatten And & Or groups by directly using and/or as property name ([ec80478](https://github.com/tmlmt/cooklang-parser/commit/ec80478))
 
 Before:
 
 ```
-{ 
+{
     type: "or", // or "and"
     entries: [ ... ]
 }
@@ -38,7 +78,7 @@ After:
 
 ### 🎨 Styles
 
-- **types:** ⚠️  Flatten And & Or groups by directly using and/or as property name ([ec80478](https://github.com/tmlmt/cooklang-parser/commit/ec80478))
+- **types:** ⚠️ Flatten And & Or groups by directly using and/or as property name ([ec80478](https://github.com/tmlmt/cooklang-parser/commit/ec80478))
 
 ### ❤️ Contributors
 

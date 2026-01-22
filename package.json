@@ -1,6 +1,6 @@
 {
   "name": "@tmlmt/cooklang-parser",
-  "version": "3.0.0-alpha.9",
+  "version": "3.0.0-alpha.10",
   "description": "Cooklang parsers and utilities",
   "author": "Thomas Lamant <tom@tmlmt.com>",
   "packageManager": "pnpm@10.21.0",
