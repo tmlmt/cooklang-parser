@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TabsItem } from "@nuxt/ui";
+import type { RecipeChoices } from "cooklang-parser";
 import { Recipe } from "cooklang-parser";
 import pkg from "~~/../package.json";
 
@@ -38,9 +39,9 @@ Mash @ripe bananas{1%=large|1.5%cup} and @&ripe bananas{2%=small|1%cup} in a #la
 
 Add @butter{115%g|4%oz}|coconut oil{100%g}[vegan] and mix well.
 
-Whisk in @eggs{2%large}|flax eggs{2}[vegan].
+Whisk in @|eggs|eggs{2%large} that you can also replace by @|eggs|flax eggs{2}.
 
-In a #separate bowl{}, combine @flour{280%g|2%cups}, @sugar{150%g}, and @-salt{1/4%tsp}.
+In a #separate bowl{}, combine @flour{280%g|2%cups}, @sugar{150%g}|cane sugar{150%g}, and @-salt{1/4%tsp}.
 
 Fold dry ingredients into wet mixture.
 
@@ -62,6 +63,12 @@ const parsedRecipe = computed(() => {
 // Servings state for scaling - initialize from parsed recipe
 const servings = ref<number>(1);
 
+// Choices state for ingredient alternatives
+const choices = ref<RecipeChoices>({
+  ingredientItems: new Map(),
+  ingredientGroups: new Map(),
+});
+
 // Initialize and reset servings when recipe servings change
 watch(
   () => parsedRecipe.value.servings,
@@ -71,6 +78,17 @@ watch(
     }
   },
   { immediate: true },
+);
+
+// Reset choices when parsed recipe changes
+watch(
+  () => parsedRecipe.value,
+  () => {
+    choices.value = {
+      ingredientItems: new Map(),
+      ingredientGroups: new Map(),
+    };
+  },
 );
 
 // Scaled recipe based on servings selection
@@ -137,7 +155,11 @@ const scaledRecipe = computed(() => {
           </template>
 
           <template #choices>
-            <RecipeChoices v-model:servings="servings" :recipe="parsedRecipe" />
+            <RecipeChoices
+              v-model:servings="servings"
+              v-model:choices="choices"
+              :recipe="parsedRecipe"
+            />
           </template>
         </UTabs>
       </div>
@@ -152,7 +174,7 @@ const scaledRecipe = computed(() => {
         >
           <template #render>
             <div class="w-full text-sm">
-              <RecipeRender :recipe="scaledRecipe" />
+              <RecipeRender :recipe="scaledRecipe" :choices="choices" />
             </div>
           </template>
 
@@ -188,12 +210,16 @@ const scaledRecipe = computed(() => {
           </template>
 
           <template #choices>
-            <RecipeChoices v-model:servings="servings" :recipe="parsedRecipe" />
+            <RecipeChoices
+              v-model:servings="servings"
+              v-model:choices="choices"
+              :recipe="parsedRecipe"
+            />
           </template>
 
           <template #render>
             <div class="w-full text-sm">
-              <RecipeRender :recipe="scaledRecipe" />
+              <RecipeRender :recipe="scaledRecipe" :choices="choices" />
             </div>
           </template>
         </UTabs>

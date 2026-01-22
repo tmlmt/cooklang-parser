@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { Recipe } from "cooklang-parser";
+import type { Recipe, RecipeChoices } from "cooklang-parser";
 
 const props = defineProps<{
   recipe: Recipe;
+  choices?: RecipeChoices;
 }>();
 
 const title = computed(() => {
@@ -33,24 +34,27 @@ const hasCookware = computed(() => props.recipe.cookware.length > 0);
 const hasSections = computed(() => props.recipe.sections.length > 0);
 
 /**
- * Filter ingredients to only show primary ones (usedAsPrimary: true)
- * and exclude hidden ingredients (flags includes "hidden")
- * Non-primary ingredients are alternatives that will be shown via the choices system
+ * Get ingredients using getIngredientQuantities with choices applied.
+ * This filters based on the selected alternatives and excludes hidden ingredients.
  */
-const primaryIngredients = computed(() => {
-  return props.recipe.ingredients.filter(
-    (ing) => ing.usedAsPrimary && !ing.flags?.includes("hidden"),
+const filteredIngredients = computed(() => {
+  const ingredients = props.recipe.getIngredientQuantities({
+    choices: props.choices,
+  });
+  // Exclude hidden ingredients
+  return ingredients.filter(
+    (ing) => !ing.flags?.includes("hidden") && ing.usedAsPrimary,
   );
 });
 
 /**
  * Check if an ingredient is optional
  */
-function isOptional(ingredient: (typeof props.recipe.ingredients)[0]) {
+function isOptional(ingredient: (typeof filteredIngredients.value)[0]) {
   return ingredient.flags?.includes("optional");
 }
 
-const hasIngredients = computed(() => primaryIngredients.value.length > 0);
+const hasIngredients = computed(() => filteredIngredients.value.length > 0);
 
 /**
  * Compute step numbers across all sections
@@ -96,7 +100,7 @@ const sectionsWithStepNumbers = computed(() => {
       <h3 class="mb-2 text-lg font-semibold">Ingredients</h3>
       <ul class="list-inside list-disc space-y-1">
         <RecipeIngredientItem
-          v-for="(ingredient, idx) in primaryIngredients"
+          v-for="(ingredient, idx) in filteredIngredients"
           :key="idx"
           :ingredient="ingredient"
           :ingredients="recipe.ingredients"
@@ -141,7 +145,11 @@ const sectionsWithStepNumbers = computed(() => {
               <div v-if="item.type === 'step'" class="step">
                 <div class="font-bold">Step {{ item.stepNumber }}</div>
                 <div class="ml-4">
-                  <RecipeStepContent :step="item" :recipe="recipe" />
+                  <RecipeStepContent
+                    :step="item"
+                    :recipe="recipe"
+                    :choices="choices"
+                  />
                 </div>
               </div>
 
