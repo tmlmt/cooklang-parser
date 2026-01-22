@@ -1,5 +1,48 @@
 # Changelog
 
+## v3.0.0-alpha.9
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.8...v3.0.0-alpha.9)
+
+### ⚠️ Breaking Changes
+
+- **types:** ⚠️  Flatten And & Or groups by directly using and/or as property name ([ec80478](https://github.com/tmlmt/cooklang-parser/commit/ec80478))
+
+Before:
+
+```
+{ 
+    type: "or", // or "and"
+    entries: [ ... ]
+}
+```
+
+After:
+
+```
+{
+    or: [ ... ] // or and: [ ... ]
+}
+
+### 🚀 Enhancements
+
+- **Recipe:** New universal `getIngredientQuantities` method to filter by section, step and/or user choices ([04e61f6](https://github.com/tmlmt/cooklang-parser/commit/04e61f6))
+- **ShoppingList:** Enhance ingredient handling with AND groups and ensure choices are provided for recipes with alternatives ([f5ef123](https://github.com/tmlmt/cooklang-parser/commit/f5ef123))
+- **Helpers:** Add isAlternativeSelected function to determine selected ingredient alternatives ([2c5af2a](https://github.com/tmlmt/cooklang-parser/commit/2c5af2a))
+
+### 📖 Documentation
+
+- **Recipe:** Fix description of `choices` property ([b9169ac](https://github.com/tmlmt/cooklang-parser/commit/b9169ac))
+- **playground:** Dynamically render user choices for alternatives ingredients ([2eea3c0](https://github.com/tmlmt/cooklang-parser/commit/2eea3c0))
+
+### 🎨 Styles
+
+- **types:** ⚠️  Flatten And & Or groups by directly using and/or as property name ([ec80478](https://github.com/tmlmt/cooklang-parser/commit/ec80478))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.8
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.7...v3.0.0-alpha.8)
