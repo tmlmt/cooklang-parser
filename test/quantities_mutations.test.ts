@@ -144,9 +144,10 @@ describe("normalizeAllUnits", () => {
           unit: {
             name: "cup",
             type: "volume",
-            system: "imperial",
+            system: "ambiguous",
             aliases: ["cups"],
             toBase: 236.588,
+            toBaseBySystem: { US: 236.588, UK: 284.131 },
           },
         },
         {
@@ -159,9 +160,10 @@ describe("normalizeAllUnits", () => {
               unit: {
                 name: "tbsp",
                 type: "volume",
-                system: "metric",
+                system: "ambiguous",
                 aliases: ["tablespoon", "tablespoons"],
                 toBase: 15,
+                toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
               },
             },
             {
@@ -424,8 +426,8 @@ describe("addQuantities", () => {
     });
   });
 
-  it("should add compatible metric and imperial units, converting to largest metric", () => {
-    const result = addQuantities(
+  it("should add compatible metric and non-metric units, converting to largest metric if no context provided", () => {
+    const result1 = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         unit: { name: "lb" },
@@ -435,11 +437,117 @@ describe("addQuantities", () => {
         unit: { name: "g" },
       },
     );
-    expect(result.unit).toEqual({ name: "kg" });
+    const resultUnit = { name: "g" };
+    expect(result1.unit).toEqual(resultUnit);
+    const resultQuantity = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 953.592 },
+    };
+    expect(result1.quantity).toEqual(resultQuantity);
+    // Also works the other way around
+    const result2 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+        unit: { name: "g" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "lb" },
+      },
+    );
+    expect(result2.unit).toEqual(resultUnit);
+    expect(result2.quantity).toEqual(resultQuantity);
+  });
+
+  it("should convert sum of two non-metric units to metric if no context system provided", () => {
+    const result1 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "go" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "cup" },
+      },
+    );
+    const resultUnit = { name: "l" };
+    expect(result1.unit).toEqual(resultUnit);
+    // 180ml (go) + 236.588ml (cup defaulting to US)= 416.588ml = 0.416588l
+    const resultQuantity = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 0.417 },
+    };
+    expect(result1.quantity).toEqual(resultQuantity);
+    // Also works the other way around
+    const result2 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "cup" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "go" },
+      },
+    );
+    expect(result2.unit).toEqual(resultUnit);
+    expect(result2.quantity).toEqual(resultQuantity);
+  });
+
+  it("should convert ambiguous units to supported context system if provided", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "cup" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "fl-oz" },
+      },
+      "US",
+    );
+    expect(result.unit).toEqual({ name: "cup" });
+    // 1 cup + 0.125 cup
     expect(result.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", decimal: 0.954 },
+      value: { type: "decimal", decimal: 1.125 },
     });
+  });
+
+  it("should convert the sum of ambiguous and metric units to supported context system if provided", () => {
+    const result1 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "cup" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: { name: "ml" },
+      },
+      "US",
+    );
+    const resultUnit = { name: "cup" };
+    expect(result1.unit).toEqual(resultUnit);
+    // 1 cup + 0.423 cup
+    const resultQuantity = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 1.423 },
+    };
+    expect(result1.quantity).toEqual(resultQuantity);
+    // Also works the other way around
+    const result2 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+        unit: { name: "ml" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "cup" },
+      },
+
+      "US",
+    );
+    expect(result2.unit).toEqual(resultUnit);
+    expect(result2.quantity).toEqual(resultQuantity);
   });
 
   it("should handle text quantities", () => {

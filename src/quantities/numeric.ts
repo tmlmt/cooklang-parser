@@ -99,9 +99,13 @@ export function addNumericValues(
 
 export const toRoundedDecimal = (
   v: DecimalValue | FractionValue,
+  precision: number = 3,
 ): DecimalValue => {
   const value = v.type === "decimal" ? v.decimal : v.num / v.den;
-  return { type: "decimal", decimal: Math.round(value * 1000) / 1000 };
+  return {
+    type: "decimal",
+    decimal: Math.round(value * 10 ** precision) / 10 ** precision,
+  };
 };
 
 export function multiplyQuantityValue(

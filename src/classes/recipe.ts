@@ -24,6 +24,7 @@ import type {
   FixedNumericValue,
   StepItem,
   GetIngredientQuantitiesOptions,
+  SpecificUnitSystem,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -132,6 +133,22 @@ export class Recipe {
    * @see {@link Recipe.scaleBy | scaleBy()} and {@link Recipe.scaleTo | scaleTo()} methods
    */
   servings?: number;
+
+  /**
+   * Gets the unit system specified in the recipe metadata.
+   * Used for resolving ambiguous units like tsp, tbsp, cup, etc.
+   *
+   * @returns The unit system if specified, or undefined to use defaults
+   */
+  get unitSystem(): SpecificUnitSystem | undefined {
+    return Recipe.unitSystems.get(this);
+  }
+
+  /**
+   * External storage for unit system (not a property on instances).
+   * Used for resolving ambiguous units during quantity addition.
+   */
+  private static unitSystems = new WeakMap<Recipe, SpecificUnitSystem>();
 
   /**
    * External storage for item count (not a property on instances).
@@ -863,7 +880,10 @@ export class Recipe {
           )[] = [];
 
           for (const [, group] of groupsForIng) {
-            const summed = addEquivalentsAndSimplify(...group.quantities);
+            const summed = addEquivalentsAndSimplify(
+              group.quantities,
+              this.unitSystem,
+            );
             const flattened = flattenPlainUnitGroup(summed);
 
             // Build alternatives from accumulated quantities
@@ -873,7 +893,7 @@ export class Recipe {
                     index: altIdx,
                     ...(altQtys.length > 0 && {
                       quantities: flattenPlainUnitGroup(
-                        addEquivalentsAndSimplify(...altQtys),
+                        addEquivalentsAndSimplify(altQtys, this.unitSystem),
                       ).flatMap(
                         /* v8 ignore next -- item.and branch requires complex nested AND-with-equivalents structure */
                         (item) => ("quantity" in item ? [item] : item.and),
@@ -927,9 +947,11 @@ export class Recipe {
       .split(/\r\n?|\n/);
 
     // Metadata
-    const { metadata, servings }: MetadataExtract = extractMetadata(content);
+    const { metadata, servings, unitSystem }: MetadataExtract =
+      extractMetadata(content);
     this.metadata = metadata;
     this.servings = servings;
+    if (unitSystem) Recipe.unitSystems.set(this, unitSystem);
 
     // Initializing utility variables and property bearers
     let blankLineBefore = true;

@@ -17,20 +17,22 @@ export const units: UnitDefinition[] = [
     aliases: ["kilogram", "kilograms", "kilogrammes", "kilos", "kilo"],
     toBase: 1000,
   },
-  // Mass (Imperial)
+  // Mass (US/UK - identical in both systems)
   {
     name: "oz",
     type: "mass",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["ounce", "ounces"],
-    toBase: 28.3495,
+    toBase: 28.3495, // default: US (same as UK)
+    toBaseBySystem: { US: 28.3495, UK: 28.3495 },
   },
   {
     name: "lb",
     type: "mass",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["pound", "pounds"],
-    toBase: 453.592,
+    toBase: 453.592, // default: US (same as UK)
+    toBaseBySystem: { US: 453.592, UK: 453.592 },
   },
 
   // Volume (Metric)
@@ -62,56 +64,74 @@ export const units: UnitDefinition[] = [
     aliases: ["liter", "liters", "litre", "litres"],
     toBase: 1000,
   },
+
+  // Volume (JP)
+  {
+    name: "go",
+    type: "volume",
+    system: "JP",
+    aliases: ["gou", "goo", "合", "rice cup"],
+    toBase: 180,
+  },
+
+  // Volume (Ambiguous: metric/US/UK)
   {
     name: "tsp",
     type: "volume",
-    system: "metric",
+    system: "ambiguous",
     aliases: ["teaspoon", "teaspoons"],
-    toBase: 5,
+    toBase: 5, // default: metric
+    toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919 },
   },
   {
     name: "tbsp",
     type: "volume",
-    system: "metric",
+    system: "ambiguous",
     aliases: ["tablespoon", "tablespoons"],
-    toBase: 15,
+    toBase: 15, // default: metric
+    toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
   },
 
-  // Volume (Imperial)
+  // Volume (Ambiguous: US/UK only)
   {
     name: "fl-oz",
     type: "volume",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["fluid ounce", "fluid ounces"],
-    toBase: 29.5735,
+    toBase: 29.5735, // default: US
+    toBaseBySystem: { US: 29.5735, UK: 28.4131 },
   },
   {
     name: "cup",
     type: "volume",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["cups"],
-    toBase: 236.588,
+    toBase: 236.588, // default: US
+    toBaseBySystem: { US: 236.588, UK: 284.131 },
   },
   {
     name: "pint",
     type: "volume",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["pints"],
-    toBase: 473.176,
+    toBase: 473.176, // default: US
+    toBaseBySystem: { US: 473.176, UK: 568.261 },
   },
   {
     name: "quart",
     type: "volume",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["quarts"],
-    toBase: 946.353,
+    toBase: 946.353, // default: US
+    toBaseBySystem: { US: 946.353, UK: 1136.52 },
   },
   {
     name: "gallon",
     type: "volume",
-    system: "imperial",
+    system: "ambiguous",
     aliases: ["gallons"],
-    toBase: 3785.41,
+    toBase: 3785.41, // default: US
+    toBaseBySystem: { US: 3785.41, UK: 4546.09 },
   },
 
   // Count units (no conversion, but recognized as a type)

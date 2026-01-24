@@ -25,7 +25,7 @@ import { resolveUnit } from "../units/definitions";
 import { normalizeAllUnits } from "../quantities/mutations";
 import { getNumericValue, multiplyQuantityValue } from "../quantities/numeric";
 import { isAndGroup, isOrGroup } from "../utils/type_guards";
-import { areUnitsCompatible } from "../units/lookup";
+import { areUnitsGroupable } from "../units/compatibility";
 import { solve, type Model } from "yalps";
 
 /**
@@ -284,7 +284,7 @@ export class ShoppingCart {
           // A product is compatible if ANY of its sizes has a compatible unit
           const matchOptions = normalizedOptions.filter((option) =>
             option.sizes.some((s) =>
-              areUnitsCompatible(alternative.unit, s.unit),
+              areUnitsGroupable(alternative.unit, s.unit),
             ),
           );
           if (matchOptions.length > 0) {
@@ -293,7 +293,7 @@ export class ShoppingCart {
               option: ProductOptionNormalized,
             ): ProductSizeNormalized =>
               option.sizes.find((s) =>
-                areUnitsCompatible(alternative.unit, s.unit),
+                areUnitsGroupable(alternative.unit, s.unit),
               )!;
 
             // Simple minimization exercise if only one product option

@@ -211,14 +211,13 @@ tags:      [ one,two, three ]
     expect(extractMetadata(content)).toEqual(expected);
   });
 
-  it("should handle all possible metadata fields", () => {
+  it("should handle all possible passthrough metadata fields", () => {
     const content = `
 ---
 title: Sheet-Pan Baked Feta With Broccolini, Tomatoes and Lemon
 tags: [dinner, oven-only]
 source: https://cooking.nytimes.com/recipes/1021277-sheet-pan-baked-feta-with-broccolini-tomatoes-and-lemon
 author: Yasmin Fahr
-servings: 4
 prep time: 10m
 cook time: 15m
 time: 25m
@@ -237,7 +236,6 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
         source:
           "https://cooking.nytimes.com/recipes/1021277-sheet-pan-baked-feta-with-broccolini-tomatoes-and-lemon",
         author: "Yasmin Fahr",
-        servings: "4",
         "prep time": "10m",
         "cook time": "15m",
         time: "25m",
@@ -249,9 +247,59 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
           "https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-baked-feta-master768.jpg?quality=75&auto=webp",
         ],
       },
-      servings: 4,
     };
     expect(extractMetadata(content)).toEqual(expected);
+  });
+
+  it("should accept known unit systems", () => {
+    const content_metric = `
+---
+unit system: metric
+---`;
+    const expected: MetadataExtract = {
+      metadata: {
+        "unit system": "metric",
+      },
+      unitSystem: "metric",
+    };
+    expect(extractMetadata(content_metric)).toEqual(expected);
+  });
+
+  it("should accept unit systems case-insensitively", () => {
+    expect(extractMetadata("---\nunit system: METRIC\n---")).toEqual({
+      metadata: { "unit system": "METRIC" },
+      unitSystem: "metric",
+    });
+    expect(extractMetadata("---\nunit system: Metric\n---")).toEqual({
+      metadata: { "unit system": "Metric" },
+      unitSystem: "metric",
+    });
+    expect(extractMetadata("---\nunit system: us\n---")).toEqual({
+      metadata: { "unit system": "us" },
+      unitSystem: "US",
+    });
+    expect(extractMetadata("---\nunit system: Us\n---")).toEqual({
+      metadata: { "unit system": "Us" },
+      unitSystem: "US",
+    });
+    expect(extractMetadata("---\nunit system: uk\n---")).toEqual({
+      metadata: { "unit system": "uk" },
+      unitSystem: "UK",
+    });
+    expect(extractMetadata("---\nunit system: jp\n---")).toEqual({
+      metadata: { "unit system": "jp" },
+      unitSystem: "JP",
+    });
+  });
+
+  it("should store unknown unit systems in metadata but not normalize", () => {
+    const content_unknown = `
+---
+unit system: unknown
+---`;
+    expect(extractMetadata(content_unknown)).toEqual({
+      metadata: { "unit system": "unknown" },
+    });
   });
 });
 

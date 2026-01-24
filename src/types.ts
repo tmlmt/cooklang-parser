@@ -117,6 +117,12 @@ export interface Metadata {
   picture?: string;
   /** The introduction of the recipe. */
   introduction?: string;
+  /**
+   * The unit system used in the recipe for ambiguous units like tsp, tbsp, cup.
+   * See [Unit Systems Guide](/guide-units) for more information.
+   * This stores the original value as written by the user.
+   */
+  "unit system"?: string;
 }
 
 /**
@@ -128,6 +134,8 @@ export interface MetadataExtract {
   metadata: Metadata;
   /** The number of servings the recipe makes. Used for scaling */
   servings?: number;
+  /** The normalized unit system for the recipe. */
+  unitSystem?: SpecificUnitSystem;
 }
 
 /**
@@ -767,12 +775,26 @@ export type CartMisMatch = ProductMisMatch[];
  * Represents the type category of a unit used for quantities
  * @category Types
  */
-export type UnitType = "mass" | "volume" | "count";
+export type UnitType = "mass" | "volume" | "count" | "other";
+
+/**
+ * Represents the specific measurement systems
+ * @category Types
+ */
+export type SpecificUnitSystem = "metric" | "US" | "UK" | "JP";
+
 /**
  * Represents the measurement system a unit belongs to
  * @category Types
  */
-export type UnitSystem = "metric" | "imperial";
+export type UnitSystem = SpecificUnitSystem | "ambiguous";
+
+/**
+ * Conversion factors for ambiguous units that can belong to multiple systems.
+ * Maps each possible system to its toBase conversion factor.
+ * @category Types
+ */
+export type ToBaseBySystem = Partial<Record<SpecificUnitSystem, number>>;
 
 /**
  * Represents a unit used to describe quantities
@@ -794,8 +816,10 @@ export interface UnitDefinition extends Unit {
   system: UnitSystem;
   /** e.g. ['gram', 'grams'] */
   aliases: string[];
-  /** Conversion factor to the base unit of its type */
+  /** Conversion factor to the base unit of its type (uses default system for ambiguous units) */
   toBase: number;
+  /** For ambiguous units: conversion factors for each possible system */
+  toBaseBySystem?: ToBaseBySystem;
 }
 
 /**

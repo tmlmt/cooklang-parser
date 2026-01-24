@@ -8,6 +8,7 @@ import type {
   MaybeNestedOrGroup,
   FlatAndGroup,
   MaybeNestedGroup,
+  SpecificUnitSystem,
 } from "../types";
 import { resolveUnit } from "../units/definitions";
 import { multiplyQuantityValue, getAverageValue } from "./numeric";
@@ -26,10 +27,10 @@ import {
 } from "./mutations";
 import { getUnitRatio, getBaseUnitRatio } from "../units/conversion";
 import {
-  areUnitsCompatible,
   findCompatibleQuantityWithinList,
   findListWithCompatibleQuantity,
 } from "../units/lookup";
+import { areUnitsGroupable } from "../units/compatibility";
 import { deepClone } from "../utils/general";
 
 export function getEquivalentUnitsLists(
@@ -58,15 +59,9 @@ export function getEquivalentUnitsLists(
     unitsToCheck: (UnitDefinitionLike | undefined)[],
   ) {
     return lists.findIndex((l) => {
-      const listItem = l.map((q) => resolveUnit(q.unit?.name));
-      return unitsToCheck.some((u) =>
-        listItem.some(
-          (lu) =>
-            lu.name === u?.name ||
-            (lu.system === u?.system &&
-              lu.type === u?.type &&
-              lu.type !== "other"),
-        ),
+      const listItems = l.map((q) => resolveUnit(q.unit?.name));
+      return unitsToCheck.some(
+        (u) => u && listItems.some((lu) => areUnitsGroupable(lu, u)),
       );
     });
   }
@@ -84,17 +79,21 @@ export function getEquivalentUnitsLists(
       };
 
       const commonQuantity = og.or.find(
-        (q) => isQuantity(q) && areUnitsCompatible(q.unit, normalizedV.unit),
+        (q) => isQuantity(q) && areUnitsGroupable(q.unit, normalizedV.unit),
       );
       if (commonQuantity) {
         acc.push(normalizedV);
-        unitRatio = getUnitRatio(normalizedV, commonQuantity);
+        // Only set unitRatio on the first match to avoid overwriting with
+        // a less precise match (e.g., ambiguous oz matching metric cL)
+        if (!unitRatio) {
+          unitRatio = getUnitRatio(normalizedV, commonQuantity);
+        }
       }
       return acc;
     }, [] as QuantityWithUnitDef[]);
 
     for (const newQ of og.or) {
-      if (commonUnitList.some((q) => areUnitsCompatible(q.unit, newQ.unit))) {
+      if (commonUnitList.some((q) => areUnitsGroupable(q.unit, newQ.unit))) {
         continue;
       } else {
         const scaledQuantity = multiplyQuantityValue(newQ.quantity, unitRatio!);
@@ -248,10 +247,11 @@ export function reduceOrsToFirstEquivalent(
 }
 
 export function addQuantitiesOrGroups(
-  ...quantities: (
+  quantities: (
     | QuantityWithExtendedUnit
     | FlatOrGroup<QuantityWithExtendedUnit>
-  )[]
+  )[],
+  system?: SpecificUnitSystem,
 ): {
   sum: QuantityWithUnitDef | FlatAndGroup<QuantityWithUnitDef>;
   unitsLists: QuantityWithUnitDef[][];
@@ -289,7 +289,7 @@ export function addQuantitiesOrGroups(
         unit: resolveUnit(nextQ.unit?.name),
       });
     } else {
-      const sumQ = addQuantities(existingQ, nextQ);
+      const sumQ = addQuantities(existingQ, nextQ, system);
       existingQ.quantity = sumQ.quantity;
       existingQ.unit = resolveUnit(sumQ.unit?.name);
     }
@@ -384,16 +384,17 @@ export function regroupQuantitiesAndExpandEquivalents(
 }
 
 export function addEquivalentsAndSimplify(
-  ...quantities: (
+  quantities: (
     | QuantityWithExtendedUnit
     | FlatOrGroup<QuantityWithExtendedUnit>
-  )[]
+  )[],
+  system?: SpecificUnitSystem,
 ): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {
   if (quantities.length === 1) {
     return toPlainUnit(quantities[0]!);
   }
   // Step 1+2+3: find equivalents, reduce groups and add quantities
-  const { sum, unitsLists } = addQuantitiesOrGroups(...quantities);
+  const { sum, unitsLists } = addQuantitiesOrGroups(quantities, system);
   // Step 4: regroup and expand equivalents per group
   const regrouped = regroupQuantitiesAndExpandEquivalents(sum, unitsLists);
   if (regrouped.length === 1) {

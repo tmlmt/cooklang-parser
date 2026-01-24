@@ -153,7 +153,7 @@ describe("reduceOrsToFirstEquivalent", () => {
 
 describe("addQuantitiesOrGroups", () => {
   it("should return correct values in case no quantities are passed", () => {
-    const result = addQuantitiesOrGroups();
+    const result = addQuantitiesOrGroups([]);
     expect(result).toEqual({
       sum: {
         ...q(0),
@@ -164,7 +164,7 @@ describe("addQuantitiesOrGroups", () => {
   });
   it("should pass single quantities transparently", () => {
     const quantity: QuantityWithExtendedUnit = q(1, "kg");
-    const result = addQuantitiesOrGroups(quantity);
+    const result = addQuantitiesOrGroups([quantity]);
     expect(result.sum).toEqual({
       ...q(1, "kg"),
       unit: {
@@ -181,7 +181,7 @@ describe("addQuantitiesOrGroups", () => {
       or: [q(2, "large"), q(1.5, "cup")],
     };
 
-    const { sum } = addQuantitiesOrGroups(or);
+    const { sum } = addQuantitiesOrGroups([or]);
     expect(sum).toEqual(qWithUnitDef(2, "large"));
   });
   it("should add two OR groups to the sum of their most relevant member", () => {
@@ -192,7 +192,7 @@ describe("addQuantitiesOrGroups", () => {
       or: [q(4, "large"), q(3, "cup")],
     };
 
-    const { sum } = addQuantitiesOrGroups(or1, or2);
+    const { sum } = addQuantitiesOrGroups([or1, or2]);
     expect(sum).toEqual(qWithUnitDef(6, "large"));
   });
   it("should reduce two OR groups partially overlapping to the sum of the most relevant member of the union", () => {
@@ -203,7 +203,7 @@ describe("addQuantitiesOrGroups", () => {
       or: [q(2, "small"), q(1, "cup")],
     };
 
-    const { sum } = addQuantitiesOrGroups(or1, or2);
+    const { sum } = addQuantitiesOrGroups([or1, or2]);
     expect(sum).toEqual(qWithUnitDef(3.333, "large"));
   });
   it("should handle OR groups with different normalizable units", () => {
@@ -214,7 +214,7 @@ describe("addQuantitiesOrGroups", () => {
       or: [q(20, "cl"), q(1, "pint")],
     }; // 10 cl = 100 ml
 
-    const { sum } = addQuantitiesOrGroups(or1, or2);
+    const { sum } = addQuantitiesOrGroups([or1, or2]);
     expect(sum).toEqual(qWithUnitDef(300, "ml"));
   });
 });
@@ -248,8 +248,8 @@ describe("regroupQuantitiesAndExpandEquivalents", () => {
 
 describe("addEquivalentsAndSimplify", () => {
   it("leaves Quantity's intact", () => {
-    expect(addEquivalentsAndSimplify(q(2, "kg"))).toEqual(qPlain(2, "kg"));
-    expect(addEquivalentsAndSimplify(q(2, "kg"), q(2, "large"))).toEqual({
+    expect(addEquivalentsAndSimplify([q(2, "kg")])).toEqual(qPlain(2, "kg"));
+    expect(addEquivalentsAndSimplify([q(2, "kg"), q(2, "large")])).toEqual({
       and: [qPlain(2, "kg"), qPlain(2, "large")],
     });
   });
@@ -257,7 +257,7 @@ describe("addEquivalentsAndSimplify", () => {
     const or: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(2, "kg"), q(2, "large")],
     };
-    expect(addEquivalentsAndSimplify(or)).toEqual(toPlainUnit(or));
+    expect(addEquivalentsAndSimplify([or])).toEqual(toPlainUnit(or));
   });
   it("correctly adds two groups of equivalent quantities of same unit", () => {
     const or1: FlatOrGroup<QuantityWithExtendedUnit> = {
@@ -266,7 +266,7 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(1.5, "kg"), q(3, "large")],
     };
-    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+    expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
       or: [qPlain(5, "large"), qPlain(2.5, "kg")],
     });
   });
@@ -277,7 +277,7 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(100, "g"), q(2, "large")],
     };
-    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+    expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
       or: [qPlain(22, "large"), qPlain(1.1, "kg")],
     });
   });
@@ -288,7 +288,7 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(2, "small"), q(1, "cup")],
     };
-    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+    expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
       or: [qPlain(3.333, "large"), qPlain(5, "small"), qPlain(2.5, "cup")],
     });
   });
@@ -299,7 +299,7 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(1, "pint"), q(473, "mL")],
     };
-    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+    expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
       or: [qPlain(12, "cup"), qPlain(2839.2, "mL")],
     });
   });
@@ -310,7 +310,7 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(2, "small"), q(1, "cup")],
     };
-    expect(addEquivalentsAndSimplify(or1, or2)).toEqual({
+    expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
       or: [
         { and: [qPlain(2, "large"), qPlain(2, "small")] },
         qPlain(2.5, "cup"),

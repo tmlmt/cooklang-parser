@@ -10,6 +10,7 @@ import type {
   QuantityWithUnitDef,
   MaybeNestedGroup,
   MaybeNestedAndGroup,
+  SpecificUnitSystem,
 } from "../types";
 import {
   units,
@@ -17,6 +18,8 @@ import {
   resolveUnit,
   isNoUnit,
 } from "../units/definitions";
+import { getToBase } from "../units/conversion";
+import { areUnitsConvertible } from "../units/compatibility";
 import { addNumericValues, multiplyQuantityValue } from "./numeric";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
 import { isAndGroup, isOrGroup, isQuantity } from "../utils/type_guards";
@@ -66,14 +69,26 @@ export function normalizeAllUnits(
   }
 }
 
+/**
+ * Convert a quantity value from one unit to another.
+ *
+ * @param value - The quantity value to convert
+ * @param def - The source unit definition
+ * @param targetDef - The target unit definition
+ * @param system - Optional system context for resolving ambiguous units
+ * @returns The converted quantity value
+ */
 export const convertQuantityValue = (
   value: FixedValue | Range,
   def: UnitDefinition,
   targetDef: UnitDefinition,
+  system?: SpecificUnitSystem,
 ): FixedValue | Range => {
   if (def.name === targetDef.name) return value;
 
-  const factor = def.toBase / targetDef.toBase;
+  const sourceToBase = getToBase(def, system);
+  const targetToBase = getToBase(targetDef, system);
+  const factor = sourceToBase / targetToBase;
 
   return multiplyQuantityValue(value, factor);
 };
@@ -139,10 +154,16 @@ export function addQuantityValues(
 
 /**
  * Adds two quantities, returning the result in the most appropriate unit.
+ *
+ * @param q1 - The first quantity
+ * @param q2 - The second quantity
+ * @param system - Optional system context for resolving ambiguous units
+ * @returns The sum of the two quantities
  */
 export function addQuantities(
   q1: QuantityWithExtendedUnit,
   q2: QuantityWithExtendedUnit,
+  system?: SpecificUnitSystem,
 ): QuantityWithExtendedUnit {
   const v1 = q1.quantity;
   const v2 = q2.quantity;
@@ -193,31 +214,92 @@ export function addQuantities(
 
   // Case 4: the two quantities have different units of known type
   if (unit1Def && unit2Def) {
-    // Case 4.1: different unit type => we can't add quantities
-    if (unit1Def.type !== unit2Def.type) {
+    // Throw error if units aren't convertible (not of same type)
+    if (!areUnitsConvertible(unit1Def, unit2Def)) {
       throw new IncompatibleUnitsError(
         `${unit1Def.type} (${q1.unit?.name})`,
         `${unit2Def.type} (${q2.unit?.name})`,
       );
     }
 
-    let targetUnitDef: UnitDefinition;
+    // Determine the effective system for conversion of ambiguous units
+    let effectiveSystem = system;
 
-    // Case 4.2: same unit type but different system => we convert to metric
-    if (unit1Def.system !== unit2Def.system) {
-      const metricUnitDef = unit1Def.system === "metric" ? unit1Def : unit2Def;
-      targetUnitDef = units
-        .filter((u) => u.type === metricUnitDef.type && u.system === "metric")
-        .reduce((prev, current) =>
-          prev.toBase > current.toBase ? prev : current,
-        );
+    // If no system provided, try to infer from non-ambiguous unit
+    // v8 ignore else -- @preserve
+    if (!effectiveSystem) {
+      if (unit1Def.system !== "ambiguous") {
+        effectiveSystem = unit1Def.system;
+      } else if (unit2Def.system !== "ambiguous") {
+        effectiveSystem = unit2Def.system;
+      }
+      // If both are ambiguous, effectiveSystem remains undefined and we use defaults
     }
-    // Case 4.3: same unit type, same system but different unit => we use the biggest unit of the two
-    else {
-      targetUnitDef = unit1Def.toBase >= unit2Def.toBase ? unit1Def : unit2Def;
+
+    let targetUnitDef: UnitDefinition;
+    let conversionSystem: SpecificUnitSystem | undefined;
+
+    // Resolve effective systems for each unit
+    const sys1 =
+      unit1Def.system === "ambiguous"
+        ? unit1Def.toBaseBySystem?.[effectiveSystem!] !== undefined
+          ? effectiveSystem
+          : undefined
+        : unit1Def.system;
+
+    const sys2 =
+      unit2Def.system === "ambiguous"
+        ? unit2Def.toBaseBySystem?.[effectiveSystem!] !== undefined
+          ? effectiveSystem
+          : undefined
+        : unit2Def.system;
+
+    if (sys1 === sys2 && sys1 !== undefined) {
+      // Case 4.1: Same system - use larger unit of that system
+      const toBase1 = getToBase(unit1Def, sys1);
+      const toBase2 = getToBase(unit2Def, sys1);
+      targetUnitDef = toBase1 >= toBase2 ? unit1Def : unit2Def;
+      conversionSystem = sys1;
+    } else if (system !== undefined) {
+      // Case 4.2: Context system is set - use the unit that supports it (or larger if both do)
+      const unit1SupportsSystem =
+        unit1Def.system === system ||
+        (unit1Def.system === "ambiguous" &&
+          unit1Def.toBaseBySystem?.[system] !== undefined);
+
+      targetUnitDef = unit1SupportsSystem ? unit1Def : unit2Def;
+      conversionSystem = system;
+    } else if (sys1 === "metric" || sys2 === "metric") {
+      // Case 4.3: No context system, but one unit is metric - use that metric unit
+      targetUnitDef = sys1 === "metric" ? unit1Def : unit2Def;
+      conversionSystem = "metric";
+    } else if (sys1 === undefined && sys2 === undefined) {
+      // Case 4.4: Both units are ambiguous with no context - default to US, use larger unit
+      const toBase1 = getToBase(unit1Def, "US");
+      const toBase2 = getToBase(unit2Def, "US");
+      targetUnitDef = toBase1 >= toBase2 ? unit1Def : unit2Def;
+      conversionSystem = "US";
+    } else {
+      // Case 4.5: Different non-metric systems (e.g., JP + US/UK) - convert to metric
+      const metricUnits = units.filter(
+        (u) => u.type === unit1Def.type && u.system === "metric",
+      );
+      targetUnitDef = metricUnits[metricUnits.length - 1]!;
+      conversionSystem = "metric";
     }
-    const convertedV1 = convertQuantityValue(v1, unit1Def, targetUnitDef);
-    const convertedV2 = convertQuantityValue(v2, unit2Def, targetUnitDef);
+
+    const convertedV1 = convertQuantityValue(
+      v1,
+      unit1Def,
+      targetUnitDef,
+      conversionSystem,
+    );
+    const convertedV2 = convertQuantityValue(
+      v2,
+      unit2Def,
+      targetUnitDef,
+      conversionSystem,
+    );
     const targetUnit: Unit = { name: targetUnitDef.name };
 
     return addQuantityValuesAndSetUnit(convertedV1, convertedV2, targetUnit);

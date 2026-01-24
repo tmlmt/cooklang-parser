@@ -1,6 +1,7 @@
 import Big from "big.js";
 import type { QuantityWithUnitDef } from "../types";
 import { getAverageValue } from "../quantities/numeric";
+import { UnitDefinition, SpecificUnitSystem } from "../types";
 
 export function getUnitRatio(q1: QuantityWithUnitDef, q2: QuantityWithUnitDef) {
   const q1Value = getAverageValue(q1.quantity);
@@ -27,4 +28,25 @@ export function getBaseUnitRatio(
   } else {
     return 1;
   }
+}
+
+/**
+ * Get the toBase conversion factor for a unit, considering the system context.
+ *
+ * For ambiguous units:
+ * - If a specific system is provided and the unit supports it, use that system's factor
+ * - Otherwise, fall back to the unit's default toBase
+ *
+ * @param unit - The unit definition
+ * @param system - Optional system context to use for ambiguous units
+ * @returns The appropriate toBase conversion factor
+ */
+export function getToBase(
+  unit: UnitDefinition,
+  system?: SpecificUnitSystem,
+): number {
+  if (unit.system === "ambiguous" && system && unit.toBaseBySystem) {
+    return unit.toBaseBySystem[system] ?? unit.toBase;
+  }
+  return unit.toBase;
 }

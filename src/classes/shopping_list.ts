@@ -103,10 +103,10 @@ export class ShoppingList {
             | QuantityWithExtendedUnit
             | FlatOrGroup<QuantityWithExtendedUnit>
           )[];
-          existing.quantityTotal = addEquivalentsAndSimplify(
+          existing.quantityTotal = addEquivalentsAndSimplify([
             ...existingQuantities,
             ...newQuantities,
-          );
+          ]);
           return;
         } catch {
           // Incompatible
@@ -177,10 +177,10 @@ export class ShoppingList {
               extendAllUnits(q),
             );
             const totalQuantity = addEquivalentsAndSimplify(
-              ...(extendedQuantities as (
+              extendedQuantities as (
                 | QuantityWithExtendedUnit
                 | FlatOrGroup<QuantityWithExtendedUnit>
-              )[]),
+              )[],
             );
             // addEquivalentsAndSimplify already returns plain units
             addIngredientQuantity(ingredient.name, totalQuantity);

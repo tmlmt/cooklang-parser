@@ -673,9 +673,9 @@ describe("parse function", () => {
         {
           quantity: {
             type: "fixed",
-            value: { type: "decimal", decimal: 0.704 },
+            value: { type: "decimal", decimal: 703.592 },
           },
-          unit: "kg",
+          unit: "g",
         },
       ]);
       // TODO: 700g would be more elegant
@@ -2121,6 +2121,75 @@ Another step.
         ],
         usedAsPrimary: true,
       });
+    });
+  });
+
+  describe("unit system", () => {
+    it("adds units in parsed recipes according to provided unit system", () => {
+      const recipe = `
+---
+unit system: UK
+---
+Add @water{1%cup} and some more @&water{1%fl-oz}
+`;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      const ing: Ingredient = {
+        name: "water",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1.1 },
+            },
+            unit: "cup",
+          },
+        ],
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(ing);
+    });
+    it("defaults imperial units to US in parsed recipes if no unit system is provided", () => {
+      const recipe = `
+Add @water{1%cup} and some more @&water{1%fl-oz}
+`;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      const ing: Ingredient = {
+        name: "water",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1.125 },
+            },
+            unit: "cup",
+          },
+        ],
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(ing);
+    });
+    it("defaults ambiguous units to metric in parsed recipes if no unit system is provided", () => {
+      const recipe = `
+Add @water{1%tbsp} and some more @&water{100%mL}
+`;
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(1);
+      const ing: Ingredient = {
+        name: "water",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 7.667 },
+            },
+            unit: "tbsp",
+          },
+        ],
+        usedAsPrimary: true,
+      };
+      expect(result.ingredients[0]).toEqual(ing);
     });
   });
 

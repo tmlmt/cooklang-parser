@@ -1,66 +1,10 @@
 import { describe, it, expect } from "vitest";
 
 import {
-  areUnitsCompatible,
-  findListWithCompatibleQuantity,
   findCompatibleQuantityWithinList,
+  findListWithCompatibleQuantity,
 } from "../src/units/lookup";
-import { UnitDefinition } from "../src/types";
 import { qWithUnitDef } from "./mocks/quantity";
-
-describe("areUnitsCompatible", () => {
-  it("should return true for identical units", () => {
-    const unitA: UnitDefinition = {
-      name: "g",
-      type: "mass",
-      system: "metric",
-      aliases: ["gram", "grams", "grammes"],
-      toBase: 1,
-    };
-    const unitB: UnitDefinition = {
-      name: "g",
-      type: "mass",
-      system: "metric",
-      aliases: ["gram", "grams", "grammes"],
-      toBase: 1,
-    };
-    expect(areUnitsCompatible(unitA, unitB)).toBe(true);
-  });
-  it("should return true for units of the same type and system", () => {
-    const unitA: UnitDefinition = {
-      name: "kg",
-      type: "mass",
-      system: "metric",
-      aliases: ["kilogram", "kilograms", "kilogrammes", "kilos", "kilo"],
-      toBase: 1000,
-    };
-    const unitB: UnitDefinition = {
-      name: "g",
-      type: "mass",
-      system: "metric",
-      aliases: ["gram", "grams", "grammes"],
-      toBase: 1,
-    };
-    expect(areUnitsCompatible(unitA, unitB)).toBe(true);
-  });
-  it("should return false for units of different types or systems", () => {
-    const unitA: UnitDefinition = {
-      name: "oz",
-      type: "mass",
-      system: "imperial",
-      aliases: ["ounce", "ounces"],
-      toBase: 28.3495,
-    };
-    const unitB: UnitDefinition = {
-      name: "ml",
-      type: "volume",
-      system: "metric",
-      aliases: ["milliliter", "milliliters", "millilitre", "millilitres", "cc"],
-      toBase: 1,
-    };
-    expect(areUnitsCompatible(unitA, unitB)).toBe(false);
-  });
-});
 
 describe("findListWithCompatibleQuantity", () => {
   const lists = [
@@ -68,7 +12,8 @@ describe("findListWithCompatibleQuantity", () => {
     [qWithUnitDef(1, "bucket"), qWithUnitDef(5, "L")],
   ];
 
-  // The user should explicitely provide the link between units of different systems
+  // The user should explicitly provide the link between units of different systems
+  // cup is US system mass, g is metric system mass - these should not auto-match for grouping
   it("should not consider a list containing a unit of same type but different system to be compatible", () => {
     expect(
       findListWithCompatibleQuantity(lists, qWithUnitDef(5, "cup")),

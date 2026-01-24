@@ -7,6 +7,7 @@ import type {
   DecimalValue,
   FractionValue,
   NoteItem,
+  SpecificUnitSystem,
 } from "../types";
 import {
   metadataRegex,
@@ -367,6 +368,20 @@ export function extractMetadata(content: string): MetadataExtract {
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
   }
 
+  // Unit system (case-insensitive normalization)
+  let unitSystem: SpecificUnitSystem | undefined;
+  const unitSystemRaw = parseSimpleMetaVar(metadataContent, "unit system");
+  if (unitSystemRaw) {
+    metadata["unit system"] = unitSystemRaw;
+    const unitSystemMap: Record<string, SpecificUnitSystem> = {
+      metric: "metric",
+      us: "US",
+      uk: "UK",
+      jp: "JP",
+    };
+    unitSystem = unitSystemMap[unitSystemRaw.toLowerCase()];
+  }
+
   // String metadata variables
   for (const metaVar of ["serves", "yield", "servings"] as (keyof Pick<
     Metadata,
@@ -388,7 +403,7 @@ export function extractMetadata(content: string): MetadataExtract {
     if (listMetaValue) metadata[metaVar] = listMetaValue;
   }
 
-  return { metadata, servings };
+  return { metadata, servings, unitSystem };
 }
 
 export function isPositiveIntegerString(str: string): boolean {

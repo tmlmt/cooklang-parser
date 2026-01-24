@@ -337,11 +337,11 @@ Recipe {
           "quantity": {
             "type": "fixed",
             "value": {
-              "decimal": 0.104,
+              "decimal": 0.438,
               "type": "decimal",
             },
           },
-          "unit": "l",
+          "unit": "cup",
         },
       ],
       "usedAsPrimary": true,
