@@ -24,7 +24,7 @@
     "build": "pnpm run clean && tsup",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "test:ui": "vitest --ui",
+    "test:ui": "vitest --ui --coverage",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noemit && eslint",
     "format": "prettier --write .",
