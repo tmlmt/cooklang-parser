@@ -3,7 +3,7 @@
   "version": "2.1.8",
   "description": "Cooklang parsers and utilities",
   "author": "Thomas Lamant <tom@tmlmt.com>",
-  "packageManager": "pnpm@10.21.0",
+  "packageManager": "pnpm@10.28.2",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
