@@ -17,9 +17,67 @@ import { Recipe } from "../classes/recipe";
 // ============================================================================
 
 /**
+ * Map of common fractions to their Unicode vulgar fraction characters.
+ */
+const VULGAR_FRACTIONS: Record<string, string> = {
+  "1/2": "½",
+  "1/3": "⅓",
+  "2/3": "⅔",
+  "1/4": "¼",
+  "3/4": "¾",
+  "1/8": "⅛",
+  "3/8": "⅜",
+  "5/8": "⅝",
+  "7/8": "⅞",
+};
+
+/**
+ * Render a fraction using Unicode vulgar fraction characters when available.
+ * Handles improper fractions by extracting the whole part (e.g., 5/4 → "1¼").
+ *
+ * @param num - The numerator
+ * @param den - The denominator
+ * @returns The fraction as a string, using vulgar characters if available
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * renderFractionAsVulgar(1, 2); // "½"
+ * renderFractionAsVulgar(3, 4); // "¾"
+ * renderFractionAsVulgar(5, 4); // "1¼"
+ * renderFractionAsVulgar(7, 3); // "2⅓"
+ * renderFractionAsVulgar(2, 5); // "2/5" (no vulgar character available)
+ * ```
+ */
+export function renderFractionAsVulgar(num: number, den: number): string {
+  // Handle improper fractions (num >= den)
+  const wholePart = Math.floor(num / den);
+  const remainder = num % den;
+
+  if (remainder === 0) {
+    // Exact integer
+    return String(wholePart);
+  }
+
+  const fractionKey = `${remainder}/${den}`;
+  const vulgar = VULGAR_FRACTIONS[fractionKey];
+
+  if (wholePart > 0) {
+    // Mixed fraction: whole part + fractional part
+    return vulgar
+      ? `${wholePart}${vulgar}`
+      : `${wholePart} ${remainder}/${den}`;
+  }
+
+  // Proper fraction only
+  return vulgar ?? `${num}/${den}`;
+}
+
+/**
  * Format a numeric value (decimal or fraction) to a string.
  *
  * @param value - The decimal or fraction value to format
+ * @param useVulgar - Whether to use Unicode vulgar fraction characters (default: false)
  * @returns The formatted string representation
  * @category Helpers
  *
@@ -27,13 +85,19 @@ import { Recipe } from "../classes/recipe";
  * ```typescript
  * formatNumericValue({ type: "decimal", decimal: 1.5 }); // "1.5"
  * formatNumericValue({ type: "fraction", num: 1, den: 2 }); // "1/2"
+ * formatNumericValue({ type: "fraction", num: 1, den: 2 }, true); // "½"
+ * formatNumericValue({ type: "fraction", num: 5, den: 4 }, true); // "1¼"
  * ```
  */
 export function formatNumericValue(
   value: DecimalValue | FractionValue,
+  useVulgar: boolean = true,
 ): string {
   if (value.type === "decimal") {
     return String(value.decimal);
+  }
+  if (useVulgar) {
+    return renderFractionAsVulgar(value.num, value.den);
   }
   return `${value.num}/${value.den}`;
 }

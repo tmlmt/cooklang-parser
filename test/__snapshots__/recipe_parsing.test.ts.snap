@@ -337,11 +337,12 @@ Recipe {
           "quantity": {
             "type": "fixed",
             "value": {
-              "decimal": 0.438,
-              "type": "decimal",
+              "den": 2,
+              "num": 7,
+              "type": "fraction",
             },
           },
-          "unit": "cup",
+          "unit": "fl-oz",
         },
       ],
       "usedAsPrimary": true,

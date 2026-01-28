@@ -6,42 +6,6 @@ outline: deep
 
 When adding quantities of [referenced ingredients](/guide-extensions.html#reference-to-an-existing-ingredient) together for the ingredients list (i.e the [ingredients](/api/classes/Recipe.html#ingredients) properties of a `Recipe`), the parser tries its best to add apples to apples.
 
-## Conversion rules
-
-The conversion behavior depends on the unit systems involved and whether a `unit system` is specified in the recipe metadata:
-
-1. **Same system** → The largest unit of that system is used. Example: `1%kg` + `100%g` becomes `1.1%kg`
-
-2. **Recipe has `unit system` metadata** → Convert to the specified system using the unit that supports it. Example with `unit system: UK`: `1%cup` + `1%fl-oz` becomes `1.1%cup` (using UK measurements)
-
-3. **One unit is metric (no context)** → Convert to the metric unit. Example: `1%lb` + `500%g` becomes `953.592%g`
-
-4. **Both units are ambiguous (no context)** → Default to US system, use larger unit. Example: `1%cup` + `1%fl-oz` becomes `1.125%cup` (US)
-
-5. **Different non-metric systems (no context)** → Convert to metric. Example: `1%go` + `1%cup` becomes `0.417%l`
-
-6. **Incompatible units** (e.g., text values, or volume and mass) → Quantities won't be added and will be kept separate.
-
-## Specifying a unit system
-
-You can specify a unit system in your recipe metadata to control how ambiguous units are resolved:
-
-```cooklang
----
-unit system: UK
----
-Add @water{1%cup} and some more @&water{1%fl-oz}
-```
-
-Valid values (case insensitive) are: `metric`, `US`, `UK`, `JP` (see [Unit Reference Table](#unit-reference-table) below)
-
-## Ambiguous units
-
-Some units like `cup`, `tsp`, and `tbsp` have different sizes depending on the measurement system. These are marked as **ambiguous** and have system-specific conversion factors in the `toBaseBySystem` column.
-
-When no `unit system` is specified:
-- Units with a **metric** definition (like `tsp`, `tbsp`) default to metric
-- Units without a metric definition (like `cup`, `pint`) default to US
 
 ## Unit reference table
 
@@ -93,3 +57,107 @@ The following table shows all recognized units:
 | Name  | Type  | System | Aliases    | To Base (default) | To Base by System |
 | ----- | ----- | ------ | ---------- | ----------------- | ----------------- |
 | piece | count | metric | pieces, pc | 1                 |                   |
+
+## Ambiguous units
+
+Some units like `cup`, `tsp`, and `tbsp` have different sizes depending on the measurement system. These are marked as **ambiguous** and have system-specific conversion factors in the `toBaseBySystem` column.
+
+## Specifying a unit system
+
+You can specify a unit system in your recipe metadata to control how ambiguous units are resolved:
+
+```cooklang
+---
+unit system: UK
+---
+Add @water{1%cup} and some more @&water{1%fl-oz}
+```
+
+Valid values (case insensitive) are: `metric`, `US`, `UK`, `JP` (see [Unit Reference Table](#unit-reference-table) above)
+
+When no `unit system` is specified:
+- Units with a **metric** definition (like `tsp`, `tbsp`) default to metric
+- Units without a metric definition (like `cup`, `pint`) default to US
+
+## Adding quantities
+
+When quantities are added together (e.g., from [referenced ingredients](/guide-extensions.html#reference-to-an-existing-ingredient)), the parser selects the most appropriate unit for the result. This does **not** apply to individual quantities—`@flour{500%g}` will always parse as `500 g`.
+
+### System selection
+
+The target system depends on the input units and recipe metadata:
+
+1. **Recipe has `unit system` metadata** → Use the specified system. Example with `unit system: UK`: `1%cup` + `1%fl-oz` becomes `11%fl-oz`
+
+Otherwise:
+
+2. **One unit is metric** → Convert to metric. Example: `1%lb` + `500%g` becomes `954%g`
+
+3. **Both units are ambiguous and US-compatible** → Use US system. Example: `1%cup` + `1%fl-oz` becomes `9%fl-oz`
+
+4. **Different non-metric systems** → Convert to metric. Example: `1%go` + `1%cup` becomes `417%ml`
+
+5. **Incompatible units** (e.g., text values, or volume and mass) → Quantities won't be added and will be kept separate.
+
+### Unit selection algorithm
+
+Once the system is determined, the best unit is selected based on:
+
+1. **Candidates units**: 
+    - Units that belong to that system are considered potential candidates for best unit. The JP system also includes all the metric units. Certain units are disabled as not commonly used, by setting `isBestUnit` to false (default: true)
+    - The units of the input quantities are restored into that list, as they are actually already used in the recipe.
+
+2. **Valid range**: A value is considered "in range" for a unit if:
+    - It's between 1 and the unit's `maxValue` (default: 999), OR
+    - It's less than 1 but can be approximated as a fraction (for units with fractions enabled)
+
+::: info Example: fraction-aware selection
+With US units, a value of 1.7 ml (~0.345 tsp) will select `tsp` because:
+- 0.345 ≈ 1/3, which is a valid fraction (denominator 3 is allowed)
+- `tsp` has `fractions.enabled: true`
+- Therefore 0.345 tsp is considered "in range" and is the smallest valid option
+:::
+
+3. **Selection priority** (among in-range candidates):
+    - Smallest integer in the input unit family. Examples:
+        - `1 cup + 1 cup` -> `2 cup` and not 1 pint
+        - `0.5 pint + 0.5 pint` -> `1 pint` and not 2 cup
+        - `2 cup + 1 pint` -> `2 pint` and not 4 cup
+    - Smallest integers in any compatible family
+    - Smallest non-integer value in range
+
+4. **Fallback**: If no candidate is in range, the unit closest to the valid range is selected. This is in particular used for potential edge cases with values above 999 liters or 999 gallons. 
+
+### Per-unit configuration
+
+Each unit can have custom configuration:
+
+| Config | Description | Default |
+| ------ | ----------- | ------- |
+| `isBestUnit` | Whether a unit is eligible for best unit | true |
+| `maxValue` | Maximum value before upgrading to a larger unit | 999 |
+| `fractions.enabled` | Whether to approximate decimals as fractions | false |
+| `fractions.denominators` | Allowed denominators for fraction approximation | [2, 3, 4, 8] |
+| `fractions.maxWhole` | Maximum whole number in mixed fraction | 4 |
+
+Complete configuration for all units.
+
+| Unit   | maxValue | fractions.enabled | fractions.denominators | isBestUnit |
+| ------ | -------- | ----------------- | ---------------------- | ---------- |
+| g      | 999      | —                 | —                      | ✓          |
+| kg     | —        | —                 | —                      | ✓          |
+| oz     | 31       | ✓                 | [2, 3, 4, 8]           | ✓          |
+| lb     | —        | ✓                 | [2, 3, 4, 8]           | ✓          |
+| ml     | 999      | —                 | —                      | ✓          |
+| cl     | —        | —                 | —                      | —          |
+| dl     | —        | —                 | —                      | —          |
+| l      | —        | —                 | —                      | ✓          |
+| go     | 10       | —                 | —                      | ✓          |
+| tsp    | 5        | ✓                 | [2, 3, 4]              | ✓          |
+| tbsp   | 4        | ✓                 | [2, 3, 4]              | ✓          |
+| fl-oz  | 15       | ✓                 | [2, 3, 4, 8]           | ✓          |
+| cup    | 4        | ✓                 | [2, 3, 4, 8]           | ✓          |
+| pint   | 3        | ✓                 | [2, 3, 4, 8]           | —          |
+| quart  | 3        | ✓                 | [2, 3, 4, 8]           | —          |
+| gallon | —        | ✓                 | [2, 3, 4, 8]           | ✓          |
+| piece  | 999      | —                 | —                      | ✓          |

@@ -25,7 +25,7 @@ describe("normalizeUnit", () => {
 describe("resolveUnit", () => {
   it("should add various properties from the corresponding canonical definition but preserve the name", () => {
     expect(resolveUnit("g").name).toBe("g");
-    expect(resolveUnit("gram")).toEqual({
+    expect(resolveUnit("gram")).toMatchObject({
       name: "gram",
       type: "mass",
       system: "metric",

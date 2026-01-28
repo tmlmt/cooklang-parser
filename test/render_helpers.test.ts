@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import {
+  renderFractionAsVulgar,
   formatNumericValue,
   formatSingleValue,
   formatQuantity,
@@ -31,6 +32,47 @@ import {
 } from "./fixtures/recipes";
 
 // ============================================================================
+// renderFractionAsVulgar
+// ============================================================================
+
+describe("renderFractionAsVulgar", () => {
+  it("should render common fractions as vulgar characters", () => {
+    expect(renderFractionAsVulgar(1, 2)).toBe("½");
+    expect(renderFractionAsVulgar(1, 3)).toBe("⅓");
+    expect(renderFractionAsVulgar(2, 3)).toBe("⅔");
+    expect(renderFractionAsVulgar(1, 4)).toBe("¼");
+    expect(renderFractionAsVulgar(3, 4)).toBe("¾");
+    expect(renderFractionAsVulgar(1, 8)).toBe("⅛");
+    expect(renderFractionAsVulgar(3, 8)).toBe("⅜");
+    expect(renderFractionAsVulgar(5, 8)).toBe("⅝");
+    expect(renderFractionAsVulgar(7, 8)).toBe("⅞");
+  });
+
+  it("should fall back to plain text for uncommon fractions", () => {
+    expect(renderFractionAsVulgar(2, 5)).toBe("2/5");
+    expect(renderFractionAsVulgar(3, 7)).toBe("3/7");
+  });
+
+  it("should handle improper fractions (mixed numbers)", () => {
+    expect(renderFractionAsVulgar(5, 4)).toBe("1¼");
+    expect(renderFractionAsVulgar(7, 3)).toBe("2⅓");
+    expect(renderFractionAsVulgar(11, 8)).toBe("1⅜");
+    expect(renderFractionAsVulgar(9, 4)).toBe("2¼");
+  });
+
+  it("should handle improper fractions without vulgar characters", () => {
+    expect(renderFractionAsVulgar(7, 5)).toBe("1 2/5");
+    expect(renderFractionAsVulgar(10, 7)).toBe("1 3/7");
+  });
+
+  it("should handle exact integers from improper fractions", () => {
+    expect(renderFractionAsVulgar(4, 2)).toBe("2");
+    expect(renderFractionAsVulgar(9, 3)).toBe("3");
+    expect(renderFractionAsVulgar(8, 4)).toBe("2");
+  });
+});
+
+// ============================================================================
 // formatNumericValue
 // ============================================================================
 
@@ -42,7 +84,30 @@ describe("formatNumericValue", () => {
 
   it("should format fraction values", () => {
     const fraction: FractionValue = { type: "fraction", num: 1, den: 2 };
-    expect(formatNumericValue(fraction)).toBe("1/2");
+    expect(formatNumericValue(fraction)).toBe("½");
+  });
+
+  it("should format fraction values with vulgar characters by default", () => {
+    expect(formatNumericValue({ type: "fraction", num: 1, den: 2 })).toBe("½");
+    expect(formatNumericValue({ type: "fraction", num: 3, den: 4 })).toBe("¾");
+    expect(formatNumericValue({ type: "fraction", num: 5, den: 4 })).toBe("1¼");
+  });
+
+  it("should format fraction values with vulgar characters when useVulgar is false", () => {
+    expect(
+      formatNumericValue({ type: "fraction", num: 1, den: 2 }, false),
+    ).toBe("1/2");
+    expect(
+      formatNumericValue({ type: "fraction", num: 3, den: 4 }, false),
+    ).toBe("3/4");
+    expect(
+      formatNumericValue({ type: "fraction", num: 5, den: 4 }, false),
+    ).toBe("5/4");
+  });
+
+  it("should not affect decimal values by default", () => {
+    const decimal: DecimalValue = { type: "decimal", decimal: 1.5 };
+    expect(formatNumericValue(decimal)).toBe("1.5");
   });
 });
 
@@ -63,7 +128,7 @@ describe("formatSingleValue", () => {
 
   it("should format fraction values", () => {
     const fraction: FractionValue = { type: "fraction", num: 3, den: 4 };
-    expect(formatSingleValue(fraction)).toBe("3/4");
+    expect(formatSingleValue(fraction)).toBe("¾");
   });
 });
 
@@ -103,7 +168,7 @@ describe("formatQuantity", () => {
       min: { type: "fraction", num: 1, den: 4 },
       max: { type: "fraction", num: 1, den: 2 },
     };
-    expect(formatQuantity(range)).toBe("1/4-1/2");
+    expect(formatQuantity(range)).toBe("¼-½");
   });
 
   it("should format range with mixed types", () => {
@@ -112,7 +177,7 @@ describe("formatQuantity", () => {
       min: { type: "decimal", decimal: 1 },
       max: { type: "fraction", num: 3, den: 2 },
     };
-    expect(formatQuantity(range)).toBe("1-3/2");
+    expect(formatQuantity(range)).toBe("1-1½");
   });
 });
 

@@ -12,11 +12,13 @@ import {
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../src/errors";
 import {
   AndGroup,
+  FixedValue,
   FlatAndGroup,
   FlatOrGroup,
   MaybeNestedAndGroup,
   QuantityWithExtendedUnit,
   QuantityWithPlainUnit,
+  Range,
 } from "../src/types";
 
 describe("extendAllUnits", () => {
@@ -105,6 +107,7 @@ describe("normalizeAllUnits", () => {
         system: "metric",
         aliases: ["gram", "grams", "grammes"],
         toBase: 1,
+        maxValue: 999,
       },
     };
     expect(normalized).toEqual(expected);
@@ -148,6 +151,10 @@ describe("normalizeAllUnits", () => {
             aliases: ["cups"],
             toBase: 236.588,
             toBaseBySystem: { US: 236.588, UK: 284.131 },
+            fractions: {
+              enabled: true,
+            },
+            maxValue: 15,
           },
         },
         {
@@ -163,7 +170,12 @@ describe("normalizeAllUnits", () => {
                 system: "ambiguous",
                 aliases: ["tablespoon", "tablespoons"],
                 toBase: 15,
-                toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
+                toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
+                fractions: {
+                  denominators: [2, 3, 4],
+                  enabled: true,
+                },
+                maxValue: 4,
               },
             },
             {
@@ -183,6 +195,7 @@ describe("normalizeAllUnits", () => {
                   "cc",
                 ],
                 toBase: 1,
+                maxValue: 999,
               },
             },
           ],
@@ -225,6 +238,11 @@ describe("addQuantityValues", () => {
   });
 
   it("should add a fixed and a range value", () => {
+    const result: Range = {
+      type: "range",
+      min: { type: "decimal", decimal: 4 },
+      max: { type: "decimal", decimal: 5 },
+    };
     expect(
       addQuantityValues(
         { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -234,11 +252,17 @@ describe("addQuantityValues", () => {
           max: { type: "decimal", decimal: 4 },
         },
       ),
-    ).toEqual({
-      type: "range",
-      min: { type: "decimal", decimal: 4 },
-      max: { type: "decimal", decimal: 5 },
-    });
+    ).toEqual(result);
+    expect(
+      addQuantityValues(
+        {
+          type: "range",
+          min: { type: "decimal", decimal: 3 },
+          max: { type: "decimal", decimal: 4 },
+        },
+        { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      ),
+    ).toEqual(result);
   });
 
   it("should throw an error if one of the value is a text value", () => {
@@ -408,7 +432,9 @@ describe("addQuantities", () => {
     });
   });
 
-  it("should add compatible imperial units and convert to largest", () => {
+  it("should add compatible imperial units and prefer integer result", () => {
+    // 1 lb + 8 oz = 24 oz = 1.5 lb
+    // oz maxValue is 31, so 24oz is kept
     expect(
       addQuantities(
         {
@@ -421,12 +447,21 @@ describe("addQuantities", () => {
         },
       ),
     ).toEqual({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
-      unit: { name: "lb" },
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 24 },
+      },
+      unit: { name: "oz" },
     });
   });
 
-  it("should add compatible metric and non-metric units, converting to largest metric if no context provided", () => {
+  it("should add compatible metric and non-metric units, preferring metric", () => {
+    // 1 lb = 453.592g, 500g + 453.592g = 953.592g
+    // No system provided, one unit is metric → effectiveSystem = metric
+    // lb is not compatible with metric system, so only metric units are candidates
+    // g: 953.592 (in range, not integer)
+    // kg: 0.954 (below range)
+    // Best: g at 954 (rounded)
     const result1 = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -437,14 +472,12 @@ describe("addQuantities", () => {
         unit: { name: "g" },
       },
     );
-    const resultUnit = { name: "g" };
-    expect(result1.unit).toEqual(resultUnit);
-    const resultQuantity = {
+    expect(result1.unit).toEqual({ name: "g" });
+    expect(result1.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", decimal: 953.592 },
-    };
-    expect(result1.quantity).toEqual(resultQuantity);
-    // Also works the other way around
+      value: { type: "decimal", decimal: 954 },
+    });
+    // Also works the other way around (same result)
     const result2 = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
@@ -455,11 +488,19 @@ describe("addQuantities", () => {
         unit: { name: "lb" },
       },
     );
-    expect(result2.unit).toEqual(resultUnit);
-    expect(result2.quantity).toEqual(resultQuantity);
+    expect(result2.unit).toEqual({ name: "g" });
+    expect(result2.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 954 },
+    });
   });
 
-  it("should convert sum of two non-metric units to metric if no context system provided", () => {
+  it("should add non-US-compatible units and return metric", () => {
+    // 1 go = 180ml (JP system), 1 cup = 236.588ml (US default)
+    // go is JP (not US-compatible), so effectiveSystem falls back to metric
+    // Total = 180 + 236.588 = 416.588ml in base
+    // With metric system:
+    // ml: 417 (in range, dl/cl are deprioritized)
     const result1 = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -470,19 +511,51 @@ describe("addQuantities", () => {
         unit: { name: "cup" },
       },
     );
-    const resultUnit = { name: "l" };
+    const resultUnit = { name: "ml" };
     expect(result1.unit).toEqual(resultUnit);
-    // 180ml (go) + 236.588ml (cup defaulting to US)= 416.588ml = 0.416588l
-    const resultQuantity = {
+    const resultQuantity: FixedValue = {
       type: "fixed",
-      value: { type: "decimal", decimal: 0.417 },
+      value: { type: "decimal", decimal: 417 },
     };
     expect(result1.quantity).toEqual(resultQuantity);
-    // Also works the other way around
+    // Swap order: same result
     const result2 = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         unit: { name: "cup" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "go" },
+      },
+    );
+    expect(result2.unit).toEqual(resultUnit);
+    expect(result2.quantity).toEqual(resultQuantity);
+  });
+
+  it("should add JP units and return JP", () => {
+    const result1 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "go" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "go" },
+      },
+    );
+    const resultUnit = { name: "go" };
+    expect(result1.unit).toEqual(resultUnit);
+    const resultQuantity: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 2 },
+    };
+    expect(result1.quantity).toEqual(resultQuantity);
+    // Swap order: same result
+    const result2 = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "go" },
       },
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -494,6 +567,11 @@ describe("addQuantities", () => {
   });
 
   it("should convert ambiguous units to supported context system if provided", () => {
+    // 1 US cup = 236.588ml, 1 US fl-oz = 29.5735ml
+    // Total = 266.1615ml in base
+    // Input units: cup, fl-oz
+    // cup: 266.1615/236.588 = 1.125 (in range, not integer)
+    // fl-oz: 266.1615/29.5735 = 9 (integer! preferred)
     const result = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -505,15 +583,20 @@ describe("addQuantities", () => {
       },
       "US",
     );
-    expect(result.unit).toEqual({ name: "cup" });
-    // 1 cup + 0.125 cup
+    expect(result.unit).toEqual({ name: "fl-oz" });
     expect(result.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", decimal: 1.125 },
+      value: { type: "decimal", decimal: 9 },
     });
   });
 
   it("should convert the sum of ambiguous and metric units to supported context system if provided", () => {
+    // 1 US cup = 236.588ml, 100ml
+    // Total = 336.588ml in base
+    // Input units: cup (US), ml
+    // cup: 336.588/236.588 = 1.42 (in range)
+    // ml: 336.588 (in range)
+    // Smallest in range from input: 1.42 cup → 11/8 as fraction (1.375, within 5%)
     const result1 = addQuantities(
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -525,14 +608,11 @@ describe("addQuantities", () => {
       },
       "US",
     );
-    const resultUnit = { name: "cup" };
-    expect(result1.unit).toEqual(resultUnit);
-    // 1 cup + 0.423 cup
-    const resultQuantity = {
+    expect(result1.unit).toEqual({ name: "cup" });
+    expect(result1.quantity).toEqual({
       type: "fixed",
-      value: { type: "decimal", decimal: 1.423 },
-    };
-    expect(result1.quantity).toEqual(resultQuantity);
+      value: { type: "fraction", num: 11, den: 8 },
+    });
     // Also works the other way around
     const result2 = addQuantities(
       {
@@ -546,8 +626,29 @@ describe("addQuantities", () => {
 
       "US",
     );
-    expect(result2.unit).toEqual(resultUnit);
-    expect(result2.quantity).toEqual(resultQuantity);
+    expect(result2.unit).toEqual({ name: "cup" });
+    expect(result2.quantity).toEqual({
+      type: "fixed",
+      value: { type: "fraction", num: 11, den: 8 },
+    });
+  });
+
+  it("should choose the best unit when the result of outside the range of the input unit", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+        unit: { name: "g" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 700 } },
+        unit: { name: "g" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "kg" });
+    expect(result.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 1.2 },
+    });
   });
 
   it("should handle text quantities", () => {
@@ -683,6 +784,33 @@ describe("addQuantities", () => {
         max: { type: "decimal", decimal: 3 },
       },
       unit: { name: "tsp" },
+    });
+  });
+
+  it("should add ranges with different units", () => {
+    // Range (100-200g) + fixed 1kg = range (1100-1200g) = range (1.1-1.2 kg)
+    expect(
+      addQuantities(
+        {
+          quantity: {
+            type: "range",
+            min: { type: "decimal", decimal: 100 },
+            max: { type: "decimal", decimal: 200 },
+          },
+          unit: { name: "g" },
+        },
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+          unit: { name: "kg" },
+        },
+      ),
+    ).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 1.1 },
+        max: { type: "decimal", decimal: 1.2 },
+      },
+      unit: { name: "kg" },
     });
   });
 });

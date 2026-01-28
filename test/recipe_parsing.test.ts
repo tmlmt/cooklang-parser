@@ -660,7 +660,7 @@ describe("parse function", () => {
       });
     });
 
-    it("should add quantities and convert to metric", () => {
+    it("should add quantities and prefer metric", () => {
       const recipe = `
         Add @butter{1%lb}.
         Then add some more @&butter{250%g}.
@@ -669,16 +669,17 @@ describe("parse function", () => {
       expect(result.ingredients).toHaveLength(1);
       const butter = result.ingredients[0]!;
       expect(butter.name).toBe("butter");
+      // 1 lb + 250g = 453.592g + 250g = 703.592g
+      // No system provided, one unit is metric → prefer metric
       expect(butter.quantities).toEqual([
         {
           quantity: {
             type: "fixed",
-            value: { type: "decimal", decimal: 703.592 },
+            value: { type: "decimal", decimal: 704 },
           },
           unit: "g",
         },
       ]);
-      // TODO: 700g would be more elegant
     });
 
     it("should throw an error if referenced ingredient does not exist", () => {
@@ -2134,15 +2135,17 @@ Add @water{1%cup} and some more @&water{1%fl-oz}
 `;
       const result = new Recipe(recipe);
       expect(result.ingredients).toHaveLength(1);
+      // UK: 1 cup (284.131ml) + 1 fl-oz (28.4131ml) = 312.544ml
+      // fl-oz: 312.544/28.4131 = 11 (integer preferred)
       const ing: Ingredient = {
         name: "water",
         quantities: [
           {
             quantity: {
               type: "fixed",
-              value: { type: "decimal", decimal: 1.1 },
+              value: { type: "decimal", decimal: 11 },
             },
-            unit: "cup",
+            unit: "fl-oz",
           },
         ],
         usedAsPrimary: true,
@@ -2155,15 +2158,17 @@ Add @water{1%cup} and some more @&water{1%fl-oz}
 `;
       const result = new Recipe(recipe);
       expect(result.ingredients).toHaveLength(1);
+      // US: 1 cup (236.588ml) + 1 fl-oz (29.5735ml) = 266.162ml
+      // fl-oz: 266.162/29.5735 = 9 (integer preferred)
       const ing: Ingredient = {
         name: "water",
         quantities: [
           {
             quantity: {
               type: "fixed",
-              value: { type: "decimal", decimal: 1.125 },
+              value: { type: "decimal", decimal: 9 },
             },
-            unit: "cup",
+            unit: "fl-oz",
           },
         ],
         usedAsPrimary: true,
@@ -2176,15 +2181,16 @@ Add @water{1%tbsp} and some more @&water{100%mL}
 `;
       const result = new Recipe(recipe);
       expect(result.ingredients).toHaveLength(1);
+      // 1 tbsp (15ml) + 100ml = 115ml (integer preferred)
       const ing: Ingredient = {
         name: "water",
         quantities: [
           {
             quantity: {
               type: "fixed",
-              value: { type: "decimal", decimal: 7.667 },
+              value: { type: "decimal", decimal: 115 },
             },
-            unit: "tbsp",
+            unit: "ml",
           },
         ],
         usedAsPrimary: true,

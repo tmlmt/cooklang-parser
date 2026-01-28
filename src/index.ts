@@ -25,6 +25,7 @@ export {
 import {
   isAlternativeSelected,
   isGroupedItem,
+  renderFractionAsVulgar,
   formatNumericValue,
   formatSingleValue,
   formatQuantity,
@@ -42,6 +43,7 @@ import {
 export {
   isAlternativeSelected,
   isGroupedItem,
+  renderFractionAsVulgar,
   formatNumericValue,
   formatSingleValue,
   formatQuantity,

@@ -47,7 +47,7 @@ describe("getEquivalentUnitsLists", () => {
       [
         qWithUnitDef(1, "small"),
         qWithUnitDef(1, "cup"),
-        qWithUnitDef(1.333, "large", true),
+        qWithUnitDef(1.33, "large", true),
         qWithUnitDef(0.667, "pack"),
       ],
     ]);
@@ -165,7 +165,7 @@ describe("addQuantitiesOrGroups", () => {
   it("should pass single quantities transparently", () => {
     const quantity: QuantityWithExtendedUnit = q(1, "kg");
     const result = addQuantitiesOrGroups([quantity]);
-    expect(result.sum).toEqual({
+    expect(result.sum).toMatchObject({
       ...q(1, "kg"),
       unit: {
         name: "kg",
@@ -204,7 +204,7 @@ describe("addQuantitiesOrGroups", () => {
     };
 
     const { sum } = addQuantitiesOrGroups([or1, or2]);
-    expect(sum).toEqual(qWithUnitDef(3.333, "large"));
+    expect(sum).toEqual(qWithUnitDef(3.33, "large"));
   });
   it("should handle OR groups with different normalizable units", () => {
     const or1: FlatOrGroup<QuantityWithExtendedUnit> = {
@@ -288,8 +288,19 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(2, "small"), q(1, "cup")],
     };
+    // 1.5 + 1 = 2.5 cups → 5/2 as fraction (cup has fractions enabled)
     expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
-      or: [qPlain(3.333, "large"), qPlain(5, "small"), qPlain(2.5, "cup")],
+      or: [
+        qPlain(3.33, "large"),
+        qPlain(5, "small"),
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "fraction", num: 5, den: 2 },
+          },
+          unit: "cup",
+        },
+      ],
     });
   });
   it("accepts units of the same type but different system as alternative", () => {
@@ -299,8 +310,11 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(1, "pint"), q(473, "mL")],
     };
+    // 10 cups + 1 pint = ~12 cups
+    // Total base = 10*236.588 + 473.176 = 2839ml
+    // Best unit selection prefers non-metric when system is US (inferred from ambiguous units)
     expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
-      or: [qPlain(12, "cup"), qPlain(2839.2, "mL")],
+      or: [qPlain(12, "cup"), qPlain(2.84, "l")],
     });
   });
   it("correctly take integer-protected units into account", () => {
@@ -310,10 +324,17 @@ describe("addEquivalentsAndSimplify", () => {
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
       or: [q(2, "small"), q(1, "cup")],
     };
+    // 1.5 + 1 = 2.5 cups → 5/2 as fraction (cup has fractions enabled)
     expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
       or: [
         { and: [qPlain(2, "large"), qPlain(2, "small")] },
-        qPlain(2.5, "cup"),
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "fraction", num: 5, den: 2 },
+          },
+          unit: "cup",
+        },
       ],
     });
   });

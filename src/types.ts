@@ -820,6 +820,25 @@ export interface UnitDefinition extends Unit {
   toBase: number;
   /** For ambiguous units: conversion factors for each possible system */
   toBaseBySystem?: ToBaseBySystem;
+  /** Whether this unit is a candidate for "best unit" selection (default: true) */
+  isBestUnit?: boolean;
+  /** Maximum value before upgrading to a larger unit (default: 999) */
+  maxValue?: number;
+  /** Fraction display configuration */
+  fractions?: UnitFractionConfig;
+}
+
+/**
+ * Configuration for fraction display on a unit
+ * @category Types
+ */
+export interface UnitFractionConfig {
+  /** Whether to approximate decimals as fractions for this unit */
+  enabled: boolean;
+  /** Allowed denominators (default: [2, 3, 4, 8]) */
+  denominators?: number[];
+  /** Maximum whole number in mixed fraction before falling back to decimal (default: 4) */
+  maxWhole?: number;
 }
 
 /**
