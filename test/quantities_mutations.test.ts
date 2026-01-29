@@ -172,7 +172,6 @@ describe("normalizeAllUnits", () => {
                 toBase: 15,
                 toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
                 fractions: {
-                  denominators: [2, 3, 4],
                   enabled: true,
                 },
                 maxValue: 4,
@@ -611,7 +610,7 @@ describe("addQuantities", () => {
     expect(result1.unit).toEqual({ name: "cup" });
     expect(result1.quantity).toEqual({
       type: "fixed",
-      value: { type: "fraction", num: 11, den: 8 },
+      value: { type: "decimal", decimal: 1.42 },
     });
     // Also works the other way around
     const result2 = addQuantities(
@@ -629,7 +628,7 @@ describe("addQuantities", () => {
     expect(result2.unit).toEqual({ name: "cup" });
     expect(result2.quantity).toEqual({
       type: "fixed",
-      value: { type: "fraction", num: 11, den: 8 },
+      value: { type: "decimal", decimal: 1.42 },
     });
   });
 
