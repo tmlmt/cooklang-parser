@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TabsItem } from "@nuxt/ui";
-import type { RecipeChoices } from "cooklang-parser";
+import type { RecipeChoices, SpecificUnitSystem } from "cooklang-parser";
 import { Recipe } from "cooklang-parser";
 import pkg from "~~/../package.json";
 
@@ -55,18 +55,37 @@ Bake for ~{55-60%minutes} until golden.
 
 `);
 
-const parsedRecipe = computed(() => {
-  const recipe = new Recipe(rawRecipe.value);
-  return recipe;
-});
+// Step 1: Parse the raw recipe text
+const parsedRecipe = computed(() => new Recipe(rawRecipe.value));
 
-// Servings state for scaling - initialize from parsed recipe
+// Servings state for scaling
 const servings = ref<number>(1);
 
 // Choices state for ingredient alternatives
 const choices = ref<RecipeChoices>({
   ingredientItems: new Map(),
   ingredientGroups: new Map(),
+});
+
+// Unit conversion state
+const unitSystem = ref<SpecificUnitSystem | null>(null);
+const conversionMethod = ref<"keep" | "replace" | "remove">("keep");
+
+// Step 2: Apply unit conversion (if selected)
+const convertedRecipe = computed(() => {
+  if (unitSystem.value === null) {
+    return parsedRecipe.value;
+  }
+  return parsedRecipe.value.convertTo(unitSystem.value, conversionMethod.value);
+});
+
+// Step 3: Apply scaling (if different from base servings)
+const scaledRecipe = computed(() => {
+  const baseServings = convertedRecipe.value.servings;
+  if (baseServings && servings.value !== baseServings) {
+    return convertedRecipe.value.scaleTo(servings.value);
+  }
+  return convertedRecipe.value;
 });
 
 // Initialize and reset servings when recipe servings change
@@ -80,7 +99,7 @@ watch(
   { immediate: true },
 );
 
-// Reset choices when parsed recipe changes
+// Reset choices and conversion when parsed recipe changes
 watch(
   () => parsedRecipe.value,
   () => {
@@ -88,19 +107,9 @@ watch(
       ingredientItems: new Map(),
       ingredientGroups: new Map(),
     };
+    unitSystem.value = null;
   },
 );
-
-// Scaled recipe based on servings selection
-const scaledRecipe = computed(() => {
-  if (
-    parsedRecipe.value.servings &&
-    servings.value !== parsedRecipe.value.servings
-  ) {
-    return parsedRecipe.value.scaleTo(servings.value);
-  }
-  return parsedRecipe.value;
-});
 </script>
 
 <template>
@@ -158,6 +167,8 @@ const scaledRecipe = computed(() => {
             <RecipeChoices
               v-model:servings="servings"
               v-model:choices="choices"
+              v-model:unit-system="unitSystem"
+              v-model:conversion-method="conversionMethod"
               :recipe="parsedRecipe"
             />
           </template>
@@ -213,6 +224,8 @@ const scaledRecipe = computed(() => {
             <RecipeChoices
               v-model:servings="servings"
               v-model:choices="choices"
+              v-model:unit-system="unitSystem"
+              v-model:conversion-method="conversionMethod"
               :recipe="parsedRecipe"
             />
           </template>

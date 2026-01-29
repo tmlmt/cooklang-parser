@@ -3,6 +3,7 @@ import type {
   Recipe,
   RecipeChoices,
   IngredientAlternative,
+  SpecificUnitSystem,
 } from "cooklang-parser";
 import { formatItemQuantity } from "cooklang-parser";
 
@@ -12,6 +13,30 @@ const props = defineProps<{
 
 const servings = defineModel<number>("servings", { required: true });
 const choices = defineModel<RecipeChoices>("choices", { required: true });
+const unitSystem = defineModel<SpecificUnitSystem | null>("unitSystem", {
+  required: true,
+});
+const conversionMethod = defineModel<"keep" | "replace" | "remove">(
+  "conversionMethod",
+  { required: true },
+);
+
+// Unit conversion options
+const unitSystems: { label: string; value: SpecificUnitSystem | null }[] = [
+  { label: "None", value: null },
+  { label: "Metric", value: "metric" },
+  { label: "US", value: "US" },
+  { label: "UK", value: "UK" },
+  { label: "Japan", value: "JP" },
+];
+const conversionMethods: {
+  label: string;
+  value: "keep" | "replace" | "remove";
+}[] = [
+  { label: "Keep original as equivalent", value: "keep" },
+  { label: "Replace original", value: "replace" },
+  { label: "Remove equivalents", value: "remove" },
+];
 
 // Reset servings when recipe's base servings change
 watch(
@@ -159,6 +184,34 @@ function setSelectedGrouped(groupKey: string, value: number | undefined) {
       <p v-if="recipe.servings" class="text-xs text-gray-500">
         Original recipe: {{ recipe.servings }} servings
       </p>
+    </div>
+
+    <!-- Unit Conversion Section -->
+    <div class="flex flex-col gap-3">
+      <h3 class="text-sm font-semibold">Convert Units</h3>
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <label class="text-xs font-medium text-gray-700 dark:text-gray-300"
+            >Target system:</label
+          >
+          <USelectMenu
+            v-model="unitSystem"
+            :items="unitSystems"
+            value-key="value"
+            class="w-32"
+          />
+        </div>
+        <div v-if="unitSystem" class="flex flex-col gap-2">
+          <label class="text-xs font-medium text-gray-700 dark:text-gray-300"
+            >Conversion method:</label
+          >
+          <URadioGroup
+            v-model="conversionMethod"
+            :items="conversionMethods"
+            value-key="value"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Ingredient Choices Section -->

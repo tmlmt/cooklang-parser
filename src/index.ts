@@ -39,6 +39,7 @@ import {
   isSimpleGroup,
   hasAlternatives,
 } from "./utils/type_guards";
+import { convertQuantityToSystem } from "./quantities/mutations";
 
 export {
   isAlternativeSelected,
@@ -54,6 +55,7 @@ export {
   isAndGroup,
   isSimpleGroup,
   hasAlternatives,
+  convertQuantityToSystem,
 };
 
 // Types

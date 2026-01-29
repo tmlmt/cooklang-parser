@@ -319,10 +319,10 @@ describe("addEquivalentsAndSimplify", () => {
   });
   it("correctly take integer-protected units into account", () => {
     const or1: FlatOrGroup<QuantityWithExtendedUnit> = {
-      or: [q(2, "large", true), q(1.5, "cup")],
+      or: [q(2, "large", true), q(1.5, "cup"), q(355, "ml")],
     };
     const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
-      or: [q(2, "small"), q(1, "cup")],
+      or: [q(2, "small"), q(1, "cup"), q(237, "mL")],
     };
     // 1.5 + 1 = 2.5 cups → 5/2 as fraction (cup has fractions enabled)
     expect(addEquivalentsAndSimplify([or1, or2])).toEqual({
@@ -335,6 +335,7 @@ describe("addEquivalentsAndSimplify", () => {
           },
           unit: "cup",
         },
+        qPlain(592, "ml"),
       ],
     });
   });
