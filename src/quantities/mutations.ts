@@ -524,3 +524,97 @@ export const flattenPlainUnitGroup = (
     ];
   }
 };
+
+/**
+ * Apply the best unit to a quantity based on its value and unit system.
+ * Converts the quantity to base units, finds the best unit for display,
+ * and returns a new quantity with the best unit.
+ *
+ * @param q - The quantity to optimize
+ * @param system - The unit system to use for finding the best unit. If not provided,
+ *                 the system is inferred from the unit (metric/JP stay as-is, others default to US).
+ * @returns A new quantity with the best unit, or the original if no conversion possible
+ */
+export function applyBestUnit(
+  q: QuantityWithExtendedUnit,
+  system?: SpecificUnitSystem,
+): QuantityWithExtendedUnit {
+  // Skip if no unit or text value
+  if (!q.unit?.name) {
+    return q;
+  }
+
+  const unitDef = resolveUnit(q.unit.name);
+
+  // Skip if unit type is "other" (not convertible)
+  if (unitDef.type === "other") {
+    return q;
+  }
+
+  // Get the value - skip if text
+  if (q.quantity.type === "fixed" && q.quantity.value.type === "text") {
+    return q;
+  }
+
+  const avgValue = getAverageValue(q.quantity);
+  if (typeof avgValue !== "number") {
+    return q;
+  }
+
+  // Determine effective system: use provided system, or infer from unit
+  const effectiveSystem: SpecificUnitSystem =
+    system ??
+    (["metric", "JP"].includes(unitDef.system)
+      ? (unitDef.system as "metric" | "JP")
+      : "US");
+
+  // Convert to base units
+  const toBase = getToBase(unitDef, effectiveSystem);
+  const valueInBase = avgValue * toBase;
+
+  // Find the best unit
+  const { unit: bestUnit, value: bestValue } = findBestUnit(
+    valueInBase,
+    unitDef.type,
+    effectiveSystem,
+    [unitDef],
+  );
+
+  // Get canonical name of the original unit for comparison
+  const originalCanonicalName = normalizeUnit(q.unit.name)?.name ?? q.unit.name;
+
+  // If same unit (by canonical name match), no change needed - preserve original unit name
+  if (bestUnit.name === originalCanonicalName) {
+    return q;
+  }
+
+  // Format the value for the best unit
+  const formattedValue = formatOutputValue(bestValue, bestUnit);
+
+  // Handle ranges: scale to the best unit
+  if (q.quantity.type === "range") {
+    const bestToBase = getToBase(bestUnit, effectiveSystem);
+    const minValue =
+      (getNumericValue(q.quantity.min) * toBase) / bestToBase;
+    const maxValue =
+      (getNumericValue(q.quantity.max) * toBase) / bestToBase;
+
+    return {
+      quantity: {
+        type: "range",
+        min: formatOutputValue(minValue, bestUnit),
+        max: formatOutputValue(maxValue, bestUnit),
+      },
+      unit: { name: bestUnit.name },
+    };
+  }
+
+  // Fixed value
+  return {
+    quantity: {
+      type: "fixed",
+      value: formattedValue,
+    },
+    unit: { name: bestUnit.name },
+  };
+}

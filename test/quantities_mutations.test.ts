@@ -8,6 +8,7 @@ import {
   normalizeAllUnits,
   toExtendedUnit,
   flattenPlainUnitGroup,
+  applyBestUnit,
 } from "../src/quantities/mutations";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../src/errors";
 import {
@@ -1219,5 +1220,115 @@ describe("flattenPlainUnitGroup", () => {
         unit: "cup",
       },
     ]);
+  });
+});
+
+describe("applyBestUnit", () => {
+  it("should return original quantity when no unit", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+    };
+    expect(applyBestUnit(q)).toBe(q);
+  });
+
+  it("should return original quantity when unit type is 'other'", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+      unit: { name: "clove" },
+    };
+    expect(applyBestUnit(q)).toBe(q);
+  });
+
+  it("should return original quantity when value is text", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "text", text: "some" } },
+      unit: { name: "g" },
+    };
+    expect(applyBestUnit(q)).toBe(q);
+  });
+
+  it("should convert to best unit (g -> kg)", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1000 } },
+      unit: { name: "g" },
+    };
+    const result = applyBestUnit(q);
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "kg" },
+    });
+  });
+
+  it("should preserve original unit name when best unit is the same (mL stays mL)", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+      unit: { name: "mL" },
+    };
+    const result = applyBestUnit(q);
+    expect(result).toBe(q);
+    expect(result.unit?.name).toBe("mL");
+  });
+
+  it("should preserve unit alias when best unit is the same (cups stays cups)", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+      unit: { name: "cups" },
+    };
+    const result = applyBestUnit(q);
+    expect(result).toBe(q);
+    expect(result.unit?.name).toBe("cups");
+  });
+
+  it("should infer metric system from unit when system not provided", () => {
+    // 1000g should become 1kg (metric system inferred)
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1000 } },
+      unit: { name: "g" },
+    };
+    const result = applyBestUnit(q);
+    expect(result.unit?.name).toBe("kg");
+    expect(result.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 1 },
+    });
+  });
+
+  it("should infer US system from ambiguous unit when system not provided", () => {
+    // Ambiguous units (like cup) default to US system
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 16 } },
+      unit: { name: "tbsp" },
+    };
+    const result = applyBestUnit(q);
+    // 16 tbsp = 1 cup in US system
+    expect(result.unit?.name).toBe("cup");
+    expect(result.quantity.type).toBe("fixed");
+  });
+
+  it("should use provided system for conversion", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1000 } },
+      unit: { name: "ml" },
+    };
+    const result = applyBestUnit(q, "metric");
+    expect(result.unit?.name).toBe("l");
+  });
+
+  it("should handle ranges correctly", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 500 },
+        max: { type: "decimal", decimal: 1500 },
+      },
+      unit: { name: "g" },
+    };
+    const result = applyBestUnit(q);
+    expect(result.unit?.name).toBe("kg");
+    expect(result.quantity).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 0.5 },
+      max: { type: "decimal", decimal: 1.5 },
+    });
   });
 });
