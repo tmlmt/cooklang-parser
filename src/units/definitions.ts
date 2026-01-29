@@ -27,7 +27,7 @@ export const units: UnitDefinition[] = [
     toBase: 28.3495, // default: US (same as UK)
     toBaseBySystem: { US: 28.3495, UK: 28.3495 },
     maxValue: 31, // 16 oz = 1 lb, allow a bit more
-    fractions: { enabled: true },
+    fractions: { enabled: true, denominators: [2] },
   },
   {
     name: "lb",
@@ -36,7 +36,7 @@ export const units: UnitDefinition[] = [
     aliases: ["pound", "pounds"],
     toBase: 453.592, // default: US (same as UK)
     toBaseBySystem: { US: 453.592, UK: 453.592 },
-    fractions: { enabled: true },
+    fractions: { enabled: true, denominators: [2, 4] },
   },
 
   // Volume (Metric)
@@ -91,7 +91,7 @@ export const units: UnitDefinition[] = [
     toBase: 5, // default: metric
     toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919, JP: 5 },
     maxValue: 5, // 3 tsp = 1 tbsp (but allow a bit more)
-    fractions: { enabled: true, denominators: [2, 3, 4] },
+    fractions: { enabled: true, denominators: [2, 3, 4, 8] },
   },
   {
     name: "tbsp",
@@ -101,7 +101,7 @@ export const units: UnitDefinition[] = [
     toBase: 15, // default: metric
     toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
     maxValue: 4, // ~16 tbsp = 1 cup
-    fractions: { enabled: true, denominators: [2, 3, 4] },
+    fractions: { enabled: true },
   },
 
   // Volume (Ambiguous: US/UK only)
@@ -113,7 +113,7 @@ export const units: UnitDefinition[] = [
     toBase: 29.5735, // default: US
     toBaseBySystem: { US: 29.5735, UK: 28.4131 },
     maxValue: 15, // 8 fl-oz ~ 1 cup, allow more
-    fractions: { enabled: true },
+    fractions: { enabled: true, denominators: [2] },
   },
   {
     name: "cup",
@@ -133,7 +133,7 @@ export const units: UnitDefinition[] = [
     toBase: 473.176, // default: US
     toBaseBySystem: { US: 473.176, UK: 568.261 },
     maxValue: 3, // 2 pints = 1 quart
-    fractions: { enabled: true },
+    fractions: { enabled: true, denominators: [2] },
     isBestUnit: false, // exists but not a "best" candidate
   },
   {
@@ -144,7 +144,7 @@ export const units: UnitDefinition[] = [
     toBase: 946.353, // default: US
     toBaseBySystem: { US: 946.353, UK: 1136.52 },
     maxValue: 3, // 4 quarts = 1 gallon
-    fractions: { enabled: true },
+    fractions: { enabled: true, denominators: [2] },
     isBestUnit: false, // exists but not a "best" candidate
   },
   {
@@ -154,7 +154,7 @@ export const units: UnitDefinition[] = [
     aliases: ["gallons"],
     toBase: 3785.41, // default: US
     toBaseBySystem: { US: 3785.41, UK: 4546.09 },
-    fractions: { enabled: true },
+    fractions: { enabled: true, denominators: [2] },
   },
 
   // Count units (no conversion, but recognized as a type)

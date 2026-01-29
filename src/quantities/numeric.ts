@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 /** Default allowed denominators for fraction approximation */
-export const DEFAULT_DENOMINATORS = [2, 3, 4, 8];
+export const DEFAULT_DENOMINATORS = [2, 3, 4];
 /** Default accuracy tolerance for fraction approximation (5%) */
 export const DEFAULT_FRACTION_ACCURACY = 0.05;
 /** Default maximum whole number in mixed fraction before falling back to decimal */
