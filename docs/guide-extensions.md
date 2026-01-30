@@ -18,7 +18,7 @@ One of more prefixes can be added before the ingredient name (`@<modifiers>name{
 
 Use case: `Add @water{1%L} first, and than again @&water{100%mL}` will create one "water" ingredient with a quantity of 1.1L
 
-- The quantities will be added to the ingredient having the same name existing in the `ingredients` list, according to the rules explained in the [units guide](/guide-units)
+- The quantities will be added to the ingredient having the same name existing in the `ingredients` list, according to the rules explained in the [unit conversion guide](/guide-unit-conversion)
 - The quantity for this specific instance will be saved as part of the item
 - If the referenced ingredient is not found or if the quantities cannot be added, a new ingredient will be created
 

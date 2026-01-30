@@ -1312,8 +1312,8 @@ export class Recipe {
    *
    * @param system - The target unit system to convert to (metric, US, UK, JP)
    * @param method - How to handle existing quantities:
-   *   - "keep": Keep all quantities, ensure target system is primary (swap if needed, or add converted)
-   *   - "replace": Replace primary with target system quantity, discard old primary, keep only non-target equivalents
+   *   - "keep": Keep all existing equivalents (swap if needed, or add converted)
+   *   - "replace": Replace primary with target system quantity, discard equivalent used for conversion
    *   - "remove": Only keep target system quantity, delete all equivalents
    * @returns A new Recipe instance with converted quantities
    *

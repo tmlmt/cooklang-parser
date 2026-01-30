@@ -37,14 +37,22 @@ export default defineConfig({
           { text: "Quick start", link: "/api/#quick-start" },
           { text: "Cooklang specs", link: "/guide-cooklang-specs" },
           { text: "Extensions", link: "/guide-extensions" }, 
-          { text: "Units and conversions", link: "/guide-units" }, 
+          { text: "Unit conversion", link: "/guide-unit-conversion" }, 
         ],
         collapsed: true
       },
       {
         text: "API",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        items: typedocSidebar,
+        items: [
+          { 
+            text: "Reference",
+            items: [
+              { 
+                text: "Units definition", link: "/reference-units" 
+              }
+            ],
+          }, ...typedocSidebar],
         collapsed: true
       },
       {
