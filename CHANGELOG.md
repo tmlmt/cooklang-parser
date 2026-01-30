@@ -1,5 +1,31 @@
 # Changelog
 
+## v3.0.0-alpha.11
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.10...v3.0.0-alpha.11)
+
+#### ⚠️ Breaking Changes
+
+- **units:** ⚠️ When added or scaled, the best unit is found and applied to the all resulting quantities, potentially taking into account a user-defined unit system in the recipe frontmatter. Previously, the original unit was maintained or compatible units where possibly merging into metric units.
+
+### 🚀 Enhancements
+
+- Enhance handling of unit systems and cover metric, UK, US and JP units ([487cdcd](https://github.com/tmlmt/cooklang-parser/commit/487cdcd))
+- **units:** ⚠️ Improve unit system and quantity additions ([#95](https://github.com/tmlmt/cooklang-parser/pull/95))
+- Full-recipe unit conversion ([#97](https://github.com/tmlmt/cooklang-parser/pull/97))
+
+### 🏡 Chore
+
+- **vitest:** Do not run coverage by default ([fcd2302](https://github.com/tmlmt/cooklang-parser/commit/fcd2302))
+- **gitignore:** Ignore copilot instructions file ([8d73c9e](https://github.com/tmlmt/cooklang-parser/commit/8d73c9e))
+- **package:** Update test:ui script to include coverage ([333c902](https://github.com/tmlmt/cooklang-parser/commit/333c902))
+- **playground:** Remove passing of invalid prop in IngredientItem ([#96](https://github.com/tmlmt/cooklang-parser/pull/96))
+- **docs:** Move eslint-disable-next-line to the new right place ([288c1e9](https://github.com/tmlmt/cooklang-parser/commit/288c1e9))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.10
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.9...v3.0.0-alpha.10)
