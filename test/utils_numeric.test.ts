@@ -147,11 +147,12 @@ describe("multiplyNumericValue", () => {
       value: { type: "decimal", decimal: 5 },
     };
     const factor = Big(1).div(3);
+    // 5/3 = 1.6666... rounded to 3 sig figs = 1.67
     expect(multiplyQuantityValue(val, factor)).toEqual({
       type: "fixed",
       value: {
         type: "decimal",
-        decimal: 1.667,
+        decimal: 1.67,
       },
     });
   });

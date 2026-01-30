@@ -303,6 +303,7 @@ export function addQuantitiesOrGroups(
 export function regroupQuantitiesAndExpandEquivalents(
   sum: QuantityWithUnitDef | FlatAndGroup<QuantityWithUnitDef>,
   unitsLists: QuantityWithUnitDef[][],
+  system?: SpecificUnitSystem,
 ): (QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>)[] {
   const sumQuantities = isAndGroup(sum) ? sum.and : [sum];
   const result: (
@@ -341,9 +342,21 @@ export function regroupQuantitiesAndExpandEquivalents(
       }
       return main.reduce((acc, v) => {
         const mainInList = findCompatibleQuantityWithinList(list, v)!;
+        // If the sum unit differs from the original list unit (e.g., cups → gallon after best-unit upgrade),
+        // we need to convert the sum value to the equivalent amount in the original unit before scaling.
+        const conversionRatio = getBaseUnitRatio(v, mainInList);
+        const valueInOriginalUnit = Big(getAverageValue(v.quantity)).times(
+          conversionRatio,
+        );
         const newValue: QuantityWithExtendedUnit = {
           quantity: multiplyQuantityValue(
-            v.quantity,
+            {
+              type: "fixed",
+              value: {
+                type: "decimal",
+                decimal: valueInOriginalUnit.toNumber(),
+              },
+            },
             Big(getAverageValue(equiv.quantity)).div(
               getAverageValue(mainInList.quantity),
             ),
@@ -352,7 +365,7 @@ export function regroupQuantitiesAndExpandEquivalents(
         if (equiv.unit && !isNoUnit(equiv.unit)) {
           newValue.unit = { name: equiv.unit.name };
         }
-        return addQuantities(acc, newValue);
+        return addQuantities(acc, newValue, system);
       }, initialValue);
     });
 
@@ -396,7 +409,11 @@ export function addEquivalentsAndSimplify(
   // Step 1+2+3: find equivalents, reduce groups and add quantities
   const { sum, unitsLists } = addQuantitiesOrGroups(quantities, system);
   // Step 4: regroup and expand equivalents per group
-  const regrouped = regroupQuantitiesAndExpandEquivalents(sum, unitsLists);
+  const regrouped = regroupQuantitiesAndExpandEquivalents(
+    sum,
+    unitsLists,
+    system,
+  );
   if (regrouped.length === 1) {
     return toPlainUnit(regrouped[0]!);
   } else {

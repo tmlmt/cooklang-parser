@@ -12,15 +12,15 @@ import type {
   MaybeNestedAndGroup,
   SpecificUnitSystem,
 } from "../types";
-import {
-  units,
-  normalizeUnit,
-  resolveUnit,
-  isNoUnit,
-} from "../units/definitions";
-import { getToBase } from "../units/conversion";
+import { normalizeUnit, resolveUnit, isNoUnit } from "../units/definitions";
+import { getToBase, findBestUnit } from "../units/conversion";
 import { areUnitsConvertible } from "../units/compatibility";
-import { addNumericValues, multiplyQuantityValue } from "./numeric";
+import {
+  addNumericValues,
+  getNumericValue,
+  formatOutputValue,
+  getAverageValue,
+} from "./numeric";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
 import { isAndGroup, isOrGroup, isQuantity } from "../utils/type_guards";
 
@@ -68,30 +68,6 @@ export function normalizeAllUnits(
     return newQ;
   }
 }
-
-/**
- * Convert a quantity value from one unit to another.
- *
- * @param value - The quantity value to convert
- * @param def - The source unit definition
- * @param targetDef - The target unit definition
- * @param system - Optional system context for resolving ambiguous units
- * @returns The converted quantity value
- */
-export const convertQuantityValue = (
-  value: FixedValue | Range,
-  def: UnitDefinition,
-  targetDef: UnitDefinition,
-  system?: SpecificUnitSystem,
-): FixedValue | Range => {
-  if (def.name === targetDef.name) return value;
-
-  const sourceToBase = getToBase(def, system);
-  const targetToBase = getToBase(targetDef, system);
-  const factor = sourceToBase / targetToBase;
-
-  return multiplyQuantityValue(value, factor);
-};
 
 /**
  * Get the default / neutral quantity which can be provided to addQuantity
@@ -155,6 +131,13 @@ export function addQuantityValues(
 /**
  * Adds two quantities, returning the result in the most appropriate unit.
  *
+ * The "best unit" is selected based on:
+ * 1. Filter candidates to units where `isBestUnit !== false`
+ * 2. Use per-unit `maxValue` thresholds (prefer largest unit where value ≥ 1 and ≤ maxValue)
+ * 3. Prefer integers in input unit family
+ * 4. Prefer integers in any unit family
+ * 5. If no integers, prefer smallest value in range
+ *
  * @param q1 - The first quantity
  * @param q2 - The second quantity
  * @param system - Optional system context for resolving ambiguous units
@@ -202,13 +185,28 @@ export function addQuantities(
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit); // Prefer q1's unit
   }
 
-  // Case 3: the two quantities have the exact same unit
+  // Case 3: the two quantities have the exact same unit (or both no unit)
+  if (!q1.unit && !q2.unit) {
+    return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
+  }
   if (
-    (!q1.unit && !q2.unit) ||
-    (q1.unit &&
-      q2.unit &&
-      q1.unit.name.toLowerCase() === q2.unit.name.toLowerCase())
+    q1.unit &&
+    q2.unit &&
+    q1.unit.name.toLowerCase() === q2.unit.name.toLowerCase()
   ) {
+    // Same unit - check if we should upgrade to a larger unit (e.g., 1200g → 1.2kg)
+    if (unit1Def) {
+      // Known unit type - use findBestUnit to potentially upgrade
+      const effectiveSystem =
+        system ??
+        (["metric", "JP"].includes(unit1Def.system)
+          ? (unit1Def.system as "metric" | "JP")
+          : "US");
+      return addAndFindBestUnit(v1, v2, unit1Def, unit1Def, effectiveSystem, [
+        unit1Def,
+      ]);
+    }
+    // Unknown unit type - just add values, keep unit
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
   }
 
@@ -225,84 +223,41 @@ export function addQuantities(
     // Determine the effective system for conversion of ambiguous units
     let effectiveSystem = system;
 
-    // If no system provided, try to infer from non-ambiguous unit
+    // If no system provided, infer based on the input units:
+    // 1. Prefer metric if either unit is metric
+    // 2. If both are ambiguous and US-compatible, use US
+    // 3. Default to metric
     // v8 ignore else -- @preserve
     if (!effectiveSystem) {
-      if (unit1Def.system !== "ambiguous") {
-        effectiveSystem = unit1Def.system;
-      } else if (unit2Def.system !== "ambiguous") {
-        effectiveSystem = unit2Def.system;
+      if (unit1Def.system === "metric" || unit2Def.system === "metric") {
+        effectiveSystem = "metric";
+      } else {
+        // TODO remove if v8 marker if JP is augmented with more than one unit */
+        // v8 ignore if -- @preserve
+        if (unit1Def.system === "JP" && unit2Def.system === "JP") {
+          effectiveSystem = "JP";
+        } else {
+          // Check if both units are US-compatible
+          const unit1SupportsUS =
+            unit1Def.system === "US" ||
+            (unit1Def.system === "ambiguous" &&
+              unit1Def.toBaseBySystem &&
+              "US" in unit1Def.toBaseBySystem);
+          const unit2SupportsUS =
+            unit2Def.system === "US" ||
+            (unit2Def.system === "ambiguous" &&
+              unit2Def.toBaseBySystem &&
+              "US" in unit2Def.toBaseBySystem);
+          effectiveSystem =
+            unit1SupportsUS && unit2SupportsUS ? "US" : "metric";
+        }
       }
-      // If both are ambiguous, effectiveSystem remains undefined and we use defaults
     }
 
-    let targetUnitDef: UnitDefinition;
-    let conversionSystem: SpecificUnitSystem | undefined;
-
-    // Resolve effective systems for each unit
-    const sys1 =
-      unit1Def.system === "ambiguous"
-        ? unit1Def.toBaseBySystem?.[effectiveSystem!] !== undefined
-          ? effectiveSystem
-          : undefined
-        : unit1Def.system;
-
-    const sys2 =
-      unit2Def.system === "ambiguous"
-        ? unit2Def.toBaseBySystem?.[effectiveSystem!] !== undefined
-          ? effectiveSystem
-          : undefined
-        : unit2Def.system;
-
-    if (sys1 === sys2 && sys1 !== undefined) {
-      // Case 4.1: Same system - use larger unit of that system
-      const toBase1 = getToBase(unit1Def, sys1);
-      const toBase2 = getToBase(unit2Def, sys1);
-      targetUnitDef = toBase1 >= toBase2 ? unit1Def : unit2Def;
-      conversionSystem = sys1;
-    } else if (system !== undefined) {
-      // Case 4.2: Context system is set - use the unit that supports it (or larger if both do)
-      const unit1SupportsSystem =
-        unit1Def.system === system ||
-        (unit1Def.system === "ambiguous" &&
-          unit1Def.toBaseBySystem?.[system] !== undefined);
-
-      targetUnitDef = unit1SupportsSystem ? unit1Def : unit2Def;
-      conversionSystem = system;
-    } else if (sys1 === "metric" || sys2 === "metric") {
-      // Case 4.3: No context system, but one unit is metric - use that metric unit
-      targetUnitDef = sys1 === "metric" ? unit1Def : unit2Def;
-      conversionSystem = "metric";
-    } else if (sys1 === undefined && sys2 === undefined) {
-      // Case 4.4: Both units are ambiguous with no context - default to US, use larger unit
-      const toBase1 = getToBase(unit1Def, "US");
-      const toBase2 = getToBase(unit2Def, "US");
-      targetUnitDef = toBase1 >= toBase2 ? unit1Def : unit2Def;
-      conversionSystem = "US";
-    } else {
-      // Case 4.5: Different non-metric systems (e.g., JP + US/UK) - convert to metric
-      const metricUnits = units.filter(
-        (u) => u.type === unit1Def.type && u.system === "metric",
-      );
-      targetUnitDef = metricUnits[metricUnits.length - 1]!;
-      conversionSystem = "metric";
-    }
-
-    const convertedV1 = convertQuantityValue(
-      v1,
+    return addAndFindBestUnit(v1, v2, unit1Def, unit2Def, effectiveSystem, [
       unit1Def,
-      targetUnitDef,
-      conversionSystem,
-    );
-    const convertedV2 = convertQuantityValue(
-      v2,
       unit2Def,
-      targetUnitDef,
-      conversionSystem,
-    );
-    const targetUnit: Unit = { name: targetUnitDef.name };
-
-    return addQuantityValuesAndSetUnit(convertedV1, convertedV2, targetUnit);
+    ]);
   }
 
   // Case 5: the two quantities have different units of unknown type
@@ -310,6 +265,83 @@ export function addQuantities(
     q1.unit?.name as string,
     q2.unit?.name as string,
   );
+}
+
+/**
+ * Helper function to add two quantities and find the best unit for the result.
+ */
+function addAndFindBestUnit(
+  v1: FixedValue | Range,
+  v2: FixedValue | Range,
+  unit1Def: UnitDefinition,
+  unit2Def: UnitDefinition,
+  system: SpecificUnitSystem,
+  inputUnits: UnitDefinition[],
+): QuantityWithExtendedUnit {
+  // Convert both values to base units and sum
+  const toBase1 = getToBase(unit1Def, system);
+  const toBase2 = getToBase(unit2Def, system);
+
+  // Get the sum in base units
+  let sumInBase: number;
+  if (v1.type === "fixed" && v2.type === "fixed") {
+    const val1 = getNumericValue(v1.value as DecimalValue | FractionValue);
+    const val2 = getNumericValue(v2.value as DecimalValue | FractionValue);
+    sumInBase = val1 * toBase1 + val2 * toBase2;
+  } else {
+    // Handle ranges by using average for best unit selection
+    const avg1 = getAverageValue(v1) as number;
+    const avg2 = getAverageValue(v2) as number;
+    sumInBase = avg1 * toBase1 + avg2 * toBase2;
+  }
+
+  // Find the best unit
+  const { unit: bestUnit, value: bestValue } = findBestUnit(
+    sumInBase,
+    unit1Def.type,
+    system,
+    inputUnits,
+  );
+
+  // Format the value (uses fractions if unit supports them)
+  const formattedValue = formatOutputValue(bestValue, bestUnit);
+
+  // Handle ranges: scale the range to the best unit
+  if (v1.type === "range" || v2.type === "range") {
+    const r1 =
+      v1.type === "range"
+        ? v1
+        : { type: "range" as const, min: v1.value, max: v1.value };
+    const r2 =
+      v2.type === "range"
+        ? v2
+        : { type: "range" as const, min: v2.value, max: v2.value };
+
+    const minInBase =
+      getNumericValue(r1.min as DecimalValue | FractionValue) * toBase1 +
+      getNumericValue(r2.min as DecimalValue | FractionValue) * toBase2;
+    const maxInBase =
+      getNumericValue(r1.max as DecimalValue | FractionValue) * toBase1 +
+      getNumericValue(r2.max as DecimalValue | FractionValue) * toBase2;
+
+    const bestToBase = getToBase(bestUnit, system);
+    const minValue = minInBase / bestToBase;
+    const maxValue = maxInBase / bestToBase;
+
+    return {
+      quantity: {
+        type: "range",
+        min: formatOutputValue(minValue, bestUnit),
+        max: formatOutputValue(maxValue, bestUnit),
+      },
+      unit: { name: bestUnit.name },
+    };
+  }
+
+  return {
+    quantity: { type: "fixed", value: formattedValue },
+    unit: { name: bestUnit.name },
+  };
 }
 
 export function toPlainUnit(
@@ -492,3 +524,97 @@ export const flattenPlainUnitGroup = (
     ];
   }
 };
+
+/**
+ * Apply the best unit to a quantity based on its value and unit system.
+ * Converts the quantity to base units, finds the best unit for display,
+ * and returns a new quantity with the best unit.
+ *
+ * @param q - The quantity to optimize
+ * @param system - The unit system to use for finding the best unit. If not provided,
+ *                 the system is inferred from the unit (metric/JP stay as-is, others default to US).
+ * @returns A new quantity with the best unit, or the original if no conversion possible
+ */
+export function applyBestUnit(
+  q: QuantityWithExtendedUnit,
+  system?: SpecificUnitSystem,
+): QuantityWithExtendedUnit {
+  // Skip if no unit or text value
+  if (!q.unit?.name) {
+    return q;
+  }
+
+  const unitDef = resolveUnit(q.unit.name);
+
+  // Skip if unit type is "other" (not convertible)
+  if (unitDef.type === "other") {
+    return q;
+  }
+
+  // Get the value - skip if text
+  if (q.quantity.type === "fixed" && q.quantity.value.type === "text") {
+    return q;
+  }
+
+  const avgValue = getAverageValue(q.quantity);
+  if (typeof avgValue !== "number") {
+    return q;
+  }
+
+  // Determine effective system: use provided system, or infer from unit
+  const effectiveSystem: SpecificUnitSystem =
+    system ??
+    (["metric", "JP"].includes(unitDef.system)
+      ? (unitDef.system as "metric" | "JP")
+      : "US");
+
+  // Convert to base units
+  const toBase = getToBase(unitDef, effectiveSystem);
+  const valueInBase = avgValue * toBase;
+
+  // Find the best unit
+  const { unit: bestUnit, value: bestValue } = findBestUnit(
+    valueInBase,
+    unitDef.type,
+    effectiveSystem,
+    [unitDef],
+  );
+
+  // Get canonical name of the original unit for comparison
+  const originalCanonicalName = normalizeUnit(q.unit.name)?.name ?? q.unit.name;
+
+  // If same unit (by canonical name match), no change needed - preserve original unit name
+  if (bestUnit.name === originalCanonicalName) {
+    return q;
+  }
+
+  // Format the value for the best unit
+  const formattedValue = formatOutputValue(bestValue, bestUnit);
+
+  // Handle ranges: scale to the best unit
+  if (q.quantity.type === "range") {
+    const bestToBase = getToBase(bestUnit, effectiveSystem);
+    const minValue =
+      (getNumericValue(q.quantity.min) * toBase) / bestToBase;
+    const maxValue =
+      (getNumericValue(q.quantity.max) * toBase) / bestToBase;
+
+    return {
+      quantity: {
+        type: "range",
+        min: formatOutputValue(minValue, bestUnit),
+        max: formatOutputValue(maxValue, bestUnit),
+      },
+      unit: { name: bestUnit.name },
+    };
+  }
+
+  // Fixed value
+  return {
+    quantity: {
+      type: "fixed",
+      value: formattedValue,
+    },
+    unit: { name: bestUnit.name },
+  };
+}

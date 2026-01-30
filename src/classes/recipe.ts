@@ -56,6 +56,7 @@ import {
   toPlainUnit,
   toExtendedUnit,
   flattenPlainUnitGroup,
+  applyBestUnit,
 } from "../quantities/mutations";
 import { resolveUnit } from "../units/definitions";
 import Big from "big.js";
@@ -1157,6 +1158,9 @@ export class Recipe {
       originalServings = 1;
     }
 
+    // Get unit system for best unit optimization (if set)
+    const unitSystem = this.unitSystem;
+
     function scaleAlternativesBy(
       alternatives: IngredientAlternative[],
       factor: number | Big,
@@ -1196,6 +1200,26 @@ export class Recipe {
                     };
                   }
                 },
+              );
+          }
+
+          // Apply best unit optimization (infers system from unit if unitSystem not set)
+          // Apply to primary
+          const optimizedPrimary = applyBestUnit(
+            {
+              quantity: alternative.itemQuantity.quantity,
+              unit: alternative.itemQuantity.unit,
+            },
+            unitSystem,
+          );
+          alternative.itemQuantity.quantity = optimizedPrimary.quantity;
+          alternative.itemQuantity.unit = optimizedPrimary.unit;
+
+          // Apply to equivalents
+          if (alternative.itemQuantity.equivalents) {
+            alternative.itemQuantity.equivalents =
+              alternative.itemQuantity.equivalents.map((eq) =>
+                applyBestUnit(eq, unitSystem),
               );
           }
         }

@@ -644,3 +644,125 @@ Add {{sauce:100%g}} of sauce.
     });
   });
 });
+
+describe("scaleBy with best unit optimization", () => {
+  it("should apply best unit when scaling with unitSystem set (metric)", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+unit system: metric
+---
+Add @flour{100%g}.
+    `);
+
+    // Scale by 10x - 100g * 10 = 1000g = 1kg
+    const scaledRecipe = recipe.scaleBy(10);
+    const step = scaledRecipe.sections[0]!.content[0]! as Step;
+    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
+    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "kg" },
+    });
+  });
+
+  it("should apply best unit to equivalents when scaling", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+unit system: metric
+---
+Add @flour{100%g|1%cup}.
+    `);
+
+    // Scale by 10x - 100g * 10 = 1000g = 1kg, 1cup * 10 = 10 cups stays (no better unit)
+    const scaledRecipe = recipe.scaleBy(10);
+    const step = scaledRecipe.sections[0]!.content[0]! as Step;
+    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
+    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "kg" },
+    });
+    // Equivalent (cup) optimized within metric system context
+    expect(item.alternatives[0]!.itemQuantity!.equivalents![0]).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal" } },
+      unit: { name: "l" },
+    });
+  });
+
+  it("should apply best unit even when unitSystem is not set (infers from unit)", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @flour{100%g}.
+    `);
+
+    // Scale by 10x - 100g * 10 = 1000g = 1kg (infers metric system from g unit)
+    const scaledRecipe = recipe.scaleBy(10);
+    const step = scaledRecipe.sections[0]!.content[0]! as Step;
+    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
+    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "kg" },
+    });
+  });
+
+  it("should apply best unit to range quantities", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+unit system: metric
+---
+Add @flour{100-200%g}.
+    `);
+
+    // Scale by 10x - range becomes 1000-2000g = 1-2kg
+    const scaledRecipe = recipe.scaleBy(10);
+    const step = scaledRecipe.sections[0]!.content[0]! as Step;
+    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
+    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
+      },
+      unit: { name: "kg" },
+    });
+  });
+
+  it("should leave text quantities unchanged", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+unit system: metric
+---
+Add @flour{some%g}.
+    `);
+
+    const scaledRecipe = recipe.scaleBy(2);
+    const step = scaledRecipe.sections[0]!.content[0]! as Step;
+    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
+    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+      quantity: { type: "fixed", value: { type: "text", text: "some" } },
+      unit: { name: "g" },
+    });
+  });
+
+  it("should leave non-convertible units unchanged", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+unit system: metric
+---
+Add @eggs{5%piece}.
+    `);
+
+    const scaledRecipe = recipe.scaleBy(2);
+    const step = scaledRecipe.sections[0]!.content[0]! as Step;
+    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
+    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 10 } },
+      unit: { name: "piece" },
+    });
+  });
+});

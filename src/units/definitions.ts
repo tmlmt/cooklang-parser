@@ -9,6 +9,7 @@ export const units: UnitDefinition[] = [
     system: "metric",
     aliases: ["gram", "grams", "grammes"],
     toBase: 1,
+    maxValue: 999,
   },
   {
     name: "kg",
@@ -25,6 +26,8 @@ export const units: UnitDefinition[] = [
     aliases: ["ounce", "ounces"],
     toBase: 28.3495, // default: US (same as UK)
     toBaseBySystem: { US: 28.3495, UK: 28.3495 },
+    maxValue: 31, // 16 oz = 1 lb, allow a bit more
+    fractions: { enabled: true, denominators: [2] },
   },
   {
     name: "lb",
@@ -33,6 +36,7 @@ export const units: UnitDefinition[] = [
     aliases: ["pound", "pounds"],
     toBase: 453.592, // default: US (same as UK)
     toBaseBySystem: { US: 453.592, UK: 453.592 },
+    fractions: { enabled: true, denominators: [2, 4] },
   },
 
   // Volume (Metric)
@@ -42,6 +46,7 @@ export const units: UnitDefinition[] = [
     system: "metric",
     aliases: ["milliliter", "milliliters", "millilitre", "millilitres", "cc"],
     toBase: 1,
+    maxValue: 999,
   },
   {
     name: "cl",
@@ -49,6 +54,7 @@ export const units: UnitDefinition[] = [
     system: "metric",
     aliases: ["centiliter", "centiliters", "centilitre", "centilitres"],
     toBase: 10,
+    isBestUnit: false, // exists but not a "best" candidate
   },
   {
     name: "dl",
@@ -56,6 +62,7 @@ export const units: UnitDefinition[] = [
     system: "metric",
     aliases: ["deciliter", "deciliters", "decilitre", "decilitres"],
     toBase: 100,
+    isBestUnit: false, // exists but not a "best" candidate
   },
   {
     name: "l",
@@ -72,6 +79,7 @@ export const units: UnitDefinition[] = [
     system: "JP",
     aliases: ["gou", "goo", "合", "rice cup"],
     toBase: 180,
+    maxValue: 10,
   },
 
   // Volume (Ambiguous: metric/US/UK)
@@ -81,7 +89,9 @@ export const units: UnitDefinition[] = [
     system: "ambiguous",
     aliases: ["teaspoon", "teaspoons"],
     toBase: 5, // default: metric
-    toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919 },
+    toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919, JP: 5 },
+    maxValue: 5, // 3 tsp = 1 tbsp (but allow a bit more)
+    fractions: { enabled: true, denominators: [2, 3, 4, 8] },
   },
   {
     name: "tbsp",
@@ -89,7 +99,9 @@ export const units: UnitDefinition[] = [
     system: "ambiguous",
     aliases: ["tablespoon", "tablespoons"],
     toBase: 15, // default: metric
-    toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
+    toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
+    maxValue: 4, // ~16 tbsp = 1 cup
+    fractions: { enabled: true },
   },
 
   // Volume (Ambiguous: US/UK only)
@@ -100,6 +112,8 @@ export const units: UnitDefinition[] = [
     aliases: ["fluid ounce", "fluid ounces"],
     toBase: 29.5735, // default: US
     toBaseBySystem: { US: 29.5735, UK: 28.4131 },
+    maxValue: 15, // 8 fl-oz ~ 1 cup, allow more
+    fractions: { enabled: true, denominators: [2] },
   },
   {
     name: "cup",
@@ -108,6 +122,8 @@ export const units: UnitDefinition[] = [
     aliases: ["cups"],
     toBase: 236.588, // default: US
     toBaseBySystem: { US: 236.588, UK: 284.131 },
+    maxValue: 15, // upgrade to gallons above 15 cups
+    fractions: { enabled: true },
   },
   {
     name: "pint",
@@ -116,6 +132,9 @@ export const units: UnitDefinition[] = [
     aliases: ["pints"],
     toBase: 473.176, // default: US
     toBaseBySystem: { US: 473.176, UK: 568.261 },
+    maxValue: 3, // 2 pints = 1 quart
+    fractions: { enabled: true, denominators: [2] },
+    isBestUnit: false, // exists but not a "best" candidate
   },
   {
     name: "quart",
@@ -124,6 +143,9 @@ export const units: UnitDefinition[] = [
     aliases: ["quarts"],
     toBase: 946.353, // default: US
     toBaseBySystem: { US: 946.353, UK: 1136.52 },
+    maxValue: 3, // 4 quarts = 1 gallon
+    fractions: { enabled: true, denominators: [2] },
+    isBestUnit: false, // exists but not a "best" candidate
   },
   {
     name: "gallon",
@@ -132,6 +154,7 @@ export const units: UnitDefinition[] = [
     aliases: ["gallons"],
     toBase: 3785.41, // default: US
     toBaseBySystem: { US: 3785.41, UK: 4546.09 },
+    fractions: { enabled: true, denominators: [2] },
   },
 
   // Count units (no conversion, but recognized as a type)
@@ -141,6 +164,7 @@ export const units: UnitDefinition[] = [
     system: "metric",
     aliases: ["pieces", "pc"],
     toBase: 1,
+    maxValue: 999,
   },
 ];
 
