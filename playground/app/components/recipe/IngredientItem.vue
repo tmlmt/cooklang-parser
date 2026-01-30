@@ -159,7 +159,6 @@ const displayMode = computed<DisplayMode>(() => {
               <RecipeSingleQuantity
                 :quantity="eq.quantity"
                 :unit="eq.unit"
-                :equivalents="eq.equivalents"
               /> </template
             >)
           </template>
@@ -230,7 +229,6 @@ const displayMode = computed<DisplayMode>(() => {
             <RecipeSingleQuantity
               :quantity="eq.quantity"
               :unit="eq.unit"
-              :equivalents="eq.equivalents"
             /> </template
           >)
         </template>
@@ -269,7 +267,6 @@ const displayMode = computed<DisplayMode>(() => {
                   <RecipeSingleQuantity
                     :quantity="eq.quantity"
                     :unit="eq.unit"
-                    :equivalents="eq.equivalents"
                   /> </template
                 >)
               </template>
