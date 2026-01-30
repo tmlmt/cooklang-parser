@@ -25,6 +25,7 @@ import type {
   StepItem,
   GetIngredientQuantitiesOptions,
   SpecificUnitSystem,
+  Unit,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -56,9 +57,11 @@ import {
   toPlainUnit,
   toExtendedUnit,
   flattenPlainUnitGroup,
+  convertQuantityToSystem,
   applyBestUnit,
 } from "../quantities/mutations";
 import { resolveUnit } from "../units/definitions";
+import { isUnitCompatibleWithSystem } from "../units/compatibility";
 import Big from "big.js";
 import { deepClone } from "../utils/general";
 import { InvalidQuantityFormat } from "../errors";
@@ -1300,6 +1303,209 @@ export class Recipe {
         );
       }
     }
+
+    return newRecipe;
+  }
+
+  /**
+   * Converts all ingredient quantities in the recipe to a target unit system.
+   *
+   * @param system - The target unit system to convert to (metric, US, UK, JP)
+   * @param method - How to handle existing quantities:
+   *   - "keep": Keep all existing equivalents (swap if needed, or add converted)
+   *   - "replace": Replace primary with target system quantity, discard equivalent used for conversion
+   *   - "remove": Only keep target system quantity, delete all equivalents
+   * @returns A new Recipe instance with converted quantities
+   *
+   * @example
+   * ```typescript
+   * // Convert a recipe to metric, keeping original units as equivalents
+   * const metricRecipe = recipe.convertTo("metric", "keep");
+   *
+   * // Convert to US units, removing all other equivalents
+   * const usRecipe = recipe.convertTo("US", "remove");
+   * ```
+   */
+  convertTo(
+    system: SpecificUnitSystem,
+    method: "keep" | "replace" | "remove",
+  ): Recipe {
+    const newRecipe = this.clone();
+
+    /**
+     * Helper to build a new primary from a converted quantity
+     */
+    function buildNewPrimary(
+      convertedQty: QuantityWithExtendedUnit,
+      oldPrimary: QuantityWithExtendedUnit,
+      remainingEquivalents: QuantityWithExtendedUnit[],
+      scalable: boolean,
+      integerProtected: boolean | undefined,
+      source: "converted" | "swapped",
+    ): IngredientItemQuantity {
+      const newUnit: Unit | undefined =
+        integerProtected && convertedQty.unit
+          ? { name: convertedQty.unit.name, integerProtected: true }
+          : convertedQty.unit;
+
+      const newPrimary: IngredientItemQuantity = {
+        quantity: convertedQty.quantity,
+        unit: newUnit,
+        scalable,
+      };
+
+      if (method === "remove") {
+        return newPrimary;
+      } else if (method === "replace") {
+        if (remainingEquivalents.length > 0) {
+          // Keep remaining equivalents
+          newPrimary.equivalents = remainingEquivalents;
+          // An equivalent was converted and replaced, we still want to keep the oldPrimary
+          if (source === "converted") newPrimary.equivalents.push(oldPrimary);
+        }
+      } else {
+        // method === "keep": include old primary + remaining equivalents
+        newPrimary.equivalents = [oldPrimary, ...remainingEquivalents];
+      }
+
+      return newPrimary;
+    }
+
+    /**
+     * Convert a single IngredientItemQuantity to the target system.
+     */
+    function convertItemQuantity(
+      itemQuantity: IngredientItemQuantity,
+    ): IngredientItemQuantity {
+      const primaryUnit = resolveUnit(itemQuantity.unit?.name);
+      const equivalents = itemQuantity.equivalents ?? [];
+      const oldPrimary: QuantityWithExtendedUnit = {
+        quantity: itemQuantity.quantity,
+        unit: itemQuantity.unit,
+      };
+
+      // Check if primary is already in target system
+      if (
+        primaryUnit.type !== "other" &&
+        isUnitCompatibleWithSystem(primaryUnit, system)
+      ) {
+        // Primary is already in target system
+        if (method === "remove") {
+          return { ...itemQuantity, equivalents: undefined };
+        }
+        return itemQuantity;
+      }
+
+      // Look for an equivalent in the target system
+      const targetEquivIndex = equivalents.findIndex((eq) => {
+        const eqUnit = resolveUnit(eq.unit?.name);
+        return (
+          eqUnit.type !== "other" && isUnitCompatibleWithSystem(eqUnit, system)
+        );
+      });
+
+      if (targetEquivIndex !== -1) {
+        // Found an equivalent in target system - swap with primary
+        const targetEquiv = equivalents[targetEquivIndex]!;
+        const remainingEquivalents = equivalents.filter(
+          (_, i) => i !== targetEquivIndex,
+        );
+        return buildNewPrimary(
+          targetEquiv,
+          oldPrimary,
+          remainingEquivalents,
+          itemQuantity.scalable,
+          targetEquiv.unit?.integerProtected,
+          "swapped",
+        );
+      }
+
+      // No equivalent in target system - try to convert from primary
+      const converted = convertQuantityToSystem(oldPrimary, system);
+
+      if (converted && converted.unit) {
+        return buildNewPrimary(
+          converted,
+          oldPrimary,
+          equivalents,
+          itemQuantity.scalable,
+          itemQuantity.unit?.integerProtected,
+          "swapped",
+        );
+      }
+
+      // Primary cannot be converted - try to convert from equivalents
+      for (let i = 0; i < equivalents.length; i++) {
+        const equiv = equivalents[i]!;
+        const convertedEquiv = convertQuantityToSystem(equiv, system);
+
+        // v8 ignore else -- @preserve
+        if (convertedEquiv && convertedEquiv.unit) {
+          const remainingEquivalents =
+            method === "keep"
+              ? equivalents
+              : equivalents.filter((_, idx) => idx !== i);
+          return buildNewPrimary(
+            convertedEquiv,
+            oldPrimary,
+            remainingEquivalents,
+            itemQuantity.scalable,
+            equiv.unit?.integerProtected,
+            "converted",
+          );
+        }
+      }
+
+      // Cannot convert - return as-is (or with cleared equivalents for "remove")
+      // v8 ignore next -- @preserve
+      if (method === "remove") {
+        return { ...itemQuantity, equivalents: undefined };
+      } else {
+        return itemQuantity;
+      }
+    }
+
+    /**
+     * Convert all alternatives in a list
+     */
+    function convertAlternatives(alternatives: IngredientAlternative[]) {
+      for (const alternative of alternatives) {
+        // v8 ignore else -- @preserve
+        if (alternative.itemQuantity) {
+          alternative.itemQuantity = convertItemQuantity(
+            alternative.itemQuantity,
+          );
+        }
+      }
+    }
+
+    // Convert IngredientItems in sections
+    for (const section of newRecipe.sections) {
+      for (const step of section.content.filter(
+        (item) => item.type === "step",
+      )) {
+        for (const item of step.items.filter(
+          (item) => item.type === "ingredient",
+        )) {
+          convertAlternatives(item.alternatives);
+        }
+      }
+    }
+
+    // Convert Choices
+    for (const alternatives of newRecipe.choices.ingredientGroups.values()) {
+      convertAlternatives(alternatives);
+    }
+    for (const alternatives of newRecipe.choices.ingredientItems.values()) {
+      convertAlternatives(alternatives);
+    }
+
+    // Re-aggregate ingredient quantities
+    newRecipe._populate_ingredient_quantities();
+
+    // Setting the unit system in 'keep' mode will convert all equivalents to that system
+    // which will lead to duplicates
+    if (method !== "keep") Recipe.unitSystems.set(newRecipe, system);
 
     return newRecipe;
   }

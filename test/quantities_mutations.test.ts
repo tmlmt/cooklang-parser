@@ -6,6 +6,7 @@ import {
   addQuantities,
   getDefaultQuantityValue,
   normalizeAllUnits,
+  convertQuantityToSystem,
   toExtendedUnit,
   flattenPlainUnitGroup,
   applyBestUnit,
@@ -853,6 +854,20 @@ describe("getDefaultQuantityValue + addQuantities", () => {
         max: { type: "decimal", decimal: 2 },
       },
       unit: { name: "" },
+    });
+  });
+});
+
+describe("convertQuantityToSystem", () => {
+  it("should convert a quantity with plain units", () => {
+    const input: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: "cup",
+    };
+    const result = convertQuantityToSystem(input, "metric");
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 237 } },
+      unit: { name: "ml" },
     });
   });
 });

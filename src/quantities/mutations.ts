@@ -344,6 +344,80 @@ function addAndFindBestUnit(
   };
 }
 
+/**
+ * Converts a quantity to the best unit in a target system.
+ * Returns the converted quantity, or undefined if the unit type is "other" or not convertible.
+ *
+ * @category Helpers
+ *
+ * @param quantity - The quantity to convert
+ * @param system - The target unit system
+ * @returns The converted quantity, or undefined if conversion not possible
+ */
+
+export function convertQuantityToSystem(
+  quantity: QuantityWithPlainUnit,
+  system: SpecificUnitSystem,
+): QuantityWithPlainUnit | undefined;
+export function convertQuantityToSystem(
+  quantity: QuantityWithExtendedUnit,
+  system: SpecificUnitSystem,
+): QuantityWithExtendedUnit | undefined;
+export function convertQuantityToSystem(
+  quantity: QuantityWithPlainUnit | QuantityWithExtendedUnit,
+  system: SpecificUnitSystem,
+): QuantityWithPlainUnit | QuantityWithExtendedUnit | undefined {
+  const unitDef = resolveUnit(
+    typeof quantity.unit === "string" ? quantity.unit : quantity.unit?.name,
+  );
+
+  // Cannot convert "other" type units or units without toBase
+  if (unitDef.type === "other" || !("toBase" in unitDef)) {
+    return undefined;
+  }
+
+  const avgValue = getAverageValue(quantity.quantity);
+  if (typeof avgValue !== "number") {
+    return undefined;
+  }
+
+  const toBase = getToBase(unitDef, system);
+  const valueInBase = avgValue * toBase;
+  const { unit: bestUnit, value: bestValue } = findBestUnit(
+    valueInBase,
+    unitDef.type,
+    system,
+    [unitDef],
+  );
+
+  // Format the value (uses fractions if unit supports them)
+  const formattedValue = formatOutputValue(bestValue, bestUnit);
+
+  // Handle ranges
+  if (quantity.quantity.type === "range") {
+    const bestToBase = getToBase(bestUnit, system);
+
+    const minValue =
+      (getNumericValue(quantity.quantity.min) * toBase) / bestToBase;
+    const maxValue =
+      (getNumericValue(quantity.quantity.max) * toBase) / bestToBase;
+
+    return {
+      quantity: {
+        type: "range",
+        min: formatOutputValue(minValue, bestUnit),
+        max: formatOutputValue(maxValue, bestUnit),
+      },
+      unit: { name: bestUnit.name },
+    };
+  }
+
+  return {
+    quantity: { type: "fixed", value: formattedValue },
+    unit: { name: bestUnit.name },
+  };
+}
+
 export function toPlainUnit(
   quantity:
     | QuantityWithExtendedUnit
@@ -556,10 +630,8 @@ export function applyBestUnit(
     return q;
   }
 
-  const avgValue = getAverageValue(q.quantity);
-  if (typeof avgValue !== "number") {
-    return q;
-  }
+  // string is filtered out in the above if
+  const avgValue = getAverageValue(q.quantity) as number;
 
   // Determine effective system: use provided system, or infer from unit
   const effectiveSystem: SpecificUnitSystem =
@@ -581,7 +653,7 @@ export function applyBestUnit(
   );
 
   // Get canonical name of the original unit for comparison
-  const originalCanonicalName = normalizeUnit(q.unit.name)?.name ?? q.unit.name;
+  const originalCanonicalName = normalizeUnit(q.unit.name)?.name;
 
   // If same unit (by canonical name match), no change needed - preserve original unit name
   if (bestUnit.name === originalCanonicalName) {
@@ -594,10 +666,8 @@ export function applyBestUnit(
   // Handle ranges: scale to the best unit
   if (q.quantity.type === "range") {
     const bestToBase = getToBase(bestUnit, effectiveSystem);
-    const minValue =
-      (getNumericValue(q.quantity.min) * toBase) / bestToBase;
-    const maxValue =
-      (getNumericValue(q.quantity.max) * toBase) / bestToBase;
+    const minValue = (getNumericValue(q.quantity.min) * toBase) / bestToBase;
+    const maxValue = (getNumericValue(q.quantity.max) * toBase) / bestToBase;
 
     return {
       quantity: {

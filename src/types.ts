@@ -119,7 +119,7 @@ export interface Metadata {
   introduction?: string;
   /**
    * The unit system used in the recipe for ambiguous units like tsp, tbsp, cup.
-   * See [Unit Systems Guide](/guide-units) for more information.
+   * See [Unit Conversion Guide](/guide-unit-conversion) for more information.
    * This stores the original value as written by the user.
    */
   "unit system"?: string;
