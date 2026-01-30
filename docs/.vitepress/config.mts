@@ -43,7 +43,6 @@ export default defineConfig({
       },
       {
         text: "API",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         items: [
           { 
             text: "Reference",
@@ -52,6 +51,7 @@ export default defineConfig({
                 text: "Units definition", link: "/reference-units" 
               }
             ],
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           }, ...typedocSidebar],
         collapsed: true
       },
