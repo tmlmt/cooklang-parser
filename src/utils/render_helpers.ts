@@ -8,7 +8,7 @@ import type {
   FractionValue,
   Unit,
   QuantityWithExtendedUnit,
-  IngredientItemQuantity,
+  MaybeScalableQuantity,
 } from "../types";
 import { Recipe } from "../classes/recipe";
 
@@ -219,7 +219,7 @@ export function formatExtendedQuantity(item: QuantityWithExtendedUnit): string {
  * ```
  */
 export function formatItemQuantity(
-  itemQuantity: IngredientItemQuantity,
+  itemQuantity: MaybeScalableQuantity,
   separator: string = " | ",
 ): string {
   const parts: string[] = [];

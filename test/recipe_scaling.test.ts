@@ -103,11 +103,11 @@ describe("scaleTo", () => {
     const item1 = step.items[1] as IngredientItem;
     const item3 = step.items[3] as IngredientItem;
 
-    expect(item1.alternatives[0]?.itemQuantity).toMatchObject({
+    expect(item1.alternatives[0]).toMatchObject({
       unit: { name: "g" },
       quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
     });
-    expect(item3.alternatives[0]?.itemQuantity).toMatchObject({
+    expect(item3.alternatives[0]).toMatchObject({
       unit: { name: "g" },
       quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
     });
@@ -361,39 +361,36 @@ serves: 2, some
         {
           displayName: "milk",
           index: 0,
-          itemQuantity: {
-            scalable: true,
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 400 },
-            },
-            unit: { name: "ml" },
+
+          scalable: true,
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 400 },
           },
+          unit: { name: "ml" },
         },
         {
           displayName: "almond milk",
           index: 1,
-          itemQuantity: {
-            scalable: true,
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
-            },
-            unit: { name: "ml" },
+
+          scalable: true,
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 200 },
           },
+          unit: { name: "ml" },
           note: "vegan version",
         },
         {
           displayName: "soy milk",
           index: 2,
-          itemQuantity: {
-            scalable: true,
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 300 },
-            },
-            unit: { name: "ml" },
+
+          scalable: true,
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 300 },
           },
+          unit: { name: "ml" },
           note: "another vegan option",
         },
       ],
@@ -448,30 +445,29 @@ Use @sugar{100%g|0.5%cups|3.5%oz} in the mix.
         {
           displayName: "sugar",
           index: 0,
-          itemQuantity: {
-            scalable: true,
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
-            },
-            unit: { name: "g" },
-            equivalents: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 1 },
-                },
-                unit: { name: "cups" },
-              },
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 7 },
-                },
-                unit: { name: "oz" },
-              },
-            ],
+
+          scalable: true,
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 200 },
           },
+          unit: { name: "g" },
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: { name: "cups" },
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 7 },
+              },
+              unit: { name: "oz" },
+            },
+          ],
         },
       ],
     };
@@ -550,36 +546,34 @@ Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
       {
         displayName: "sugar",
         index: 0,
-        itemQuantity: {
-          quantity: {
-            type: "fixed",
-            value: {
-              decimal: 200,
-              type: "decimal",
-            },
+
+        quantity: {
+          type: "fixed",
+          value: {
+            decimal: 200,
+            type: "decimal",
           },
-          unit: {
-            name: "g",
-          },
-          scalable: true,
         },
+        unit: {
+          name: "g",
+        },
+        scalable: true,
       },
       {
         displayName: "honey",
         index: 1,
-        itemQuantity: {
-          quantity: {
-            type: "fixed",
-            value: {
-              decimal: 200,
-              type: "decimal",
-            },
+
+        quantity: {
+          type: "fixed",
+          value: {
+            decimal: 200,
+            type: "decimal",
           },
-          unit: {
-            name: "g",
-          },
-          scalable: true,
         },
+        unit: {
+          name: "g",
+        },
+        scalable: true,
       },
     ]);
 
@@ -590,37 +584,35 @@ Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
         displayName: "milk",
         index: 2,
         itemId: "ingredient-item-1",
-        itemQuantity: {
-          quantity: {
-            type: "fixed",
-            value: {
-              decimal: 300,
-              type: "decimal",
-            },
+
+        quantity: {
+          type: "fixed",
+          value: {
+            decimal: 300,
+            type: "decimal",
           },
-          unit: {
-            name: "mL",
-          },
-          scalable: true,
         },
+        unit: {
+          name: "mL",
+        },
+        scalable: true,
       },
       {
         displayName: "oat milk",
         index: 3,
         itemId: "ingredient-item-2",
-        itemQuantity: {
-          quantity: {
-            type: "fixed",
-            value: {
-              decimal: 300,
-              type: "decimal",
-            },
+
+        quantity: {
+          type: "fixed",
+          value: {
+            decimal: 300,
+            type: "decimal",
           },
-          unit: {
-            name: "mL",
-          },
-          scalable: true,
         },
+        unit: {
+          name: "mL",
+        },
+        scalable: true,
       },
     ]);
   });
@@ -658,8 +650,10 @@ Add @flour{100%g}.
     // Scale by 10x - 100g * 10 = 1000g = 1kg
     const scaledRecipe = recipe.scaleBy(10);
     const step = scaledRecipe.sections[0]!.content[0]! as Step;
-    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
-    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+    const item = step.items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+    expect(item.alternatives[0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       unit: { name: "kg" },
     });
@@ -677,13 +671,15 @@ Add @flour{100%g|1%cup}.
     // Scale by 10x - 100g * 10 = 1000g = 1kg, 1cup * 10 = 10 cups stays (no better unit)
     const scaledRecipe = recipe.scaleBy(10);
     const step = scaledRecipe.sections[0]!.content[0]! as Step;
-    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
-    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+    const item = step.items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+    expect(item.alternatives[0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       unit: { name: "kg" },
     });
     // Equivalent (cup) optimized within metric system context
-    expect(item.alternatives[0]!.itemQuantity!.equivalents![0]).toMatchObject({
+    expect(item.alternatives[0]!.equivalents![0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "decimal" } },
       unit: { name: "l" },
     });
@@ -700,8 +696,10 @@ Add @flour{100%g}.
     // Scale by 10x - 100g * 10 = 1000g = 1kg (infers metric system from g unit)
     const scaledRecipe = recipe.scaleBy(10);
     const step = scaledRecipe.sections[0]!.content[0]! as Step;
-    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
-    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+    const item = step.items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+    expect(item.alternatives[0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       unit: { name: "kg" },
     });
@@ -719,8 +717,10 @@ Add @flour{100-200%g}.
     // Scale by 10x - range becomes 1000-2000g = 1-2kg
     const scaledRecipe = recipe.scaleBy(10);
     const step = scaledRecipe.sections[0]!.content[0]! as Step;
-    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
-    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+    const item = step.items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+    expect(item.alternatives[0]).toMatchObject({
       quantity: {
         type: "range",
         min: { type: "decimal", decimal: 1 },
@@ -741,8 +741,10 @@ Add @flour{some%g}.
 
     const scaledRecipe = recipe.scaleBy(2);
     const step = scaledRecipe.sections[0]!.content[0]! as Step;
-    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
-    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+    const item = step.items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+    expect(item.alternatives[0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "text", text: "some" } },
       unit: { name: "g" },
     });
@@ -759,8 +761,10 @@ Add @eggs{5%piece}.
 
     const scaledRecipe = recipe.scaleBy(2);
     const step = scaledRecipe.sections[0]!.content[0]! as Step;
-    const item = step.items.find((i) => i.type === "ingredient") as IngredientItem;
-    expect(item.alternatives[0]!.itemQuantity).toMatchObject({
+    const item = step.items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+    expect(item.alternatives[0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 10 } },
       unit: { name: "piece" },
     });

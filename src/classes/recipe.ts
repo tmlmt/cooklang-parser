@@ -3,7 +3,6 @@ import type {
   Ingredient,
   IngredientExtras,
   IngredientItem,
-  IngredientItemQuantity,
   Timer,
   Step,
   NoteItem,
@@ -26,6 +25,7 @@ import type {
   GetIngredientQuantitiesOptions,
   SpecificUnitSystem,
   Unit,
+  MaybeScalableQuantity,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -370,7 +370,7 @@ export class Recipe {
 
       // 2. We build up the ingredient item
       // -- alternative quantities
-      let itemQuantity: IngredientItemQuantity | undefined = undefined;
+      let itemQuantity: MaybeScalableQuantity | undefined = undefined;
       if (groups.ingredientQuantity) {
         const parsedQuantities = this._parseQuantityRecursive(
           groups.ingredientQuantity,
@@ -391,13 +391,13 @@ export class Recipe {
         index: idxInList,
         displayName,
       };
-      // Only add itemQuantity and note if they exist
+      // Only add quantity fields and note if they exist
       const note = groups.ingredientNote?.trim();
       if (note) {
         alternative.note = note;
       }
       if (itemQuantity) {
-        alternative.itemQuantity = itemQuantity;
+        Object.assign(alternative, itemQuantity);
       }
       alternatives.push(alternative);
       testString = groups.ingredientAlternative || "";
@@ -522,7 +522,7 @@ export class Recipe {
 
     // 2. We build up the ingredient item
     // -- alternative quantities
-    let itemQuantity: IngredientItemQuantity | undefined = undefined;
+    let itemQuantity: MaybeScalableQuantity | undefined = undefined;
     if (groups.gIngredientQuantity) {
       const parsedQuantities = this._parseQuantityRecursive(
         groups.gIngredientQuantity,
@@ -541,9 +541,9 @@ export class Recipe {
       index: idxInList,
       displayName,
     };
-    // Only add itemQuantity if it exists
+    // Only add quantity fields if it exists
     if (itemQuantity) {
-      alternative.itemQuantity = itemQuantity;
+      Object.assign(alternative, itemQuantity);
     }
 
     const existingAlternatives = this.choices.ingredientGroups.get(groupKey);
@@ -755,17 +755,17 @@ export class Recipe {
             referencedIndices.add(alt.index);
           }
 
-          if (!alternative.itemQuantity) continue;
+          if (!alternative.quantity) continue;
 
           // Build quantity entry with equivalents
           const baseQty: QuantityWithExtendedUnit = {
-            quantity: alternative.itemQuantity.quantity,
-            ...(alternative.itemQuantity.unit && {
-              unit: alternative.itemQuantity.unit,
+            quantity: alternative.quantity,
+            ...(alternative.unit && {
+              unit: alternative.unit,
             }),
           };
-          const quantityEntry = alternative.itemQuantity.equivalents?.length
-            ? { or: [baseQty, ...alternative.itemQuantity.equivalents] }
+          const quantityEntry = alternative.equivalents?.length
+            ? { or: [baseQty, ...alternative.equivalents] }
             : baseQty;
 
           // Build alternative refs (only when no explicit choice)
@@ -779,14 +779,14 @@ export class Recipe {
               )
               .map((otherAlt) => {
                 const ref: AlternativeIngredientRef = { index: otherAlt.index };
-                if (otherAlt.itemQuantity) {
+                if (otherAlt.quantity) {
                   const altQty: QuantityWithPlainUnit = {
-                    quantity: otherAlt.itemQuantity.quantity,
-                    ...(otherAlt.itemQuantity.unit && {
-                      unit: otherAlt.itemQuantity.unit.name,
+                    quantity: otherAlt.quantity,
+                    ...(otherAlt.unit && {
+                      unit: otherAlt.unit.name,
                     }),
-                    ...(otherAlt.itemQuantity.equivalents && {
-                      equivalents: otherAlt.itemQuantity.equivalents.map(
+                    ...(otherAlt.equivalents && {
+                      equivalents: otherAlt.equivalents.map(
                         (eq) => toPlainUnit(eq) as QuantityWithPlainUnit,
                       ),
                     }),
@@ -803,15 +803,11 @@ export class Recipe {
           const altIndices = getAlternativeSignature(alternativeRefs) ?? "";
           let signature: string | null;
           if (isGrouped) {
-            const resolvedUnit = resolveUnit(
-              alternative.itemQuantity.unit?.name,
-            );
+            const resolvedUnit = resolveUnit(alternative.unit?.name);
             signature = `group:${item.group}|${altIndices}|${resolvedUnit.type}`;
           } else if (altIndices) {
             // Has alternatives: include unit type to keep incompatible units separate
-            const resolvedUnit = resolveUnit(
-              alternative.itemQuantity.unit?.name,
-            );
+            const resolvedUnit = resolveUnit(alternative.unit?.name);
             signature = `${altIndices}|${resolvedUnit.type}}`;
           } else {
             // No alternatives: use null to allow normal summing behavior
@@ -1169,61 +1165,57 @@ export class Recipe {
       factor: number | Big,
     ) {
       for (const alternative of alternatives) {
-        if (alternative.itemQuantity) {
-          const scaleFactor = alternative.itemQuantity.scalable
-            ? Big(factor)
-            : 1;
+        if (alternative.quantity) {
+          const scaleFactor = alternative.scalable ? Big(factor) : 1;
           // Scale the primary quantity
           if (
-            alternative.itemQuantity.quantity.type !== "fixed" ||
-            alternative.itemQuantity.quantity.value.type !== "text"
+            alternative.quantity.type !== "fixed" ||
+            alternative.quantity.value.type !== "text"
           ) {
-            alternative.itemQuantity.quantity = multiplyQuantityValue(
-              alternative.itemQuantity.quantity,
+            alternative.quantity = multiplyQuantityValue(
+              alternative.quantity,
               scaleFactor,
             );
           }
           // Scale equivalents if any
-          if (alternative.itemQuantity.equivalents) {
-            alternative.itemQuantity.equivalents =
-              alternative.itemQuantity.equivalents.map(
-                (altQuantity: QuantityWithExtendedUnit) => {
-                  if (
-                    altQuantity.quantity.type === "fixed" &&
-                    altQuantity.quantity.value.type === "text"
-                  ) {
-                    return altQuantity;
-                  } else {
-                    return {
-                      ...altQuantity,
-                      quantity: multiplyQuantityValue(
-                        altQuantity.quantity,
-                        scaleFactor,
-                      ),
-                    };
-                  }
-                },
-              );
+          if (alternative.equivalents) {
+            alternative.equivalents = alternative.equivalents.map(
+              (altQuantity: QuantityWithExtendedUnit) => {
+                if (
+                  altQuantity.quantity.type === "fixed" &&
+                  altQuantity.quantity.value.type === "text"
+                ) {
+                  return altQuantity;
+                } else {
+                  return {
+                    ...altQuantity,
+                    quantity: multiplyQuantityValue(
+                      altQuantity.quantity,
+                      scaleFactor,
+                    ),
+                  };
+                }
+              },
+            );
           }
 
           // Apply best unit optimization (infers system from unit if unitSystem not set)
           // Apply to primary
           const optimizedPrimary = applyBestUnit(
             {
-              quantity: alternative.itemQuantity.quantity,
-              unit: alternative.itemQuantity.unit,
+              quantity: alternative.quantity,
+              unit: alternative.unit,
             },
             unitSystem,
           );
-          alternative.itemQuantity.quantity = optimizedPrimary.quantity;
-          alternative.itemQuantity.unit = optimizedPrimary.unit;
+          alternative.quantity = optimizedPrimary.quantity;
+          alternative.unit = optimizedPrimary.unit;
 
           // Apply to equivalents
-          if (alternative.itemQuantity.equivalents) {
-            alternative.itemQuantity.equivalents =
-              alternative.itemQuantity.equivalents.map((eq) =>
-                applyBestUnit(eq, unitSystem),
-              );
+          if (alternative.equivalents) {
+            alternative.equivalents = alternative.equivalents.map((eq) =>
+              applyBestUnit(eq, unitSystem),
+            );
           }
         }
       }
@@ -1333,7 +1325,7 @@ export class Recipe {
     const newRecipe = this.clone();
 
     /**
-     * Helper to build a new primary from a converted quantity
+     * Helper to build new primary quantity fields from a converted quantity
      */
     function buildNewPrimary(
       convertedQty: QuantityWithExtendedUnit,
@@ -1342,13 +1334,13 @@ export class Recipe {
       scalable: boolean,
       integerProtected: boolean | undefined,
       source: "converted" | "swapped",
-    ): IngredientItemQuantity {
+    ): MaybeScalableQuantity {
       const newUnit: Unit | undefined =
         integerProtected && convertedQty.unit
           ? { name: convertedQty.unit.name, integerProtected: true }
           : convertedQty.unit;
 
-      const newPrimary: IngredientItemQuantity = {
+      const newPrimary: MaybeScalableQuantity = {
         quantity: convertedQty.quantity,
         unit: newUnit,
         scalable,
@@ -1372,16 +1364,16 @@ export class Recipe {
     }
 
     /**
-     * Convert a single IngredientItemQuantity to the target system.
+     * Convert a single alternative's quantity to the target system.
      */
-    function convertItemQuantity(
-      itemQuantity: IngredientItemQuantity,
-    ): IngredientItemQuantity {
-      const primaryUnit = resolveUnit(itemQuantity.unit?.name);
-      const equivalents = itemQuantity.equivalents ?? [];
+    function convertAlternativeQuantity(
+      alternative: IngredientAlternative & MaybeScalableQuantity,
+    ): MaybeScalableQuantity {
+      const primaryUnit = resolveUnit(alternative.unit?.name);
+      const equivalents = alternative.equivalents ?? [];
       const oldPrimary: QuantityWithExtendedUnit = {
-        quantity: itemQuantity.quantity,
-        unit: itemQuantity.unit,
+        quantity: alternative.quantity,
+        unit: alternative.unit,
       };
 
       // Check if primary is already in target system
@@ -1391,9 +1383,18 @@ export class Recipe {
       ) {
         // Primary is already in target system
         if (method === "remove") {
-          return { ...itemQuantity, equivalents: undefined };
+          return {
+            quantity: alternative.quantity,
+            unit: alternative.unit,
+            scalable: alternative.scalable,
+          };
         }
-        return itemQuantity;
+        return {
+          quantity: alternative.quantity,
+          unit: alternative.unit,
+          scalable: alternative.scalable,
+          equivalents,
+        };
       }
 
       // Look for an equivalent in the target system
@@ -1414,7 +1415,7 @@ export class Recipe {
           targetEquiv,
           oldPrimary,
           remainingEquivalents,
-          itemQuantity.scalable,
+          alternative.scalable,
           targetEquiv.unit?.integerProtected,
           "swapped",
         );
@@ -1428,8 +1429,8 @@ export class Recipe {
           converted,
           oldPrimary,
           equivalents,
-          itemQuantity.scalable,
-          itemQuantity.unit?.integerProtected,
+          alternative.scalable,
+          alternative.unit?.integerProtected,
           "swapped",
         );
       }
@@ -1449,7 +1450,7 @@ export class Recipe {
             convertedEquiv,
             oldPrimary,
             remainingEquivalents,
-            itemQuantity.scalable,
+            alternative.scalable,
             equiv.unit?.integerProtected,
             "converted",
           );
@@ -1459,9 +1460,18 @@ export class Recipe {
       // Cannot convert - return as-is (or with cleared equivalents for "remove")
       // v8 ignore next -- @preserve
       if (method === "remove") {
-        return { ...itemQuantity, equivalents: undefined };
+        return {
+          quantity: alternative.quantity,
+          unit: alternative.unit,
+          scalable: alternative.scalable,
+        };
       } else {
-        return itemQuantity;
+        return {
+          quantity: alternative.quantity,
+          unit: alternative.unit,
+          scalable: alternative.scalable,
+          equivalents,
+        };
       }
     }
 
@@ -1471,10 +1481,16 @@ export class Recipe {
     function convertAlternatives(alternatives: IngredientAlternative[]) {
       for (const alternative of alternatives) {
         // v8 ignore else -- @preserve
-        if (alternative.itemQuantity) {
-          alternative.itemQuantity = convertItemQuantity(
-            alternative.itemQuantity,
+        if (alternative.quantity) {
+          const converted = convertAlternativeQuantity(
+            alternative as IngredientAlternative & MaybeScalableQuantity,
           );
+          alternative.quantity = converted.quantity;
+          alternative.unit = converted.unit;
+          (
+            alternative as IngredientAlternative & MaybeScalableQuantity
+          ).scalable = converted.scalable;
+          alternative.equivalents = converted.equivalents;
         }
       }
     }

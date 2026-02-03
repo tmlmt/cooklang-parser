@@ -24,7 +24,7 @@ import type {
   Range,
   Unit,
   QuantityWithExtendedUnit,
-  IngredientItemQuantity,
+  MaybeScalableQuantity,
 } from "../src/types";
 import {
   recipeWithInlineAlternatives,
@@ -275,7 +275,7 @@ describe("formatExtendedQuantity", () => {
 
 describe("formatItemQuantity", () => {
   it("should format single quantity without equivalents", () => {
-    const itemQty: IngredientItemQuantity = {
+    const itemQty: QuantityWithExtendedUnit & { scalable: boolean } = {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
       unit: { name: "g" },
       scalable: true,
@@ -284,7 +284,7 @@ describe("formatItemQuantity", () => {
   });
 
   it("should format quantity with equivalents using default separator", () => {
-    const itemQty: IngredientItemQuantity = {
+    const itemQty: MaybeScalableQuantity = {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
       unit: { name: "g" },
       equivalents: [
@@ -299,7 +299,7 @@ describe("formatItemQuantity", () => {
   });
 
   it("should format quantity with custom separator", () => {
-    const itemQty: IngredientItemQuantity = {
+    const itemQty: MaybeScalableQuantity = {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
       unit: { name: "g" },
       equivalents: [
@@ -314,7 +314,7 @@ describe("formatItemQuantity", () => {
   });
 
   it("should format multiple equivalents", () => {
-    const itemQty: IngredientItemQuantity = {
+    const itemQty: MaybeScalableQuantity = {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 240 } },
       unit: { name: "ml" },
       equivalents: [

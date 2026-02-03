@@ -304,32 +304,32 @@ export interface Ingredient {
   extras?: IngredientExtras;
 }
 
-/**
- * Represents a contributor to an ingredient's total quantity, corresponding
- * to a single mention in the recipe text. It can contain multiple
- * equivalent quantities (e.g., in different units).
- * @category Types
- */
-export interface IngredientItemQuantity extends QuantityWithExtendedUnit {
-  /**
-   * A list of equivalent quantities/units for this ingredient mention besides the primary quantity.
-   * For `@salt{1%tsp|5%g}`, the main quantity is 1 tsp and the equivalents will contain 5 g.
-   */
-  equivalents?: QuantityWithExtendedUnit[];
+export type MaybeScalableQuantity = QuantityWithExtendedUnit & {
   /** Indicates whether this quantity should be scaled when the recipe serving size changes. */
   scalable: boolean;
-}
+  /** A list of equivalent quantities/units for this ingredient mention besides the primary quantity.
+   * For `@salt{1%tsp|5%g}`, the main quantity is 1 tsp and the equivalents will contain 5 g. */
+  equivalents?: QuantityWithExtendedUnit[];
+};
+
+type WithOptionalQuantity<T> =
+  | (T & MaybeScalableQuantity)
+  | (T & {
+      // quantity is absent → scalable and unit must be absent
+      quantity?: undefined;
+      scalable?: never;
+      unit?: never;
+      equivalents?: never;
+    });
 
 /**
  * Represents a single ingredient choice within a single or a group of `IngredientItem`s. It points
  * to a specific ingredient and its corresponding quantity information.
  * @category Types
  */
-export interface IngredientAlternative {
+type IngredientAlternativeBase = {
   /** The index of the ingredient within the {@link Recipe.ingredients} array. */
   index: number;
-  /** The quantity of this specific mention of the ingredient */
-  itemQuantity?: IngredientItemQuantity;
   /** The alias/name of the ingredient as it should be displayed for this occurrence. */
   displayName: string;
   /** An optional note for this specific choice (e.g., "for a vegan version"). */
@@ -338,7 +338,10 @@ export interface IngredientAlternative {
    * with group keys: the id of the corresponding ingredient item (e.g. "ingredient-item-2").
    * Can be useful for creating alternative selection UI elements with anchor links */
   itemId?: string;
-}
+};
+
+export type IngredientAlternative =
+  WithOptionalQuantity<IngredientAlternativeBase>;
 
 /**
  * Represents an ingredient item in a recipe step.
