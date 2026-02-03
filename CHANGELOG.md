@@ -1,5 +1,44 @@
 # Changelog
 
+## v3.0.0-alpha.12
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.11...v3.0.0-alpha.12)
+
+#### ⚠️ Breaking Changes
+
+The `IngredientAlternative` type (cf `IngredientItem.alternatives: IngredientAlternative[]`) no longer has an
+itemQuantity property. The quantity, unit, scalable, and equivalents
+fields are now directly on the IngredientAlternative object.
+
+Before:
+
+- alternative.itemQuantity?.quantity
+- alternative.itemQuantity?.unit
+- alternative.itemQuantity?.scalable
+- alternative.itemQuantity?.equivalents
+
+After:
+
+- alternative.quantity
+- alternative.unit
+- alternative.scalable
+- alternative.equivalents
+
+When an alternative has no quantity, these fields are undefined/absent
+rather than itemQuantity being undefined.
+
+### 💅 Refactors
+
+- **types:** ⚠️ Flatten IngredientItemQuantity into IngredientAlternative ([2ff869d](https://github.com/tmlmt/cooklang-parser/commit/2ff869d))
+
+### 📖 Documentation
+
+- **reference-units:** Correct values in units configuration table ([55c2914](https://github.com/tmlmt/cooklang-parser/commit/55c2914))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.11
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.10...v3.0.0-alpha.11)
