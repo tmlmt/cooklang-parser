@@ -603,7 +603,7 @@ export class Recipe {
    * Quantities are grouped by their alternative signature and summed using addEquivalentsAndSimplify.
    * @internal
    */
-  private _populate_ingredient_quantities(): void {
+  private _populateIngredientQuantities(): void {
     // Reset quantities and usedAsPrimary flag
     for (const ing of this.ingredients) {
       delete ing.quantities;
@@ -1118,7 +1118,7 @@ export class Recipe {
       this.sections.push(section);
     }
 
-    this._populate_ingredient_quantities();
+    this._populateIngredientQuantities();
   }
 
   /**
@@ -1250,7 +1250,7 @@ export class Recipe {
       ) as FixedNumericValue;
     }
 
-    newRecipe._populate_ingredient_quantities();
+    newRecipe._populateIngredientQuantities();
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
 
@@ -1517,7 +1517,7 @@ export class Recipe {
     }
 
     // Re-aggregate ingredient quantities
-    newRecipe._populate_ingredient_quantities();
+    newRecipe._populateIngredientQuantities();
 
     // Setting the unit system in 'keep' mode will convert all equivalents to that system
     // which will lead to duplicates

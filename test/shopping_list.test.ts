@@ -19,7 +19,7 @@ describe("ShoppingList", () => {
   describe("Adding recipes", () => {
     it("should add a recipe's ingredients", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
+      shoppingList.addRecipe(recipe1);
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -72,9 +72,9 @@ describe("ShoppingList", () => {
 
     it("should handle adding a recipe with multiple units for the same ingredient", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
-      shoppingList.add_recipe(recipe3);
-      shoppingList.add_recipe(recipe1); // adding the same one again to check accumulation
+      shoppingList.addRecipe(recipe1);
+      shoppingList.addRecipe(recipe3);
+      shoppingList.addRecipe(recipe1); // adding the same one again to check accumulation
       expect(shoppingList.ingredients.find((i) => i.name === "eggs")).toEqual({
         name: "eggs",
         quantityTotal: {
@@ -106,8 +106,8 @@ describe("ShoppingList", () => {
 
     it("should merge ingredients from multiple recipes", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
-      shoppingList.add_recipe(recipe2);
+      shoppingList.addRecipe(recipe1);
+      shoppingList.addRecipe(recipe2);
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -188,7 +188,7 @@ describe("ShoppingList", () => {
     it("should scale recipe ingredients (deprecated signature)", () => {
       const shoppingList = new ShoppingList();
       // TODO: Deprecated, to remove in v3
-      shoppingList.add_recipe(recipe1, { scaling: { factor: 2 } });
+      shoppingList.addRecipe(recipe1, { scaling: { factor: 2 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -241,7 +241,7 @@ describe("ShoppingList", () => {
 
     it("should scale recipe ingredients (using factor)", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1, { scaling: { factor: 2 } });
+      shoppingList.addRecipe(recipe1, { scaling: { factor: 2 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -294,7 +294,7 @@ describe("ShoppingList", () => {
 
     it("should scale recipe ingredients (using servings)", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1, { scaling: { servings: 3 } });
+      shoppingList.addRecipe(recipe1, { scaling: { servings: 3 } });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -350,7 +350,7 @@ describe("ShoppingList", () => {
       const choices = {
         ingredientItems: new Map([["ingredient-item-0", 1]]),
       };
-      shoppingList.add_recipe(recipeAlt, { choices });
+      shoppingList.addRecipe(recipeAlt, { choices });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "almond milk",
@@ -371,7 +371,7 @@ describe("ShoppingList", () => {
 Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
 `);
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipeWithAndGroups);
+      shoppingList.addRecipe(recipeWithAndGroups);
       // Potato should have quantities combined from the AND group
       const potato = shoppingList.ingredients.find((i) => i.name === "potato");
       expect(potato).toBeDefined();
@@ -382,7 +382,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
     it("should throw an error when adding a recipe with inline alternatives without choices", () => {
       const shoppingList = new ShoppingList();
       // recipeAlt has inline alternatives (ingredient-item-0)
-      expect(() => shoppingList.add_recipe(recipeAlt)).toThrowError(
+      expect(() => shoppingList.addRecipe(recipeAlt)).toThrowError(
         /Recipe has unresolved alternatives.*ingredientItems.*ingredient-item-0/,
       );
     });
@@ -392,7 +392,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       const recipeWithGroups = new Recipe(`
 Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
 `);
-      expect(() => shoppingList.add_recipe(recipeWithGroups)).toThrowError(
+      expect(() => shoppingList.addRecipe(recipeWithGroups)).toThrowError(
         /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
       );
     });
@@ -405,7 +405,7 @@ Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
       const choices = {
         ingredientGroups: new Map([["milk", 1]]), // Choose almond milk (index 1)
       };
-      shoppingList.add_recipe(recipeWithGroups, { choices });
+      shoppingList.addRecipe(recipeWithGroups, { choices });
       expect(shoppingList.ingredients).toEqual([
         {
           name: "almond milk",
@@ -432,8 +432,8 @@ butter
 flour
 sugar
     `);
-      expect(shoppingList.category_config).toBeDefined();
-      expect(shoppingList.category_config?.categories.length).toBe(2);
+      expect(shoppingList.categoryConfig).toBeDefined();
+      expect(shoppingList.categoryConfig?.categories.length).toBe(2);
     });
 
     it("should parse at creation if a CategoryConfig", () => {
@@ -447,8 +447,8 @@ flour
 sugar
     `);
       const shoppingList = new ShoppingList(categoryConfig);
-      expect(shoppingList.category_config).toBeDefined();
-      expect(shoppingList.category_config?.categories.length).toBe(2);
+      expect(shoppingList.categoryConfig).toBeDefined();
+      expect(shoppingList.categoryConfig?.categories.length).toBe(2);
     });
 
     it("should set category config", () => {
@@ -462,24 +462,24 @@ butter
 flour
 sugar
     `;
-      shoppingList.set_category_config(config);
-      expect(shoppingList.category_config).toBeDefined();
-      expect(shoppingList.category_config?.categories.length).toBe(2);
+      shoppingList.setCategoryConfig(config);
+      expect(shoppingList.categoryConfig).toBeDefined();
+      expect(shoppingList.categoryConfig?.categories.length).toBe(2);
     });
 
     it("should throw an error if an incorrect category config is provided", () => {
       const shoppingList = new ShoppingList();
       const config = 2;
       // @ts-expect-error testing a deliberate type error
-      expect(() => shoppingList.set_category_config(config)).toThrowError();
+      expect(() => shoppingList.setCategoryConfig(config)).toThrowError();
     });
   });
 
   describe("Ingredient categorization", () => {
     it("should categorize ingredients", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
-      shoppingList.add_recipe(recipe2);
+      shoppingList.addRecipe(recipe1);
+      shoppingList.addRecipe(recipe2);
       const config = `
 [Dairy]
 milk
@@ -489,7 +489,7 @@ butter
 flour
 sugar
     `;
-      shoppingList.set_category_config(config);
+      shoppingList.setCategoryConfig(config);
 
       // Sort ingredients within each category
       for (const category in shoppingList.categories!) {
@@ -598,7 +598,7 @@ sugar
 
     it('should categorize all ingredients as "other" if no category config is set', () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
+      shoppingList.addRecipe(recipe1);
       expect(shoppingList.categories).toEqual({
         other: [
           {
@@ -658,9 +658,9 @@ sugar
   describe("Removing recipes", () => {
     it("should remove a recipe and recalculate ingredients", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
-      shoppingList.add_recipe(recipe2);
-      shoppingList.remove_recipe(0);
+      shoppingList.addRecipe(recipe1);
+      shoppingList.addRecipe(recipe2);
+      shoppingList.removeRecipe(0);
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
@@ -707,11 +707,11 @@ sugar
 
     it("should remove a recipe and re-categorize ingredients", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
-      shoppingList.add_recipe(recipe2);
+      shoppingList.addRecipe(recipe1);
+      shoppingList.addRecipe(recipe2);
       const config = `[Bakery]
                     flour`;
-      shoppingList.set_category_config(config);
+      shoppingList.setCategoryConfig(config);
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
@@ -724,7 +724,7 @@ sugar
           },
         },
       ]);
-      shoppingList.remove_recipe(0);
+      shoppingList.removeRecipe(0);
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
@@ -740,8 +740,8 @@ sugar
     });
     it("should throw an error when removing a recipe with an invalid index", () => {
       const shoppingList = new ShoppingList();
-      shoppingList.add_recipe(recipe1);
-      expect(() => shoppingList.remove_recipe(1)).toThrow(
+      shoppingList.addRecipe(recipe1);
+      expect(() => shoppingList.removeRecipe(1)).toThrow(
         "Index out of bounds",
       );
     });

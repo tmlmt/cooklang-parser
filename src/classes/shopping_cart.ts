@@ -65,7 +65,7 @@ export interface ShoppingCartSummary {
  * ```ts
  * const shoppingList = new ShoppingList();
  * const recipe = new Recipe("@flour{600%g}");
- * shoppingList.add_recipe(recipe);
+ * shoppingList.addRecipe(recipe);
  *
  * const catalog = new ProductCatalog();
  * catalog.products = [
@@ -138,7 +138,6 @@ export class ShoppingCart {
     this.productCatalog = catalog;
   }
 
-  // TODO: harmonize recipe name to use underscores
   /**
    * Sets the shopping list to build the cart from.
    * To use if a shopping list was not provided at the creation of the instance

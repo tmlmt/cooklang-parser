@@ -101,7 +101,7 @@ productCatalog.products = [
 describe("initialisation", () => {
   it("should be initialized directly with the class constructor", () => {
     const shoppingList = new ShoppingList();
-    shoppingList.add_recipe(new Recipe(recipeForShoppingList1));
+    shoppingList.addRecipe(new Recipe(recipeForShoppingList1));
     const shoppingCart = new ShoppingCart({
       catalog: productCatalog,
       list: shoppingList,
@@ -118,7 +118,7 @@ describe("initialisation", () => {
 
   it("should throw an error if no product catalog is set", () => {
     const shoppingList = new ShoppingList();
-    shoppingList.add_recipe(new Recipe(recipeForShoppingList1));
+    shoppingList.addRecipe(new Recipe(recipeForShoppingList1));
     const shoppingCart = new ShoppingCart();
     shoppingCart.setShoppingList(shoppingList);
     expect(() => shoppingCart.buildCart()).toThrow(
@@ -132,7 +132,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@unknown-ingredient{1}");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -144,7 +144,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@flour");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -156,7 +156,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@flour{a bit}");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -169,7 +169,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@flour{1%l}");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -194,7 +194,7 @@ describe("buildCart", () => {
         },
       ],
     });
-    shoppingList2.add_recipe(recipe2);
+    shoppingList2.addRecipe(recipe2);
     shoppingCart2.setShoppingList(shoppingList2);
     shoppingCart2.setProductCatalog(productCatalog2);
     shoppingCart2.buildCart();
@@ -216,7 +216,7 @@ describe("buildCart", () => {
         { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
       ],
     });
-    shoppingList3.add_recipe(recipe3);
+    shoppingList3.addRecipe(recipe3);
     shoppingCart3.setShoppingList(shoppingList3);
     shoppingCart3.setProductCatalog(productCatalog3);
     shoppingCart3.buildCart();
@@ -241,7 +241,7 @@ describe("buildCart", () => {
         },
       ],
     });
-    shoppingList4.add_recipe(recipe4);
+    shoppingList4.addRecipe(recipe4);
     shoppingCart4.setShoppingList(shoppingList4);
     shoppingCart4.setProductCatalog(productCatalog4);
     shoppingCart4.buildCart();
@@ -256,7 +256,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@eggs{2%dozen}");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
 
     const catalog = new ProductCatalog();
     catalog.products = [
@@ -291,7 +291,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@eggs{24}"); // 24 eggs = 2 packs of 12
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
 
     const catalog = new ProductCatalog();
     catalog.products = [
@@ -325,7 +325,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("@flour{600%g}");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
     const catalog = new ProductCatalog();
     catalog.products = [
@@ -367,7 +367,7 @@ describe("buildCart", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
     const recipe = new Recipe("Mix @flour{30-90%g} with @milk{80-120%cL}");
-    shoppingList.add_recipe(recipe);
+    shoppingList.addRecipe(recipe);
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -383,7 +383,7 @@ describe("buildCart", () => {
   it("should build a cart with one recipe", () => {
     const shoppingList = new ShoppingList();
     const shoppingCart = new ShoppingCart();
-    shoppingList.add_recipe(new Recipe(recipeForShoppingList1));
+    shoppingList.addRecipe(new Recipe(recipeForShoppingList1));
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -401,8 +401,8 @@ describe("buildCart", () => {
   it("should build a cart with multiple recipes", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
-    shoppingList.add_recipe(new Recipe(recipeForShoppingList1));
-    shoppingList.add_recipe(new Recipe(recipeForShoppingList2));
+    shoppingList.addRecipe(new Recipe(recipeForShoppingList1));
+    shoppingList.addRecipe(new Recipe(recipeForShoppingList2));
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -432,7 +432,7 @@ describe("alternative quantities", () => {
   it("should handle ingredients with multiple quantities", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
-    shoppingList.add_recipe(new Recipe(recipeForShoppingList4));
+    shoppingList.addRecipe(new Recipe(recipeForShoppingList4));
     shoppingCart.setShoppingList(shoppingList);
     shoppingCart.setProductCatalog(productCatalog);
     shoppingCart.buildCart();
@@ -445,7 +445,7 @@ describe("alternative quantities", () => {
   it("should handle ingredients with alternative units", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
-    shoppingList.add_recipe(
+    shoppingList.addRecipe(
       new Recipe(`
 ---
 servings: 1
@@ -464,7 +464,7 @@ Cook @carrots{10%large|1%kg}
   it("should add to misMatch when no alternatives can be matched", () => {
     const shoppingCart = new ShoppingCart();
     const shoppingList = new ShoppingList();
-    shoppingList.add_recipe(
+    shoppingList.addRecipe(
       new Recipe(`
 ---
 servings: 1

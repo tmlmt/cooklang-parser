@@ -20,7 +20,7 @@ import { isAndGroup } from "../utils/type_guards";
  * ## Usage
  *
  * - Create a new ShoppingList instance with an optional category configuration (see {@link ShoppingList."constructor" | constructor})
- * - Add recipes, scaling them as needed (see {@link ShoppingList.add_recipe | add_recipe()})
+ * - Add recipes, scaling them as needed (see {@link ShoppingList.addRecipe | addRecipe()})
  * - Categorize the ingredients (see {@link ShoppingList.categorize | categorize()})
  *
  * @example
@@ -32,10 +32,10 @@ import { isAndGroup } from "../utils/type_guards";
  * const categoryConfig = fs.readFileSync("./myconfig.txt", "utf-8")
  * const recipe1 = new Recipe(fs.readFileSync("./myrecipe.cook", "utf-8"));
  * const shoppingList = new ShoppingList();
- * shoppingList.set_category_config(categoryConfig);
+ * shoppingList.setCategoryConfig(categoryConfig);
  * // Quantities are automatically calculated and ingredients categorized
  * // when adding a recipe
- * shoppingList.add_recipe(recipe1);
+ * shoppingList.addRecipe(recipe1);
  * ```
  *
  * @category Classes
@@ -53,7 +53,7 @@ export class ShoppingList {
   /**
    * The category configuration for the shopping list.
    */
-  category_config?: CategoryConfig;
+  categoryConfig?: CategoryConfig;
   /**
    * The categorized ingredients in the shopping list.
    */
@@ -61,15 +61,15 @@ export class ShoppingList {
 
   /**
    * Creates a new ShoppingList instance
-   * @param category_config_str - The category configuration to parse.
+   * @param categoryConfigStr - The category configuration to parse.
    */
-  constructor(category_config_str?: string | CategoryConfig) {
-    if (category_config_str) {
-      this.set_category_config(category_config_str);
+  constructor(categoryConfigStr?: string | CategoryConfig) {
+    if (categoryConfigStr) {
+      this.setCategoryConfig(categoryConfigStr);
     }
   }
 
-  private calculate_ingredients() {
+  private calculateIngredients() {
     this.ingredients = [];
 
     const addIngredientQuantity = (
@@ -199,7 +199,7 @@ export class ShoppingList {
    * @param options - Options for adding the recipe.
    * @throws Error if the recipe has alternatives without corresponding choices.
    */
-  add_recipe(recipe: Recipe, options: AddedRecipeOptions = {}): void {
+  addRecipe(recipe: Recipe, options: AddedRecipeOptions = {}): void {
     // Validate that choices are provided for all alternatives
     const errorMessage = this.getUnresolvedAlternativesError(
       recipe,
@@ -230,7 +230,7 @@ export class ShoppingList {
         });
       }
     }
-    this.calculate_ingredients();
+    this.calculateIngredients();
     this.categorize();
   }
 
@@ -281,15 +281,15 @@ export class ShoppingList {
 
   /**
    * Removes a recipe from the shopping list, then automatically
-   * recalculates the quantities and recategorize the ingredients.s
+   * recalculates the quantities and recategorize the ingredients.
    * @param index - The index of the recipe to remove.
    */
-  remove_recipe(index: number) {
+  removeRecipe(index: number) {
     if (index < 0 || index >= this.recipes.length) {
       throw new Error("Index out of bounds");
     }
     this.recipes.splice(index, 1);
-    this.calculate_ingredients();
+    this.calculateIngredients();
     this.categorize();
   }
 
@@ -298,10 +298,10 @@ export class ShoppingList {
    * and automatically categorize current ingredients from the list.
    * @param config - The category configuration to parse.
    */
-  set_category_config(config: string | CategoryConfig) {
+  setCategoryConfig(config: string | CategoryConfig) {
     if (typeof config === "string")
-      this.category_config = new CategoryConfig(config);
-    else if (config instanceof CategoryConfig) this.category_config = config;
+      this.categoryConfig = new CategoryConfig(config);
+    else if (config instanceof CategoryConfig) this.categoryConfig = config;
     else throw new Error("Invalid category configuration");
     this.categorize();
   }
@@ -311,19 +311,19 @@ export class ShoppingList {
    * Will use the category config if any, otherwise all ingredients will be placed in the "other" category
    */
   categorize() {
-    if (!this.category_config) {
+    if (!this.categoryConfig) {
       this.categories = { other: this.ingredients };
       return;
     }
 
     const categories: CategorizedIngredients = { other: [] };
-    for (const category of this.category_config.categories) {
+    for (const category of this.categoryConfig.categories) {
       categories[category.name] = [];
     }
 
     for (const ingredient of this.ingredients) {
       let found = false;
-      for (const category of this.category_config.categories) {
+      for (const category of this.categoryConfig.categories) {
         for (const categoryIngredient of category.ingredients) {
           if (categoryIngredient.aliases.includes(ingredient.name)) {
             categories[category.name]!.push(ingredient);

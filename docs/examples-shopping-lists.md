@@ -6,24 +6,24 @@ outline: deep
 
 ## Basics
 
-A quick start example is provided in the corresponding [API page](/api/classes/ShoppingList#example). Note that it is `Recipe` objects that are passed to the `add_recipe()` method.
+A quick start example is provided in the corresponding [API page](/api/classes/ShoppingList#example). Note that it is `Recipe` objects that are passed to the `addRecipe()` method.
 
 ## Adding scaled recipes
 
-You can specify a number of servings for which the recipe should be scaled before being added with [`add_recipe()`](/api/classes/ShoppingList.html#add-recipe). Example:
+You can specify a number of servings for which the recipe should be scaled before being added with [`addRecipe()`](/api/classes/ShoppingList.html#addRecipe). Example:
 
 ```typescript
-shoppingList.add_recipe(myRecipe, 4)
+shoppingList.addRecipe(myRecipe, 4)
 ```
 
 When adding a recipe, the combined list of ingredients of the shopping list is automatically calculated, and the ingredients categorized if a `CategoryConfig` has been set.
 
 ## Removing recipes
 
-You can remove the recipe by passing the index of the recipe to remove to the [`remove_recipe()`](/api/classes/ShoppingList.html#remove-recipe). The list of indexes is accessible via the [`recipes`](/api/classes/ShoppingList.html#recipes) property of the `ShoppingList`. Example:
+You can remove the recipe by passing the index of the recipe to remove to the [`removeRecipe()`](/api/classes/ShoppingList.html#removeRecipe). The list of indexes is accessible via the [`recipes`](/api/classes/ShoppingList.html#recipes) property of the `ShoppingList`. Example:
 
 ```typescript
-shoppingList.remove_recipe(0)
+shoppingList.removeRecipe(0)
 ```
 
 ## Optional: Category Configuration
@@ -43,7 +43,7 @@ const myConfig = new CategoryConfig(`...`)
 const shoppingList = new ShoppingList(myConfig)
 // or 
 const shoppingList = new ShoppingList()
-shoppingList.set_category_config(myConfig)
+shoppingList.setCategoryConfig(myConfig)
 ```
 
 ### Categorizing according to the category configuration
