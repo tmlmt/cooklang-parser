@@ -1,6 +1,8 @@
 import type {
   MetadataExtract,
   Metadata,
+  MetadataSource,
+  MetadataTime,
   FixedValue,
   Range,
   TextValue,
@@ -313,21 +315,10 @@ export function extractMetadata(content: string): MetadataExtract {
     return { metadata };
   }
 
-  // String metadata variables
+  // Simple string metadata variables
   for (const metaVar of [
     "title",
-    "source",
-    "source.name",
-    "source.url",
     "author",
-    "source.author",
-    "prep time",
-    "time.prep",
-    "cook time",
-    "time.cook",
-    "time required",
-    "time",
-    "duration",
     "locale",
     "introduction",
     "description",
@@ -336,43 +327,66 @@ export function extractMetadata(content: string): MetadataExtract {
     "diet",
     "cuisine",
     "difficulty",
-    "image",
-    "picture",
-  ] as (keyof Pick<
-    Metadata,
-    | "title"
-    | "source"
-    | "source.name"
-    | "source.url"
-    | "author"
-    | "source.author"
-    | "prep time"
-    | "time.prep"
-    | "cook time"
-    | "time.cook"
-    | "time required"
-    | "time"
-    | "duration"
-    | "locale"
-    | "introduction"
-    | "description"
-    | "course"
-    | "category"
-    | "diet"
-    | "cuisine"
-    | "difficulty"
-    | "image"
-    | "picture"
-  >)[]) {
+  ] as const) {
     const stringMetaValue = parseSimpleMetaVar(metadataContent, metaVar);
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
   }
+
+  // Source: can be simple string OR nested object
+  const sourceTxt = parseSimpleMetaVar(metadataContent, "source");
+  const sourceName = parseSimpleMetaVar(metadataContent, "source.name");
+  const sourceUrl = parseSimpleMetaVar(metadataContent, "source.url");
+  const sourceAuthor = parseSimpleMetaVar(metadataContent, "source.author");
+
+  if (sourceName || sourceAuthor || sourceUrl) {
+    // Structured source
+    const source: MetadataSource = {};
+    if (sourceName) source.name = sourceName;
+    if (sourceUrl || sourceUrl) source.url = sourceUrl ?? sourceUrl;
+    if (sourceAuthor) source.author = sourceAuthor;
+    metadata.source = source;
+  } else if (sourceTxt) {
+    // Simple string source (backwards compatible)
+    metadata.source = sourceTxt;
+  }
+
+  // Time: merge various keys into nested structure
+  const prepTime =
+    parseSimpleMetaVar(metadataContent, "prep time") ??
+    parseSimpleMetaVar(metadataContent, "time.prep");
+  const cookTime =
+    parseSimpleMetaVar(metadataContent, "cook time") ??
+    parseSimpleMetaVar(metadataContent, "time.cook");
+  const totalTime =
+    parseSimpleMetaVar(metadataContent, "time required") ??
+    parseSimpleMetaVar(metadataContent, "time") ??
+    parseSimpleMetaVar(metadataContent, "duration");
+
+  if (prepTime || cookTime || totalTime) {
+    const time: MetadataTime = {};
+    if (prepTime) time.prep = prepTime;
+    if (cookTime) time.cook = cookTime;
+    if (totalTime) time.total = totalTime;
+    metadata.time = time;
+  }
+
+  // Image: normalize aliases
+  const image =
+    parseSimpleMetaVar(metadataContent, "image") ??
+    parseSimpleMetaVar(metadataContent, "picture");
+  if (image) metadata.image = image;
+
+  // Images: normalize aliases
+  const images =
+    parseListMetaVar(metadataContent, "images") ??
+    parseListMetaVar(metadataContent, "pictures");
+  if (images) metadata.images = images;
 
   // Unit system (case-insensitive normalization)
   let unitSystem: SpecificUnitSystem | undefined;
   const unitSystemRaw = parseSimpleMetaVar(metadataContent, "unit system");
   if (unitSystemRaw) {
-    metadata["unit system"] = unitSystemRaw;
+    metadata.unitSystem = unitSystemRaw;
     const unitSystemMap: Record<string, SpecificUnitSystem> = {
       metric: "metric",
       us: "US",
@@ -382,11 +396,8 @@ export function extractMetadata(content: string): MetadataExtract {
     unitSystem = unitSystemMap[unitSystemRaw.toLowerCase()];
   }
 
-  // String metadata variables
-  for (const metaVar of ["serves", "yield", "servings"] as (keyof Pick<
-    Metadata,
-    "servings" | "yield" | "serves"
-  >)[]) {
+  // Scaling metadata variables (servings, yield, serves)
+  for (const metaVar of ["servings", "yield", "serves"] as const) {
     const scalingMetaValue = parseScalingMetaVar(metadataContent, metaVar);
     if (scalingMetaValue && scalingMetaValue[1]) {
       metadata[metaVar] = scalingMetaValue[1];
@@ -394,14 +405,9 @@ export function extractMetadata(content: string): MetadataExtract {
     }
   }
 
-  // List metadata variables
-  for (const metaVar of ["tags", "images", "pictures"] as (keyof Pick<
-    Metadata,
-    "tags" | "images" | "pictures"
-  >)[]) {
-    const listMetaValue = parseListMetaVar(metadataContent, metaVar);
-    if (listMetaValue) metadata[metaVar] = listMetaValue;
-  }
+  // Tags
+  const tags = parseListMetaVar(metadataContent, "tags");
+  if (tags) metadata.tags = tags;
 
   return { metadata, servings, unitSystem };
 }

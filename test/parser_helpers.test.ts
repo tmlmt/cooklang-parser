@@ -236,9 +236,11 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
         source:
           "https://cooking.nytimes.com/recipes/1021277-sheet-pan-baked-feta-with-broccolini-tomatoes-and-lemon",
         author: "Yasmin Fahr",
-        "prep time": "10m",
-        "cook time": "15m",
-        time: "25m",
+        time: {
+          prep: "10m",
+          cook: "15m",
+          total: "25m",
+        },
         difficulty: "easy",
         cuisine: "continental",
         diet: "vegan",
@@ -258,7 +260,7 @@ unit system: metric
 ---`;
     const expected: MetadataExtract = {
       metadata: {
-        "unit system": "metric",
+        unitSystem: "metric",
       },
       unitSystem: "metric",
     };
@@ -267,27 +269,27 @@ unit system: metric
 
   it("should accept unit systems case-insensitively", () => {
     expect(extractMetadata("---\nunit system: METRIC\n---")).toEqual({
-      metadata: { "unit system": "METRIC" },
+      metadata: { unitSystem: "METRIC" },
       unitSystem: "metric",
     });
     expect(extractMetadata("---\nunit system: Metric\n---")).toEqual({
-      metadata: { "unit system": "Metric" },
+      metadata: { unitSystem: "Metric" },
       unitSystem: "metric",
     });
     expect(extractMetadata("---\nunit system: us\n---")).toEqual({
-      metadata: { "unit system": "us" },
+      metadata: { unitSystem: "us" },
       unitSystem: "US",
     });
     expect(extractMetadata("---\nunit system: Us\n---")).toEqual({
-      metadata: { "unit system": "Us" },
+      metadata: { unitSystem: "Us" },
       unitSystem: "US",
     });
     expect(extractMetadata("---\nunit system: uk\n---")).toEqual({
-      metadata: { "unit system": "uk" },
+      metadata: { unitSystem: "uk" },
       unitSystem: "UK",
     });
     expect(extractMetadata("---\nunit system: jp\n---")).toEqual({
-      metadata: { "unit system": "jp" },
+      metadata: { unitSystem: "jp" },
       unitSystem: "JP",
     });
   });
@@ -298,7 +300,7 @@ unit system: metric
 unit system: unknown
 ---`;
     expect(extractMetadata(content_unknown)).toEqual({
-      metadata: { "unit system": "unknown" },
+      metadata: { unitSystem: "unknown" },
     });
   });
 });

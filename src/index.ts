@@ -62,6 +62,8 @@ export {
 
 import type {
   Metadata,
+  MetadataSource,
+  MetadataTime,
   Ingredient,
   IngredientFlag,
   IngredientExtras,
@@ -138,6 +140,8 @@ export {
   ShoppingCartOptions,
   ShoppingCartSummary,
   Metadata,
+  MetadataSource,
+  MetadataTime,
   Ingredient,
   IngredientFlag,
   IngredientExtras,

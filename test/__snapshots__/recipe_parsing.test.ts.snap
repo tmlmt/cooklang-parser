@@ -481,8 +481,6 @@ Recipe {
   ],
   "metadata": {
     "author": "Pam Thompson",
-    "cook time": "50m",
-    "prep time": "1h",
     "servings": "12, 12 slices",
     "source": "https://www.tasteofhome.com/recipes/best-lasagna/",
     "tags": [
@@ -490,7 +488,11 @@ Recipe {
       "casserole",
       "classic",
     ],
-    "time": "1h50m",
+    "time": {
+      "cook": "50m",
+      "prep": "1h",
+      "total": "1h50m",
+    },
     "title": "Best Lasagna",
   },
   "sections": [

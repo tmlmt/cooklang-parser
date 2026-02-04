@@ -2,6 +2,32 @@ import type { Recipe } from "./classes/recipe";
 import { Section } from "./classes/section";
 
 /**
+ * Represents source attribution information for a recipe.
+ * @category Types
+ */
+export interface MetadataSource {
+  /** The name of the source (e.g., "New York Times Cooking"). */
+  name?: string;
+  /** The URL of the source recipe. */
+  url?: string;
+  /** The author at the source. */
+  author?: string;
+}
+
+/**
+ * Represents time information for a recipe.
+ * @category Types
+ */
+export interface MetadataTime {
+  /** The preparation time (not parsed into DateTime format). */
+  prep?: string;
+  /** The cooking time (not parsed into DateTime format). */
+  cook?: string;
+  /** The total time required (not parsed into DateTime format). */
+  total?: string;
+}
+
+/**
  * Represents the metadata of a recipe.
  * @category Types
  */
@@ -10,15 +36,12 @@ export interface Metadata {
   title?: string;
   /** The tags of the recipe. */
   tags?: string[];
-  /** The source of the recipe. */
-  source?: string;
-  /** The source name of the recipe. */
-  "source.name"?: string;
-  /** The source url of the recipe. */
-  "source.url"?: string;
-  /** The source author of the recipe. */
-  "source.author"?: string;
-  /** The author of the recipe. */
+  /**
+   * The source of the recipe. Can be a simple URL string or structured attribution.
+   * When parsed from YAML, `source.name`, `source.url`, `source.author` keys are merged here.
+   */
+  source?: string | MetadataSource;
+  /** The author of the recipe (separate from source author). */
   author?: string;
   /** The number of servings the recipe makes.
    * Should be either a number or a string which starts with a number
@@ -69,36 +92,11 @@ export interface Metadata {
   /** The locale of the recipe. */
   locale?: string;
   /**
-   *  The preparation time of the recipe.
-   *  Will not be further parsed into any DateTime format nor normalize
+   * Time information for the recipe.
+   * When parsed from YAML, `prep time`, `time.prep`, `cook time`, `time.cook`,
+   * `time required`, `time`, `duration` keys are merged here.
    */
-  "prep time"?: string;
-  /**
-   *  Alias of `prep time`
-   */
-  "time.prep"?: string;
-  /**
-   *  The cooking time of the recipe.
-   *  Will not be further parsed into any DateTime format nor normalize
-   */
-  "cook time"?: string;
-  /**
-   *  Alias of `cook time`
-   */
-  "time.cook"?: string;
-  /**
-   *  The total time of the recipe.
-   *  Will not be further parsed into any DateTime format nor normalize
-   */
-  "time required"?: string;
-  /*
-   * Alias of `time required`
-   */
-  time?: string;
-  /*
-   * Alias of `time required`
-   */
-  duration?: string;
+  time?: MetadataTime;
   /** The difficulty of the recipe. */
   difficulty?: string;
   /** The cuisine of the recipe. */
@@ -107,14 +105,10 @@ export interface Metadata {
   diet?: string;
   /** The description of the recipe. */
   description?: string;
-  /** The images of the recipe. Alias of `pictures` */
+  /** The images of the recipe. */
   images?: string[];
-  /** The images of the recipe. Alias of `images` */
-  pictures?: string[];
-  /** The picture of the recipe. Alias of `picture` */
+  /** The primary image of the recipe. */
   image?: string;
-  /** The picture of the recipe. Alias of `image` */
-  picture?: string;
   /** The introduction of the recipe. */
   introduction?: string;
   /**
@@ -122,7 +116,7 @@ export interface Metadata {
    * See [Unit Conversion Guide](/guide-unit-conversion) for more information.
    * This stores the original value as written by the user.
    */
-  "unit system"?: string;
+  unitSystem?: string;
 }
 
 /**
