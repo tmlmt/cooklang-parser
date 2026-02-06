@@ -28,6 +28,27 @@ export interface MetadataTime {
 }
 
 /**
+ * Represents a nested metadata object with arbitrary keys.
+ * @category Types
+ */
+export interface MetadataObject {
+  [key: string]: MetadataValue;
+}
+
+/**
+ * Represents any value that can appear in recipe metadata.
+ * @category Types
+ */
+export type MetadataValue =
+  | string
+  | number
+  | (string | number)[]
+  | MetadataObject
+  | MetadataSource
+  | MetadataTime
+  | undefined;
+
+/**
  * Represents the metadata of a recipe.
  * @category Types
  */
@@ -117,6 +138,11 @@ export interface Metadata {
    * This stores the original value as written by the user.
    */
   unitSystem?: string;
+  /**
+   * Index signature for additional metadata fields not explicitly typed.
+   * Any metadata key in the frontmatter will be captured here.
+   */
+  [key: string]: MetadataValue;
 }
 
 /**

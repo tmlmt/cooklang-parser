@@ -1,5 +1,22 @@
 import { createRegex } from "human-regex";
 
+/** Matches all top-level metadata keys in frontmatter content */
+export const metadataKeyRegex = /^([^:\n]+?):/gm;
+
+/** Matches a number (integer or decimal, optionally negative) */
+export const numericValueRegex = /^-?\d+(\.\d+)?$/;
+
+/** Creates a regex to match a nested YAML-style object for a given key 
+ * 
+ * Nested properties should be indented at least by one space and can be nested arbitrarily deep. Tabs are not allowed for indentation.
+ * Lines can be key-value pairs or list items (starting with `-`).
+*/
+export const nestedMetaVarRegex = (varName: string): RegExp =>
+  new RegExp(
+    `^${varName}:\\s*\\r?\\n((?:[ ]+.+(?:\\r?\\n|$))+)`,
+    "m",
+  );
+
 export const metadataRegex = createRegex()
   .literal("---").newline()
   .startCaptureGroup().anyCharacter().zeroOrMore().optional().endGroup()

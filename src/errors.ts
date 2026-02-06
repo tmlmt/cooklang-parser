@@ -89,3 +89,19 @@ export class InvalidQuantityFormat extends Error {
     this.name = "InvalidQuantityFormat";
   }
 }
+
+export class NoTabAsIndentError extends Error {
+  constructor() {
+    super(
+      `Tabs are not allowed for indentation in metadata blocks. Please use spaces only.`,
+    );
+    this.name = "NoTabAsIndentError";
+  }
+}
+
+export class BadIndentationError extends Error {
+  constructor() {
+    super(`Bad identation of a nested block. Please use spaces only.`);
+    this.name = "BadIndentationError";
+  }
+}

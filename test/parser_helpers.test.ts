@@ -15,13 +15,20 @@ import {
   parseListMetaVar,
   parseFixedValue,
   parseQuantityInput,
+  parseNestedMetaVar,
+  parseNestedBlock,
   extractMetadata,
   findAndUpsertCookware,
   findAndUpsertIngredient,
   stringifyQuantityValue,
   unionOfSets,
+  parseAnyMetaVar,
 } from "../src/utils/parser_helpers";
-import { ReferencedItemCannotBeRedefinedError } from "../src/errors";
+import {
+  NoTabAsIndentError,
+  BadIndentationError,
+  ReferencedItemCannotBeRedefinedError,
+} from "../src/errors";
 
 describe("parseSimpleMetaVar", () => {
   it("should parse canonical string vars", () => {
@@ -209,6 +216,35 @@ tags:      [ one,two, three ]
       servings: 2,
     };
     expect(extractMetadata(content)).toEqual(expected);
+  });
+
+  it("should handle detailed source information", () => {
+    const contentDot = `
+---
+source.name: NYT Cooking
+source.url: https://cooking.nytimes.com
+source.author: Melissa Clark
+---
+`;
+    const contentNested = `
+---
+source:
+  name: NYT Cooking
+  url: https://cooking.nytimes.com
+  author: Melissa Clark
+---
+`;
+    const expected: MetadataExtract = {
+      metadata: {
+        source: {
+          name: "NYT Cooking",
+          url: "https://cooking.nytimes.com",
+          author: "Melissa Clark",
+        },
+      },
+    };
+    expect(extractMetadata(contentDot)).toEqual(expected);
+    expect(extractMetadata(contentNested)).toEqual(expected);
   });
 
   it("should handle all possible passthrough metadata fields", () => {
@@ -677,5 +713,389 @@ describe("unionOfSets", () => {
     expect(
       unionOfSets(new Set(["a", "b", "c"]), new Set(["b", "c", "d", "e"])),
     ).toEqual(new Set(["a", "b", "c", "d", "e"]));
+  });
+});
+
+describe("parseNestedBlock", () => {
+  it("should return undefined when there's no line to parse", () => {
+    const testString = `
+    
+    `;
+    expect(parseNestedBlock(testString)).toBeUndefined();
+  });
+
+  it("should skip lines that are not in key: value format", () => {
+    const testString = `
+key: value
+anotherKey
+aThirdKey: yeah
+`;
+    expect(parseNestedBlock(testString)).toEqual({
+      key: "value",
+      aThirdKey: "yeah",
+    });
+  });
+});
+
+describe("parseNestedMetaVar", () => {
+  it("should parse nested metadata variables correctly", () => {
+    const testString = `meta: 
+  key: value
+  anotherKey: 
+    nestedKey: nestedValue`;
+    const result = parseNestedMetaVar(testString, "meta");
+    expect(result).toEqual({
+      key: "value",
+      anotherKey: {
+        nestedKey: "nestedValue",
+      },
+    });
+  });
+
+  it("does not allow tab as indent", () => {
+    const testString = `meta: 
+ \tkey: value 
+`;
+    const testString2 = `meta: 
+  key: value 
+ \tanotherKey: anotherValue
+`;
+    expect(() => parseNestedMetaVar(testString, "meta")).toThrow(
+      NoTabAsIndentError,
+    );
+    expect(() => parseNestedMetaVar(testString2, "meta")).toThrow(
+      NoTabAsIndentError,
+    );
+  });
+
+  it("ends block when smaller indent is encountered", () => {
+    const testString = `meta: 
+  key: value
+ hide: true
+  anotherKey: anotherValue 
+`;
+    expect(parseNestedMetaVar(testString, "meta")).toEqual({
+      key: "value",
+    });
+  });
+
+  it("should throw an error if the indentation is different", () => {
+    const testString = `meta: 
+  key: value
+   hide: true
+`;
+    expect(() => parseNestedMetaVar(testString, "meta")).toThrow(
+      BadIndentationError,
+    );
+  });
+
+  it("should parse array values", () => {
+    const testString = `meta: 
+  key:
+    - 1
+    - 2
+`;
+    expect(parseNestedMetaVar(testString, "meta")).toEqual({
+      key: [1, 2],
+    });
+  });
+
+  it("should return undefined when key is not found", () => {
+    const testString = `other: value`;
+    expect(parseNestedMetaVar(testString, "meta")).toBeUndefined();
+  });
+
+  it("should return undefined when key has simple value (not nested)", () => {
+    const testString = `meta: simple value`;
+    expect(parseNestedMetaVar(testString, "meta")).toBeUndefined();
+  });
+
+  it("should parse numeric values in nested objects", () => {
+    const testString = `config:
+  count: 42
+  ratio: 3.14
+  negative: -5`;
+    const result = parseNestedMetaVar(testString, "config");
+    expect(result).toEqual({
+      count: 42,
+      ratio: 3.14,
+      negative: -5,
+    });
+  });
+
+  it("should parse inline arrays in nested objects", () => {
+    const testString = `settings:
+  items: [one, two, three]
+  enabled: true`;
+    const result = parseNestedMetaVar(testString, "settings");
+    expect(result).toEqual({
+      items: ["one", "two", "three"],
+      enabled: "true",
+    });
+  });
+
+  it("should handle deeply nested objects (3+ levels)", () => {
+    const testString = `root:
+  level1:
+    level2:
+      level3: deep value`;
+    const result = parseNestedMetaVar(testString, "root");
+    expect(result).toEqual({
+      level1: {
+        level2: {
+          level3: "deep value",
+        },
+      },
+    });
+  });
+
+  it("should handle mixed nesting with siblings", () => {
+    const testString = `data:
+  simple: value
+  nested:
+    child: childValue
+  another: anotherValue`;
+    const result = parseNestedMetaVar(testString, "data");
+    expect(result).toEqual({
+      simple: "value",
+      nested: {
+        child: "childValue",
+      },
+      another: "anotherValue",
+    });
+  });
+
+  it("should handle keys with special characters", () => {
+    const testString = `meta:
+  clé française: valeur
+  日本語キー: 値`;
+    const result = parseNestedMetaVar(testString, "meta");
+    expect(result).toEqual({
+      "clé française": "valeur",
+      日本語キー: "値",
+    });
+  });
+});
+
+describe("extractMetadata - dynamic parsing", () => {
+  it("should capture arbitrary string metadata keys", () => {
+    const content = `---
+customField: custom value
+anotherCustom: 
+  key: value
+  arrayKey: 
+    - 1
+    - 2
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.customField).toBe("custom value");
+    expect(result.metadata.anotherCustom).toEqual({
+      key: "value",
+      arrayKey: [1, 2],
+    });
+  });
+
+  it("should detect and parse numeric metadata values", () => {
+    const content = `---
+rating: 5
+temperature: 180
+price: 12.99
+negative: -10
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.rating).toBe(5);
+    expect(result.metadata.temperature).toBe(180);
+    expect(result.metadata.price).toBe(12.99);
+    expect(result.metadata.negative).toBe(-10);
+  });
+
+  it("should parse inline array metadata values", () => {
+    const content = `---
+equipment: [oven, pan, spatula]
+allergens: [nuts, dairy]
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.equipment).toEqual(["oven", "pan", "spatula"]);
+    expect(result.metadata.allergens).toEqual(["nuts", "dairy"]);
+  });
+
+  it("should parse YAML-style list metadata values", () => {
+    const content = `---
+steps:
+  - prepare
+  - cook
+  - serve
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.steps).toEqual(["prepare", "cook", "serve"]);
+  });
+
+  it("should parse time as YAML-style nested object", () => {
+    const content = `---
+time:
+  prep: 15 minutes
+  cook: 30 minutes
+  total: 45 minutes
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.time).toEqual({
+      prep: "15 minutes",
+      cook: "30 minutes",
+      total: "45 minutes",
+    });
+  });
+
+  it("should prefer YAML nested source over dot-notation", () => {
+    const content = `---
+source:
+  name: Nested Name
+  url: https://nested.com
+source.name: Dot Name
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.source).toEqual({
+      name: "Nested Name",
+      url: "https://nested.com",
+    });
+  });
+
+  it("should prefer YAML nested time over legacy keys", () => {
+    const content = `---
+time:
+  prep: 10m
+  cook: 20m
+prep time: 15m
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.time).toEqual({
+      prep: "10m",
+      cook: "20m",
+    });
+  });
+
+  it("should handle mixed known and unknown metadata fields", () => {
+    const content = `---
+title: Mixed Recipe
+customRating: 5
+source: https://example.com
+customNotes: Some notes
+tags: [test]
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata).toEqual({
+      title: "Mixed Recipe",
+      customRating: 5,
+      source: "https://example.com",
+      customNotes: "Some notes",
+      tags: ["test"],
+    });
+  });
+
+  it("should handle keys with spaces", () => {
+    const content = `---
+my custom field: my value
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata["my custom field"]).toBe("my value");
+  });
+
+  it("should handle keys with unicode characters", () => {
+    const content = `---
+recette française: délicieuse
+料理名: 寿司
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata["recette française"]).toBe("délicieuse");
+    expect(result.metadata["料理名"]).toBe("寿司");
+  });
+
+  it("should handle empty nested objects gracefully", () => {
+    const content = `---
+title: Test
+emptyNested:
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.title).toBe("Test");
+    // Empty nested should not appear or be undefined
+    expect(result.metadata.emptyNested).toBeUndefined();
+  });
+
+  it("should preserve string values that look numeric but aren't", () => {
+    const content = `---
+version: 1.0.0
+phone: 555-1234
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.version).toBe("1.0.0");
+    expect(result.metadata.phone).toBe("555-1234");
+  });
+
+  it("should convert numeric strings to numbers (including leading zeros)", () => {
+    const content = `---
+code: 007
+count: 42
+---`;
+    const result = extractMetadata(content);
+    // Leading zeros are stripped when converted to number
+    expect(result.metadata.code).toBe(7);
+    expect(result.metadata.count).toBe(42);
+  });
+
+  it("should handle picture as alias for image", () => {
+    const content = `---
+picture: https://example.com/recipe.jpg
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.image).toBe("https://example.com/recipe.jpg");
+  });
+
+  it("should handle pictures as alias for images", () => {
+    const content = `---
+pictures: [https://example.com/a.jpg, https://example.com/b.jpg]
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.images).toEqual([
+      "https://example.com/a.jpg",
+      "https://example.com/b.jpg",
+    ]);
+  });
+
+  it("should prefer image over picture alias", () => {
+    const content = `---
+image: https://example.com/image.jpg
+picture: https://example.com/picture.jpg
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.image).toBe("https://example.com/image.jpg");
+  });
+
+  it("should handle partial source fields via dot-notation", () => {
+    const content = `---
+source.url: https://example.com
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.source).toEqual({
+      url: "https://example.com",
+    });
+  });
+
+  it("should handle partial time fields via legacy keys", () => {
+    const content = `---
+cook time: 30m
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.time).toEqual({
+      cook: "30m",
+    });
+  });
+
+  it("should handle duration as alias for total time", () => {
+    const content = `---
+duration: 1 hour
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.time).toEqual({
+      total: "1 hour",
+    });
   });
 });

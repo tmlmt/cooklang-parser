@@ -3,6 +3,8 @@ import type {
   Metadata,
   MetadataSource,
   MetadataTime,
+  MetadataValue,
+  MetadataObject,
   FixedValue,
   Range,
   TextValue,
@@ -13,6 +15,9 @@ import type {
 } from "../types";
 import {
   metadataRegex,
+  metadataKeyRegex,
+  nestedMetaVarRegex,
+  numericValueRegex,
   rangeRegex,
   numberLikeRegex,
   scalingMetaValueRegex,
@@ -22,6 +27,8 @@ import type { Ingredient, Step, Cookware } from "../types";
 import { addQuantityValues } from "../quantities/mutations";
 import {
   CannotAddTextValueError,
+  NoTabAsIndentError,
+  BadIndentationError,
   ReferencedItemCannotBeRedefinedError,
 } from "../errors";
 
@@ -305,6 +312,183 @@ export function parseListMetaVar(content: string, varName: string) {
   }
 }
 
+/**
+ * Extracts all top-level metadata keys from frontmatter content.
+ * Only captures keys at the start of a line (not nested keys).
+ */
+function extractAllMetadataKeys(content: string): string[] {
+  const keys: string[] = [];
+  for (const match of content.matchAll(metadataKeyRegex)) {
+    keys.push(match[1]!.trim());
+  }
+  return [...new Set(keys)]; // deduplicate
+}
+
+/**
+ * Parses a nested YAML-style object from frontmatter content.
+ * Handles indented key-value pairs under a parent key, including deeply nested objects.
+ */
+export function parseNestedMetaVar(
+  content: string,
+  varName: string,
+): MetadataObject | undefined {
+  const match = content.match(nestedMetaVarRegex(varName));
+  if (!match) return undefined;
+
+  const nestedContent = match[1]!;
+  return parseNestedBlock(nestedContent);
+}
+
+/**
+ * Parses a block of indented YAML-like content into a nested object.
+ * Recursively handles nested objects when a key has no value but has indented children.
+ *
+ * @remarks
+ * Only spaces are allowed for indentation (tabs are rejected), following YAML spec.
+ */
+export function parseNestedBlock(content: string): MetadataObject | undefined {
+  const lines = content.split(/\r?\n/).filter((line) => line.trim() !== "");
+  if (lines.length === 0) return undefined;
+
+  // Determine base indentation from first line (spaces only)
+  const baseIndentMatch = lines[0]!.match(/^(\s*)/);
+  if (baseIndentMatch?.[0]?.includes("\t")) {
+    throw new NoTabAsIndentError();
+  }
+  // We know that the regex will return a number of spaces (0+)
+  const baseIndent = baseIndentMatch?.[1]?.length as number;
+
+  // If the block itself is a list (not an object), return undefined
+  // so the caller can fall through to parseListMetaVar
+  if (lines[0]!.trim().startsWith("- ")) return undefined;
+
+  const result: MetadataObject = {};
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i]!;
+
+    // Check for tabs in indentation - not allowed
+    const leadingWhitespace = line.match(/^(\s*)/)?.[1];
+    if (leadingWhitespace && leadingWhitespace.includes("\t")) {
+      throw new NoTabAsIndentError();
+    }
+
+    const currentIndent = leadingWhitespace!.length;
+
+    // Less indentation than base = end of this block
+    if (currentIndent < baseIndent) {
+      break;
+    }
+
+    // More indentation than base = belongs to a child (skip, handled recursively)
+    if (currentIndent !== baseIndent) {
+      throw new BadIndentationError();
+    }
+
+    // Parse key: value from this line
+    const keyValueMatch = line.match(/^[ ]*([^:\n]+?):\s*(.*)$/);
+    if (!keyValueMatch) {
+      i++;
+      continue;
+    }
+
+    const key = keyValueMatch[1]!.trim();
+    const rawValue = keyValueMatch[2]!.trim();
+
+    if (rawValue === "") {
+      // Empty value means this key has nested children
+      // Collect all following lines with greater indentation
+      const childLines: string[] = [];
+      let j = i + 1;
+      while (j < lines.length) {
+        const childLine = lines[j]!;
+        const childIndent = childLine.match(/^([ ]*)/)?.[1]?.length;
+        if (childIndent && childIndent > baseIndent) {
+          childLines.push(childLine);
+          j++;
+        } else {
+          break;
+        }
+      }
+
+      // v8 ignore else -- @preserve
+      if (childLines.length > 0) {
+        // Check if children are a list (start with `-`)
+        const firstChildTrimmed = childLines[0]!.trim();
+        if (firstChildTrimmed.startsWith("- ")) {
+          // Reconstruct content and reuse parseListMetaVar
+          const reconstructedContent = `${key}:\n${childLines.join("\n")}`;
+          const listResult = parseListMetaVar(reconstructedContent, key);
+          if (listResult) {
+            result[key] = listResult.map(
+              (item) => parseMetadataValue(item) as string | number,
+            );
+          }
+        } else {
+          // Parse as nested object
+          const childContent = childLines.join("\n");
+          const nested = parseNestedBlock(childContent);
+          // v8 ignore else -- @preserve
+          if (nested) {
+            result[key] = nested;
+          }
+        }
+      }
+      i = j;
+    } else {
+      // Has a value, parse it
+      result[key] = parseMetadataValue(rawValue);
+      i++;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Parses a raw string value into appropriate type (number, string, or array).
+ */
+function parseMetadataValue(rawValue: string): MetadataValue {
+  // Check for inline array [a, b, c]
+  if (rawValue.startsWith("[") && rawValue.endsWith("]")) {
+    return rawValue
+      .slice(1, -1)
+      .split(",")
+      .map((item) => item.trim());
+  }
+
+  // Check for number (integer or decimal)
+  if (numericValueRegex.test(rawValue)) {
+    return Number(rawValue);
+  }
+
+  // Return as string
+  return rawValue;
+}
+
+/**
+ * Detects and parses any metadata value (simple, list, nested object, or numeric).
+ */
+function parseAnyMetaVar(
+  content: string,
+  varName: string,
+): MetadataValue | undefined {
+  // Try nested object first (key followed by indented content)
+  const nested = parseNestedMetaVar(content, varName);
+  if (nested) return nested;
+
+  // Try list (inline [...] or YAML-style - items)
+  const list = parseListMetaVar(content, varName);
+  if (list) return list;
+
+  // Try simple value
+  const simple = parseSimpleMetaVar(content, varName);
+  if (simple) return parseMetadataValue(simple);
+
+  return undefined;
+}
+
 export function extractMetadata(content: string): MetadataExtract {
   const metadata: Metadata = {};
   let servings: number | undefined = undefined;
@@ -314,6 +498,47 @@ export function extractMetadata(content: string): MetadataExtract {
   if (!metadataContent) {
     return { metadata };
   }
+
+  // Track keys that have been handled with special logic
+  const handledKeys = new Set<string>([
+    // Simple string fields
+    "title",
+    "author",
+    "locale",
+    "introduction",
+    "description",
+    "course",
+    "category",
+    "diet",
+    "cuisine",
+    "difficulty",
+    // Source fields
+    "source",
+    "source.name",
+    "source.url",
+    "source.author",
+    // Time fields
+    "prep time",
+    "time.prep",
+    "cook time",
+    "time.cook",
+    "time required",
+    "time",
+    "duration",
+    // Image fields
+    "image",
+    "picture",
+    "images",
+    "pictures",
+    // Unit system
+    "unit system",
+    // Scaling fields
+    "servings",
+    "yield",
+    "serves",
+    // List fields
+    "tags",
+  ]);
 
   // Simple string metadata variables
   for (const metaVar of [
@@ -332,17 +557,31 @@ export function extractMetadata(content: string): MetadataExtract {
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
   }
 
-  // Source: can be simple string OR nested object
+  // Source: can be simple string, dot-notation, OR nested object
+  const sourceNested = parseNestedMetaVar(metadataContent, "source");
   const sourceTxt = parseSimpleMetaVar(metadataContent, "source");
   const sourceName = parseSimpleMetaVar(metadataContent, "source.name");
   const sourceUrl = parseSimpleMetaVar(metadataContent, "source.url");
   const sourceAuthor = parseSimpleMetaVar(metadataContent, "source.author");
 
-  if (sourceName || sourceAuthor || sourceUrl) {
-    // Structured source
+  if (sourceNested) {
+    // YAML-style nested object
+    const source: MetadataSource = {};
+    // v8 ignore else -- @preserve
+    if (typeof sourceNested.name === "string") source.name = sourceNested.name;
+    // v8 ignore else -- @preserve
+    if (typeof sourceNested.url === "string") source.url = sourceNested.url;
+    // v8 ignore else -- @preserve
+    if (typeof sourceNested.author === "string")
+      source.author = sourceNested.author;
+    // v8 ignore else -- @preserve
+    if (Object.keys(source).length > 0) metadata.source = source;
+  } else if (sourceName || sourceAuthor || sourceUrl) {
+    // Dot-notation structured source
     const source: MetadataSource = {};
     if (sourceName) source.name = sourceName;
-    if (sourceUrl || sourceUrl) source.url = sourceUrl ?? sourceUrl;
+    // v8 ignore else -- @preserve
+    if (sourceUrl) source.url = sourceUrl;
     if (sourceAuthor) source.author = sourceAuthor;
     metadata.source = source;
   } else if (sourceTxt) {
@@ -350,7 +589,8 @@ export function extractMetadata(content: string): MetadataExtract {
     metadata.source = sourceTxt;
   }
 
-  // Time: merge various keys into nested structure
+  // Time: can be dot-notation, legacy keys, OR nested object
+  const timeNested = parseNestedMetaVar(metadataContent, "time");
   const prepTime =
     parseSimpleMetaVar(metadataContent, "prep time") ??
     parseSimpleMetaVar(metadataContent, "time.prep");
@@ -362,7 +602,18 @@ export function extractMetadata(content: string): MetadataExtract {
     parseSimpleMetaVar(metadataContent, "time") ??
     parseSimpleMetaVar(metadataContent, "duration");
 
-  if (prepTime || cookTime || totalTime) {
+  if (timeNested) {
+    // YAML-style nested object
+    const time: MetadataTime = {};
+    // v8 ignore else -- @preserve
+    if (typeof timeNested.prep === "string") time.prep = timeNested.prep;
+    // v8 ignore else -- @preserve
+    if (typeof timeNested.cook === "string") time.cook = timeNested.cook;
+    // v8 ignore else -- @preserve
+    if (typeof timeNested.total === "string") time.total = timeNested.total;
+    // v8 ignore else -- @preserve
+    if (Object.keys(time).length > 0) metadata.time = time;
+  } else if (prepTime || cookTime || totalTime) {
     const time: MetadataTime = {};
     if (prepTime) time.prep = prepTime;
     if (cookTime) time.cook = cookTime;
@@ -408,6 +659,17 @@ export function extractMetadata(content: string): MetadataExtract {
   // Tags
   const tags = parseListMetaVar(metadataContent, "tags");
   if (tags) metadata.tags = tags;
+
+  // Dynamic parsing: capture all additional keys not handled above
+  const allKeys = extractAllMetadataKeys(metadataContent);
+  for (const key of allKeys) {
+    if (handledKeys.has(key)) continue;
+
+    const value = parseAnyMetaVar(metadataContent, key);
+    if (value !== undefined) {
+      metadata[key] = value;
+    }
+  }
 
   return { metadata, servings, unitSystem };
 }
