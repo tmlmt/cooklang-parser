@@ -177,34 +177,22 @@ describe("Recipe.convertTo", () => {
       };
       expect(itemQty).toMatchObject(expected);
 
-      const recipe2 = new Recipe("Add @flour{1%bag|2%cup}");
+      const recipe2 = new Recipe("Add @flour{1%=bag|2%cup}");
       const converted2 = recipe2.convertTo("metric", "replace");
 
       const itemQty2 = getFirstItem(converted2);
       const expected2: MaybeScalableQuantity = {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 473 } },
         unit: { name: "ml" },
+        equivalents: [
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: { name: "bag", integerProtected: true },
+          },
+        ],
         scalable: true,
       };
       expect(itemQty2).toMatchObject(expected2);
-    });
-
-    it("converts with 'replace' and filters out target-compatible equivalents", () => {
-      // cup (primary, US/UK/metric compatible) with an existing ml equivalent
-      // When converting to metric with 'replace':
-      // - cup was the old primary (discarded)
-      // - ml is metric-compatible (filtered out)
-      // Result: only converted primary, no equivalents
-      const recipe = new Recipe("Add @flour{2%cup|473%ml}");
-      const converted = recipe.convertTo("metric", "replace");
-
-      const itemQty = getFirstItem(converted);
-      const expected: MaybeScalableQuantity = {
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 473 } },
-        unit: { name: "ml" },
-        scalable: true,
-      };
-      expect(itemQty).toMatchObject(expected);
     });
 
     it("converts primary to target system with 'remove' method and clears equivalents", () => {

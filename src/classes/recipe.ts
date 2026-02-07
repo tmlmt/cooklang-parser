@@ -1349,11 +1349,11 @@ export class Recipe {
       if (method === "remove") {
         return newPrimary;
       } else if (method === "replace") {
+        // An equivalent was converted and replaced, we still want to keep the oldPrimary
+        if (source === "converted") remainingEquivalents.push(oldPrimary);
         if (remainingEquivalents.length > 0) {
           // Keep remaining equivalents
           newPrimary.equivalents = remainingEquivalents;
-          // An equivalent was converted and replaced, we still want to keep the oldPrimary
-          if (source === "converted") newPrimary.equivalents.push(oldPrimary);
         }
       } else {
         // method === "keep": include old primary + remaining equivalents
