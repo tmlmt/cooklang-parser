@@ -1,5 +1,57 @@
 # Changelog
 
+## v3.0.0-alpha.13
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.12...v3.0.0-alpha.13)
+
+#### ⚠️ Breaking Changes
+
+- **Metadata interface restructured.**
+
+Source attribution:
+
+    - metadata["source.name"] → metadata.source?.name (when source is object)
+    - metadata["source.url"] → metadata.source?.url (when source is object)
+    - metadata["source.author"] → metadata.source?.author (when source is object)
+
+Simple string source remains: metadata.source (when string)
+
+Time information:
+
+    - metadata["prep time"] / metadata["time.prep"] → metadata.time?.prep
+    - metadata["cook time"] / metadata["time.cook"] → metadata.time?.cook
+
+- **ShoppingList public API renamed to camelCase.**
+
+Migrate by updating method calls:
+
+    .add_recipe() → .addRecipe()
+    .remove_recipe() → .removeRecipe()
+    .set_category_config() → .setCategoryConfig()
+    .category_config → .categoryConfig
+
+### 🚀 Enhancements
+
+- Allow custom metadata fields ([bd40101](https://github.com/tmlmt/cooklang-parser/commit/bd40101))
+
+### 🩹 Fixes
+
+- **convertTo:** Keep old primary quantity when an equivalent was used to convert, in 'replace' mode ([c1be26e](https://github.com/tmlmt/cooklang-parser/commit/c1be26e))
+
+### 💅 Refactors
+
+- ⚠️ Harmonize method naming to camelCase ([327a2c2](https://github.com/tmlmt/cooklang-parser/commit/327a2c2))
+- ⚠️ Restructure Metadata interface with nested source and time objects ([1b239e7](https://github.com/tmlmt/cooklang-parser/commit/1b239e7))
+
+### 🏡 Chore
+
+- **test:** Maximize coverage ([210006a](https://github.com/tmlmt/cooklang-parser/commit/210006a))
+- Remove unused import ([5c91fc4](https://github.com/tmlmt/cooklang-parser/commit/5c91fc4))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.12
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.11...v3.0.0-alpha.12)
