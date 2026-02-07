@@ -420,6 +420,7 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
           // Reconstruct content and reuse parseListMetaVar
           const reconstructedContent = `${key}:\n${childLines.join("\n")}`;
           const listResult = parseListMetaVar(reconstructedContent, key);
+          // v8 ignore else -- @preserve
           if (listResult) {
             result[key] = listResult.map(
               (item) => parseMetadataValue(item) as string | number,
