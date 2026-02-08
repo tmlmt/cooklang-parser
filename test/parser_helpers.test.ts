@@ -17,6 +17,7 @@ import {
   parseQuantityInput,
   parseNestedMetaVar,
   parseNestedBlock,
+  parseBlockScalarMetaVar,
   extractMetadata,
   findAndUpsertCookware,
   findAndUpsertIngredient,
@@ -93,6 +94,79 @@ tags:
   - two
   - three`;
     expect(parseListMetaVar(content_bullets, "tags")).toEqual(expected_list);
+  });
+});
+
+describe("parseBlockScalarMetaVar", () => {
+  it("should parse literal block scalar (|) preserving newlines", () => {
+    const content = `description: |
+  Line one
+  Line two
+  Line three`;
+    expect(parseBlockScalarMetaVar(content, "description")).toEqual(
+      "Line one\nLine two\nLine three",
+    );
+  });
+
+  it("should parse folded block scalar (>) folding newlines into spaces", () => {
+    const content = `description: >
+  This is a long
+  description that
+  spans multiple lines`;
+    expect(parseBlockScalarMetaVar(content, "description")).toEqual(
+      "This is a long description that spans multiple lines",
+    );
+  });
+
+  it("should preserve paragraph breaks in folded block scalar (>)", () => {
+    const content = `description: >
+  First paragraph
+  continues here
+
+  Second paragraph
+  continues here`;
+    expect(parseBlockScalarMetaVar(content, "description")).toEqual(
+      "First paragraph continues here\nSecond paragraph continues here",
+    );
+  });
+
+  it("should return undefined when no block scalar is present", () => {
+    expect(
+      parseBlockScalarMetaVar("description: simple text", "description"),
+    ).toBeUndefined();
+  });
+
+  it("should return undefined when block scalar is empty", () => {
+    const content = `description: |
+  
+`;
+    expect(parseBlockScalarMetaVar(content, "description")).toBeUndefined();
+  });
+
+  it("should return undefined when the key does not exist", () => {
+    expect(
+      parseBlockScalarMetaVar("title: something", "description"),
+    ).toBeUndefined();
+  });
+
+  it("should strip trailing empty lines", () => {
+    const content = `description: |
+  Line one
+  Line two
+
+`;
+    expect(parseBlockScalarMetaVar(content, "description")).toEqual(
+      "Line one\nLine two",
+    );
+  });
+
+  it("should work with introduction field", () => {
+    const content = `introduction: >
+  Welcome to this recipe.
+  It is very delicious.`;
+    expect(parseBlockScalarMetaVar(content, "introduction")).toEqual(
+      "Welcome to this recipe. It is very delicious.",
+    );
   });
 });
 
@@ -336,6 +410,73 @@ unit system: unknown
 ---`;
     expect(extractMetadata(content_unknown)).toEqual({
       metadata: { unitSystem: "unknown" },
+    });
+  });
+
+  it("should parse description with literal block scalar (|)", () => {
+    const content = `---
+description: |
+  This is a multi-line
+  description that preserves
+  newlines.
+---`;
+    expect(extractMetadata(content)).toEqual<MetadataExtract>({
+      metadata: {
+        description:
+          "This is a multi-line\ndescription that preserves\nnewlines.",
+      },
+    });
+  });
+
+  it("should parse description with folded block scalar (>)", () => {
+    const content = `---
+description: >
+  This is a multi-line
+  description that folds
+  into one paragraph.
+---`;
+    expect(extractMetadata(content)).toEqual<MetadataExtract>({
+      metadata: {
+        description:
+          "This is a multi-line description that folds into one paragraph.",
+      },
+    });
+  });
+
+  it("should parse introduction with literal block scalar (|)", () => {
+    const content = `---
+introduction: |
+  Welcome to this recipe.
+  It has multiple steps.
+---`;
+    expect(extractMetadata(content)).toEqual<MetadataExtract>({
+      metadata: {
+        introduction: "Welcome to this recipe.\nIt has multiple steps.",
+      },
+    });
+  });
+
+  it("should parse introduction with folded block scalar (>)", () => {
+    const content = `---
+introduction: >
+  Welcome to this recipe.
+  It has multiple steps.
+---`;
+    expect(extractMetadata(content)).toEqual<MetadataExtract>({
+      metadata: {
+        introduction: "Welcome to this recipe. It has multiple steps.",
+      },
+    });
+  });
+
+  it("should still parse description as simple string when no block scalar", () => {
+    const content = `---
+description: A simple description
+---`;
+    expect(extractMetadata(content)).toEqual<MetadataExtract>({
+      metadata: {
+        description: "A simple description",
+      },
     });
   });
 });

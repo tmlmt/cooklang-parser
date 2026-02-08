@@ -274,6 +274,53 @@ export function parseSimpleMetaVar(content: string, varName: string) {
     : undefined;
 }
 
+/**
+ * Parses a YAML block scalar value (`|` for literal, `\>` for folded) for a given key.
+ * - `|` preserves newlines within the block.
+ * - `\>` folds newlines into spaces (like a paragraph).
+ * Trailing newlines are stripped.
+ */
+export function parseBlockScalarMetaVar(
+  content: string,
+  varName: string,
+): string | undefined {
+  const match = content.match(
+    new RegExp(
+      `^${varName}:\\s*([|>])\\s*\\r?\\n((?:(?:[ ]+.*|\\s*)(?:\\r?\\n|$))+)`,
+      "m",
+    ),
+  );
+  if (!match) return undefined;
+
+  const style = match[1] as "|" | ">";
+  const rawBlock = match[2]!;
+
+  // Determine base indentation from the first non-empty line
+  const lines = rawBlock.split(/\r?\n/);
+  const firstNonEmpty = lines.find((l) => l.trim() !== "");
+  /* v8 ignore else -- @preserve */
+  if (!firstNonEmpty) return undefined;
+  const baseIndent = firstNonEmpty.match(/^([ ]*)/)![1]!.length;
+
+  // Strip base indentation from each line
+  const stripped = lines
+    .map((line) => (line.trim() === "" ? "" : line.slice(baseIndent)))
+    // Remove trailing empty lines
+    .join("\n")
+    .replace(/\n+$/, "");
+
+  if (style === "|") {
+    // Literal: preserve newlines
+    return stripped;
+  }
+
+  // Folded: replace single newlines with spaces, preserve double newlines as paragraph breaks
+  return stripped
+    .replace(/\n\n/g, "\0")
+    .replace(/\n/g, " ")
+    .replace(/\0/g, "\n");
+}
+
 export function parseScalingMetaVar(
   content: string,
   varName: string,
@@ -554,6 +601,14 @@ export function extractMetadata(content: string): MetadataExtract {
     "cuisine",
     "difficulty",
   ] as const) {
+    // For description and introduction, try block scalar syntax first
+    if (metaVar === "description" || metaVar === "introduction") {
+      const blockValue = parseBlockScalarMetaVar(metadataContent, metaVar);
+      if (blockValue) {
+        metadata[metaVar] = blockValue;
+        continue;
+      }
+    }
     const stringMetaValue = parseSimpleMetaVar(metadataContent, metaVar);
     if (stringMetaValue) metadata[metaVar] = stringMetaValue;
   }
