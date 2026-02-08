@@ -80,6 +80,7 @@ import type {
   TextItem,
   IngredientItem,
   MaybeScalableQuantity,
+  IngredientAlternativeBase,
   IngredientAlternative,
   CookwareItem,
   TimerItem,
@@ -122,6 +123,8 @@ import type {
   UnitType,
   UnitDefinition,
   UnitDefinitionLike,
+  UnitFractionConfig,
+  WithOptionalQuantity,
   AndGroup,
   OrGroup,
   Group,
@@ -161,6 +164,7 @@ export {
   TextItem,
   IngredientItem,
   MaybeScalableQuantity,
+  IngredientAlternativeBase,
   IngredientAlternative,
   CookwareItem,
   TimerItem,
@@ -203,6 +207,8 @@ export {
   UnitType,
   UnitDefinition,
   UnitDefinitionLike,
+  UnitFractionConfig,
+  WithOptionalQuantity,
   AndGroup,
   OrGroup,
   Group,
@@ -225,6 +231,13 @@ export {
 import {
   NoProductCatalogForCartError,
   NoShoppingListForCartError,
+  NoTabAsIndentError,
+  BadIndentationError,
 } from "./errors";
 
-export { NoProductCatalogForCartError, NoShoppingListForCartError };
+export {
+  NoProductCatalogForCartError,
+  NoShoppingListForCartError,
+  NoTabAsIndentError,
+  BadIndentationError,
+};

@@ -332,7 +332,7 @@ export type MaybeScalableQuantity = QuantityWithExtendedUnit & {
   equivalents?: QuantityWithExtendedUnit[];
 };
 
-type WithOptionalQuantity<T> =
+export type WithOptionalQuantity<T> =
   | (T & MaybeScalableQuantity)
   | (T & {
       // quantity is absent → scalable and unit must be absent
@@ -347,7 +347,7 @@ type WithOptionalQuantity<T> =
  * to a specific ingredient and its corresponding quantity information.
  * @category Types
  */
-type IngredientAlternativeBase = {
+export type IngredientAlternativeBase = {
   /** The index of the ingredient within the {@link Recipe.ingredients} array. */
   index: number;
   /** The alias/name of the ingredient as it should be displayed for this occurrence. */
