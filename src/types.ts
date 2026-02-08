@@ -474,6 +474,12 @@ export interface Timer {
 }
 
 /**
+ * Represents a formatting attribute for a {@link TextItem}.
+ * @category Types
+ */
+export type TextAttribute = "bold" | "italic" | "bold+italic" | "link" | "code";
+
+/**
  * Represents a text item in a recipe step.
  * @category Types
  */
@@ -482,6 +488,10 @@ export interface TextItem {
   type: "text";
   /** The content of the text item. */
   value: string;
+  /** The formatting attribute of the text item, if any. */
+  attribute?: TextAttribute;
+  /** The URL target, only present when attribute is "link". */
+  href?: string;
 }
 
 /**

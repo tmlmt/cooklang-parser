@@ -6,6 +6,7 @@ import type {
   Cookware,
   Ingredient,
   NoteItem,
+  TextItem,
 } from "../src/types";
 import {
   flushPendingNote,
@@ -18,6 +19,7 @@ import {
   parseNestedMetaVar,
   parseNestedBlock,
   parseBlockScalarMetaVar,
+  parseMarkdownSegments,
   extractMetadata,
   findAndUpsertCookware,
   findAndUpsertIngredient,
@@ -94,6 +96,201 @@ tags:
   - two
   - three`;
     expect(parseListMetaVar(content_bullets, "tags")).toEqual(expected_list);
+  });
+});
+
+describe("parseMarkdownSegments", () => {
+  it("should return a single plain TextItem for text without markdown", () => {
+    expect(parseMarkdownSegments("just plain text")).toEqual<TextItem[]>([
+      { type: "text", value: "just plain text" },
+    ]);
+  });
+
+  it("should return empty array for empty string", () => {
+    expect(parseMarkdownSegments("")).toEqual<TextItem[]>([]);
+  });
+
+  // Bold
+  it("should parse **bold** with asterisks", () => {
+    expect(parseMarkdownSegments("some **bold** text")).toEqual<TextItem[]>([
+      { type: "text", value: "some " },
+      { type: "text", value: "bold", attribute: "bold" },
+      { type: "text", value: " text" },
+    ]);
+  });
+
+  it("should parse __bold__ with underscores at word boundaries", () => {
+    expect(parseMarkdownSegments("some __bold__ text")).toEqual<TextItem[]>([
+      { type: "text", value: "some " },
+      { type: "text", value: "bold", attribute: "bold" },
+      { type: "text", value: " text" },
+    ]);
+  });
+
+  it("should not parse __underscores__ inside words", () => {
+    expect(parseMarkdownSegments("foo__bar__baz")).toEqual<TextItem[]>([
+      { type: "text", value: "foo__bar__baz" },
+    ]);
+  });
+
+  // Italic
+  it("should parse *italic* with asterisks", () => {
+    expect(parseMarkdownSegments("some *italic* text")).toEqual<TextItem[]>([
+      { type: "text", value: "some " },
+      { type: "text", value: "italic", attribute: "italic" },
+      { type: "text", value: " text" },
+    ]);
+  });
+
+  it("should parse _italic_ with underscores at word boundaries", () => {
+    expect(parseMarkdownSegments("some _italic_ text")).toEqual<TextItem[]>([
+      { type: "text", value: "some " },
+      { type: "text", value: "italic", attribute: "italic" },
+      { type: "text", value: " text" },
+    ]);
+  });
+
+  it("should not parse _underscores_ inside words", () => {
+    expect(parseMarkdownSegments("foo_bar_baz")).toEqual<TextItem[]>([
+      { type: "text", value: "foo_bar_baz" },
+    ]);
+  });
+
+  // Bold+Italic
+  it("should parse ***bold+italic*** with triple asterisks", () => {
+    expect(parseMarkdownSegments("some ***strong*** text")).toEqual<TextItem[]>(
+      [
+        { type: "text", value: "some " },
+        { type: "text", value: "strong", attribute: "bold+italic" },
+        { type: "text", value: " text" },
+      ],
+    );
+  });
+
+  it("should parse ___bold+italic___ with triple underscores", () => {
+    expect(parseMarkdownSegments("some ___strong___ text")).toEqual<TextItem[]>(
+      [
+        { type: "text", value: "some " },
+        { type: "text", value: "strong", attribute: "bold+italic" },
+        { type: "text", value: " text" },
+      ],
+    );
+  });
+
+  it("should parse **_bold+italic_** with mixed markers", () => {
+    expect(parseMarkdownSegments("some **_strong_** text")).toEqual<TextItem[]>(
+      [
+        { type: "text", value: "some " },
+        { type: "text", value: "strong", attribute: "bold+italic" },
+        { type: "text", value: " text" },
+      ],
+    );
+  });
+
+  it("should parse __*bold+italic*__ with mixed markers", () => {
+    expect(parseMarkdownSegments("some __*strong*__ text")).toEqual<TextItem[]>(
+      [
+        { type: "text", value: "some " },
+        { type: "text", value: "strong", attribute: "bold+italic" },
+        { type: "text", value: " text" },
+      ],
+    );
+  });
+
+  it("should parse *__bold+italic__* with mixed markers", () => {
+    expect(parseMarkdownSegments("some *__strong__* text")).toEqual<TextItem[]>(
+      [
+        { type: "text", value: "some " },
+        { type: "text", value: "strong", attribute: "bold+italic" },
+        { type: "text", value: " text" },
+      ],
+    );
+  });
+
+  it("should parse _**bold+italic**_ with mixed markers", () => {
+    expect(parseMarkdownSegments("some _**strong**_ text")).toEqual<TextItem[]>(
+      [
+        { type: "text", value: "some " },
+        { type: "text", value: "strong", attribute: "bold+italic" },
+        { type: "text", value: " text" },
+      ],
+    );
+  });
+
+  // Links
+  it("should parse [text](url) links", () => {
+    expect(
+      parseMarkdownSegments("see [my recipe](https://example.com) here"),
+    ).toEqual<TextItem[]>([
+      { type: "text", value: "see " },
+      {
+        type: "text",
+        value: "my recipe",
+        attribute: "link",
+        href: "https://example.com",
+      },
+      { type: "text", value: " here" },
+    ]);
+  });
+
+  // Inline code
+  it("should parse `inline code`", () => {
+    expect(parseMarkdownSegments("set to `180°C` now")).toEqual<TextItem[]>([
+      { type: "text", value: "set to " },
+      { type: "text", value: "180°C", attribute: "code" },
+      { type: "text", value: " now" },
+    ]);
+  });
+
+  // Escaping
+  it("should handle escaped asterisks", () => {
+    expect(parseMarkdownSegments("not \\*bold\\* here")).toEqual<TextItem[]>([
+      { type: "text", value: "not " },
+      { type: "text", value: "*" },
+      { type: "text", value: "bold" },
+      { type: "text", value: "*" },
+      { type: "text", value: " here" },
+    ]);
+  });
+
+  it("should handle escaped underscores", () => {
+    expect(parseMarkdownSegments("not \\_italic\\_ here")).toEqual<TextItem[]>([
+      { type: "text", value: "not " },
+      { type: "text", value: "_" },
+      { type: "text", value: "italic" },
+      { type: "text", value: "_" },
+      { type: "text", value: " here" },
+    ]);
+  });
+
+  it("should handle escaped backticks", () => {
+    expect(parseMarkdownSegments("not \\`code\\` here")).toEqual<TextItem[]>([
+      { type: "text", value: "not " },
+      { type: "text", value: "`" },
+      { type: "text", value: "code" },
+      { type: "text", value: "`" },
+      { type: "text", value: " here" },
+    ]);
+  });
+
+  // Multiple segments
+  it("should handle multiple formatted segments in one string", () => {
+    expect(parseMarkdownSegments("mix **well** then *gently* fold")).toEqual<
+      TextItem[]
+    >([
+      { type: "text", value: "mix " },
+      { type: "text", value: "well", attribute: "bold" },
+      { type: "text", value: " then " },
+      { type: "text", value: "gently", attribute: "italic" },
+      { type: "text", value: " fold" },
+    ]);
+  });
+
+  // Edge: only formatted
+  it("should handle text that is entirely formatted", () => {
+    expect(parseMarkdownSegments("**all bold**")).toEqual<TextItem[]>([
+      { type: "text", value: "all bold", attribute: "bold" },
+    ]);
   });
 });
 

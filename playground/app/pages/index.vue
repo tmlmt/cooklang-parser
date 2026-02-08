@@ -53,6 +53,8 @@ Beat @&eggs{2%small} for the glaze and brush on top.
 
 Bake for ~{55-60%minutes} until golden.
 
+> This recipe was written using [cooklang](https://cooklang.org) syntax and additional extensions.
+
 `);
 
 // Step 1: Parse the raw recipe text

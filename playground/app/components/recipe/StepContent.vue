@@ -8,10 +8,7 @@ import type {
   IngredientItemQuantity,
   QuantityWithPlainUnit,
 } from "cooklang-parser";
-import {
-  isAlternativeSelected,
-  isGroupedItem,
-} from "cooklang-parser";
+import { isAlternativeSelected, isGroupedItem } from "cooklang-parser";
 
 const props = defineProps<{
   step: Step;
@@ -83,7 +80,23 @@ function getVisibleAlternatives(
 <template>
   <span class="step-content">
     <template v-for="(item, idx) in step.items" :key="idx">
-      <template v-if="item.type === 'text'">{{ item.value }}</template>
+      <template v-if="item.type === 'text'">
+        <strong v-if="item.attribute === 'bold'">{{ item.value }}</strong>
+        <em v-else-if="item.attribute === 'italic'">{{ item.value }}</em>
+        <strong v-else-if="item.attribute === 'bold+italic'"
+          ><em>{{ item.value }}</em></strong
+        >
+        <a
+          v-else-if="item.attribute === 'link'"
+          class="underline"
+          :href="item.href"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ item.value }}</a
+        >
+        <code v-else-if="item.attribute === 'code'">{{ item.value }}</code>
+        <template v-else>{{ item.value }}</template>
+      </template>
       <template v-else-if="item.type === 'ingredient'">
         <!-- Grouped alternative: single ingredient, may have strikethrough -->
         <template v-if="isGroupedItem(item)">

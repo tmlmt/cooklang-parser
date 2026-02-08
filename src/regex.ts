@@ -405,3 +405,147 @@ export const floatRegex = createRegex()
   .endGroup().optional()
   .endAnchor()
   .toRegExp()
+  
+/** Markdown: escaped character *, _, \` */
+const mdEscaped = createRegex()
+  .literal("\\")
+  .startCaptureGroup()
+    .anyOf("*_`")
+  .endGroup();
+
+/** Markdown: inline code `code` */
+const mdInlineCode = createRegex()
+  .literal("`")
+  .startCaptureGroup()
+    .notAnyOf("`").oneOrMore().lazy()
+  .endGroup()
+  .literal("`");
+
+/** Markdown: link `[text](url)` */
+const mdLink = createRegex()
+  .literal("[")
+  .startCaptureGroup()
+    .notAnyOf("\\]").oneOrMore().lazy()
+  .endGroup()
+  .literal("](")
+  .startCaptureGroup()
+    .notAnyOf(")").oneOrMore().lazy()
+  .endGroup()
+  .literal(")");
+
+/** Markdown: bold+italic `***text***` */
+const mdTripleAsterisk = createRegex()
+  .literal("***")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("***");
+
+/** Markdown: bold+italic `___text___` */
+const mdTripleUnderscore = createRegex()
+  .literal("___")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("___");
+
+/** Markdown: bold+italic `**_text_**` */
+const mdBoldAstItalicUnd = createRegex()
+  .literal("**_")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("_**");
+
+/** Markdown: bold+italic `__*text*__` */
+const mdBoldUndItalicAst = createRegex()
+  .literal("__*")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("*__");
+
+/** Markdown: bold+italic `*__text__*` */
+const mdItalicAstBoldUnd = createRegex()
+  .literal("*__")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("__*");
+
+/** Markdown: bold+italic `_**text**_` */
+const mdItalicUndBoldAst = createRegex()
+  .literal("_**")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("**_");
+
+/** Markdown: bold `**text**` */
+const mdBoldAsterisk = createRegex()
+  .literal("**")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("**");
+
+/** Markdown: bold `__text__` (word boundaries) */
+const mdBoldUnderscore = createRegex()
+  .wordBoundary()
+  .literal("__")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("__")
+  .wordBoundary();
+
+/** Markdown: italic `*text*` */
+const mdItalicAsterisk = createRegex()
+  .literal("*")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("*");
+
+/** Markdown: italic `_text_` (word boundaries) */
+const mdItalicUnderscore = createRegex()
+  .wordBoundary()
+  .literal("_")
+  .startCaptureGroup()
+    .anyCharacter().oneOrMore().lazy()
+  .endGroup()
+  .literal("_")
+  .wordBoundary()
+
+/**
+ * Matches markdown formatting patterns in text.
+ *
+ * Matches in priority order (earlier alternatives take precedence):
+ * 1. Escaped characters: `\*`, `\_`, `\` + backtick
+ * 2. Inline code: backtick-delimited spans
+ * 3. Links: `[text](url)`
+ * 4. Bold+italic (triple): `***text***`, `___text___`
+ * 5. Bold+italic (mixed): `**_text_**`, `__*text*__`, `*__text__*`, `_**text**_`
+ * 6. Bold: `**text**`, `__text__` (underscores at word boundaries)
+ * 7. Italic: `*text*`, `_text_` (underscores at word boundaries)
+ */
+export const markdownRegex = new RegExp(
+  [
+    mdEscaped,
+    mdInlineCode,
+    mdLink,
+    mdTripleAsterisk,
+    mdTripleUnderscore,
+    mdBoldAstItalicUnd,
+    mdBoldUndItalicAst,
+    mdItalicAstBoldUnd,
+    mdItalicUndBoldAst,
+    mdBoldAsterisk,
+    mdBoldUnderscore,
+    mdItalicAsterisk,
+    mdItalicUnderscore,
+  ]
+    .map((r) => r.toRegExp().source)
+    .join("|"),
+  "g",
+);

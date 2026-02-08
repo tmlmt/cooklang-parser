@@ -50,6 +50,7 @@ import {
   extractMetadata,
   unionOfSets,
   getAlternativeSignature,
+  parseMarkdownSegments,
 } from "../utils/parser_helpers";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import { multiplyQuantityValue } from "../quantities/numeric";
@@ -241,7 +242,7 @@ export class Recipe {
       const idx = match.index;
       /* v8 ignore else -- @preserve */
       if (idx > cursor) {
-        noteItems.push({ type: "text", value: text.slice(cursor, idx) });
+        noteItems.push(...parseMarkdownSegments(text.slice(cursor, idx)));
       }
 
       this._parseArbitraryScalable(match.groups, noteItems);
@@ -249,7 +250,7 @@ export class Recipe {
     }
 
     if (cursor < text.length) {
-      noteItems.push({ type: "text", value: text.slice(cursor) });
+      noteItems.push(...parseMarkdownSegments(text.slice(cursor)));
     }
 
     return noteItems;
@@ -1024,7 +1025,7 @@ export class Recipe {
         const idx = match.index;
         /* v8 ignore else -- @preserve */
         if (idx > cursor) {
-          items.push({ type: "text", value: line.slice(cursor, idx) });
+          items.push(...parseMarkdownSegments(line.slice(cursor, idx)));
         }
 
         const groups = match.groups!;
@@ -1105,7 +1106,7 @@ export class Recipe {
       }
 
       if (cursor < line.length) {
-        items.push({ type: "text", value: line.slice(cursor) });
+        items.push(...parseMarkdownSegments(line.slice(cursor)));
       }
 
       blankLineBefore = false;

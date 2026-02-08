@@ -17,7 +17,23 @@ function getArbitrary(index: number): ArbitraryScalable | undefined {
 <template>
   <span class="note-content">
     <template v-for="(item, idx) in note.items" :key="idx">
-      <template v-if="item.type === 'text'">{{ item.value }}</template>
+      <template v-if="item.type === 'text'">
+        <strong v-if="item.attribute === 'bold'">{{ item.value }}</strong>
+        <em v-else-if="item.attribute === 'italic'">{{ item.value }}</em>
+        <strong v-else-if="item.attribute === 'bold+italic'"
+          ><em>{{ item.value }}</em></strong
+        >
+        <a
+          v-else-if="item.attribute === 'link'"
+          :href="item.href"
+          class="underline"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ item.value }}</a
+        >
+        <code v-else-if="item.attribute === 'code'">{{ item.value }}</code>
+        <template v-else>{{ item.value }}</template>
+      </template>
       <template v-else-if="item.type === 'arbitrary'">
         <span
           v-if="getArbitrary(item.index)"

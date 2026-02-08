@@ -12,6 +12,8 @@ import type {
   FractionValue,
   NoteItem,
   SpecificUnitSystem,
+  TextItem,
+  TextAttribute,
 } from "../types";
 import {
   metadataRegex,
@@ -21,6 +23,7 @@ import {
   rangeRegex,
   numberLikeRegex,
   scalingMetaValueRegex,
+  markdownRegex,
 } from "../regex";
 import { Section as SectionObject } from "../classes/section";
 import type { Ingredient, Step, Cookware } from "../types";
@@ -263,6 +266,106 @@ export function parseQuantityInput(input_str: string): FixedValue | Range {
   }
 
   return { type: "fixed", value: parseFixedValue(clean_str) };
+}
+
+/**
+ * Parses markdown formatting in a text string and returns an array of TextItems.
+ *
+ * Supported syntax:
+ * - Bold: `**text**` or `__text__` (underscores at word boundaries)
+ * - Italic: `*text*` or `_text_` (underscores at word boundaries)
+ * - Bold+italic: `***text***`, `___text___`, or mixed combos like `**_text_**`
+ * - Links: `[text](url)`
+ * - Inline code: backtick-delimited spans
+ * - Escaping: `\*`, `\_`, or backslash-backtick to produce literal characters
+ *
+ * @param text - The raw text to parse for markdown formatting.
+ * @returns An array of TextItem objects, with formatting attributes where detected.
+ */
+export function parseMarkdownSegments(text: string): TextItem[] {
+  const items: TextItem[] = [];
+  let cursor = 0;
+
+  for (const match of text.matchAll(markdownRegex)) {
+    const idx = match.index;
+
+    // Push preceding plain text
+    if (idx > cursor) {
+      items.push({ type: "text", value: text.slice(cursor, idx) });
+    }
+
+    // Determine which group matched
+    const [
+      ,
+      escaped, // group 1: escaped character
+      code, // group 2: inline code
+      linkText, // group 3: link text
+      linkUrl, // group 4: link url
+      tripleAst, // group 5: ***bold+italic***
+      tripleUnd, // group 6: ___bold+italic___
+      astUnd, // group 7: **_bold+italic_**
+      undAst, // group 8: __*bold+italic*__
+      astUndUnd, // group 9: *__bold+italic__*
+      undAstAst, // group 10: _**bold+italic**_
+      boldAst, // group 11: **bold**
+      boldUnd, // group 12: __bold__
+      italicAst, // group 13: *italic*
+      italicUnd, // group 14: _italic_
+    ] = match;
+
+    let value: string;
+    let attribute: TextAttribute | undefined;
+    let href: string | undefined;
+
+    if (escaped !== undefined) {
+      // Escaped character → plain text
+      items.push({ type: "text", value: escaped });
+      cursor = idx + match[0].length;
+      continue;
+    } else if (code !== undefined) {
+      value = code;
+      attribute = "code";
+    } else if (linkText !== undefined) {
+      value = linkText;
+      attribute = "link";
+      href = linkUrl;
+    } else if (
+      tripleAst !== undefined ||
+      tripleUnd !== undefined ||
+      astUnd !== undefined ||
+      undAst !== undefined ||
+      astUndUnd !== undefined ||
+      undAstAst !== undefined
+    ) {
+      value = (tripleAst ??
+        tripleUnd ??
+        astUnd ??
+        undAst ??
+        astUndUnd ??
+        undAstAst)!;
+      attribute = "bold+italic";
+    } else if (boldAst !== undefined || boldUnd !== undefined) {
+      value = (boldAst ?? boldUnd)!;
+      attribute = "bold";
+    } else {
+      value = (italicAst ?? italicUnd)!;
+      attribute = "italic";
+    }
+
+    const item: TextItem = { type: "text", value };
+    // v8 ignore else -- @preserve
+    if (attribute) item.attribute = attribute;
+    if (href) item.href = href;
+    items.push(item);
+    cursor = idx + match[0].length;
+  }
+
+  // Push remaining plain text
+  if (cursor < text.length) {
+    items.push({ type: "text", value: text.slice(cursor) });
+  }
+
+  return items;
 }
 
 export function parseSimpleMetaVar(content: string, varName: string) {

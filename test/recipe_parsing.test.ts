@@ -11,7 +11,13 @@ import {
   InvalidQuantityFormat,
   ReferencedItemCannotBeRedefinedError,
 } from "../src/errors";
-import type { Ingredient, IngredientItem, Note, Step } from "../src/types";
+import type {
+  Ingredient,
+  IngredientItem,
+  Note,
+  Step,
+  TextItem,
+} from "../src/types";
 
 describe("parse function", () => {
   it("parses basic metadata correctly", () => {
@@ -2257,6 +2263,86 @@ Add @water{1%tbsp} and some more @&water{100%mL}
       const recipeClone = recipe.clone();
       expect(recipeClone).toEqual(recipe);
       expect(recipeClone).not.toBe(recipe);
+    });
+  });
+
+  describe("markdown in steps", () => {
+    it("parses bold text in steps", () => {
+      const recipe = new Recipe("Mix **well** then add @flour{100%g}");
+      const step = recipe.sections[0]!.content[0] as Step;
+      expect(step.items[0]).toEqual<TextItem>({
+        type: "text",
+        value: "Mix ",
+      });
+      expect(step.items[1]).toEqual<TextItem>({
+        type: "text",
+        value: "well",
+        attribute: "bold",
+      });
+      expect(step.items[2]).toEqual<TextItem>({
+        type: "text",
+        value: " then add ",
+      });
+      expect(step.items[3]).toMatchObject({ type: "ingredient" });
+    });
+
+    it("parses italic and links in steps", () => {
+      const recipe = new Recipe(
+        "Stir *gently*. See [tips](https://example.com).",
+      );
+      const step = recipe.sections[0]!.content[0] as Step;
+      expect(step.items).toEqual<Step["items"]>([
+        { type: "text", value: "Stir " },
+        { type: "text", value: "gently", attribute: "italic" },
+        { type: "text", value: ". See " },
+        {
+          type: "text",
+          value: "tips",
+          attribute: "link",
+          href: "https://example.com",
+        },
+        { type: "text", value: "." },
+      ]);
+    });
+
+    it("parses inline code in steps", () => {
+      const recipe = new Recipe("Set oven to `180°C`.");
+      const step = recipe.sections[0]!.content[0] as Step;
+      expect(step.items).toEqual<Step["items"]>([
+        { type: "text", value: "Set oven to " },
+        { type: "text", value: "180°C", attribute: "code" },
+        { type: "text", value: "." },
+      ]);
+    });
+  });
+
+  describe("markdown in notes", () => {
+    it("parses bold and italic text in notes", () => {
+      const recipe = new Recipe("> Mix **well** and *gently*");
+      const note = recipe.sections[0]!.content[0] as Note;
+      expect(note.items).toEqual<Note["items"]>([
+        { type: "text", value: "Mix " },
+        { type: "text", value: "well", attribute: "bold" },
+        { type: "text", value: " and " },
+        { type: "text", value: "gently", attribute: "italic" },
+      ]);
+    });
+
+    it("parses links in notes", () => {
+      const recipe = new Recipe(
+        "> See [the guide](https://example.com) for more.",
+      );
+      const note = recipe.sections[0]!.content[0] as Note;
+      expect(note.items).toEqual<Note["items"]>([
+        { type: "text", value: "See " },
+        {
+          type: "text",
+          value: "the guide",
+          attribute: "link",
+          href: "https://example.com",
+        },
+        { type: "text", value: " for more." },
+      ]);
     });
   });
 });
