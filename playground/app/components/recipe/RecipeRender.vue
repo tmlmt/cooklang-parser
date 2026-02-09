@@ -85,12 +85,12 @@ const sectionsWithStepNumbers = computed(() => {
     <!-- Metadata Section -->
     <section v-if="hasMetadata">
       <h3 class="mb-2 text-lg font-semibold">Metadata</h3>
-      <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <div class="grid grid-cols-4 gap-x-4 gap-y-1 text-sm">
         <template v-for="entry in metadataEntries" :key="entry.key">
           <div class="font-medium text-gray-600 dark:text-gray-300">
             {{ entry.key }}
           </div>
-          <div>{{ entry.value }}</div>
+          <div class="col-span-3">{{ entry.value }}</div>
         </template>
       </div>
     </section>

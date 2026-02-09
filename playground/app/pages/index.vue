@@ -28,6 +28,10 @@ const desktopItemsRight = ref<TabsItem[]>([
 const rawRecipe = ref<string>(`---
 title: Vegan-Friendly Banana Bread
 servings: 8
+description: >
+  A moist and delicious banana bread that's perfect for breakfast or a snack. This recipe is vegan-friendly, 
+  using flax eggs and coconut oil instead of traditional ingredients, without compromising on flavor 
+  or texture.
 tags: [baking, vegan-option]
 ---
 
