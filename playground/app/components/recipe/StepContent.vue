@@ -5,8 +5,8 @@ import type {
   IngredientAlternative,
   RecipeChoices,
   IngredientItem,
-  IngredientItemQuantity,
   QuantityWithPlainUnit,
+  QuantityWithExtendedUnit,
 } from "cooklang-parser";
 import { isAlternativeSelected, isGroupedItem } from "cooklang-parser";
 
@@ -41,12 +41,12 @@ function isGroupedItemSelected(item: IngredientItem): boolean {
 }
 
 /**
- * Convert IngredientItemQuantity equivalents to a QuantityWithPlainUnit array.
+ * Convert equivalents to a QuantityWithPlainUnit array.
  */
 function toPlainEquivalents(
-  itemQuantity: IngredientItemQuantity,
+  equivalents: QuantityWithExtendedUnit[] | undefined,
 ): QuantityWithPlainUnit[] | undefined {
-  return itemQuantity.equivalents?.map((eq) => ({
+  return equivalents?.map((eq) => ({
     quantity: eq.quantity,
     unit: eq.unit?.name,
   }));
@@ -108,12 +108,12 @@ function getVisibleAlternatives(
               },
             ]"
           >
-            <template v-if="item.alternatives[0]?.itemQuantity">
+            <template v-if="item.alternatives[0]?.quantity">
               <RecipeQuantityWithEquivalents
-                :quantity="item.alternatives[0]!.itemQuantity!.quantity"
-                :unit="item.alternatives[0]!.itemQuantity!.unit?.name"
+                :quantity="item.alternatives[0]!.quantity!"
+                :unit="item.alternatives[0]!.unit?.name"
                 :equivalents="
-                  toPlainEquivalents(item.alternatives[0]!.itemQuantity!)
+                  toPlainEquivalents(item.alternatives[0]!.equivalents)
                 "
               />
               {{ " " }}
@@ -137,11 +137,11 @@ function getVisibleAlternatives(
                 { 'text-gray-500 dark:text-gray-300': visIdx > 0 },
               ]"
             >
-              <template v-if="visibleAlt.alt.itemQuantity">
+              <template v-if="visibleAlt.alt.quantity">
                 <RecipeQuantityWithEquivalents
-                  :quantity="visibleAlt.alt.itemQuantity.quantity"
-                  :unit="visibleAlt.alt.itemQuantity.unit?.name"
-                  :equivalents="toPlainEquivalents(visibleAlt.alt.itemQuantity)"
+                  :quantity="visibleAlt.alt.quantity"
+                  :unit="visibleAlt.alt.unit?.name"
+                  :equivalents="toPlainEquivalents(visibleAlt.alt.equivalents)"
                   :wrapper-start="visIdx > 0 ? '[' : undefined"
                   :wrapper-end="visIdx > 0 ? ']' : undefined"
                 />

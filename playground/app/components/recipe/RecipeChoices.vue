@@ -103,8 +103,8 @@ function buildInlineLabel(alternatives: IngredientAlternative[]): string {
   if (alternatives.length === 0) return "Unknown";
   const first = alternatives[0]!;
   const name = first.displayName;
-  if (first.itemQuantity) {
-    const qty = formatItemQuantity(first.itemQuantity);
+  if (first.quantity) {
+    const qty = formatItemQuantity(first);
     return qty ? `${name} (${qty})` : name;
   }
   return name;
@@ -120,8 +120,8 @@ function buildAlternativeOptions(
     if (alt.note) {
       label += ` ${alt.note}`;
     }
-    if (alt.itemQuantity) {
-      const qty = formatItemQuantity(alt.itemQuantity);
+    if (alt.quantity) {
+      const qty = formatItemQuantity(alt);
       if (qty) {
         label += ` (${qty})`;
       }
