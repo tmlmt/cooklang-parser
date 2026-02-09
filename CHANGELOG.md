@@ -1,5 +1,27 @@
 # Changelog
 
+## v3.0.0-alpha.14
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.13...v3.0.0-alpha.14)
+
+### 🚀 Enhancements
+
+- **metadata:** Support yaml block scalar values for 'introduction' and 'description' ([8b12e60](https://github.com/tmlmt/cooklang-parser/commit/8b12e60))
+- **parser:** Support for selected markdown elements in notes and steps ([9d3fe4f](https://github.com/tmlmt/cooklang-parser/commit/9d3fe4f))
+
+### 🩹 Fixes
+
+- **playground:** Update renderer after flattening of IngredientItem's itemQuantity ([0ac3f53](https://github.com/tmlmt/cooklang-parser/commit/0ac3f53))
+
+### 🏡 Chore
+
+- **index:** Add missing exports ([063afa3](https://github.com/tmlmt/cooklang-parser/commit/063afa3))
+- **playground:** Add a multiline description field in the example recipe for demo purposes ([1ff847f](https://github.com/tmlmt/cooklang-parser/commit/1ff847f))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.13
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.12...v3.0.0-alpha.13)
