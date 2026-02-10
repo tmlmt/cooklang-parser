@@ -31,5 +31,5 @@ features:
   - title: Parsing and scaling
     details: Classes to parse and scale recipes
   - title: Shopping
-    details: Classes to parse category configurations, create shopping lists, and fill in a virtual shopping cart based on a product catalog
+    details: Classes to parse category configurations, pantry inventory, create shopping lists, and fill in a virtual shopping cart based on a product catalog
 ---

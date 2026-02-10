@@ -1,4 +1,5 @@
 import { CategoryConfig } from "./category_config";
+import { Pantry } from "./pantry";
 import { Recipe } from "./recipe";
 import type {
   CategorizedIngredients,
@@ -9,10 +10,17 @@ import type {
   MaybeNestedGroup,
   FlatOrGroup,
   AddedRecipeOptions,
+  PantryOptions,
 } from "../types";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
-import { extendAllUnits } from "../quantities/mutations";
-import { isAndGroup } from "../utils/type_guards";
+import {
+  extendAllUnits,
+  subtractQuantities,
+  toExtendedUnit,
+  toPlainUnit,
+} from "../quantities/mutations";
+import { isAndGroup, isOrGroup, isQuantity } from "../utils/type_guards";
+import { deepClone } from "../utils/general";
 
 /**
  * Shopping List generator.
@@ -58,6 +66,15 @@ export class ShoppingList {
    * The categorized ingredients in the shopping list.
    */
   categories?: CategorizedIngredients;
+  /**
+   * The original pantry (never mutated by recipe calculations).
+   */
+  pantry?: Pantry;
+  /**
+   * The pantry with quantities updated after subtracting recipe needs.
+   * Recomputed on every {@link ShoppingList.calculateIngredients | calculateIngredients()} call.
+   */
+  private resultingPantry?: Pantry;
 
   /**
    * Creates a new ShoppingList instance
@@ -190,6 +207,124 @@ export class ShoppingList {
         }
       }
     }
+
+    // Subtract pantry quantities from ingredients
+    this.applyPantrySubtraction();
+  }
+
+  /**
+   * Subtracts pantry item quantities from calculated ingredient quantities
+   * and updates the resultingPantry to reflect consumed stock.
+   */
+  private applyPantrySubtraction() {
+    if (!this.pantry) {
+      this.resultingPantry = undefined;
+      return;
+    }
+
+    // Deep clone the original pantry for the resulting pantry
+    const clonedPantry = new Pantry();
+    clonedPantry.items = deepClone(this.pantry.items);
+    if (this.categoryConfig) {
+      clonedPantry.setCategoryConfig(this.categoryConfig);
+    }
+
+    for (const ingredient of this.ingredients) {
+      if (!ingredient.quantityTotal) continue;
+
+      const pantryItem = clonedPantry.findItem(ingredient.name);
+      if (!pantryItem || !pantryItem.quantity) continue;
+
+      // Extract leaf quantities from the ingredient (handles simple, AND, OR)
+      const leaves = this.extractLeafQuantities(ingredient.quantityTotal);
+
+      let pantryExtended: QuantityWithExtendedUnit = {
+        quantity: pantryItem.quantity,
+        ...(pantryItem.unit && { unit: { name: pantryItem.unit } }),
+      };
+
+      for (const leaf of leaves) {
+        const ingredientExtended = toExtendedUnit(leaf.quantity);
+
+        try {
+          // Subtract pantry from ingredient need (clamped to zero)
+          const remaining = subtractQuantities(
+            ingredientExtended,
+            pantryExtended,
+            { clampToZero: true },
+          );
+
+          // Apply the updated quantity back into the group structure
+          leaf.apply(toPlainUnit(remaining) as QuantityWithPlainUnit);
+
+          // Update the pantry remainder: subtract what was consumed
+          const consumed = subtractQuantities(
+            pantryExtended,
+            ingredientExtended,
+            { clampToZero: true },
+          );
+          pantryExtended = consumed;
+        } catch {
+          // Incompatible units — skip subtraction for this leaf
+        }
+      }
+
+      pantryItem.quantity = pantryExtended.quantity;
+      // v8 ignore else -- @preserve
+      if (pantryExtended.unit) {
+        pantryItem.unit = pantryExtended.unit.name;
+      }
+    }
+
+    this.resultingPantry = clonedPantry;
+  }
+
+  /**
+   * Extracts leaf (simple) quantities from a possibly nested group structure.
+   * Each leaf includes the quantity and an `apply` callback to write back
+   * a modified value into the original structure in-place.
+   *
+   * - Simple quantity → one leaf
+   * - OR group → recurse into the first entry only (the primary alternative)
+   * - AND group → recurse into all entries
+   */
+  private extractLeafQuantities(
+    q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+  ): {
+    quantity: QuantityWithPlainUnit;
+    apply: (v: QuantityWithPlainUnit) => void;
+  }[] {
+    if (isQuantity(q)) {
+      return [
+        {
+          quantity: q,
+          apply: (v: QuantityWithPlainUnit) => {
+            Object.assign(q, v);
+          },
+        },
+      ];
+    }
+
+    if (isOrGroup(q)) {
+      // Only subtract from the primary (first) entry
+      const first = q.or[0];
+      /* v8 ignore else -- @preserve */
+      if (first) {
+        return this.extractLeafQuantities(first);
+      }
+      /* v8 ignore next -- @preserve */
+      return [];
+    }
+
+    // AND group: recurse into all entries
+    const results: {
+      quantity: QuantityWithPlainUnit;
+      apply: (v: QuantityWithPlainUnit) => void;
+    }[] = [];
+    for (const entry of q.and) {
+      results.push(...this.extractLeafQuantities(entry));
+    }
+    return results;
   }
 
   /**
@@ -294,8 +429,42 @@ export class ShoppingList {
   }
 
   /**
+   * Adds a pantry to the shopping list. On-hand pantry quantities will be
+   * subtracted from recipe ingredient needs on each recalculation.
+   * @param pantry - A Pantry instance or a TOML string to parse.
+   * @param options - Options for pantry parsing (only used when providing a TOML string).
+   */
+  addPantry(pantry: Pantry | string, options?: PantryOptions): void {
+    if (typeof pantry === "string") {
+      this.pantry = new Pantry(pantry, options);
+    } else if (pantry instanceof Pantry) {
+      this.pantry = pantry;
+    } else {
+      throw new Error(
+        "Invalid pantry: expected a Pantry instance or TOML string",
+      );
+    }
+    if (this.categoryConfig) {
+      this.pantry.setCategoryConfig(this.categoryConfig);
+    }
+    this.calculateIngredients();
+    this.categorize();
+  }
+
+  /**
+   * Returns the resulting pantry with quantities updated to reflect
+   * what was consumed by the shopping list's recipes.
+   * Returns undefined if no pantry was added.
+   * @returns The resulting Pantry, or undefined.
+   */
+  getPantry(): Pantry | undefined {
+    return this.resultingPantry;
+  }
+
+  /**
    * Sets the category configuration for the shopping list
    * and automatically categorize current ingredients from the list.
+   * Also propagates the configuration to the pantry if one is set.
    * @param config - The category configuration to parse.
    */
   setCategoryConfig(config: string | CategoryConfig) {
@@ -303,6 +472,9 @@ export class ShoppingList {
       this.categoryConfig = new CategoryConfig(config);
     else if (config instanceof CategoryConfig) this.categoryConfig = config;
     else throw new Error("Invalid category configuration");
+    if (this.pantry) {
+      this.pantry.setCategoryConfig(this.categoryConfig);
+    }
     this.categorize();
   }
 

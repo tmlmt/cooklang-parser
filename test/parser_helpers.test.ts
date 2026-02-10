@@ -25,6 +25,9 @@ import {
   findAndUpsertIngredient,
   stringifyQuantityValue,
   unionOfSets,
+  parseQuantityWithUnit,
+  parseDateFromFormat,
+  parseFuzzyDate,
 } from "../src/utils/parser_helpers";
 import {
   NoTabAsIndentError,
@@ -1434,5 +1437,152 @@ duration: 1 hour
     expect(result.metadata.time).toEqual({
       total: "1 hour",
     });
+  });
+});
+
+describe("parseQuantityWithUnit", () => {
+  it("should parse value and unit separated by %", () => {
+    const result = parseQuantityWithUnit("500%g");
+    expect(result.value).toMatchObject({
+      type: "fixed",
+      value: { type: "decimal", decimal: 500 },
+    });
+    expect(result.unit).toBe("g");
+  });
+
+  it("should parse value without unit", () => {
+    const result = parseQuantityWithUnit("6");
+    expect(result.value).toMatchObject({
+      type: "fixed",
+      value: { type: "decimal", decimal: 6 },
+    });
+    expect(result.unit).toBeUndefined();
+  });
+
+  it("should handle whitespace around value and unit", () => {
+    const result = parseQuantityWithUnit("  500 % g  ");
+    expect(result.value).toMatchObject({
+      type: "fixed",
+      value: { type: "decimal", decimal: 500 },
+    });
+    expect(result.unit).toBe("g");
+  });
+
+  it("should parse fractions with unit", () => {
+    const result = parseQuantityWithUnit("1/2%cup");
+    expect(result.value).toMatchObject({
+      type: "fixed",
+      value: { type: "fraction", num: 1, den: 2 },
+    });
+    expect(result.unit).toBe("cup");
+  });
+
+  it("should return undefined unit when % is at the end", () => {
+    const result = parseQuantityWithUnit("500%");
+    expect(result.unit).toBeUndefined();
+  });
+});
+
+describe("parseDateFromFormat", () => {
+  it("should parse DD.MM.YYYY", () => {
+    expect(parseDateFromFormat("15.06.2025", "DD.MM.YYYY")).toEqual(
+      new Date(2025, 5, 15),
+    );
+  });
+
+  it("should parse MM/DD/YYYY", () => {
+    expect(parseDateFromFormat("06/15/2025", "MM/DD/YYYY")).toEqual(
+      new Date(2025, 5, 15),
+    );
+  });
+
+  it("should parse YYYY-MM-DD", () => {
+    expect(parseDateFromFormat("2025-06-15", "YYYY-MM-DD")).toEqual(
+      new Date(2025, 5, 15),
+    );
+  });
+
+  it("should throw on invalid format (no delimiter)", () => {
+    expect(() => parseDateFromFormat("15062025", "DDMMYYYY")).toThrow(
+      /No delimiter/,
+    );
+  });
+
+  it("should throw on wrong number of parts", () => {
+    expect(() => parseDateFromFormat("15.06", "DD.MM.YYYY")).toThrow(
+      /Expected 3 parts/,
+    );
+  });
+
+  it("should throw on non-numeric parts", () => {
+    expect(() => parseDateFromFormat("abc.06.2025", "DD.MM.YYYY")).toThrow(
+      /non-numeric/,
+    );
+  });
+
+  it("should throw on invalid date (e.g. month 13)", () => {
+    expect(() => parseDateFromFormat("15.13.2025", "DD.MM.YYYY")).toThrow(
+      /Invalid date/,
+    );
+  });
+
+  it("should throw on unknown token in format", () => {
+    expect(() => parseDateFromFormat("15.06.2025", "DD.XX.YYYY")).toThrow(
+      /Unknown token/,
+    );
+  });
+});
+
+describe("parseFuzzyDate", () => {
+  it("should parse DD.MM.YYYY", () => {
+    expect(parseFuzzyDate("15.06.2025")).toEqual(new Date(2025, 5, 15));
+  });
+
+  it("should parse DD/MM/YYYY", () => {
+    expect(parseFuzzyDate("15/06/2025")).toEqual(new Date(2025, 5, 15));
+  });
+
+  it("should parse YYYY-MM-DD", () => {
+    expect(parseFuzzyDate("2025-06-15")).toEqual(new Date(2025, 5, 15));
+  });
+
+  it("should parse DD-MM-YYYY", () => {
+    expect(parseFuzzyDate("15-06-2025")).toEqual(new Date(2025, 5, 15));
+  });
+
+  it("should parse 2-digit year as 20xx", () => {
+    expect(parseFuzzyDate("15.06.25")).toEqual(new Date(2025, 5, 15));
+  });
+
+  it("should throw on input without delimiter", () => {
+    expect(() => parseFuzzyDate("15062025")).toThrow(/no delimiter/);
+  });
+
+  it("should throw on input with wrong number of parts", () => {
+    expect(() => parseFuzzyDate("15.06")).toThrow(/expected 3 parts/i);
+  });
+
+  it("should throw on non-numeric parts", () => {
+    expect(() => parseFuzzyDate("abc.06.2025")).toThrow(/non-numeric/);
+  });
+
+  it("should throw on invalid date", () => {
+    expect(() => parseFuzzyDate("31.13.2025")).toThrow(/Invalid date/);
+    expect(() => parseFuzzyDate("31.01.202")).toThrow(/Invalid date/);
+  });
+
+  it("should disambiguate month-first when second part > 12", () => {
+    // 01/25/2025 → second part (25) > 12, must be day → MM/DD/YYYY
+    expect(parseFuzzyDate("01/25/2025")).toEqual(new Date(2025, 0, 25));
+  });
+
+  it("should disambiguate month-first with 2-digit year", () => {
+    // 01.25.25 → second part (25) > 12, must be day → MM.DD.YY
+    expect(parseFuzzyDate("01.25.25")).toEqual(new Date(2025, 0, 25));
+  });
+
+  it("should keep day-first when first part > 12", () => {
+    // 25.01.2025 → first part (25) > 12, confirms day-first → DD.MM.YYYY
+    expect(parseFuzzyDate("25.01.2025")).toEqual(new Date(2025, 0, 25));
   });
 });

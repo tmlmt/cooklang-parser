@@ -20,6 +20,7 @@ import {
   getNumericValue,
   formatOutputValue,
   getAverageValue,
+  multiplyQuantityValue,
 } from "./numeric";
 import { CannotAddTextValueError, IncompatibleUnitsError } from "../errors";
 import { isAndGroup, isOrGroup, isQuantity } from "../utils/type_guards";
@@ -687,4 +688,41 @@ export function applyBestUnit(
     },
     unit: { name: bestUnit.name },
   };
+}
+
+/**
+ * Subtracts one quantity from another (`q1 - q2`), returning the result in the most appropriate unit.
+ * Reuses {@link addQuantities} internally by negating `q2` first.
+ *
+ * @param q1 - The quantity to subtract from.
+ * @param q2 - The quantity to subtract.
+ * @param options - Optional configuration.
+ * @returns The difference of the two quantities.
+ */
+export function subtractQuantities(
+  q1: QuantityWithExtendedUnit,
+  q2: QuantityWithExtendedUnit,
+  options: { clampToZero?: boolean; system?: SpecificUnitSystem } = {},
+): QuantityWithExtendedUnit {
+  const { clampToZero = true, system } = options;
+
+  // Negate q2's quantity inline
+  const negatedQ2: QuantityWithExtendedUnit = {
+    ...q2,
+    quantity: multiplyQuantityValue(q2.quantity, -1),
+  };
+
+  const result = addQuantities(q1, negatedQ2, system);
+
+  if (clampToZero) {
+    const avg = getAverageValue(result.quantity);
+    if (typeof avg === "number" && avg < 0) {
+      return {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 0 } },
+        unit: result.unit,
+      };
+    }
+  }
+
+  return result;
 }
