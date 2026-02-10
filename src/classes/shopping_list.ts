@@ -7,8 +7,8 @@ import type {
   AddedIngredient,
   QuantityWithExtendedUnit,
   QuantityWithPlainUnit,
-  MaybeNestedGroup,
   FlatOrGroup,
+  FlatAndGroup,
   AddedRecipeOptions,
   PantryOptions,
 } from "../types";
@@ -19,7 +19,7 @@ import {
   toExtendedUnit,
   toPlainUnit,
 } from "../quantities/mutations";
-import { isAndGroup, isOrGroup, isQuantity } from "../utils/type_guards";
+import { isAndGroup, isQuantity } from "../utils/type_guards";
 import { deepClone } from "../utils/general";
 
 /**
@@ -93,7 +93,7 @@ export class ShoppingList {
       name: string,
       quantityTotal:
         | QuantityWithPlainUnit
-        | MaybeNestedGroup<QuantityWithPlainUnit>,
+        | FlatAndGroup<QuantityWithPlainUnit>,
     ) => {
       const quantityTotalExtended = extendAllUnits(quantityTotal);
       const newQuantities = (
@@ -123,7 +123,7 @@ export class ShoppingList {
           existing.quantityTotal = addEquivalentsAndSimplify([
             ...existingQuantities,
             ...newQuantities,
-          ]);
+          ]) as QuantityWithPlainUnit | FlatAndGroup<QuantityWithPlainUnit>;
           return;
         } catch {
           // Incompatible
@@ -167,7 +167,7 @@ export class ShoppingList {
           // Extract all quantities (converting to plain units for summing)
           const allQuantities: (
             | QuantityWithPlainUnit
-            | MaybeNestedGroup<QuantityWithPlainUnit>
+            | FlatAndGroup<QuantityWithPlainUnit>
           )[] = [];
           for (const qGroup of ingredient.quantities) {
             if ("and" in qGroup) {
@@ -194,13 +194,15 @@ export class ShoppingList {
               extendAllUnits(q),
             );
             const totalQuantity = addEquivalentsAndSimplify(
-              extendedQuantities as (
-                | QuantityWithExtendedUnit
-                | FlatOrGroup<QuantityWithExtendedUnit>
-              )[],
+              extendedQuantities as QuantityWithExtendedUnit[],
             );
             // addEquivalentsAndSimplify already returns plain units
-            addIngredientQuantity(ingredient.name, totalQuantity);
+            addIngredientQuantity(
+              ingredient.name,
+              totalQuantity as
+                | QuantityWithPlainUnit
+                | FlatAndGroup<QuantityWithPlainUnit>,
+            );
           }
         } else if (!this.ingredients.some((i) => i.name === ingredient.name)) {
           this.ingredients.push({ name: ingredient.name });
@@ -289,7 +291,7 @@ export class ShoppingList {
    * - AND group → recurse into all entries
    */
   private extractLeafQuantities(
-    q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
+    q: QuantityWithPlainUnit | FlatAndGroup<QuantityWithPlainUnit>,
   ): {
     quantity: QuantityWithPlainUnit;
     apply: (v: QuantityWithPlainUnit) => void;
@@ -303,17 +305,6 @@ export class ShoppingList {
           },
         },
       ];
-    }
-
-    if (isOrGroup(q)) {
-      // Only subtract from the primary (first) entry
-      const first = q.or[0];
-      /* v8 ignore else -- @preserve */
-      if (first) {
-        return this.extractLeafQuantities(first);
-      }
-      /* v8 ignore next -- @preserve */
-      return [];
     }
 
     // AND group: recurse into all entries

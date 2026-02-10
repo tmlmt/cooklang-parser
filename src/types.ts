@@ -631,9 +631,7 @@ export type AddedRecipeOptions = {
  */
 export type AddedIngredient = Pick<Ingredient, "name"> & {
   /** The total quantity of the ingredient after applying choices. */
-  quantityTotal?:
-    | QuantityWithPlainUnit
-    | MaybeNestedGroup<QuantityWithPlainUnit>;
+  quantityTotal?: QuantityWithPlainUnit | FlatAndGroup<QuantityWithPlainUnit>;
 };
 
 /**
