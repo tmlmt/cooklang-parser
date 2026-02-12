@@ -47,7 +47,6 @@ export function getEquivalentUnitsLists(
 
   const unitLists: QuantityWithUnitDef[][] = [];
   const normalizeOrGroup = (og: FlatOrGroup<QuantityWithExtendedUnit>) => ({
-    ...og,
     or: og.or.map((q) => ({
       ...q,
       unit: resolveUnit(q.unit?.name, q.unit?.integerProtected),
