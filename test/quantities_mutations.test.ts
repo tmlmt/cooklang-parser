@@ -93,6 +93,16 @@ describe("extendAllUnits", () => {
     };
     expect(extended).toEqual(expected);
   });
+  it("should handle a unitless quantity", () => {
+    const original: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+    };
+    const extended = extendAllUnits(original);
+    const expected: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+    };
+    expect(extended).toEqual(expected);
+  });
 });
 
 describe("normalizeAllUnits", () => {

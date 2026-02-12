@@ -482,4 +482,26 @@ Cook @carrots{three|5%box}
       "textValue_incompatibleUnits",
     );
   });
+
+  it("should handle ingredients with AND group quantities", () => {
+    const shoppingCart = new ShoppingCart();
+    const shoppingList = new ShoppingList();
+    // Recipe with AND group (incompatible primaries with cup equivalents)
+    shoppingList.addRecipe(
+      new Recipe(`
+---
+servings: 1
+---
+Cook @carrots{1%=large|1.5%cup} and @&carrots{1%=small|0.5%cup}
+`),
+    );
+    shoppingCart.setShoppingList(shoppingList);
+    shoppingCart.setProductCatalog(productCatalog);
+    shoppingCart.buildCart();
+    // The AND group has "large" and "small" primaries that match products
+    expect(shoppingCart.cart).toMatchObject([
+      { product: { id: "large-carrots" }, quantity: 1 },
+      { product: { id: "small-carrots" }, quantity: 1 },
+    ]);
+  });
 });

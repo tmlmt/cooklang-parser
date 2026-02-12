@@ -437,6 +437,27 @@ export interface GetIngredientQuantitiesOptions {
 }
 
 /**
+ * Represents a raw (unprocessed) group of quantities for a single ingredient.
+ * Returned by {@link Recipe.getRawQuantityGroups | getRawQuantityGroups()},
+ * these are the pre-addition quantities that can be fed directly into
+ * {@link addEquivalentsAndSimplify} for cross-recipe aggregation.
+ * @category Types
+ */
+export interface RawQuantityGroup {
+  /** The name of the ingredient. */
+  name: string;
+  /** Whether this ingredient is used as a primary choice. */
+  usedAsPrimary?: boolean;
+  /** Flags on the ingredient (e.g., "hidden", "optional"). */
+  flags?: IngredientFlag[];
+  /** The raw, unprocessed quantities for this ingredient across all its mentions. */
+  quantities: (
+    | QuantityWithExtendedUnit
+    | FlatOrGroup<QuantityWithExtendedUnit>
+  )[];
+}
+
+/**
  * Represents a cookware item in a recipe step.
  * @category Types
  */
@@ -629,10 +650,7 @@ export type AddedRecipeOptions = {
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name"> & {
-  /** The total quantity of the ingredient after applying choices. */
-  quantityTotal?: QuantityWithPlainUnit | FlatAndGroup<QuantityWithPlainUnit>;
-};
+export type AddedIngredient = Pick<Ingredient, "name" | "quantities">;
 
 /**
  * Represents an ingredient in a category.
