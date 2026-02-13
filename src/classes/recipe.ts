@@ -23,6 +23,7 @@ import type {
   FixedNumericValue,
   StepItem,
   GetIngredientQuantitiesOptions,
+  RawQuantityGroup,
   SpecificUnitSystem,
   Unit,
   MaybeScalableQuantity,
@@ -634,36 +635,10 @@ export class Recipe {
     }
   }
 
-  /**
-   * Gets ingredients with their quantities populated, optionally filtered by section/step
-   * and respecting user choices for alternatives.
-   *
-   * When no options are provided, returns all recipe ingredients with quantities
-   * calculated using primary alternatives (same as after parsing).
-   *
-   * @param options - Options for filtering and choice selection:
-   *   - `section`: Filter to a specific section (Section object or 0-based index)
-   *   - `step`: Filter to a specific step (Step object or 0-based index)
-   *   - `choices`: Choices for alternative ingredients (defaults to primary)
-   * @returns Array of Ingredient objects with quantities populated
-   *
-   * @example
-   * ```typescript
-   * // Get all ingredients with primary alternatives
-   * const ingredients = recipe.getIngredientQuantities();
-   *
-   * // Get ingredients for a specific section
-   * const sectionIngredients = recipe.getIngredientQuantities({ section: 0 });
-   *
-   * // Get ingredients with specific choices applied
-   * const withChoices = recipe.getIngredientQuantities({
-   *   choices: { ingredientItems: new Map([['ingredient-item-2', 1]]) }
-   * });
-   * ```
-   */
-  getIngredientQuantities(
-    options?: GetIngredientQuantitiesOptions,
-  ): Ingredient[] {
+  // Type for accumulated quantities (used internally by collectQuantityGroups)
+  // Defined as a static type alias for the private method's return type
+  /** @internal */
+  private collectQuantityGroups(options?: GetIngredientQuantitiesOptions) {
     const { section, step, choices } = options || {};
 
     // Determine sections to process
@@ -855,6 +830,98 @@ export class Recipe {
         }
       }
     }
+
+    return { ingredientGroups, selectedIndices, referencedIndices };
+  }
+
+  /**
+   * Gets the raw (unprocessed) quantity groups for each ingredient, before
+   * any summation or equivalents simplification. This is useful for cross-recipe
+   * aggregation (e.g., in {@link ShoppingList}), where quantities from multiple
+   * recipes should be combined before processing.
+   *
+   * @param options - Options for filtering and choice selection (same as {@link getIngredientQuantities}).
+   * @returns Array of {@link RawQuantityGroup} objects, one per ingredient with quantities.
+   *
+   * @example
+   * ```typescript
+   * const rawGroups = recipe.getRawQuantityGroups();
+   * // Each group has: name, usedAsPrimary, flags, quantities[]
+   * // quantities are the raw QuantityWithExtendedUnit or FlatOrGroup entries
+   * ```
+   */
+  getRawQuantityGroups(
+    options?: GetIngredientQuantitiesOptions,
+  ): RawQuantityGroup[] {
+    const { ingredientGroups, selectedIndices, referencedIndices } =
+      this.collectQuantityGroups(options);
+
+    const result: RawQuantityGroup[] = [];
+
+    for (let index = 0; index < this.ingredients.length; index++) {
+      if (!referencedIndices.has(index)) continue;
+
+      const orig = this.ingredients[index]!;
+      const usedAsPrimary = selectedIndices.has(index);
+
+      // Collect all raw quantities across all signature groups
+      const quantities: (
+        | QuantityWithExtendedUnit
+        | FlatOrGroup<QuantityWithExtendedUnit>
+      )[] = [];
+
+      if (usedAsPrimary) {
+        const groupsForIng = ingredientGroups.get(index);
+        if (groupsForIng) {
+          for (const [, group] of groupsForIng) {
+            quantities.push(...group.quantities);
+          }
+        }
+      }
+
+      result.push({
+        name: orig.name,
+        ...(usedAsPrimary && { usedAsPrimary: true }),
+        ...(orig.flags && { flags: orig.flags }),
+        quantities,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets ingredients with their quantities populated, optionally filtered by section/step
+   * and respecting user choices for alternatives.
+   *
+   * When no options are provided, returns all recipe ingredients with quantities
+   * calculated using primary alternatives (same as after parsing).
+   *
+   * @param options - Options for filtering and choice selection:
+   *   - `section`: Filter to a specific section (Section object or 0-based index)
+   *   - `step`: Filter to a specific step (Step object or 0-based index)
+   *   - `choices`: Choices for alternative ingredients (defaults to primary)
+   * @returns Array of Ingredient objects with quantities populated
+   *
+   * @example
+   * ```typescript
+   * // Get all ingredients with primary alternatives
+   * const ingredients = recipe.getIngredientQuantities();
+   *
+   * // Get ingredients for a specific section
+   * const sectionIngredients = recipe.getIngredientQuantities({ section: 0 });
+   *
+   * // Get ingredients with specific choices applied
+   * const withChoices = recipe.getIngredientQuantities({
+   *   choices: { ingredientItems: new Map([['ingredient-item-2', 1]]) }
+   * });
+   * ```
+   */
+  getIngredientQuantities(
+    options?: GetIngredientQuantitiesOptions,
+  ): Ingredient[] {
+    const { ingredientGroups, selectedIndices, referencedIndices } =
+      this.collectQuantityGroups(options);
 
     // Build result
     const result: Ingredient[] = [];

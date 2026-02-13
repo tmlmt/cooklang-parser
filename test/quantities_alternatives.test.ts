@@ -52,6 +52,31 @@ describe("getEquivalentUnitsLists", () => {
       ],
     ]);
   });
+
+  it("should ignore unitless quantities not connected to others", () => {
+    expect(
+      getEquivalentUnitsLists(
+        q(1, NO_UNIT),
+        { or: [q(1, "small"), q(1, "cup")] },
+        { or: [q(1, "large"), q(1.5, "cup")] },
+      ),
+    ).toEqual([
+      [
+        qWithUnitDef(1, "small"),
+        qWithUnitDef(1, "cup"),
+        qWithUnitDef(0.667, "large"),
+      ],
+    ]);
+  });
+
+  it("keeps the first ratio when equivalents are declared multiple times but with different ratios", () => {
+    expect(
+      getEquivalentUnitsLists(
+        { or: [q(1, "small"), q(1, "cup")] },
+        { or: [q(1, "small"), q(2, "cup")] },
+      ),
+    ).toEqual([[qWithUnitDef(1, "small"), qWithUnitDef(1, "cup")]]);
+  });
 });
 
 describe("sortUnitList", () => {
@@ -336,6 +361,33 @@ describe("addEquivalentsAndSimplify", () => {
           unit: "cup",
         },
         qPlain(592, "ml"),
+      ],
+    });
+  });
+  it("should keep unitless quantity separate from AND group with equivalents", () => {
+    // Unitless quantity (3) has no relationship to the large/small/cup equivalence system
+    // It should NOT be absorbed into the AND group
+    const or1: FlatOrGroup<QuantityWithExtendedUnit> = {
+      or: [q(1, "large", true), q(1.5, "cup")],
+    };
+    const or2: FlatOrGroup<QuantityWithExtendedUnit> = {
+      or: [q(1, "small"), q(0.5, "cup")],
+    };
+    expect(addEquivalentsAndSimplify([q(3), or1, or2])).toEqual({
+      and: [
+        {
+          or: [
+            { and: [qPlain(1, "large"), qPlain(1, "small")] },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "cup",
+            },
+          ],
+        },
+        qPlain(3),
       ],
     });
   });

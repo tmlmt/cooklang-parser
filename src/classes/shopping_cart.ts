@@ -12,6 +12,7 @@ import type {
   NoProductMatchErrorCode,
   FlatOrGroup,
   MaybeNestedGroup,
+  QuantityWithPlainUnit,
   QuantityWithUnitDef,
 } from "../types";
 import { ProductCatalog } from "./product_catalog";
@@ -217,8 +218,36 @@ export class ShoppingCart {
     if (options.length === 0)
       throw new NoProductMatchError(ingredient.name, "noProduct");
     // If the ingredient has no quantity, we can't match any product
-    if (!ingredient.quantityTotal)
+    if (!ingredient.quantities || ingredient.quantities.length === 0)
       throw new NoProductMatchError(ingredient.name, "noQuantity");
+
+    // Reconstruct a single quantityTotal for normalizeAllUnits
+    // by combining all quantity entries into one structure, preserving equivalents
+    const allPlainEntries: (
+      | QuantityWithPlainUnit
+      | MaybeNestedGroup<QuantityWithPlainUnit>
+    )[] = [];
+    for (const q of ingredient.quantities) {
+      if ("and" in q) {
+        allPlainEntries.push({ and: q.and });
+      } else {
+        const entry: QuantityWithPlainUnit = {
+          quantity: q.quantity,
+          ...(q.unit && { unit: q.unit }),
+          ...(q.equivalents && { equivalents: q.equivalents }),
+        };
+        allPlainEntries.push(entry);
+      }
+    }
+
+    let quantityTotal:
+      | QuantityWithPlainUnit
+      | MaybeNestedGroup<QuantityWithPlainUnit>;
+    if (allPlainEntries.length === 1) {
+      quantityTotal = allPlainEntries[0]!;
+    } else {
+      quantityTotal = { and: allPlainEntries };
+    }
 
     // Normalize options units and scale size to base
     const normalizedOptions: ProductOptionNormalized[] = options.map(
@@ -239,7 +268,7 @@ export class ShoppingCart {
         }),
       }),
     );
-    const normalizedQuantityTotal = normalizeAllUnits(ingredient.quantityTotal);
+    const normalizedQuantityTotal = normalizeAllUnits(quantityTotal);
 
     function getOptimumMatchForQuantityParts(
       normalizedQuantities:

@@ -145,6 +145,7 @@ import type {
   RecipeChoices,
   RecipeAlternatives,
   GetIngredientQuantitiesOptions,
+  RawQuantityGroup,
 } from "./types";
 
 export {
@@ -232,6 +233,7 @@ export {
   RecipeChoices,
   RecipeAlternatives,
   GetIngredientQuantitiesOptions,
+  RawQuantityGroup,
 };
 
 // Errors

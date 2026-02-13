@@ -7,20 +7,32 @@ import type {
   AddedIngredient,
   QuantityWithExtendedUnit,
   QuantityWithPlainUnit,
-  MaybeNestedGroup,
   FlatOrGroup,
   AddedRecipeOptions,
   PantryOptions,
+  SpecificUnitSystem,
 } from "../types";
-import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import {
-  extendAllUnits,
+  addEquivalentsAndSimplify,
+  getEquivalentUnitsLists,
+} from "../quantities/alternatives";
+import {
+  flattenPlainUnitGroup,
   subtractQuantities,
   toExtendedUnit,
   toPlainUnit,
 } from "../quantities/mutations";
-import { isAndGroup, isOrGroup, isQuantity } from "../utils/type_guards";
+import { getAverageValue } from "../quantities/numeric";
 import { deepClone } from "../utils/general";
+import { NO_UNIT } from "../units/definitions";
+import type { QuantityWithUnitDef } from "../types";
+
+/**
+ * Maps equivalent unit name → (primary unit name → ratio).
+ * ratio = equiv_quantity_value / primary_quantity_value from the original OR group.
+ * Used to recompute equivalents after pantry subtraction modifies primaries.
+ */
+type EquivalenceRatioMap = Record<string, Record<string, number>>;
 
 /**
  * Shopping List generator.
@@ -49,7 +61,6 @@ import { deepClone } from "../utils/general";
  * @category Classes
  */
 export class ShoppingList {
-  // TODO: backport type change
   /**
    * The ingredients in the shopping list.
    */
@@ -66,6 +77,17 @@ export class ShoppingList {
    * The categorized ingredients in the shopping list.
    */
   categories?: CategorizedIngredients;
+  /**
+   * The unit system to use for quantity simplification.
+   * When set, overrides per-recipe unit systems.
+   */
+  unitSystem?: SpecificUnitSystem;
+  /**
+   * Per-ingredient equivalence ratio maps for recomputing equivalents
+   * after pantry subtraction. Keyed by ingredient name.
+   * @internal
+   */
+  private equivalenceRatios = new Map<string, EquivalenceRatioMap>();
   /**
    * The original pantry (never mutated by recipe calculations).
    */
@@ -89,51 +111,17 @@ export class ShoppingList {
   private calculateIngredients() {
     this.ingredients = [];
 
-    const addIngredientQuantity = (
-      name: string,
-      quantityTotal:
-        | QuantityWithPlainUnit
-        | MaybeNestedGroup<QuantityWithPlainUnit>,
-    ) => {
-      const quantityTotalExtended = extendAllUnits(quantityTotal);
-      const newQuantities = (
-        isAndGroup(quantityTotalExtended)
-          ? quantityTotalExtended.and
-          : [quantityTotalExtended]
-      ) as (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[];
-      const existing = this.ingredients.find((i) => i.name === name);
-
-      if (existing) {
-        if (!existing.quantityTotal) {
-          existing.quantityTotal = quantityTotal;
-          return;
-        }
-        try {
-          const existingQuantityTotalExtended = extendAllUnits(
-            existing.quantityTotal,
-          );
-          const existingQuantities = (
-            isAndGroup(existingQuantityTotalExtended)
-              ? existingQuantityTotalExtended.and
-              : [existingQuantityTotalExtended]
-          ) as (
-            | QuantityWithExtendedUnit
-            | FlatOrGroup<QuantityWithExtendedUnit>
-          )[];
-          existing.quantityTotal = addEquivalentsAndSimplify([
-            ...existingQuantities,
-            ...newQuantities,
-          ]);
-          return;
-        } catch {
-          // Incompatible
-        }
+    // Accumulate raw quantities per ingredient name across all recipes
+    const rawQuantitiesMap = new Map<
+      string,
+      (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[]
+    >();
+    // Track first-appearance order of ingredient names
+    const nameOrder: string[] = [];
+    const trackName = (name: string) => {
+      if (!nameOrder.includes(name)) {
+        nameOrder.push(name);
       }
-
-      this.ingredients.push({
-        name,
-        quantityTotal,
-      });
     };
 
     for (const addedRecipe of this.recipes) {
@@ -145,67 +133,88 @@ export class ShoppingList {
         scaledRecipe = addedRecipe.recipe.scaleTo(addedRecipe.servings);
       }
 
-      // Get computed ingredients with total quantities based on choices (or default)
-      const ingredients = scaledRecipe.getIngredientQuantities({
+      const rawGroups = scaledRecipe.getRawQuantityGroups({
         choices: addedRecipe.choices,
       });
 
-      for (const ingredient of ingredients) {
-        // Do not add hidden ingredients to the shopping list
-        if (ingredient.flags && ingredient.flags.includes("hidden")) {
+      for (const group of rawGroups) {
+        if (group.flags?.includes("hidden") || !group.usedAsPrimary) {
           continue;
         }
 
-        // Only add ingredients that were selected (have usedAsPrimary flag)
-        // This filters out alternative ingredients that weren't chosen
-        if (!ingredient.usedAsPrimary) {
-          continue;
-        }
+        trackName(group.name);
 
-        // Sum up quantities from the ingredient's quantity groups
-        if (ingredient.quantities && ingredient.quantities.length > 0) {
-          // Extract all quantities (converting to plain units for summing)
-          const allQuantities: (
-            | QuantityWithPlainUnit
-            | MaybeNestedGroup<QuantityWithPlainUnit>
-          )[] = [];
-          for (const qGroup of ingredient.quantities) {
-            if ("and" in qGroup) {
-              // AndGroup - add each quantity separately
-              for (const qty of qGroup.and) {
-                allQuantities.push(qty);
-              }
-            } else {
-              // Simple quantity (strip alternatives - choices already applied)
-              const plainQty: QuantityWithPlainUnit = {
-                quantity: qGroup.quantity,
-              };
-              if (qGroup.unit) plainQty.unit = qGroup.unit;
-              if (qGroup.equivalents) plainQty.equivalents = qGroup.equivalents;
-              allQuantities.push(plainQty);
-            }
-          }
-          if (allQuantities.length === 1) {
-            addIngredientQuantity(ingredient.name, allQuantities[0]!);
-          } else {
-            // allQuantities.length > 1
-            // Sum up using addEquivalentsAndSimplify
-            const extendedQuantities = allQuantities.map((q) =>
-              extendAllUnits(q),
-            );
-            const totalQuantity = addEquivalentsAndSimplify(
-              extendedQuantities as (
-                | QuantityWithExtendedUnit
-                | FlatOrGroup<QuantityWithExtendedUnit>
-              )[],
-            );
-            // addEquivalentsAndSimplify already returns plain units
-            addIngredientQuantity(ingredient.name, totalQuantity);
-          }
-        } else if (!this.ingredients.some((i) => i.name === ingredient.name)) {
-          this.ingredients.push({ name: ingredient.name });
+        if (group.quantities.length > 0) {
+          const existing = rawQuantitiesMap.get(group.name) ?? [];
+          existing.push(...group.quantities);
+          rawQuantitiesMap.set(group.name, existing);
         }
       }
+    }
+
+    // Process each ingredient: addEquivalentsAndSimplify → flattenPlainUnitGroup
+    this.equivalenceRatios.clear();
+    for (const name of nameOrder) {
+      const rawQuantities = rawQuantitiesMap.get(name);
+
+      if (!rawQuantities || rawQuantities.length === 0) {
+        this.ingredients.push({ name });
+        continue;
+      }
+
+      // Separate text-value quantities (cannot be summed) from numeric ones
+      const textEntries: QuantityWithExtendedUnit[] = [];
+      const numericEntries: (
+        | QuantityWithExtendedUnit
+        | FlatOrGroup<QuantityWithExtendedUnit>
+      )[] = [];
+      for (const q of rawQuantities) {
+        if (
+          "quantity" in q &&
+          q.quantity.type === "fixed" &&
+          q.quantity.value.type === "text"
+        ) {
+          textEntries.push(q);
+        } else {
+          numericEntries.push(q);
+        }
+      }
+
+      // Build equivalence ratio map for recomputing equivalents after pantry subtraction
+      if (numericEntries.length > 1) {
+        const ratioMap = ShoppingList.buildEquivalenceRatioMap(
+          getEquivalentUnitsLists(...numericEntries),
+        );
+        if (Object.keys(ratioMap).length > 0) {
+          this.equivalenceRatios.set(name, ratioMap);
+        }
+      }
+
+      const resultQuantities: (
+        | QuantityWithPlainUnit
+        | {
+            and: QuantityWithPlainUnit[];
+            equivalents?: QuantityWithPlainUnit[];
+          }
+      )[] = [];
+
+      // Text values stay as individual entries (placed first to preserve order)
+      for (const t of textEntries) {
+        resultQuantities.push(toPlainUnit(t) as QuantityWithPlainUnit);
+      }
+
+      if (numericEntries.length > 0) {
+        resultQuantities.push(
+          ...flattenPlainUnitGroup(
+            addEquivalentsAndSimplify(numericEntries, this.unitSystem),
+          ),
+        );
+      }
+
+      this.ingredients.push({
+        name,
+        quantities: resultQuantities,
+      });
     }
 
     // Subtract pantry quantities from ingredients
@@ -230,47 +239,180 @@ export class ShoppingList {
     }
 
     for (const ingredient of this.ingredients) {
-      if (!ingredient.quantityTotal) continue;
+      if (!ingredient.quantities || ingredient.quantities.length === 0)
+        continue;
 
       const pantryItem = clonedPantry.findItem(ingredient.name);
       if (!pantryItem || !pantryItem.quantity) continue;
-
-      // Extract leaf quantities from the ingredient (handles simple, AND, OR)
-      const leaves = this.extractLeafQuantities(ingredient.quantityTotal);
 
       let pantryExtended: QuantityWithExtendedUnit = {
         quantity: pantryItem.quantity,
         ...(pantryItem.unit && { unit: { name: pantryItem.unit } }),
       };
 
-      for (const leaf of leaves) {
-        const ingredientExtended = toExtendedUnit(leaf.quantity);
+      for (let i = 0; i < ingredient.quantities.length; i++) {
+        const entry = ingredient.quantities[i]!;
+        // For AND groups, iterate each .and entry individually
+        const leaves: QuantityWithPlainUnit[] =
+          "and" in entry ? entry.and : [entry];
 
-        try {
-          // Subtract pantry from ingredient need (clamped to zero)
-          const remaining = subtractQuantities(
-            ingredientExtended,
-            pantryExtended,
-            { clampToZero: true },
+        for (const leaf of leaves) {
+          const ingredientExtended = toExtendedUnit(leaf);
+
+          // When one side is unitless and the other has a unit,
+          // addQuantities adopts the other's unit (Case 2), which is wrong
+          // for pantry subtraction. Use equivalence ratios to convert instead.
+          const leafHasUnit = leaf.unit !== undefined && leaf.unit !== "";
+          const pantryHasUnit =
+            pantryExtended.unit !== undefined &&
+            pantryExtended.unit.name !== "";
+          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          const unitMismatch =
+            leafHasUnit !== pantryHasUnit && ratioMap !== undefined;
+
+          if (unitMismatch) {
+            const leafUnit = leaf.unit ?? NO_UNIT;
+            const pantryUnit = pantryExtended.unit?.name ?? NO_UNIT;
+            const ratioFromPantry = ratioMap[leafUnit]?.[pantryUnit];
+            if (ratioFromPantry !== undefined) {
+              const pantryValue = getAverageValue(pantryExtended.quantity);
+              const leafValue = getAverageValue(ingredientExtended.quantity);
+              if (
+                typeof pantryValue === "number" &&
+                typeof leafValue === "number"
+              ) {
+                const pantryInLeafUnits = pantryValue * ratioFromPantry;
+                const subtracted = Math.min(pantryInLeafUnits, leafValue);
+                const remainingLeafValue = Math.max(
+                  leafValue - pantryInLeafUnits,
+                  0,
+                );
+
+                // Write back the remaining value into the leaf
+                leaf.quantity = {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: remainingLeafValue },
+                };
+
+                // Update pantry remainder: convert consumed back to pantry units
+                const consumedInPantryUnits =
+                  ratioFromPantry !== 0
+                    ? subtracted / ratioFromPantry
+                    : pantryValue;
+                const remainingPantryValue = Math.max(
+                  pantryValue - consumedInPantryUnits,
+                  0,
+                );
+                pantryExtended = {
+                  quantity: {
+                    type: "fixed",
+                    value: {
+                      type: "decimal",
+                      decimal: remainingPantryValue,
+                    },
+                  },
+                  ...(pantryExtended.unit && { unit: pantryExtended.unit }),
+                };
+                continue;
+              }
+            }
+          }
+
+          try {
+            const remaining = subtractQuantities(
+              ingredientExtended,
+              pantryExtended,
+              { clampToZero: true },
+            );
+
+            // Update the pantry remainder: subtract what was consumed
+            // Must happen before writing back into leaf, since toExtendedUnit
+            // may return the same object reference for unitless quantities
+            const consumed = subtractQuantities(
+              pantryExtended,
+              ingredientExtended,
+              { clampToZero: true },
+            );
+            pantryExtended = consumed;
+
+            // Write back into the leaf in-place
+            const updated = toPlainUnit(remaining) as QuantityWithPlainUnit;
+            leaf.quantity = updated.quantity;
+            leaf.unit = updated.unit;
+          } catch {
+            // Incompatible units — skip subtraction for this leaf
+          }
+        }
+
+        // Remove zero-valued leaves from AND groups
+        if ("and" in entry) {
+          const nonZero = entry.and.filter(
+            (leaf) =>
+              leaf.quantity.type !== "fixed" ||
+              leaf.quantity.value.type !== "decimal" ||
+              leaf.quantity.value.decimal !== 0,
           );
-
-          // Apply the updated quantity back into the group structure
-          leaf.apply(toPlainUnit(remaining) as QuantityWithPlainUnit);
-
-          // Update the pantry remainder: subtract what was consumed
-          const consumed = subtractQuantities(
-            pantryExtended,
-            ingredientExtended,
-            { clampToZero: true },
-          );
-          pantryExtended = consumed;
-        } catch {
-          // Incompatible units — skip subtraction for this leaf
+          entry.and.length = 0;
+          entry.and.push(...nonZero);
+          // Recompute equivalents from updated primaries using stored ratios
+          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          // v8 ignore else --@preserve: defensive type guard
+          if (entry.equivalents && ratioMap) {
+            const equivUnits = entry.equivalents.map((e) => e.unit ?? NO_UNIT);
+            entry.equivalents = ShoppingList.recomputeEquivalents(
+              entry.and,
+              ratioMap,
+              equivUnits,
+            );
+          }
+          // Collapse single-leaf AND group to a plain IngredientQuantityGroup
+          // v8 ignore else --@preserve: defensive type guard
+          if (entry.and.length === 1) {
+            const single = entry.and[0]!;
+            ingredient.quantities[i] = {
+              quantity: single.quantity,
+              ...(single.unit && { unit: single.unit }),
+              ...(entry.equivalents && { equivalents: entry.equivalents }),
+              ...(entry.alternatives && { alternatives: entry.alternatives }),
+            };
+          }
+        } else if ("equivalents" in entry && entry.equivalents) {
+          // Recompute equivalents for plain entries with equivalents
+          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          // v8 ignore else --@preserve: defensive type guard
+          if (ratioMap) {
+            const equivUnits = entry.equivalents.map(
+              (e: QuantityWithPlainUnit) => e.unit ?? NO_UNIT,
+            );
+            const recomputed = ShoppingList.recomputeEquivalents(
+              [entry as QuantityWithPlainUnit],
+              ratioMap,
+              equivUnits,
+            );
+            (entry as { equivalents?: QuantityWithPlainUnit[] }).equivalents =
+              recomputed;
+          }
         }
       }
 
+      // Remove empty AND groups (all leaves were zero)
+      // and remove zero-valued simple entries
+      ingredient.quantities = ingredient.quantities.filter((entry) => {
+        if ("and" in entry) return entry.and.length > 0;
+        return !(
+          entry.quantity.type === "fixed" &&
+          entry.quantity.value.type === "decimal" &&
+          entry.quantity.value.decimal === 0
+        );
+      });
+
+      // Remove ingredient entirely if all quantities were zeroed out
+      if (ingredient.quantities.length === 0) {
+        ingredient.quantities = undefined;
+      }
+
       pantryItem.quantity = pantryExtended.quantity;
-      // v8 ignore else -- @preserve
+      /* v8 ignore else -- @preserve */
       if (pantryExtended.unit) {
         pantryItem.unit = pantryExtended.unit.name;
       }
@@ -280,51 +422,69 @@ export class ShoppingList {
   }
 
   /**
-   * Extracts leaf (simple) quantities from a possibly nested group structure.
-   * Each leaf includes the quantity and an `apply` callback to write back
-   * a modified value into the original structure in-place.
-   *
-   * - Simple quantity → one leaf
-   * - OR group → recurse into the first entry only (the primary alternative)
-   * - AND group → recurse into all entries
+   * Builds a ratio map from equivalence lists.
+   * For each equivalence list, stores ratio = equiv_value / primary_value
+   * for every pair of units, so equivalents can be recomputed after
+   * pantry subtraction modifies primary quantities.
    */
-  private extractLeafQuantities(
-    q: QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>,
-  ): {
-    quantity: QuantityWithPlainUnit;
-    apply: (v: QuantityWithPlainUnit) => void;
-  }[] {
-    if (isQuantity(q)) {
-      return [
-        {
-          quantity: q,
-          apply: (v: QuantityWithPlainUnit) => {
-            Object.assign(q, v);
-          },
-        },
-      ];
-    }
-
-    if (isOrGroup(q)) {
-      // Only subtract from the primary (first) entry
-      const first = q.or[0];
-      /* v8 ignore else -- @preserve */
-      if (first) {
-        return this.extractLeafQuantities(first);
+  private static buildEquivalenceRatioMap(
+    unitsLists: QuantityWithUnitDef[][],
+  ): EquivalenceRatioMap {
+    const ratioMap: EquivalenceRatioMap = {};
+    for (const list of unitsLists) {
+      for (const equiv of list) {
+        // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
+        const equivValue = getAverageValue(equiv.quantity) as number;
+        for (const primary of list) {
+          if (primary === equiv) continue;
+          // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
+          const primaryValue = getAverageValue(primary.quantity) as number;
+          const equivUnit = equiv.unit.name;
+          const primaryUnit = primary.unit.name;
+          ratioMap[equivUnit] ??= {};
+          ratioMap[equivUnit][primaryUnit] = equivValue / primaryValue;
+        }
       }
-      /* v8 ignore next -- @preserve */
-      return [];
+    }
+    return ratioMap;
+  }
+
+  /**
+   * Recomputes equivalent quantities from current primary values and stored ratios.
+   * For each equivalent unit in equivUnits, new_value = Σ (primary_value × ratio[equivUnit][primaryUnit]).
+   * Returns undefined if all equivalents compute to zero.
+   */
+  private static recomputeEquivalents(
+    primaries: QuantityWithPlainUnit[],
+    ratioMap: EquivalenceRatioMap,
+    equivUnits: string[],
+  ): QuantityWithPlainUnit[] | undefined {
+    const equivalents: QuantityWithPlainUnit[] = [];
+
+    for (const equivUnit of equivUnits) {
+      const ratios = ratioMap[equivUnit]!;
+
+      let total = 0;
+      for (const primary of primaries) {
+        const pUnit = primary.unit ?? NO_UNIT;
+        // In equivalent unit lists, ratios and pvalues are always defined, and are numbers
+        const ratio = ratios[pUnit]!;
+        const pValue = getAverageValue(primary.quantity) as number;
+        total += pValue * ratio;
+      }
+
+      if (total > 0) {
+        equivalents.push({
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: total },
+          },
+          ...(equivUnit !== "" && { unit: equivUnit }),
+        });
+      }
     }
 
-    // AND group: recurse into all entries
-    const results: {
-      quantity: QuantityWithPlainUnit;
-      apply: (v: QuantityWithPlainUnit) => void;
-    }[] = [];
-    for (const entry of q.and) {
-      results.push(...this.extractLeafQuantities(entry));
-    }
-    return results;
+    return equivalents.length > 0 ? equivalents : undefined;
   }
 
   /**
@@ -391,6 +551,7 @@ export class ShoppingList {
 
     // Check for grouped alternatives without choices
     for (const groupId of recipe.choices.ingredientGroups.keys()) {
+      // v8 ignore else -- @preserve: detection if
       if (!choices?.ingredientGroups?.has(groupId)) {
         missingGroups.push(groupId);
       }

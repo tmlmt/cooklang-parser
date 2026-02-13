@@ -24,48 +24,61 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 100 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "sugar",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 50 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 50 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+            },
+          ],
         },
         {
           name: "milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 200 },
+              },
+              unit: "ml",
             },
-            unit: "ml",
-          },
+          ],
         },
         {
           name: "pepper",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "text", text: "to taste" },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "text", text: "to taste" },
+              },
             },
-          },
+          ],
         },
         { name: "spices" },
       ]);
@@ -78,30 +91,28 @@ describe("ShoppingList", () => {
       shoppingList.addRecipe(recipe1); // adding the same one again to check accumulation
       expect(shoppingList.ingredients.find((i) => i.name === "eggs")).toEqual({
         name: "eggs",
-        quantityTotal: {
-          and: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 4 },
-              },
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 4 },
             },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "dozen",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "half dozen",
+            unit: "dozen",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
             },
-          ],
-        },
+            unit: "half dozen",
+          },
+        ],
       });
     });
 
@@ -112,76 +123,92 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 150 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 150 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "sugar",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 50 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 50 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
+            },
+          ],
         },
         {
           name: "milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 200 },
+              },
+              unit: "ml",
             },
-            unit: "ml",
-          },
+          ],
         },
         {
           name: "pepper",
-          quantityTotal: {
-            and: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "text", text: "to taste" },
-                },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "text", text: "to taste" },
               },
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 1 },
-                },
-                unit: "tsp",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
               },
-            ],
-          },
+              unit: "tsp",
+            },
+          ],
         },
         {
           name: "spices",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-            unit: "pinch",
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "pinch",
+            },
+          ],
         },
         {
           name: "butter",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 25 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 25 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
       ]);
     });
@@ -193,48 +220,61 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 200 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "sugar",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 100 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 4 },
+              },
+            },
+          ],
         },
         {
           name: "milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 400 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 400 },
+              },
+              unit: "ml",
             },
-            unit: "ml",
-          },
+          ],
         },
         {
           name: "pepper",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "text", text: "to taste" },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "text", text: "to taste" },
+              },
             },
-          },
+          ],
         },
         { name: "spices" },
       ]);
@@ -246,48 +286,61 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 200 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 200 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "sugar",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 100 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 4 },
+              },
+            },
+          ],
         },
         {
           name: "milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 400 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 400 },
+              },
+              unit: "ml",
             },
-            unit: "ml",
-          },
+          ],
         },
         {
           name: "pepper",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "text", text: "to taste" },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "text", text: "to taste" },
+              },
             },
-          },
+          ],
         },
         { name: "spices" },
       ]);
@@ -299,48 +352,61 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 300 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 300 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "sugar",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 150 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 150 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 6 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 6 },
+              },
+            },
+          ],
         },
         {
           name: "milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 600 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 600 },
+              },
+              unit: "ml",
             },
-            unit: "ml",
-          },
+          ],
         },
         {
           name: "pepper",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "text", text: "to taste" },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "text", text: "to taste" },
+              },
             },
-          },
+          ],
         },
         { name: "spices" },
       ]);
@@ -355,13 +421,15 @@ describe("ShoppingList", () => {
       expect(shoppingList.ingredients).toEqual([
         {
           name: "almond milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 100 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 100 },
+              },
+              unit: "ml",
             },
-            unit: "ml",
-          },
+          ],
         },
       ]);
     });
@@ -376,8 +444,283 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       // Potato should have quantities combined from the AND group
       const potato = shoppingList.ingredients.find((i) => i.name === "potato");
       expect(potato).toBeDefined();
-      // The AND group (1 large + 1 small) with equivalents (1.5 cup + 0.5 cup = 2 cup) should be processed
-      expect(potato?.quantityTotal).toBeDefined();
+      // large: 1+2=3, small: 1+3=4, cup equivalents: 2+4.5=6.5
+      expect(potato?.quantities).toMatchObject([
+        {
+          and: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "large",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "small",
+            },
+          ],
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "cup",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should merge AND groups with different unit sets across recipes", () => {
+      // Recipe A has AND group with "large" and "small" units
+      const recipeA = new Recipe(
+        `Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}`,
+      );
+      // Recipe B has AND group with "large", "small", AND an extra unit "medium"
+      const recipeB = new Recipe(
+        `Add @potato{2%=large|2%cup} and @&potato{3%=small|1%cup} and @&potato{1%=medium|0.5%cup}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipeA);
+      shoppingList.addRecipe(recipeB);
+      const potato = shoppingList.ingredients.find((i) => i.name === "potato");
+      expect(potato).toBeDefined();
+      // Unified approach: all raw quantities combined and processed once
+      // large: 1+2=3, small: 1+3=4, medium: 0+1=1
+      // first ratio is retained so cup: 3*1.5+4*0.5+1*0.5 = 7
+      expect(potato?.quantities).toMatchObject([
+        {
+          and: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
+              unit: "large",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 4 },
+              },
+              unit: "small",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "medium",
+            },
+          ],
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 7 },
+              },
+              unit: "cup",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should subtract pantry from AND group entries individually", () => {
+      // Recipe with equivalents that produce a real { and: [...] } group in quantities
+      const recipe = new Recipe(
+        `Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe);
+
+      // Pantry has 5 large — should subtract from the "large" entry only
+      shoppingList.addPantry(`[pantry]\npotato = "5%large"`);
+
+      const potato = shoppingList.ingredients.find((i) => i.name === "potato");
+      expect(potato).toBeDefined();
+      // large: 1-5 = 0 (clamped), small: incompatible unit → stays 1
+      expect(potato?.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 1 },
+          },
+          unit: "small",
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 0.5 },
+              },
+              unit: "cup",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should push AND group when no existing AND group for that ingredient", () => {
+      // First recipe has a simple unitless quantity, second has an AND group
+      // Unified approach: all raw quantities combined → addEquivalentsAndSimplify
+      // Unitless quantity stays separate from the equivalence AND group (large + small with cup equivalents)
+      const recipeSimple = new Recipe(`Add @potato{3}`);
+      const recipeAnd = new Recipe(
+        `Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipeSimple);
+      shoppingList.addRecipe(recipeAnd);
+      const potato = shoppingList.ingredients.find((i) => i.name === "potato");
+      expect(potato).toBeDefined();
+      // Should have AND group (large + small with cup equivalents) + separate unitless entry
+      const quantities = potato?.quantities;
+      expect(quantities).toHaveLength(2);
+      expect(quantities![0]).toMatchObject({
+        and: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "large",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "small",
+          },
+        ],
+        equivalents: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
+            },
+            unit: "cup",
+          },
+        ],
+      });
+      expect(quantities![1]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 3 },
+        },
+      });
+    });
+
+    it("should append unmatched equivalent units during AND group merge", () => {
+      // Recipe A has AND group with no equivalents
+      // Recipe B has AND group with ml equivalents
+      // Unified approach: all raw quantities combined, equivalents computed proportionally
+      const recipeA = new Recipe(`Add @fruit{1%=large} and @&fruit{1%=small}`);
+      const recipeB = new Recipe(
+        `Add @fruit{2%=large|50%ml} and @&fruit{3%=small|90%ml}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipeA);
+      shoppingList.addRecipe(recipeB);
+      const fruit = shoppingList.ingredients.find((i) => i.name === "fruit");
+      expect(fruit).toBeDefined();
+      // large: 1+2=3, small: 1+3=4
+      // ml equivalents recomputed proportionally from recipe B ratios: 195ml
+      expect(fruit?.quantities).toMatchObject([
+        {
+          and: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
+              unit: "large",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 4 },
+              },
+              unit: "small",
+            },
+          ],
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 195 },
+              },
+              unit: "ml",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should combine incompatible units from different recipes into single AND group", () => {
+      // Recipe A has entries with equivalents (g|ml) plus incompatible unit (=large)
+      // Recipe B has an explicit AND group (big|ml + tiny|ml)
+      // Unified approach: all raw quantities combined into single addEquivalentsAndSimplify call
+      // → g, big, tiny share ml equivalents → AND group; large is standalone (no equivalence)
+      const recipeA = new Recipe(
+        `Add @fruit{1%g|300%ml} then add @fruit{1%=large}`,
+      );
+      const recipeB = new Recipe(
+        `Add @fruit{2%=big|400%ml} and @&fruit{3%=tiny|200%ml}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipeA);
+      shoppingList.addRecipe(recipeB);
+      const fruit = shoppingList.ingredients.find((i) => i.name === "fruit");
+      expect(fruit).toBeDefined();
+      // g, big, tiny in AND group with ml equivalents; large separate
+      expect(fruit?.quantities).toHaveLength(2);
+      expect(fruit?.quantities?.[0]).toMatchObject({
+        and: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "g",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
+            },
+            unit: "big",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 3 },
+            },
+            unit: "tiny",
+          },
+        ],
+        equivalents: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 900 },
+            },
+            unit: "ml",
+          },
+        ],
+      });
+      expect(fruit?.quantities?.[1]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 1 },
+        },
+        unit: "large",
+      });
     });
 
     it("should throw an error when adding a recipe with inline alternatives without choices", () => {
@@ -396,29 +739,6 @@ Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
       expect(() => shoppingList.addRecipe(recipeWithGroups)).toThrowError(
         /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
       );
-    });
-
-    it("should accept grouped alternatives with proper choices", () => {
-      const shoppingList = new ShoppingList();
-      const recipeWithGroups = new Recipe(`
-Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
-`);
-      const choices = {
-        ingredientGroups: new Map([["milk", 1]]), // Choose almond milk (index 1)
-      };
-      shoppingList.addRecipe(recipeWithGroups, { choices });
-      expect(shoppingList.ingredients).toEqual([
-        {
-          name: "almond milk",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 100 },
-            },
-            unit: "ml",
-          },
-        },
-      ]);
     });
   });
 
@@ -503,86 +823,96 @@ sugar
         Bakery: [
           {
             name: "flour",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 150 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 150 },
+                },
+                unit: "g",
               },
-              unit: "g",
-            },
+            ],
           },
           {
             name: "sugar",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 50 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 50 },
+                },
+                unit: "g",
               },
-              unit: "g",
-            },
+            ],
           },
         ],
         Dairy: [
           {
             name: "butter",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 25 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 25 },
+                },
+                unit: "g",
               },
-              unit: "g",
-            },
+            ],
           },
           {
             name: "milk",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 200 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 200 },
+                },
+                unit: "ml",
               },
-              unit: "ml",
-            },
+            ],
           },
         ],
         other: [
           {
             name: "eggs",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 3 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 3 },
+                },
               },
-            },
+            ],
           },
           {
             name: "pepper",
-            quantityTotal: {
-              and: [
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "text", text: "to taste" },
-                  },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "text", text: "to taste" },
                 },
-                {
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 1 },
-                  },
-                  unit: "tsp",
+              },
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 1 },
                 },
-              ],
-            },
+                unit: "tsp",
+              },
+            ],
           },
           {
             name: "spices",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 1 },
+                },
+                unit: "pinch",
               },
-              unit: "pinch",
-            },
+            ],
           },
         ],
       };
@@ -604,51 +934,61 @@ sugar
         other: [
           {
             name: "flour",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 100 },
+                },
+                unit: "g",
               },
-              unit: "g",
-            },
+            ],
           },
           {
             name: "sugar",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 50 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 50 },
+                },
+                unit: "g",
               },
-              unit: "g",
-            },
+            ],
           },
           {
             name: "eggs",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 2 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 2 },
+                },
               },
-            },
+            ],
           },
           {
             name: "milk",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 200 },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 200 },
+                },
+                unit: "ml",
               },
-              unit: "ml",
-            },
+            ],
           },
           {
             name: "pepper",
-            quantityTotal: {
-              quantity: {
-                type: "fixed",
-                value: { type: "text", text: "to taste" },
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "text", text: "to taste" },
+                },
               },
-            },
+            ],
           },
           { name: "spices" },
         ],
@@ -665,43 +1005,62 @@ sugar
       expect(shoppingList.ingredients).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 50 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 50 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "butter",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 25 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 25 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
         {
           name: "eggs",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+            },
+          ],
         },
         {
           name: "pepper",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-            unit: "tsp",
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "tsp",
+            },
+          ],
         },
         {
           name: "spices",
-          quantityTotal: {
-            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-            unit: "pinch",
-          },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "pinch",
+            },
+          ],
         },
       ]);
     });
@@ -716,26 +1075,30 @@ sugar
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 150 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 150 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
       ]);
       shoppingList.removeRecipe(0);
       expect(shoppingList.categories?.Bakery).toEqual([
         {
           name: "flour",
-          quantityTotal: {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 50 },
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 50 },
+              },
+              unit: "g",
             },
-            unit: "g",
-          },
+          ],
         },
       ]);
     });
@@ -758,28 +1121,25 @@ sugar
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
       expect(flour).toBeDefined();
-      expect(flour!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 100 },
+      expect(flour!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
-    it("should clamp ingredient quantity to zero when pantry has more", () => {
+    it("should remove ingredient when pantry fully covers it", () => {
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(pantryRecipe);
       shoppingList.addPantry(`[pantry]\nflour = "500%g"`);
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
       expect(flour).toBeDefined();
-      expect(flour!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 0 },
-        },
-      });
+      expect(flour!.quantities).toBeUndefined();
     });
 
     it("should update resulting pantry after subtraction", () => {
@@ -817,13 +1177,15 @@ sugar
       shoppingList.addPantry(`[pantry]\nflour = "100%g"`);
 
       const sugar = shoppingList.ingredients.find((i) => i.name === "sugar");
-      expect(sugar!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 100 },
+      expect(sugar!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
     it("should accept a Pantry instance", () => {
@@ -833,13 +1195,15 @@ sugar
       shoppingList.addPantry(pantry);
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      expect(flour!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 100 },
+      expect(flour!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
     it("should throw on invalid pantry argument", () => {
@@ -855,13 +1219,15 @@ sugar
       shoppingList.addRecipe(pantryRecipe);
 
       const flour1 = shoppingList.ingredients.find((i) => i.name === "flour");
-      expect(flour1!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 100 },
+      expect(flour1!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
 
       // Remove the recipe → no ingredients, pantry should be intact
       shoppingList.removeRecipe(0);
@@ -890,13 +1256,15 @@ sugar
 
       // Should find "farine" in pantry for "flour" in recipe
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      expect(flour!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 100 },
+      expect(flour!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
     it("should propagate CategoryConfig to pantry when set after addPantry", () => {
@@ -908,13 +1276,15 @@ sugar
       const flourBefore = shoppingList.ingredients.find(
         (i) => i.name === "flour",
       );
-      expect(flourBefore!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 200 },
+      expect(flourBefore!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 200 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
 
       // Setting config should NOT auto-recalculate (only categorize runs)
       // but the config IS propagated to the pantry for future use
@@ -928,13 +1298,15 @@ sugar
       const flourAfter = shoppingList.ingredients.find(
         (i) => i.name === "flour",
       );
-      expect(flourAfter!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 100 },
+      expect(flourAfter!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 100 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
     it("should handle pantry with unit conversion (e.g. kg vs g)", () => {
@@ -943,13 +1315,8 @@ sugar
       shoppingList.addPantry(`[pantry]\nflour = "1%kg"`); // has 1kg = 1000g
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      // 200g - 1kg → clamped to 0
-      expect(flour!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 0 },
-        },
-      });
+      // 200g - 1kg → fully covered, quantities removed
+      expect(flour!.quantities).toBeUndefined();
     });
 
     it("should skip pantry subtraction for ingredients without quantity", () => {
@@ -961,7 +1328,7 @@ sugar
       // flour has no quantity in recipe, should remain as-is
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
       expect(flour).toBeDefined();
-      expect(flour!.quantityTotal).toBeUndefined();
+      expect(flour!.quantities).toBeUndefined();
     });
 
     it("should skip pantry subtraction for incompatible units", () => {
@@ -972,48 +1339,87 @@ sugar
 
       // Should remain unchanged due to incompatible units
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      expect(flour!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 200 },
+      expect(flour!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 200 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
     it("should subtract pantry from AND group ingredient (multiple units)", () => {
-      // Recipe produces eggs as AND group: 1 dozen AND 1 half dozen
-      const recipe3 = new Recipe(`Add @eggs{1%dozen} and @&eggs{1%half dozen}`);
+      const recipe3 = new Recipe(
+        `Add @eggs{24|2%dozen} and @&eggs{6|1%half dozen}`,
+      );
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipe3);
-
-      // Pantry has 2 dozen eggs — should subtract from first AND leaf (1 dozen)
-      // then carry the remaining 1 dozen to the second leaf (1 half dozen).
-      // 1 dozen = 12, 1 half dozen = 6. Pantry 2 dozen = 24.
-      // But "dozen" and "half dozen" are different unit strings,
-      // they may or may not be convertible. Let's check with a simple compatible case.
-      shoppingList.addPantry(`[pantry]\neggs = "5"`);
+      // 30 eggs total (unitless) with equivalents: 2.5 dozen, 5 half dozen
+      // Pantry has 1 dozen = 12 eggs (via equivalence ratio)
+      // After subtraction: 30 - 12 = 18 eggs, equivalents recomputed
+      shoppingList.addPantry(`[pantry]\neggs = "1%dozen"`);
 
       const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
       expect(eggs).toBeDefined();
-      // Unitless pantry (5) vs "dozen" unit — subtraction of unitless from
-      // unit-bearing quantity: first leaf (1 dozen) gets subtracted → clamped to 0.
-      // Remaining pantry (4) tries second leaf (1 half dozen) — if incompatible, stays.
-      expect(eggs!.quantityTotal).toMatchObject({
-        and: [
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 0 },
-            },
+      expect(eggs!.quantities).toEqual([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 18 },
           },
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 1 },
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1.5 },
+              },
+              unit: "dozen",
             },
-          },
-        ],
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
+              unit: "half dozen",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should remove ingredient when pantry fully covers via equivalence ratio", () => {
+      // Recipe: 24 eggs (= 2 dozen) AND 6 eggs (= 1 half dozen), total 30 eggs
+      // Pantry has 3 dozen = 36 eggs → exceeds recipe → ingredient removed
+      const recipe = new Recipe(
+        `Add @eggs{24|2%dozen} and @&eggs{6|1%half dozen}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe);
+      shoppingList.addPantry(`[pantry]\neggs = "3%dozen"`);
+
+      const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
+      expect(eggs).toBeDefined();
+      expect(eggs!.quantities).toBeUndefined();
+
+      // Pantry should have remainder: 3 dozen - 30/12 dozen = 3 - 2.5 = 0.5 dozen
+      let resultingPantry = shoppingList.getPantry();
+      let pantryEggs = resultingPantry!.findItem("eggs");
+      expect(pantryEggs).toBeDefined();
+      expect(pantryEggs!.quantity).toMatchObject({
+        type: "fixed",
+        value: { type: "decimal", decimal: 0.5 },
+      });
+
+      // Should also work the other way around
+      shoppingList.addPantry(`[pantry]\neggs = "40"`);
+      resultingPantry = shoppingList.getPantry();
+      pantryEggs = resultingPantry!.findItem("eggs");
+      expect(pantryEggs).toBeDefined();
+      expect(pantryEggs!.quantity).toMatchObject({
+        type: "fixed",
+        value: { type: "decimal", decimal: 10 },
       });
     });
 
@@ -1030,13 +1436,15 @@ sugar
       const flourBefore = shoppingList.ingredients.find(
         (i) => i.name === "flour",
       );
-      expect(flourBefore!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 700 },
+      expect(flourBefore!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 700 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
 
       // Now add pantry with 300g flour
       shoppingList.addPantry(`[pantry]\nflour = "300%g"`);
@@ -1044,13 +1452,15 @@ sugar
       const flourAfter = shoppingList.ingredients.find(
         (i) => i.name === "flour",
       );
-      expect(flourAfter!.quantityTotal).toMatchObject({
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 400 },
+      expect(flourAfter!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 400 },
+          },
+          unit: "g",
         },
-        unit: "g",
-      });
+      ]);
     });
 
     it("should subtract pantry from AND group — partial across leaves", () => {
@@ -1062,71 +1472,49 @@ sugar
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipe);
 
-      // Verify AND group structure
+      // Verify flat array structure (incompatible units stored as separate entries)
       const pepperBefore = shoppingList.ingredients.find(
         (i) => i.name === "pepper",
       );
-      expect(pepperBefore!.quantityTotal).toMatchObject({
-        and: [
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "text", text: "to taste" },
-            },
+      expect(pepperBefore!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "text", text: "to taste" },
           },
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 1 },
-            },
-            unit: "tsp",
+        },
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 1 },
           },
-        ],
-      });
+          unit: "tsp",
+        },
+      ]);
 
-      // Add pantry with 0.5 tsp pepper — should subtract from the tsp leaf
+      // Add pantry with 0.5 tsp pepper — should subtract from the tsp entry
       shoppingList.addPantry(`[pantry]\npepper = "0.5%tsp"`);
 
       const pepperAfter = shoppingList.ingredients.find(
         (i) => i.name === "pepper",
       );
-      // The tsp leaf should be reduced (1 - 0.5 = 0.5)
-      // The text leaf remains unchanged (incompatible with tsp)
-      expect(pepperAfter!.quantityTotal).toMatchObject({
-        and: [
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "text", text: "to taste" },
-            },
+      // The tsp entry should be reduced (1 - 0.5 = 0.5)
+      // The text entry remains unchanged (incompatible with tsp)
+      expect(pepperAfter!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "text", text: "to taste" },
           },
-          {
-            quantity: {
-              type: "fixed",
-            },
-            unit: "tsp",
+        },
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "fraction", num: 1, den: 2 },
           },
-        ],
-      });
-    });
-
-    it("should update pantry remainder correctly with group subtraction", () => {
-      const recipe = new Recipe(
-        `Season with @pepper{to taste} and @&pepper{1%tsp}.`,
-      );
-      const shoppingList = new ShoppingList();
-      shoppingList.addRecipe(recipe);
-      shoppingList.addPantry(`[pantry]\npepper = "3%tsp"`);
-
-      // Pantry had 3 tsp, recipe needs 1 tsp (text leaf is incompatible)
-      // → 2 tsp should remain in pantry
-      const resultingPantry = shoppingList.getPantry();
-      const pepper = resultingPantry!.findItem("pepper");
-      expect(pepper).toBeDefined();
-      expect(pepper!.quantity).toMatchObject({
-        type: "fixed",
-        value: { type: "decimal", decimal: 2 },
-      });
+          unit: "tsp",
+        },
+      ]);
     });
   });
 });
