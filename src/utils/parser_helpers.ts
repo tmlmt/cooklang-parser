@@ -269,6 +269,173 @@ export function parseQuantityInput(input_str: string): FixedValue | Range {
 }
 
 /**
+ * Parses a quantity string with unit separated by `%` (e.g. `"500%g"`).
+ * If no `%` is present, the entire string is treated as a value with no unit.
+ * @param input - The quantity string to parse.
+ * @returns An object with parsed `value` and optional `unit`.
+ */
+export function parseQuantityWithUnit(input: string): {
+  value: FixedValue | Range;
+  unit?: string;
+} {
+  const trimmed = input.trim();
+  const separatorIndex = trimmed.indexOf("%");
+  if (separatorIndex === -1) {
+    return { value: parseQuantityInput(trimmed) };
+  }
+  const valuePart = trimmed.slice(0, separatorIndex).trim();
+  const unitPart = trimmed.slice(separatorIndex + 1).trim();
+  return {
+    value: parseQuantityInput(valuePart),
+    unit: unitPart || undefined,
+  };
+}
+
+/**
+ * Parses a date string using a specific format pattern.
+ * The format must contain `DD`, `MM`, and `YYYY` separated by a single delimiter
+ * character (e.g. `.`, `/`, `-`).
+ *
+ * @param input - The date string to parse (e.g. `"05.06.2025"`).
+ * @param format - The format pattern (e.g. `"DD.MM.YYYY"`).
+ * @returns A Date object.
+ * @throws Error if the input doesn't match the format or produces an invalid date.
+ */
+export function parseDateFromFormat(input: string, format: string): Date {
+  // Extract delimiter from format (first non-letter character)
+  const delimiterMatch = format.match(/[^A-Za-z]/);
+  if (!delimiterMatch) {
+    throw new Error(`Invalid date format: ${format}. No delimiter found.`);
+  }
+  const delimiter = delimiterMatch[0];
+
+  const formatParts = format.split(delimiter);
+  const inputParts = input.trim().split(delimiter);
+
+  if (formatParts.length !== 3 || inputParts.length !== 3) {
+    throw new Error(
+      `Invalid date input "${input}" for format "${format}". Expected 3 parts.`,
+    );
+  }
+
+  let day = 0,
+    month = 0,
+    year = 0;
+
+  for (let i = 0; i < 3; i++) {
+    const token = formatParts[i]!.toUpperCase();
+    const value = parseInt(inputParts[i]!, 10);
+    if (isNaN(value)) {
+      throw new Error(
+        `Invalid date input "${input}": non-numeric part "${inputParts[i]}".`,
+      );
+    }
+    if (token === "DD") day = value;
+    else if (token === "MM") month = value;
+    else if (token === "YYYY") year = value;
+    else
+      throw new Error(
+        `Unknown token "${formatParts[i]}" in format "${format}"`,
+      );
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    throw new Error(`Invalid date: "${input}" does not form a valid date.`);
+  }
+  return date;
+}
+
+/**
+ * Disambiguates day and month from two numeric parts.
+ * Defaults to day-first (DD.MM), but if the second part \> 12
+ * it must be the day, so we swap to interpret as month-first (MM.DD).
+ */
+function disambiguateDayMonth(
+  first: number,
+  second: number,
+  year: number,
+): [day: number, month: number, year: number] {
+  // If the second part > 12, it must be the day → input was month-first
+  if (second > 12 && first <= 12) {
+    return [second, first, year];
+  }
+  // Otherwise default to day-first
+  return [first, second, year];
+}
+
+/**
+ * Parses a date string with fuzzy format detection.
+ *
+ * Supports delimiters `.`, `/`, `-`.
+ * - If the first part is a 4-digit year → `YYYY.MM.DD`
+ * - Otherwise defaults to `DD.MM.YYYY` (day first)
+ * - If the first part \> 12 it must be the day, confirming day-first
+ * - If the second part \> 12 it must be the day, meaning month-first input,
+ *   but we still default to day-first so this produces an error (invalid month)
+ *   unless the value is unambiguous
+ *
+ * @param input - The date string to parse.
+ * @returns A Date object.
+ * @throws Error if the input cannot be parsed as a valid date.
+ */
+export function parseFuzzyDate(input: string): Date {
+  const trimmed = input.trim();
+
+  // Detect delimiter
+  const delimiterMatch = trimmed.match(/[./-]/);
+  if (!delimiterMatch) {
+    throw new Error(`Cannot parse date "${input}": no delimiter found.`);
+  }
+  const delimiter = delimiterMatch[0];
+  const parts = trimmed.split(delimiter);
+  if (parts.length !== 3) {
+    throw new Error(
+      `Cannot parse date "${input}": expected 3 parts, got ${parts.length}.`,
+    );
+  }
+
+  const nums = parts.map((p) => parseInt(p, 10));
+  if (nums.some((n) => isNaN(n))) {
+    throw new Error(`Cannot parse date "${input}": non-numeric parts found.`);
+  }
+
+  let day: number, month: number, year: number;
+
+  // If first part is a 4-digit year (>= 1000), assume YYYY.MM.DD
+  if (nums[0]! >= 1000) {
+    year = nums[0]!;
+    month = nums[1]!;
+    day = nums[2]!;
+  }
+  // If last part is a 4-digit year, default to DD.MM.YYYY
+  else if (nums[2]! >= 1000) {
+    [day, month, year] = disambiguateDayMonth(nums[0]!, nums[1]!, nums[2]!);
+  }
+  // All short numbers — assume DD.MM.YY with 2-digit year
+  else {
+    if (nums[2]! >= 100)
+      throw new Error(`Invalid date: "${input}" does not form a valid date.`);
+    [day, month] = disambiguateDayMonth(nums[0]!, nums[1]!, 0);
+    year = 2000 + nums[2]!;
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    throw new Error(`Invalid date: "${input}" does not form a valid date.`);
+  }
+  return date;
+}
+
+/**
  * Parses markdown formatting in a text string and returns an array of TextItems.
  *
  * Supported syntax:

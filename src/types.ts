@@ -745,6 +745,53 @@ export interface ProductOptionToml {
 }
 
 /**
+ * Represents a pantry item entry in the TOML file.
+ * Can be a simple quantity string (e.g. `"500%g"`) or an object with details.
+ * @category Types
+ */
+export type PantryItemToml =
+  | string
+  | {
+      quantity?: string;
+      bought?: string;
+      expire?: string;
+      low?: string;
+    };
+
+/**
+ * Represents a parsed pantry item.
+ * @category Types
+ */
+export interface PantryItem {
+  /** The name of the item. */
+  name: string;
+  /** The storage location (TOML section name, e.g. "freezer", "fridge"). */
+  location: string;
+  /** The quantity value of the item. */
+  quantity?: FixedValue | Range;
+  /** The unit of the item's quantity. */
+  unit?: string;
+  /** The date when the item was purchased. */
+  bought?: Date;
+  /** The expiration date of the item. */
+  expire?: Date;
+  /** The low stock threshold value. */
+  low?: FixedValue | Range;
+  /** The unit of the low stock threshold. */
+  lowUnit?: string;
+}
+
+/**
+ * Options for configuring a {@link Pantry}.
+ * @category Types
+ */
+export interface PantryOptions {
+  /** Date format pattern for parsing date strings (e.g. `"DD.MM.YYYY"`, `"MM/DD/YYYY"`, `"YYYY-MM-DD"`).
+   * If not provided, dates are parsed with fuzzy detection defaulting to day-first when ambiguous. */
+  dateFormat?: string;
+}
+
+/**
  * Represents a product selection in a {@link ShoppingCart}
  * @category Types
  */

@@ -49,3 +49,45 @@ shoppingList.setCategoryConfig(myConfig)
 ### Categorizing according to the category configuration
 
 This is done automatically each time you add or remove a recipe.
+
+## Optional: Pantry
+
+You can provide a [Pantry](/api/classes/Pantry) to the [ShoppingList](/api/classes/ShoppingList) so that on-hand pantry quantities are automatically subtracted from ingredient needs. The original pantry is never mutated — instead, a resulting pantry is recomputed on every recalculation.
+
+### Adding a pantry
+
+Use [`addPantry()`](/api/classes/ShoppingList.html#addPantry) with either a `Pantry` instance or a raw TOML string:
+
+```typescript
+import { Pantry, ShoppingList } from "@tmlmt/cooklang-parser";
+
+const shoppingList = new ShoppingList();
+shoppingList.addRecipe(myRecipe);
+
+// From a TOML string
+shoppingList.addPantry(`
+[pantry]
+flour = "500%g"
+eggs = "6"
+`);
+
+// Or from a Pantry instance
+const pantry = new Pantry(tomlString);
+shoppingList.addPantry(pantry);
+```
+
+When a pantry is set, ingredient quantities in the shopping list are reduced by the corresponding pantry amounts. For example, if a recipe needs 200 g of flour and the pantry has 500 g, the shopping list will show 0 g of flour needed.
+
+### Getting the resulting pantry
+
+After recipes have been added, you can retrieve the resulting pantry — reflecting what remains after recipe needs have been subtracted — with [`getPantry()`](/api/classes/ShoppingList.html#getPantry):
+
+```typescript
+const resultingPantry = shoppingList.getPantry();
+if (resultingPantry) {
+  const flour = resultingPantry.findItem("flour");
+  console.log(flour?.quantity); // remaining quantity after subtraction
+}
+```
+
+If no pantry has been set, `getPantry()` returns `undefined`.

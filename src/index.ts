@@ -1,6 +1,7 @@
 // Classes
 
 import { CategoryConfig } from "./classes/category_config";
+import { Pantry } from "./classes/pantry";
 import { ProductCatalog } from "./classes/product_catalog";
 import { Recipe } from "./classes/recipe";
 import { ShoppingList } from "./classes/shopping_list";
@@ -13,6 +14,7 @@ import { Section } from "./classes/section";
 
 export {
   CategoryConfig,
+  Pantry,
   ProductCatalog,
   Recipe,
   ShoppingList,
@@ -100,6 +102,9 @@ import type {
   RecipeWithServings,
   CategoryIngredient,
   Category,
+  PantryItem,
+  PantryItemToml,
+  PantryOptions,
   ProductOptionBase,
   ProductOptionCore,
   ProductOption,
@@ -184,6 +189,9 @@ export {
   RecipeWithServings,
   CategoryIngredient,
   Category,
+  PantryItem,
+  PantryItemToml,
+  PantryOptions,
   ProductOptionBase,
   ProductOptionCore,
   ProductOption,

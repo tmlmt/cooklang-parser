@@ -4,6 +4,7 @@ import {
   extendAllUnits,
   addQuantityValues,
   addQuantities,
+  subtractQuantities,
   getDefaultQuantityValue,
   normalizeAllUnits,
   convertQuantityToSystem,
@@ -1344,6 +1345,103 @@ describe("applyBestUnit", () => {
       type: "range",
       min: { type: "decimal", decimal: 0.5 },
       max: { type: "decimal", decimal: 1.5 },
+    });
+  });
+});
+
+describe("subtractQuantities", () => {
+  it("should subtract two quantities with the same unit", () => {
+    const q1: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+      unit: { name: "g" },
+    };
+    const q2: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+      unit: { name: "g" },
+    };
+    const result = subtractQuantities(q1, q2);
+    expect(result.quantity).toMatchObject<FixedValue>({
+      type: "fixed",
+      value: { type: "decimal", decimal: 300 },
+    });
+  });
+
+  it("should clamp to zero when result would be negative (default)", () => {
+    const q1: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+      unit: { name: "g" },
+    };
+    const q2: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+      unit: { name: "g" },
+    };
+    const result = subtractQuantities(q1, q2);
+    expect(result.quantity).toMatchObject<FixedValue>({
+      type: "fixed",
+      value: { type: "decimal", decimal: 0 },
+    });
+  });
+
+  it("should allow negative when clampToZero is false", () => {
+    const q1: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+      unit: { name: "g" },
+    };
+    const q2: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+      unit: { name: "g" },
+    };
+    const result = subtractQuantities(q1, q2, { clampToZero: false });
+    // addQuantities may convert to a best unit; just check it's negative
+    expect(result.quantity.type).toBe("fixed");
+    if (
+      result.quantity.type === "fixed" &&
+      result.quantity.value.type === "decimal"
+    ) {
+      expect(result.quantity.value.decimal).toBeLessThan(0);
+    }
+  });
+
+  it("should handle unit conversion (kg - g)", () => {
+    const q1: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "kg" },
+    };
+    const q2: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+      unit: { name: "g" },
+    };
+    const result = subtractQuantities(q1, q2);
+    expect(result.quantity).toMatchObject<FixedValue>({
+      type: "fixed",
+      value: { type: "decimal", decimal: 800 },
+    });
+    expect(result.unit?.name).toBe("g");
+  });
+
+  it("should throw for incompatible units", () => {
+    const q1: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+      unit: { name: "g" },
+    };
+    const q2: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "L" },
+    };
+    expect(() => subtractQuantities(q1, q2)).toThrow(IncompatibleUnitsError);
+  });
+
+  it("should handle unitless quantities", () => {
+    const q1: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+    };
+    const q2: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+    };
+    const result = subtractQuantities(q1, q2);
+    expect(result.quantity).toMatchObject<FixedValue>({
+      type: "fixed",
+      value: { type: "decimal", decimal: 3 },
     });
   });
 });
