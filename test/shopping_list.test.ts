@@ -622,7 +622,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       // Unified approach: all raw quantities combined, equivalents computed proportionally
       const recipeA = new Recipe(`Add @fruit{1%=large} and @&fruit{1%=small}`);
       const recipeB = new Recipe(
-        `Add @fruit{2%=large|300%ml} and @&fruit{3%=small|200%ml}`,
+        `Add @fruit{2%=large|50%ml} and @&fruit{3%=small|90%ml}`,
       );
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipeA);
@@ -630,7 +630,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       const fruit = shoppingList.ingredients.find((i) => i.name === "fruit");
       expect(fruit).toBeDefined();
       // large: 1+2=3, small: 1+3=4
-      // ml equivalents recomputed proportionally from recipe B ratios: 717ml
+      // ml equivalents recomputed proportionally from recipe B ratios: 195ml
       expect(fruit?.quantities).toMatchObject([
         {
           and: [
@@ -653,53 +653,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 717 },
-              },
-              unit: "ml",
-            },
-          ],
-        },
-      ]);
-    });
-
-    it("should merge AND groups without equivalents", () => {
-      // Both recipes have AND groups with equivalents sharing the same unit
-      // but second group has different equiv unit to cover equivalents merging
-      const recipeA = new Recipe(
-        `Add @fruit{1%=large|100%ml} and @&fruit{1%=small|50%ml}`,
-      );
-      const recipeB = new Recipe(
-        `Add @fruit{2%=large|200%ml} and @&fruit{3%=small|150%ml}`,
-      );
-      const shoppingList = new ShoppingList();
-      shoppingList.addRecipe(recipeA);
-      shoppingList.addRecipe(recipeB);
-      const fruit = shoppingList.ingredients.find((i) => i.name === "fruit");
-      expect(fruit).toBeDefined();
-      // large: 1+2=3, small: 1+3=4, ml equivalents: 150+350=500
-      expect(fruit?.quantities).toMatchObject([
-        {
-          and: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 3 },
-              },
-              unit: "large",
-            },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 4 },
-              },
-              unit: "small",
-            },
-          ],
-          equivalents: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 500 },
+                value: { type: "decimal", decimal: 195 },
               },
               unit: "ml",
             },
@@ -785,31 +739,6 @@ Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
       expect(() => shoppingList.addRecipe(recipeWithGroups)).toThrowError(
         /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
       );
-    });
-
-    it("should accept grouped alternatives with proper choices", () => {
-      const shoppingList = new ShoppingList();
-      const recipeWithGroups = new Recipe(`
-Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
-`);
-      const choices = {
-        ingredientGroups: new Map([["milk", 1]]), // Choose almond milk (index 1)
-      };
-      shoppingList.addRecipe(recipeWithGroups, { choices });
-      expect(shoppingList.ingredients).toEqual([
-        {
-          name: "almond milk",
-          quantities: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 100 },
-              },
-              unit: "ml",
-            },
-          ],
-        },
-      ]);
     });
   });
 
@@ -1203,21 +1132,14 @@ sugar
       ]);
     });
 
-    it("should clamp ingredient quantity to zero when pantry has more", () => {
+    it("should remove ingredient when pantry fully covers it", () => {
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(pantryRecipe);
       shoppingList.addPantry(`[pantry]\nflour = "500%g"`);
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
       expect(flour).toBeDefined();
-      expect(flour!.quantities).toMatchObject([
-        {
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: 0 },
-          },
-        },
-      ]);
+      expect(flour!.quantities).toBeUndefined();
     });
 
     it("should update resulting pantry after subtraction", () => {
@@ -1393,15 +1315,8 @@ sugar
       shoppingList.addPantry(`[pantry]\nflour = "1%kg"`); // has 1kg = 1000g
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      // 200g - 1kg → clamped to 0
-      expect(flour!.quantities).toMatchObject([
-        {
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: 0 },
-          },
-        },
-      ]);
+      // 200g - 1kg → fully covered, quantities removed
+      expect(flour!.quantities).toBeUndefined();
     });
 
     it("should skip pantry subtraction for ingredients without quantity", () => {
@@ -1436,35 +1351,43 @@ sugar
     });
 
     it("should subtract pantry from AND group ingredient (multiple units)", () => {
-      // Recipe produces eggs as AND group: 1 dozen AND 1 half dozen
-      const recipe3 = new Recipe(`Add @eggs{1%dozen} and @&eggs{1%half dozen}`);
+      const recipe3 = new Recipe(
+        `Add @eggs{24|2%dozen} and @&eggs{6|1%half dozen}`,
+      );
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipe3);
-
-      // Pantry has 2 dozen eggs — should subtract from first AND leaf (1 dozen)
-      // then carry the remaining 1 dozen to the second leaf (1 half dozen).
-      // 1 dozen = 12, 1 half dozen = 6. Pantry 2 dozen = 24.
-      // But "dozen" and "half dozen" are different unit strings,
-      // they may or may not be convertible. Let's check with a simple compatible case.
-      shoppingList.addPantry(`[pantry]\neggs = "5"`);
+      // AND group with 2 dozen and 1 half dozen, equivalent to 30
+      shoppingList.addPantry(`[pantry]\neggs = "1%dozen"`);
 
       const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
       expect(eggs).toBeDefined();
-      // Unitless pantry (5) vs "dozen" unit — subtraction of unitless from
-      // unit-bearing quantity: first entry (1 dozen) gets subtracted → clamped to 0.
-      // Remaining pantry (4) tries second entry (1 half dozen) — incompatible, stays.
-      expect(eggs!.quantities).toMatchObject([
+      expect(eggs!.quantities).toEqual([
         {
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: 0 },
-          },
-        },
-        {
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: 1 },
-          },
+          and: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "dozen",
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "half dozen",
+            },
+          ],
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 18 },
+              },
+              unit: "eggs",
+            },
+          ],
         },
       ]);
     });

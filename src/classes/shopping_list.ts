@@ -316,9 +316,20 @@ export class ShoppingList {
       }
 
       // Remove empty AND groups (all leaves were zero)
-      ingredient.quantities = ingredient.quantities.filter(
-        (entry) => !("and" in entry) || entry.and.length > 0,
-      );
+      // and remove zero-valued simple entries
+      ingredient.quantities = ingredient.quantities.filter((entry) => {
+        if ("and" in entry) return entry.and.length > 0;
+        return !(
+          entry.quantity.type === "fixed" &&
+          entry.quantity.value.type === "decimal" &&
+          entry.quantity.value.decimal === 0
+        );
+      });
+
+      // Remove ingredient entirely if all quantities were zeroed out
+      if (ingredient.quantities.length === 0) {
+        ingredient.quantities = undefined;
+      }
 
       pantryItem.quantity = pantryExtended.quantity;
       /* v8 ignore else -- @preserve */
