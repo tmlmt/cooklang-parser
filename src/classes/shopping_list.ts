@@ -24,6 +24,7 @@ import {
 } from "../quantities/mutations";
 import { getAverageValue } from "../quantities/numeric";
 import { deepClone } from "../utils/general";
+import { NO_UNIT } from "../units/definitions";
 import type { QuantityWithUnitDef } from "../types";
 
 /**
@@ -258,6 +259,65 @@ export class ShoppingList {
         for (const leaf of leaves) {
           const ingredientExtended = toExtendedUnit(leaf);
 
+          // When one side is unitless and the other has a unit,
+          // addQuantities adopts the other's unit (Case 2), which is wrong
+          // for pantry subtraction. Use equivalence ratios to convert instead.
+          const leafHasUnit = leaf.unit !== undefined && leaf.unit !== "";
+          const pantryHasUnit =
+            pantryExtended.unit !== undefined &&
+            pantryExtended.unit.name !== "";
+          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          const unitMismatch =
+            leafHasUnit !== pantryHasUnit && ratioMap !== undefined;
+
+          if (unitMismatch) {
+            const leafUnit = leaf.unit ?? NO_UNIT;
+            const pantryUnit = pantryExtended.unit?.name ?? NO_UNIT;
+            const ratioFromPantry = ratioMap[leafUnit]?.[pantryUnit];
+            if (ratioFromPantry !== undefined) {
+              const pantryValue = getAverageValue(pantryExtended.quantity);
+              const leafValue = getAverageValue(ingredientExtended.quantity);
+              if (
+                typeof pantryValue === "number" &&
+                typeof leafValue === "number"
+              ) {
+                const pantryInLeafUnits = pantryValue * ratioFromPantry;
+                const subtracted = Math.min(pantryInLeafUnits, leafValue);
+                const remainingLeafValue = Math.max(
+                  leafValue - pantryInLeafUnits,
+                  0,
+                );
+
+                // Write back the remaining value into the leaf
+                leaf.quantity = {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: remainingLeafValue },
+                };
+
+                // Update pantry remainder: convert consumed back to pantry units
+                const consumedInPantryUnits =
+                  ratioFromPantry !== 0
+                    ? subtracted / ratioFromPantry
+                    : pantryValue;
+                const remainingPantryValue = Math.max(
+                  pantryValue - consumedInPantryUnits,
+                  0,
+                );
+                pantryExtended = {
+                  quantity: {
+                    type: "fixed",
+                    value: {
+                      type: "decimal",
+                      decimal: remainingPantryValue,
+                    },
+                  },
+                  ...(pantryExtended.unit && { unit: pantryExtended.unit }),
+                };
+                continue;
+              }
+            }
+          }
+
           try {
             const remaining = subtractQuantities(
               ingredientExtended,
@@ -265,18 +325,20 @@ export class ShoppingList {
               { clampToZero: true },
             );
 
-            // Write back into the leaf in-place
-            const updated = toPlainUnit(remaining) as QuantityWithPlainUnit;
-            leaf.quantity = updated.quantity;
-            leaf.unit = updated.unit;
-
             // Update the pantry remainder: subtract what was consumed
+            // Must happen before writing back into leaf, since toExtendedUnit
+            // may return the same object reference for unitless quantities
             const consumed = subtractQuantities(
               pantryExtended,
               ingredientExtended,
               { clampToZero: true },
             );
             pantryExtended = consumed;
+
+            // Write back into the leaf in-place
+            const updated = toPlainUnit(remaining) as QuantityWithPlainUnit;
+            leaf.quantity = updated.quantity;
+            leaf.unit = updated.unit;
           } catch {
             // Incompatible units — skip subtraction for this leaf
           }
@@ -294,8 +356,9 @@ export class ShoppingList {
           entry.and.push(...nonZero);
           // Recompute equivalents from updated primaries using stored ratios
           const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          // v8 ignore else --@preserve: defensive type guard
           if (entry.equivalents && ratioMap) {
-            const equivUnits = entry.equivalents.map((e) => e.unit ?? "");
+            const equivUnits = entry.equivalents.map((e) => e.unit ?? NO_UNIT);
             entry.equivalents = ShoppingList.recomputeEquivalents(
               entry.and,
               ratioMap,
@@ -303,6 +366,7 @@ export class ShoppingList {
             );
           }
           // Collapse single-leaf AND group to a plain IngredientQuantityGroup
+          // v8 ignore else --@preserve: defensive type guard
           if (entry.and.length === 1) {
             const single = entry.and[0]!;
             ingredient.quantities[i] = {
@@ -311,6 +375,22 @@ export class ShoppingList {
               ...(entry.equivalents && { equivalents: entry.equivalents }),
               ...(entry.alternatives && { alternatives: entry.alternatives }),
             };
+          }
+        } else if ("equivalents" in entry && entry.equivalents) {
+          // Recompute equivalents for plain entries with equivalents
+          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          // v8 ignore else --@preserve: defensive type guard
+          if (ratioMap) {
+            const equivUnits = entry.equivalents.map(
+              (e: QuantityWithPlainUnit) => e.unit ?? NO_UNIT,
+            );
+            const recomputed = ShoppingList.recomputeEquivalents(
+              [entry as QuantityWithPlainUnit],
+              ratioMap,
+              equivUnits,
+            );
+            (entry as { equivalents?: QuantityWithPlainUnit[] }).equivalents =
+              recomputed;
           }
         }
       }
@@ -353,12 +433,12 @@ export class ShoppingList {
     const ratioMap: EquivalenceRatioMap = {};
     for (const list of unitsLists) {
       for (const equiv of list) {
-        const equivValue = getAverageValue(equiv.quantity);
-        if (typeof equivValue === "string") continue;
+        // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
+        const equivValue = getAverageValue(equiv.quantity) as number;
         for (const primary of list) {
           if (primary === equiv) continue;
-          const primaryValue = getAverageValue(primary.quantity);
-          if (typeof primaryValue === "string" || primaryValue === 0) continue;
+          // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
+          const primaryValue = getAverageValue(primary.quantity) as number;
           const equivUnit = equiv.unit.name;
           const primaryUnit = primary.unit.name;
           ratioMap[equivUnit] ??= {};
@@ -382,16 +462,14 @@ export class ShoppingList {
     const equivalents: QuantityWithPlainUnit[] = [];
 
     for (const equivUnit of equivUnits) {
-      const ratios = ratioMap[equivUnit];
-      if (!ratios) continue;
+      const ratios = ratioMap[equivUnit]!;
 
       let total = 0;
       for (const primary of primaries) {
-        const pUnit = primary.unit ?? "";
-        const ratio = ratios[pUnit];
-        if (ratio === undefined) continue;
-        const pValue = getAverageValue(primary.quantity);
-        if (typeof pValue === "string") continue;
+        const pUnit = primary.unit ?? NO_UNIT;
+        // In equivalent unit lists, ratios and pvalues are always defined, and are numbers
+        const ratio = ratios[pUnit]!;
+        const pValue = getAverageValue(primary.quantity) as number;
         total += pValue * ratio;
       }
 
@@ -473,6 +551,7 @@ export class ShoppingList {
 
     // Check for grouped alternatives without choices
     for (const groupId of recipe.choices.ingredientGroups.keys()) {
+      // v8 ignore else -- @preserve: detection if
       if (!choices?.ingredientGroups?.has(groupId)) {
         missingGroups.push(groupId);
       }

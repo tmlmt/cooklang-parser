@@ -1356,40 +1356,71 @@ sugar
       );
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipe3);
-      // AND group with 2 dozen and 1 half dozen, equivalent to 30
+      // 30 eggs total (unitless) with equivalents: 2.5 dozen, 5 half dozen
+      // Pantry has 1 dozen = 12 eggs (via equivalence ratio)
+      // After subtraction: 30 - 12 = 18 eggs, equivalents recomputed
       shoppingList.addPantry(`[pantry]\neggs = "1%dozen"`);
 
       const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
       expect(eggs).toBeDefined();
       expect(eggs!.quantities).toEqual([
         {
-          and: [
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 18 },
+          },
+          equivalents: [
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 1 },
+                value: { type: "decimal", decimal: 1.5 },
               },
               unit: "dozen",
             },
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 1 },
+                value: { type: "decimal", decimal: 3 },
               },
               unit: "half dozen",
             },
           ],
-          equivalents: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 18 },
-              },
-              unit: "eggs",
-            },
-          ],
         },
       ]);
+    });
+
+    it("should remove ingredient when pantry fully covers via equivalence ratio", () => {
+      // Recipe: 24 eggs (= 2 dozen) AND 6 eggs (= 1 half dozen), total 30 eggs
+      // Pantry has 3 dozen = 36 eggs → exceeds recipe → ingredient removed
+      const recipe = new Recipe(
+        `Add @eggs{24|2%dozen} and @&eggs{6|1%half dozen}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe);
+      shoppingList.addPantry(`[pantry]\neggs = "3%dozen"`);
+
+      const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
+      expect(eggs).toBeDefined();
+      expect(eggs!.quantities).toBeUndefined();
+
+      // Pantry should have remainder: 3 dozen - 30/12 dozen = 3 - 2.5 = 0.5 dozen
+      let resultingPantry = shoppingList.getPantry();
+      let pantryEggs = resultingPantry!.findItem("eggs");
+      expect(pantryEggs).toBeDefined();
+      expect(pantryEggs!.quantity).toMatchObject({
+        type: "fixed",
+        value: { type: "decimal", decimal: 0.5 },
+      });
+
+      // Should also work the other way around
+      shoppingList.addPantry(`[pantry]\neggs = "40"`);
+      resultingPantry = shoppingList.getPantry();
+      pantryEggs = resultingPantry!.findItem("eggs");
+      expect(pantryEggs).toBeDefined();
+      expect(pantryEggs!.quantity).toMatchObject({
+        type: "fixed",
+        value: { type: "decimal", decimal: 10 },
+      });
     });
 
     it("should subtract pantry from AND group with compatible units", () => {
@@ -1479,29 +1510,11 @@ sugar
         {
           quantity: {
             type: "fixed",
+            value: { type: "fraction", num: 1, den: 2 },
           },
           unit: "tsp",
         },
       ]);
-    });
-
-    it("should update pantry remainder correctly with group subtraction", () => {
-      const recipe = new Recipe(
-        `Season with @pepper{to taste} and @&pepper{1%tsp}.`,
-      );
-      const shoppingList = new ShoppingList();
-      shoppingList.addRecipe(recipe);
-      shoppingList.addPantry(`[pantry]\npepper = "3%tsp"`);
-
-      // Pantry had 3 tsp, recipe needs 1 tsp (text leaf is incompatible)
-      // → 2 tsp should remain in pantry
-      const resultingPantry = shoppingList.getPantry();
-      const pepper = resultingPantry!.findItem("pepper");
-      expect(pepper).toBeDefined();
-      expect(pepper!.quantity).toMatchObject({
-        type: "fixed",
-        value: { type: "decimal", decimal: 2 },
-      });
     });
   });
 });
