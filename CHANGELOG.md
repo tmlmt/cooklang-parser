@@ -1,5 +1,33 @@
 # Changelog
 
+## v3.0.0-alpha.15
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.14...v3.0.0-alpha.15)
+
+#### ⚠️ Breaking Changes
+
+- New type structure for shopping list ingredients (AddedIngredient), aligned with that of recipe ingredients (Ingredient)
+
+### 🚀 Enhancements
+
+- Add pantry inventory management with recipe integration ([#98](https://github.com/tmlmt/cooklang-parser/pull/98))
+
+### 🩹 Fixes
+
+- **flattenPlainUnitGroup:** Do not mix standalone quantities and quantities from OR group ([#101](https://github.com/tmlmt/cooklang-parser/pull/101))
+
+### 💅 Refactors
+
+- **shoppingList:** ⚠️ Harmonize ingredients quantities between Ingredient and AddedIngredient ([#99](https://github.com/tmlmt/cooklang-parser/pull/99))
+
+### 🏡 Chore
+
+- **alternatives:** Remove useless variable expansion ([#100](https://github.com/tmlmt/cooklang-parser/pull/100))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.14
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.13...v3.0.0-alpha.14)
