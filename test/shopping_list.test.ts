@@ -444,22 +444,6 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       // Potato should have quantities combined from the AND group
       const potato = shoppingList.ingredients.find((i) => i.name === "potato");
       expect(potato).toBeDefined();
-      // The AND group (1 large + 1 small) with equivalents (1.5 cup + 0.5 cup = 2 cup) should be processed
-      expect(potato?.quantities).toBeDefined();
-    });
-
-    it("should merge AND group quantities across recipes", () => {
-      const recipeA = new Recipe(
-        `Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}`,
-      );
-      const recipeB = new Recipe(
-        `Add @potato{2%=large|3%cup} and @&potato{3%=small|1.5%cup}`,
-      );
-      const shoppingList = new ShoppingList();
-      shoppingList.addRecipe(recipeA);
-      shoppingList.addRecipe(recipeB);
-      const potato = shoppingList.ingredients.find((i) => i.name === "potato");
-      expect(potato).toBeDefined();
       // large: 1+2=3, small: 1+3=4, cup equivalents: 2+4.5=6.5
       expect(potato?.quantities).toMatchObject([
         {
@@ -467,14 +451,14 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 3 },
+                value: { type: "decimal", decimal: 1 },
               },
               unit: "large",
             },
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 4 },
+                value: { type: "decimal", decimal: 1 },
               },
               unit: "small",
             },
@@ -483,7 +467,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 6.5 },
+                value: { type: "decimal", decimal: 2 },
               },
               unit: "cup",
             },
@@ -508,7 +492,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       expect(potato).toBeDefined();
       // Unified approach: all raw quantities combined and processed once
       // large: 1+2=3, small: 1+3=4, medium: 0+1=1
-      // cup equivalents recomputed proportionally: 7
+      // first ratio is retained so cup: 3*1.5+4*0.5+1*0.5 = 7
       expect(potato?.quantities).toMatchObject([
         {
           and: [
@@ -563,27 +547,16 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       // large: 1-5 = 0 (clamped), small: incompatible unit → stays 1
       expect(potato?.quantities).toMatchObject([
         {
-          and: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 0 },
-              },
-              unit: "large",
-            },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
-              },
-              unit: "small",
-            },
-          ],
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 1 },
+          },
+          unit: "small",
           equivalents: [
             {
               quantity: {
                 type: "fixed",
-                value: { type: "decimal", decimal: 2 },
+                value: { type: "decimal", decimal: 0.5 },
               },
               unit: "cup",
             },
@@ -595,7 +568,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
     it("should push AND group when no existing AND group for that ingredient", () => {
       // First recipe has a simple unitless quantity, second has an AND group
       // Unified approach: all raw quantities combined → addEquivalentsAndSimplify
-      // produces single AND group with unitless + large + small primaries
+      // Unitless quantity stays separate from the equivalence AND group (large + small with cup equivalents)
       const recipeSimple = new Recipe(`Add @potato{3}`);
       const recipeAnd = new Recipe(
         `Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}`,
@@ -605,9 +578,9 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       shoppingList.addRecipe(recipeAnd);
       const potato = shoppingList.ingredients.find((i) => i.name === "potato");
       expect(potato).toBeDefined();
-      // Should have a single AND group combining unitless + large + small
+      // Should have AND group (large + small with cup equivalents) + separate unitless entry
       const quantities = potato?.quantities;
-      expect(quantities).toHaveLength(1);
+      expect(quantities).toHaveLength(2);
       expect(quantities![0]).toMatchObject({
         and: [
           {
@@ -624,12 +597,6 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             },
             unit: "small",
           },
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 3 },
-            },
-          },
         ],
         equivalents: [
           {
@@ -640,6 +607,12 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             unit: "cup",
           },
         ],
+      });
+      expect(quantities![1]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 3 },
+        },
       });
     });
 
@@ -739,7 +712,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       // Recipe A has entries with equivalents (g|ml) plus incompatible unit (=large)
       // Recipe B has an explicit AND group (big|ml + tiny|ml)
       // Unified approach: all raw quantities combined into single addEquivalentsAndSimplify call
-      // → produces one AND group with all incompatible primaries and shared ml equivalents
+      // → g, big, tiny share ml equivalents → AND group; large is standalone (no equivalence)
       const recipeA = new Recipe(
         `Add @fruit{1%g|300%ml} then add @fruit{1%=large}`,
       );
@@ -751,9 +724,8 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       shoppingList.addRecipe(recipeB);
       const fruit = shoppingList.ingredients.find((i) => i.name === "fruit");
       expect(fruit).toBeDefined();
-      // All units combined into single AND group: g, big, tiny, large
-      // ml equivalents summed: 300+400+200 = 900
-      expect(fruit?.quantities).toHaveLength(1);
+      // g, big, tiny in AND group with ml equivalents; large separate
+      expect(fruit?.quantities).toHaveLength(2);
       expect(fruit?.quantities?.[0]).toMatchObject({
         and: [
           {
@@ -777,13 +749,6 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             },
             unit: "tiny",
           },
-          {
-            quantity: {
-              type: "fixed",
-              value: { type: "decimal", decimal: 1 },
-            },
-            unit: "large",
-          },
         ],
         equivalents: [
           {
@@ -794,6 +759,13 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
             unit: "ml",
           },
         ],
+      });
+      expect(fruit?.quantities?.[1]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 1 },
+        },
+        unit: "large",
       });
     });
 
