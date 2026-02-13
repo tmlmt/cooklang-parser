@@ -1237,6 +1237,86 @@ describe("flattenPlainUnitGroup", () => {
       },
     ]);
   });
+
+  it("should keep unitless entry separate from AND group with equivalents", () => {
+    // Input from addEquivalentsAndSimplify when combining unitless + OR groups:
+    // { and: [{ or: [{ and: [large, small] }, cup] }, unitless_3] }
+    // The unitless entry should NOT be merged into the AND group with equivalents
+    const input = {
+      and: [
+        {
+          or: [
+            {
+              and: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: "large",
+                },
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 1 },
+                  },
+                  unit: "small",
+                },
+              ],
+            },
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "cup",
+            },
+          ],
+        },
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 3 },
+          },
+        },
+      ],
+    } as unknown as FlatAndGroup<QuantityWithPlainUnit>;
+    expect(flattenPlainUnitGroup(input)).toEqual([
+      {
+        and: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "large",
+          },
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "small",
+          },
+        ],
+        equivalents: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
+            },
+            unit: "cup",
+          },
+        ],
+      },
+      {
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 3 },
+        },
+      },
+    ]);
+  });
 });
 
 describe("applyBestUnit", () => {
