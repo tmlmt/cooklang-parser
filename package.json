@@ -38,15 +38,15 @@
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
-    "@eslint/compat": "2.0.2",
-    "@eslint/js": "9.39.2",
+    "@eslint/compat": "2.0.3",
+    "@eslint/js": "10.0.1",
     "@iconify-json/material-symbols": "1.2.54",
     "@types/big.js": "6.2.2",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.19.0",
     "@vitest/coverage-v8": "4.0.18",
     "@vitest/ui": "4.0.18",
-    "eslint": "9.39.2",
+    "eslint": "10.0.3",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-tsdoc": "0.5.0",
     "execa": "9.6.1",
@@ -59,7 +59,7 @@
     "typedoc-plugin-markdown": "4.10.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.54.0",
+    "typescript-eslint": "8.57.0",
     "vitepress": "2.0.0-alpha.15",
     "vitest": "4.0.18",
     "vue": "3.5.28"
