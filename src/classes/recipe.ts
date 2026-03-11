@@ -692,8 +692,8 @@ export class Recipe {
 
           // Determine selection state
           let selectedAltIndex = 0;
-          let isSelected = false;
-          let hasExplicitChoice = false;
+          let isSelected: boolean;
+          let hasExplicitChoice: boolean;
 
           if (isGrouped) {
             const groupChoice = choices?.ingredientGroups?.get(item.group!);
