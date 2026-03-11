@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.17
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.16...v3.0.0-alpha.17)
+
+### 🚀 Enhancements
+
+- Allow grouped alternatives to replace multiple ingredients at once ([62feff4](https://github.com/tmlmt/cooklang-parser/commit/62feff4))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.16
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.15...v3.0.0-alpha.16)
