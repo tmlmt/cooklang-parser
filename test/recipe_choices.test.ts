@@ -4,6 +4,7 @@ import {
   recipeWithComplexAlternatives,
   recipeWithGroupedAlternatives,
   recipeWithInlineAlternatives,
+  recipeWithSubgroupAlternatives,
 } from "./fixtures/recipes";
 import { RecipeChoices, Section, Step } from "../src";
 
@@ -358,6 +359,110 @@ Add @potato{1%=large|1.5%cup}|carrot{1%large} and @&potato{1%=small|0.5%cup}|&ca
           ],
         },
       ],
+    });
+  });
+
+  describe("subgroup alternatives", () => {
+    it("selects the first subgroup (multiple bound ingredients) by default", () => {
+      const recipe = new Recipe(recipeWithSubgroupAlternatives);
+      const ingredients = recipe.getIngredientQuantities();
+      // Default (index 0) selects subgroup "1": milk + sugar
+      const milk = ingredients.find((ing) => ing.name === "milk");
+      expect(milk?.usedAsPrimary).toBe(true);
+      expect(milk?.quantities).toBeDefined();
+      expect(milk?.quantities?.[0]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 1 },
+        },
+        unit: "L",
+      });
+
+      const sugar = ingredients.find((ing) => ing.name === "sugar");
+      expect(sugar?.usedAsPrimary).toBe(true);
+      expect(sugar?.quantities).toBeDefined();
+      expect(sugar?.quantities?.[0]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 1 },
+        },
+        unit: "tsp",
+      });
+
+      // Non-selected ingredients should not have quantities or usedAsPrimary
+      const oatMilk = ingredients.find((ing) => ing.name === "oat milk");
+      expect(oatMilk?.usedAsPrimary).toBeUndefined();
+      expect(oatMilk?.quantities).toBeUndefined();
+    });
+
+    it("selects a multi-ingredient subgroup with explicit choice", () => {
+      const recipe = new Recipe(recipeWithSubgroupAlternatives);
+      // Choose subgroup index 1 (subgroup "2"): oat milk + honey
+      const choices: RecipeChoices = {
+        ingredientGroups: new Map([["sweetener", 1]]),
+      };
+      const ingredients = recipe.getIngredientQuantities({ choices });
+
+      const oatMilk = ingredients.find((ing) => ing.name === "oat milk");
+      expect(oatMilk?.usedAsPrimary).toBe(true);
+      expect(oatMilk?.quantities).toBeDefined();
+
+      const honey = ingredients.find((ing) => ing.name === "honey");
+      expect(honey?.usedAsPrimary).toBe(true);
+      expect(honey?.quantities).toBeDefined();
+
+      // Others should not be selected
+      const milk = ingredients.find((ing) => ing.name === "milk");
+      expect(milk?.usedAsPrimary).toBeUndefined();
+      expect(milk?.quantities).toBeUndefined();
+    });
+
+    it("selects a single-ingredient subgroup with explicit choice", () => {
+      const recipe = new Recipe(recipeWithSubgroupAlternatives);
+      // Choose subgroup index 2 (subgroup "3"): syrup alone
+      const choices: RecipeChoices = {
+        ingredientGroups: new Map([["sweetener", 2]]),
+      };
+      const ingredients = recipe.getIngredientQuantities({ choices });
+
+      const syrup = ingredients.find((ing) => ing.name === "syrup");
+      expect(syrup?.usedAsPrimary).toBe(true);
+      expect(syrup?.quantities).toBeUndefined();
+
+      // All others should not be selected
+      const milk = ingredients.find((ing) => ing.name === "milk");
+      expect(milk?.usedAsPrimary).toBeUndefined();
+    });
+
+    it("selects a bare-group (no subgroup key) subgroup with explicit choice", () => {
+      const recipe = new Recipe(recipeWithSubgroupAlternatives);
+      // Choose subgroup index 3: sweet cream (no subgroup key)
+      const choices: RecipeChoices = {
+        ingredientGroups: new Map([["sweetener", 3]]),
+      };
+      const ingredients = recipe.getIngredientQuantities({ choices });
+
+      const sweetCream = ingredients.find((ing) => ing.name === "sweet cream");
+      expect(sweetCream?.usedAsPrimary).toBe(true);
+      expect(sweetCream?.quantities).toBeDefined();
+    });
+
+    it("handles out-of-bounds subgroup choice index gracefully", () => {
+      const recipe = new Recipe(recipeWithSubgroupAlternatives);
+      // Pass an index that exceeds the number of subgroups
+      const choices: RecipeChoices = {
+        ingredientGroups: new Map([["sweetener", 99]]),
+      };
+      const ingredients = recipe.getIngredientQuantities({ choices });
+
+      // No grouped ingredient should be selected
+      const milk = ingredients.find((ing) => ing.name === "milk");
+      expect(milk?.usedAsPrimary).toBeUndefined();
+      expect(milk?.quantities).toBeUndefined();
+
+      const syrup = ingredients.find((ing) => ing.name === "syrup");
+      expect(syrup?.usedAsPrimary).toBeUndefined();
+      expect(syrup?.quantities).toBeUndefined();
     });
   });
 });

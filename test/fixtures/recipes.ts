@@ -153,3 +153,10 @@ servings: 2
 
 Use @sugar{100%g}|brown sugar{100%g}[for a richer flavor] in the mix.
 `;
+
+export const recipeWithSubgroupAlternatives = `
+---
+servings: 1
+---
+Add @|sweetener/1|milk{1%L} and @|sweetener/1|sugar{1%tsp}, or @|sweetener/2|oat milk{1%L} and @|sweetener/2|honey{1%tsp}, or just @|sweetener/3|syrup, or even @|sweetener|sweet cream{1%tbsp}
+`;

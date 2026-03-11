@@ -43,7 +43,7 @@ Mash @ripe bananas{1%=large|1.5%cup} and @&ripe bananas{2%=small|1%cup} in a #la
 
 Add @butter{115%g|4%oz}|coconut oil{100%g}[vegan] and mix well.
 
-Whisk in @|eggs|eggs{2%large} that you can also replace by @|eggs|flax eggs{2}.
+Whisk in @|eggs|eggs{2%large} that you can also replace by @|eggs/alt|flax eggs{2} and @|eggs/alt|salt{1%pinch}.
 
 In a #separate bowl{}, combine @flour{280%g|2%cups}, @sugar{150%g}|cane sugar{150%g}, and @-salt{1/4%tsp}.
 

@@ -308,16 +308,16 @@ export function isAlternativeSelected(
   if (item.group) {
     // Get the selected index in the group
     const selectedIndex = choices?.ingredientGroups?.get(item.group);
-    // Get the alternatives array for this group
-    const groupAlternatives = recipe.choices.ingredientGroups.get(item.group);
+    // Get the subgroups array for this group
+    const groupSubgroups = recipe.choices.ingredientGroups.get(item.group);
     if (
-      groupAlternatives &&
+      groupSubgroups &&
       selectedIndex !== undefined &&
-      selectedIndex < groupAlternatives.length
+      selectedIndex < groupSubgroups.length
     ) {
-      // Check if the selected alternative's itemId matches this item's id
-      const selectedItemId = groupAlternatives[selectedIndex]?.itemId;
-      return selectedItemId === item.id;
+      // Check if the selected subgroup contains this item's id
+      const selectedSubgroup = groupSubgroups[selectedIndex]!;
+      return selectedSubgroup?.some((alt) => alt.itemId === item.id);
     }
     return false;
   }

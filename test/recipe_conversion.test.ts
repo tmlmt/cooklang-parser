@@ -525,8 +525,10 @@ Add @|dairy|milk{1%cup} or @|dairy|cream{1%cup}
           },
         ],
       };
-      for (const alt of groupAlts ?? []) {
-        expect(alt).toMatchObject(expectedItemQty);
+      for (const subgroup of groupAlts ?? []) {
+        for (const alt of subgroup) {
+          expect(alt).toMatchObject(expectedItemQty);
+        }
       }
     });
   });

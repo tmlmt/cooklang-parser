@@ -619,40 +619,44 @@ Add @|milk|milk{150%mL} or @|milk|oat milk{150%mL} for a vegan version.
     const milkIngredientChoice =
       scaledRecipe.choices.ingredientGroups.get("milk");
     expect(milkIngredientChoice).toEqual([
-      {
-        displayName: "milk",
-        index: 2,
-        itemId: "ingredient-item-1",
+      [
+        {
+          displayName: "milk",
+          index: 2,
+          itemId: "ingredient-item-1",
 
-        quantity: {
-          type: "fixed",
-          value: {
-            decimal: 300,
-            type: "decimal",
+          quantity: {
+            type: "fixed",
+            value: {
+              decimal: 300,
+              type: "decimal",
+            },
           },
+          unit: {
+            name: "mL",
+          },
+          scalable: true,
         },
-        unit: {
-          name: "mL",
-        },
-        scalable: true,
-      },
-      {
-        displayName: "oat milk",
-        index: 3,
-        itemId: "ingredient-item-2",
+      ],
+      [
+        {
+          displayName: "oat milk",
+          index: 3,
+          itemId: "ingredient-item-2",
 
-        quantity: {
-          type: "fixed",
-          value: {
-            decimal: 300,
-            type: "decimal",
+          quantity: {
+            type: "fixed",
+            value: {
+              decimal: 300,
+              type: "decimal",
+            },
           },
+          unit: {
+            name: "mL",
+          },
+          scalable: true,
         },
-        unit: {
-          name: "mL",
-        },
-        scalable: true,
-      },
+      ],
     ]);
   });
 

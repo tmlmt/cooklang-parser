@@ -133,6 +133,29 @@ function buildAlternativeOptions(
   return options;
 }
 
+function buildGroupedAlternativeOptions(
+  subgroups: IngredientAlternative[][],
+): ChoiceOption[] {
+  const options: ChoiceOption[] = [{ label: "No choice", value: undefined }];
+  for (let i = 0; i < subgroups.length; i++) {
+    const subgroup = subgroups[i]!;
+    const label = subgroup
+      .map((alt) => {
+        let part = alt.displayName;
+        if (alt.quantity) {
+          const qty = formatItemQuantity(alt);
+          if (qty) {
+            part += ` (${qty})`;
+          }
+        }
+        return part;
+      })
+      .join(" + ");
+    options.push({ label, value: i });
+  }
+  return options;
+}
+
 // --- Selection handlers ---
 function getSelectedInline(itemId: string): number | undefined {
   return choices.value.ingredientItems?.get(itemId);
@@ -255,7 +278,7 @@ function setSelectedGrouped(groupKey: string, value: number | undefined) {
         </h4>
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div
-            v-for="[groupKey, alternatives] in groupedChoicesArray"
+            v-for="[groupKey, subgroups] in groupedChoicesArray"
             :key="groupKey"
             class="flex flex-col gap-1"
           >
@@ -264,7 +287,7 @@ function setSelectedGrouped(groupKey: string, value: number | undefined) {
             </label>
             <USelectMenu
               :model-value="getSelectedGrouped(groupKey)"
-              :items="buildAlternativeOptions(alternatives)"
+              :items="buildGroupedAlternativeOptions(subgroups)"
               value-key="value"
               class="w-full"
               @update:model-value="setSelectedGrouped(groupKey, $event)"

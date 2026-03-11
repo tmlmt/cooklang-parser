@@ -164,6 +164,15 @@ export class Recipe {
   private static itemCounts = new WeakMap<Recipe, number>();
 
   /**
+   * External storage for subgroup index tracking during parsing.
+   * Maps groupKey → subgroupKey → index within the subgroups array.
+   */
+  private static subgroupIndices = new WeakMap<
+    Recipe,
+    Map<string, Map<string, number>>
+  >();
+
+  /**
    * Gets the current item count for this recipe.
    */
   private getItemCount(): number {
@@ -185,6 +194,7 @@ export class Recipe {
    */
   constructor(content?: string) {
     Recipe.itemCounts.set(this, 0);
+    Recipe.subgroupIndices.set(this, new Map());
     if (content) {
       this.parse(content);
     }
@@ -444,8 +454,9 @@ export class Recipe {
     const groups = match.groups;
 
     // Use variables for readability
-    // @|<groupKey|<modifiers><name>{quantity%unit|altQuantities}(preparation)[note]
+    // @|<groupKey>/<subgroupKey>|<modifiers><name>{quantity%unit|altQuantities}(preparation)[note]
     const groupKey = groups.gIngredientGroupKey!;
+    const subgroupKey = groups.gIngredientSubgroupKey;
     let name = (groups.gmIngredientName || groups.gsIngredientName)!;
 
     // 1. We build up the different parts of the Ingredient object
@@ -535,7 +546,8 @@ export class Recipe {
       Object.assign(alternative, itemQuantity);
     }
 
-    const existingAlternatives = this.choices.ingredientGroups.get(groupKey);
+    const existingSubgroups = this.choices.ingredientGroups.get(groupKey);
+    const existingAlternativesFlat = existingSubgroups?.flat();
     // For all alternative ingredients already processed for this group, add the new ingredient as alternative
     function upsertAlternativeToIngredient(
       ingredients: Ingredient[],
@@ -553,8 +565,8 @@ export class Recipe {
         }
       }
     }
-    if (existingAlternatives) {
-      for (const alt of existingAlternatives) {
+    if (existingAlternativesFlat) {
+      for (const alt of existingAlternativesFlat) {
         upsertAlternativeToIngredient(this.ingredients, alt.index, idxInList);
         upsertAlternativeToIngredient(this.ingredients, idxInList, alt.index);
       }
@@ -568,16 +580,40 @@ export class Recipe {
       group: groupKey,
       alternatives: [alternative],
     };
+    if (subgroupKey !== undefined) {
+      newItem.subgroup = subgroupKey;
+    }
     items.push(newItem);
 
     // Populate or update choices
     const choiceAlternative = deepClone(alternative);
     choiceAlternative.itemId = id;
     const existingChoice = this.choices.ingredientGroups.get(groupKey);
+    const sgMap = Recipe.subgroupIndices.get(this)!;
     if (!existingChoice) {
-      this.choices.ingredientGroups.set(groupKey, [choiceAlternative]);
+      // New group: create first subgroup
+      this.choices.ingredientGroups.set(groupKey, [[choiceAlternative]]);
+      if (subgroupKey !== undefined) {
+        sgMap.set(groupKey, new Map([[subgroupKey, 0]]));
+      }
+    } else if (subgroupKey !== undefined) {
+      // Has subgroup key: find matching subgroup or create new one
+      const groupSgMap = sgMap.get(groupKey);
+      const existingIdx = groupSgMap?.get(subgroupKey);
+      if (existingIdx !== undefined) {
+        existingChoice[existingIdx]!.push(choiceAlternative);
+      } else {
+        const newIdx = existingChoice.length;
+        existingChoice.push([choiceAlternative]);
+        if (!groupSgMap) {
+          sgMap.set(groupKey, new Map([[subgroupKey, newIdx]]));
+        } else {
+          groupSgMap.set(subgroupKey, newIdx);
+        }
+      }
     } else {
-      existingChoice.push(choiceAlternative);
+      // No subgroup key: each item forms its own subgroup
+      existingChoice.push([choiceAlternative]);
     }
   }
 
@@ -686,7 +722,7 @@ export class Recipe {
           (item): item is IngredientItem => item.type === "ingredient",
         )) {
           const isGrouped = "group" in item && item.group !== undefined;
-          const groupAlternatives = isGrouped
+          const groupSubgroups = isGrouped
             ? this.choices.ingredientGroups.get(item.group!)
             : undefined;
 
@@ -698,8 +734,10 @@ export class Recipe {
           if (isGrouped) {
             const groupChoice = choices?.ingredientGroups?.get(item.group!);
             hasExplicitChoice = groupChoice !== undefined;
-            const targetIndex = groupChoice ?? 0;
-            isSelected = groupAlternatives?.[targetIndex]?.itemId === item.id;
+            const targetSubgroupIndex = groupChoice ?? 0;
+            const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
+            isSelected =
+              selectedSubgroup?.some((alt) => alt.itemId === item.id) ?? false;
           } else {
             const itemChoice = choices?.ingredientItems?.get(item.id);
             hasExplicitChoice = itemChoice !== undefined;
@@ -713,8 +751,10 @@ export class Recipe {
           selectedIndices.add(alternative.index);
 
           // Add all alternatives to referenced set (so indices remain valid in result)
-          const allAlts = isGrouped ? groupAlternatives! : item.alternatives;
-          for (const alt of allAlts) {
+          const allAltsFlat = isGrouped
+            ? groupSubgroups!.flat()
+            : item.alternatives;
+          for (const alt of allAltsFlat) {
             referencedIndices.add(alt.index);
           }
 
@@ -733,13 +773,47 @@ export class Recipe {
 
           // Build alternative refs (only when no explicit choice)
           let alternativeRefs: AlternativeIngredientRef[] | undefined;
-          if (!hasExplicitChoice && allAlts.length > 1) {
-            alternativeRefs = allAlts
-              .filter((alt) =>
-                isGrouped
-                  ? alt.itemId !== item.id
-                  : alt.index !== alternative.index,
-              )
+          if (
+            !hasExplicitChoice &&
+            groupSubgroups &&
+            groupSubgroups.length > 1
+          ) {
+            // For grouped items: alternatives are the other subgroups (not the current item's subgroup)
+            const currentSubgroupIdx = groupSubgroups.findIndex((sg) =>
+              sg.some((alt) => alt.itemId === item.id),
+            );
+            alternativeRefs = groupSubgroups
+              .filter((_, idx) => idx !== currentSubgroupIdx)
+              .flatMap((subgroup) =>
+                subgroup.map((otherAlt) => {
+                  const ref: AlternativeIngredientRef = {
+                    index: otherAlt.index,
+                  };
+                  if (otherAlt.quantity) {
+                    const altQty: QuantityWithPlainUnit = {
+                      quantity: otherAlt.quantity,
+                      ...(otherAlt.unit && {
+                        unit: otherAlt.unit.name,
+                      }),
+                      ...(otherAlt.equivalents && {
+                        equivalents: otherAlt.equivalents.map(
+                          (eq: QuantityWithExtendedUnit) =>
+                            toPlainUnit(eq) as QuantityWithPlainUnit,
+                        ),
+                      }),
+                    };
+                    ref.quantities = [altQty];
+                  }
+                  return ref;
+                }),
+              );
+          } else if (
+            !hasExplicitChoice &&
+            !isGrouped &&
+            allAltsFlat.length > 1
+          ) {
+            alternativeRefs = allAltsFlat
+              .filter((alt) => alt.index !== alternative.index)
               .map((otherAlt) => {
                 const ref: AlternativeIngredientRef = { index: otherAlt.index };
                 if (otherAlt.quantity) {
@@ -750,7 +824,8 @@ export class Recipe {
                     }),
                     ...(otherAlt.equivalents && {
                       equivalents: otherAlt.equivalents.map(
-                        (eq) => toPlainUnit(eq) as QuantityWithPlainUnit,
+                        (eq: QuantityWithExtendedUnit) =>
+                          toPlainUnit(eq) as QuantityWithPlainUnit,
                       ),
                     }),
                   };
@@ -1290,8 +1365,10 @@ export class Recipe {
     }
 
     // Scale Choices
-    for (const alternatives of newRecipe.choices.ingredientGroups.values()) {
-      scaleAlternativesBy(alternatives, factor);
+    for (const subgroups of newRecipe.choices.ingredientGroups.values()) {
+      for (const subgroup of subgroups) {
+        scaleAlternativesBy(subgroup, factor);
+      }
     }
     for (const alternatives of newRecipe.choices.ingredientItems.values()) {
       scaleAlternativesBy(alternatives, factor);
@@ -1553,8 +1630,10 @@ export class Recipe {
     }
 
     // Convert Choices
-    for (const alternatives of newRecipe.choices.ingredientGroups.values()) {
-      convertAlternatives(alternatives);
+    for (const subgroups of newRecipe.choices.ingredientGroups.values()) {
+      for (const subgroup of subgroups) {
+        convertAlternatives(subgroup);
+      }
     }
     for (const alternatives of newRecipe.choices.ingredientItems.values()) {
       convertAlternatives(alternatives);

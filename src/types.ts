@@ -405,6 +405,12 @@ export interface IngredientItem {
    * `@|group|...` syntax), they represent a single logical choice.
    */
   group?: string;
+  /**
+   * An optional subgroup identifier for binding multiple ingredients together
+   * within a group. Ingredients sharing the same `group` and `subgroup` are
+   * selected together as a unit (e.g., from `@|group/1|...` syntax).
+   */
+  subgroup?: string;
 }
 
 /**
@@ -419,9 +425,13 @@ export interface RecipeAlternatives {
   ingredientItems: Map<string, IngredientAlternative[]>;
   /** Map of choices that can be made for Grouped Ingredient StepItem's
    * - Keys are the Group IDs (e.g. "eggs" for `@|eggs|...`)
-   * - Values are arrays of IngredientAlternative objects representing the choices available for that group
+   * - Values are arrays of subgroups, where each subgroup is an array of
+   *   bound IngredientAlternative objects that are selected together.
+   *   Items sharing the same subgroup key (e.g., `@|group/1|...`) are
+   *   in the same inner array. Items without a subgroup key each form
+   *   their own single-element subgroup.
    */
-  ingredientGroups: Map<string, IngredientAlternative[]>;
+  ingredientGroups: Map<string, IngredientAlternative[][]>;
 }
 
 /**

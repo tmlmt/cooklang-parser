@@ -6,6 +6,7 @@ import {
   recipeToScaleWithAlternatives,
   recipeWithGroupedAlternatives,
   recipeWithInlineAlternatives,
+  recipeWithSubgroupAlternatives,
 } from "./fixtures/recipes";
 import {
   InvalidQuantityFormat,
@@ -1255,42 +1256,48 @@ Another step.
           [
             "milk",
             [
-              {
-                displayName: "milk",
-                index: 0,
-                itemId: "ingredient-item-0",
+              [
+                {
+                  displayName: "milk",
+                  index: 0,
+                  itemId: "ingredient-item-0",
 
-                scalable: true,
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 200 },
+                  scalable: true,
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 200 },
+                  },
+                  unit: { name: "ml" },
                 },
-                unit: { name: "ml" },
-              },
-              {
-                displayName: "almond milk",
-                index: 1,
-                itemId: "ingredient-item-1",
+              ],
+              [
+                {
+                  displayName: "almond milk",
+                  index: 1,
+                  itemId: "ingredient-item-1",
 
-                scalable: true,
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 100 },
+                  scalable: true,
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: { name: "ml" },
                 },
-                unit: { name: "ml" },
-              },
-              {
-                displayName: "soy milk",
-                index: 2,
-                itemId: "ingredient-item-2",
+              ],
+              [
+                {
+                  displayName: "soy milk",
+                  index: 2,
+                  itemId: "ingredient-item-2",
 
-                scalable: true,
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 150 },
+                  scalable: true,
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 150 },
+                  },
+                  unit: { name: "ml" },
                 },
-                unit: { name: "ml" },
-              },
+              ],
             ],
           ],
         ]),
@@ -1322,6 +1329,96 @@ Another step.
         id: "ingredient-item-0",
         type: "ingredient",
       });
+    });
+  });
+
+  describe("grouped alternative ingredients with subgroups", () => {
+    it("parses subgroup keys and clusters bound ingredients", () => {
+      const result = new Recipe(recipeWithSubgroupAlternatives);
+      // 6 ingredients: milk, sugar, oat milk, honey, syrup, sweet cream
+      expect(result.ingredients).toHaveLength(6);
+      expect(result.ingredients[0]!.name).toBe("milk");
+      expect(result.ingredients[1]!.name).toBe("sugar");
+      expect(result.ingredients[2]!.name).toBe("oat milk");
+      expect(result.ingredients[3]!.name).toBe("honey");
+      expect(result.ingredients[4]!.name).toBe("syrup");
+      expect(result.ingredients[5]!.name).toBe("sweet cream");
+
+      // All ingredients should reference each other as alternatives
+      for (let i = 0; i < 6; i++) {
+        const expectedAlternatives = new Set(
+          [0, 1, 2, 3, 4, 5].filter((j) => j !== i),
+        );
+        expect(result.ingredients[i]!.alternatives).toEqual(
+          expectedAlternatives,
+        );
+      }
+
+      // Check choices.ingredientGroups has one group "sweetener" with 4 subgroups
+      const subgroups = result.choices.ingredientGroups.get("sweetener");
+      expect(subgroups).toBeDefined();
+      expect(subgroups).toHaveLength(4);
+
+      // Subgroup 0 (key "1"): milk + sugar
+      expect(subgroups![0]).toHaveLength(2);
+      expect(subgroups![0]![0]!.displayName).toBe("milk");
+      expect(subgroups![0]![1]!.displayName).toBe("sugar");
+
+      // Subgroup 1 (key "2"): oat milk + honey
+      expect(subgroups![1]).toHaveLength(2);
+      expect(subgroups![1]![0]!.displayName).toBe("oat milk");
+      expect(subgroups![1]![1]!.displayName).toBe("honey");
+
+      // Subgroup 2 (key "3"): syrup alone
+      expect(subgroups![2]).toHaveLength(1);
+      expect(subgroups![2]![0]!.displayName).toBe("syrup");
+
+      // Subgroup 3 (no key): sweet cream alone
+      expect(subgroups![3]).toHaveLength(1);
+      expect(subgroups![3]![0]!.displayName).toBe("sweet cream");
+    });
+
+    it("sets subgroup on IngredientItem", () => {
+      const result = new Recipe(recipeWithSubgroupAlternatives);
+      const step = result.sections[0]?.content[0];
+      if (step?.type !== "step") return;
+      const ingredientItems = step.items.filter(
+        (i): i is IngredientItem => i.type === "ingredient",
+      );
+      // item 0: milk (subgroup "1")
+      expect(ingredientItems[0]!.group).toBe("sweetener");
+      expect(ingredientItems[0]!.subgroup).toBe("1");
+      // item 1: sugar (subgroup "1")
+      expect(ingredientItems[1]!.group).toBe("sweetener");
+      expect(ingredientItems[1]!.subgroup).toBe("1");
+      // item 2: oat milk (subgroup "2")
+      expect(ingredientItems[2]!.subgroup).toBe("2");
+      // item 3: honey (subgroup "2")
+      expect(ingredientItems[3]!.subgroup).toBe("2");
+      // item 4: syrup (subgroup "3")
+      expect(ingredientItems[4]!.subgroup).toBe("3");
+      // item 5: sweet cream (no subgroup)
+      expect(ingredientItems[5]!.subgroup).toBeUndefined();
+    });
+
+    it("handles bare-group-first then subgroup items", () => {
+      // Tests the branch where a group's first item has no subgroup key,
+      // then later items do have subgroup keys
+      const result = new Recipe(
+        "Add @|g|plain{1%g} or @|g/a|sub a{2%g} or @|g/b|sub b{3%g}",
+      );
+      const subgroups = result.choices.ingredientGroups.get("g");
+      expect(subgroups).toBeDefined();
+      expect(subgroups).toHaveLength(3);
+      // First: plain (no subgroup key → own subgroup)
+      expect(subgroups![0]).toHaveLength(1);
+      expect(subgroups![0]![0]!.displayName).toBe("plain");
+      // Second: sub a (subgroup "a")
+      expect(subgroups![1]).toHaveLength(1);
+      expect(subgroups![1]![0]!.displayName).toBe("sub a");
+      // Third: sub b (subgroup "b")
+      expect(subgroups![2]).toHaveLength(1);
+      expect(subgroups![2]![0]!.displayName).toBe("sub b");
     });
   });
 
