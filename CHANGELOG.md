@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.0.0-alpha.16
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.15...v3.0.0-alpha.16)
+
+### ⚠️ Breaking Changes
+
+- The serving metadata properties (servings, yield, serves) are now parsed as `MetadataScalingVar`
+
+### 🚀 Enhancements
+
+- ⚠️ Allow customized units as servings metadata ([46dcde5](https://github.com/tmlmt/cooklang-parser/commit/46dcde5))
+
+The serving metadata properties can now be expressed as:
+
+- `<number>[, <text>]`
+- `[<textBefore?>]<arbitraryScalable>[<textAfter?>]`
+
+Examples:
+
+- `2`
+- `3, a few`
+- `about {{1.2%kg}} of bread`
+
+### 🏡 Chore
+
+- **lint:** Do not initialize vars with values not read before reassignment ([6cd55ca](https://github.com/tmlmt/cooklang-parser/commit/6cd55ca))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.15
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.14...v3.0.0-alpha.15)
