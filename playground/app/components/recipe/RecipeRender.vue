@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import type { Recipe, RecipeChoices } from "cooklang-parser";
+import {
+  formatQuantityWithUnit,
+  type MetadataScalingVar,
+  type Recipe,
+  type RecipeChoices,
+} from "cooklang-parser";
 
 const props = defineProps<{
   recipe: Recipe;
@@ -18,7 +23,16 @@ const metadataEntries = computed(() => {
   for (const [key, value] of Object.entries(metadata)) {
     if (key === "title") continue;
     if (value === undefined || value === null) continue;
-
+    if (["servings", "yield", "serves"].includes(key)) {
+      const servingsValue = value as MetadataScalingVar;
+      // If it's an array or something else, just stringify it
+      entries.push({
+        key: "Servings",
+        value:
+          `${servingsValue.textBefore ?? ""} ${formatQuantityWithUnit(servingsValue.quantity, servingsValue.unit)} ${servingsValue.textAfter ?? ""}`.trim(),
+      });
+      continue;
+    }
     // Format arrays as comma-separated strings
     const displayValue = Array.isArray(value)
       ? value.join(", ")

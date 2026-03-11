@@ -27,6 +27,7 @@ import type {
   SpecificUnitSystem,
   Unit,
   MaybeScalableQuantity,
+  MetadataScalingVar,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -37,7 +38,6 @@ import {
   ingredientWithAlternativeRegex,
   ingredientWithGroupKeyRegex,
   ingredientAliasRegex,
-  floatRegex,
   quantityAlternativeRegex,
   inlineIngredientAlternativesRegex,
   arbitraryScalableRegex,
@@ -48,6 +48,7 @@ import {
   findAndUpsertIngredient,
   findAndUpsertCookware,
   parseQuantityInput,
+  parseArbitraryQuantity,
   extractMetadata,
   unionOfSets,
   getAlternativeSignature,
@@ -202,31 +203,17 @@ export class Recipe {
     // Type-guard to ensure regexMatchGroups is defined, which it is when calling this function
     // v8 ignore if -- @preserve
     if (!regexMatchGroups || !regexMatchGroups.arbitraryQuantity) return;
-    const quantityMatch = regexMatchGroups.arbitraryQuantity
-      ?.trim()
-      .match(quantityAlternativeRegex);
-    // Type-guard to ensure quantityMatch.groups is defined, which we know when calling this function
-    // v8 ignore else -- @preserve
-    if (quantityMatch?.groups) {
-      const value = parseQuantityInput(quantityMatch.groups.quantity!);
-      const unit = quantityMatch.groups.unit;
-      const name = regexMatchGroups.arbitraryName || undefined;
-      if (!value || (value.type === "fixed" && value.value.type === "text")) {
-        throw new InvalidQuantityFormat(
-          regexMatchGroups.arbitraryQuantity?.trim(),
-          "Arbitrary quantities must have a numerical value",
-        );
-      }
-      const arbitrary: ArbitraryScalable = {
-        quantity: value as FixedNumericValue,
-      };
-      if (name) arbitrary.name = name;
-      if (unit) arbitrary.unit = unit;
-      intoArray.push({
-        type: "arbitrary",
-        index: this.arbitraries.push(arbitrary) - 1,
-      });
-    }
+    const parsed = parseArbitraryQuantity(regexMatchGroups.arbitraryQuantity);
+    const name = regexMatchGroups.arbitraryName || undefined;
+    const arbitrary: ArbitraryScalable = {
+      quantity: parsed.quantity,
+    };
+    if (name) arbitrary.name = name;
+    if (parsed.unit) arbitrary.unit = parsed.unit;
+    intoArray.push({
+      type: "arbitrary",
+      index: this.arbitraries.push(arbitrary) - 1,
+    });
   }
 
   /**
@@ -1316,51 +1303,40 @@ export class Recipe {
         arbitrary.quantity,
         factor,
       ) as FixedNumericValue;
+      const optimized = applyBestUnit(
+        { quantity: arbitrary.quantity, unit: arbitrary.unit },
+        unitSystem,
+      );
+      arbitrary.quantity = optimized.quantity as FixedNumericValue;
+      arbitrary.unit = optimized.unit;
     }
 
     newRecipe._populateIngredientQuantities();
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
 
-    /* v8 ignore else -- @preserve */
-    if (newRecipe.metadata.servings && this.metadata.servings) {
-      if (
-        floatRegex.test(String(this.metadata.servings).replace(",", ".").trim())
-      ) {
-        const servingsValue = parseFloat(
-          String(this.metadata.servings).replace(",", "."),
+    // Scale metadata scaling variables (servings, yield, serves)
+    for (const metaVar of ["servings", "yield", "serves"] as const) {
+      /* v8 ignore else -- @preserve */
+      if (newRecipe.metadata[metaVar] && this.metadata[metaVar]) {
+        const original = this.metadata[metaVar];
+        const scaledQuantity = multiplyQuantityValue(
+          original.quantity,
+          factor,
+        ) as FixedNumericValue;
+        // Apply best unit optimization
+        const optimized = applyBestUnit(
+          { quantity: scaledQuantity, unit: original.unit },
+          unitSystem,
         );
-        newRecipe.metadata.servings = String(
-          Big(servingsValue).times(factor).toNumber(),
-        );
-      }
-    }
-
-    /* v8 ignore else -- @preserve */
-    if (newRecipe.metadata.yield && this.metadata.yield) {
-      if (
-        floatRegex.test(String(this.metadata.yield).replace(",", ".").trim())
-      ) {
-        const yieldValue = parseFloat(
-          String(this.metadata.yield).replace(",", "."),
-        );
-        newRecipe.metadata.yield = String(
-          Big(yieldValue).times(factor).toNumber(),
-        );
-      }
-    }
-
-    /* v8 ignore else -- @preserve */
-    if (newRecipe.metadata.serves && this.metadata.serves) {
-      if (
-        floatRegex.test(String(this.metadata.serves).replace(",", ".").trim())
-      ) {
-        const servesValue = parseFloat(
-          String(this.metadata.serves).replace(",", "."),
-        );
-        newRecipe.metadata.serves = String(
-          Big(servesValue).times(factor).toNumber(),
-        );
+        const scaled: MetadataScalingVar = {
+          quantity: optimized.quantity,
+        };
+        if (optimized.unit) scaled.unit = optimized.unit;
+        if (original.textBefore) scaled.textBefore = original.textBefore;
+        if (original.textAfter) scaled.textAfter = original.textAfter;
+        if (original.text) scaled.text = original.text;
+        newRecipe.metadata[metaVar] = scaled;
       }
     }
 

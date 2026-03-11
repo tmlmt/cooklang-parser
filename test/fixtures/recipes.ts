@@ -73,6 +73,13 @@ servings: 2, a few
 Pour @water{1%L}
 `;
 
+export const recipeWithUnitServings = `
+---
+servings: {{300%g}} of bread
+---
+Mix @flour{200%g} with @water{100%mL}
+`;
+
 export const recipeToScale = `
 ---
 servings: 2

@@ -1437,6 +1437,24 @@ describe("applyBestUnit", () => {
       max: { type: "decimal", decimal: 1.5 },
     });
   });
+
+  it("it should also handle ranges with plain units", () => {
+    const q: QuantityWithPlainUnit = {
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 500 },
+        max: { type: "decimal", decimal: 1500 },
+      },
+      unit: "g",
+    };
+    const result = applyBestUnit(q);
+    expect(result.unit).toBe("kg");
+    expect(result.quantity).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 0.5 },
+      max: { type: "decimal", decimal: 1.5 },
+    });
+  });
 });
 
 describe("subtractQuantities", () => {

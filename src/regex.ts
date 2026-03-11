@@ -23,27 +23,6 @@ export const metadataRegex = createRegex()
   .newline().literal("---")
   .dotAll().toRegExp();
 
-export const scalingMetaValueRegex = (varName: string): RegExp => createRegex()
-  .startAnchor()
-  .literal(varName)
-  .literal(":")
-  .anyOf("\\t ").zeroOrMore()
-  .startCaptureGroup()
-    .startCaptureGroup()
-      .notAnyOf(",\\n").oneOrMore()
-    .endGroup()
-    .startGroup()
-      .literal(",")
-      .whitespace().zeroOrMore()
-      .startCaptureGroup()
-        .anyCharacter().oneOrMore()
-      .endGroup()
-    .endGroup().optional()
-  .endGroup()
-  .endAnchor()
-  .multiline()
-  .toRegExp()
-
 const nonWordChar = "\\s@#~\\[\\]{(,;:!?"
 const nonWordCharStrict = "\\s@#~\\[\\]{(,;:!?|"
 
@@ -337,6 +316,70 @@ export const tokensRegex = new RegExp(
     .join("|"),
   "gu",
 );
+
+
+/** Matches optional trimmed text before the `{{...}}` scalable */
+export const servingsPrefixPart = (varName: string): RegExp => createRegex()
+  .startAnchor()
+  .literal(varName)
+  .literal(":")
+  .anyOf("\t ").zeroOrMore()
+  .startNamedGroup("servingsPrefix")
+    .nonWhitespace()
+    .startGroup()
+      .anyCharacter().zeroOrMore().lazy()
+      .nonWhitespace()
+    .endGroup().optional()
+  .endGroup().optional()
+  .anyOf("\t ").zeroOrMore()
+  .toRegExp()
+
+/** Matches optional trimmed text after the `{{...}}` scalable */
+const servingsSuffixPart = createRegex()
+  .anyOf("\t ").zeroOrMore()
+  .startNamedGroup("servingsSuffix")
+    .nonWhitespace()
+    .startGroup()
+      .anyCharacter().zeroOrMore()
+      .nonWhitespace()
+    .endGroup().optional()
+  .endGroup().optional()
+  .anyOf("\t ").zeroOrMore()
+  .endAnchor()
+  .toRegExp()
+
+
+export const scalingSimpleMetaValueRegex = (varName: string): RegExp => createRegex()
+  .startAnchor()
+  .literal(varName)
+  .literal(":")
+  .anyOf("\\t ").zeroOrMore()
+  .startCaptureGroup()
+    .startCaptureGroup()
+      .notAnyOf(",\\n").oneOrMore()
+    .endGroup()
+    .startGroup()
+      .literal(",")
+      .anyOf("\\t ").zeroOrMore()
+      .startCaptureGroup()
+        .anyCharacter().oneOrMore()
+      .endGroup().optional()
+    .endGroup().optional()
+  .endGroup()
+  .endAnchor()
+  .multiline()
+  .toRegExp()
+
+/** Matches a complex servings value: optional trimmed text prefix, an arbitrary scalable `{{...}}`, and optional trimmed text suffix.
+ * Named groups `servingsPrefix` and `servingsSuffix` capture surrounding text without leading/trailing spaces.
+ * Inherits `arbitraryName` and `arbitraryQuantity` named groups from {@link arbitraryScalableRegex}.
+ */
+export const scalingMetaValueWithUnitRegex = (varName: string): RegExp => new RegExp(
+  servingsPrefixPart(varName).source +
+  arbitraryScalableRegex.source +
+  servingsSuffixPart.source, "m"
+);
+
 
 export const commentRegex = createRegex()
   .literal("--")

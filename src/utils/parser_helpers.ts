@@ -14,6 +14,9 @@ import type {
   SpecificUnitSystem,
   TextItem,
   TextAttribute,
+  ArbitraryScalable,
+  FixedNumericValue,
+  MetadataScalingVar,
 } from "../types";
 import {
   metadataRegex,
@@ -22,14 +25,18 @@ import {
   numericValueRegex,
   rangeRegex,
   numberLikeRegex,
-  scalingMetaValueRegex,
+  scalingSimpleMetaValueRegex,
+  scalingMetaValueWithUnitRegex,
+  quantityAlternativeRegex,
   markdownRegex,
 } from "../regex";
 import { Section as SectionObject } from "../classes/section";
 import type { Ingredient, Step, Cookware } from "../types";
 import { addQuantityValues } from "../quantities/mutations";
+import { getNumericValue } from "../quantities/numeric";
 import {
   CannotAddTextValueError,
+  InvalidQuantityFormat,
   NoTabAsIndentError,
   BadIndentationError,
   ReferencedItemCannotBeRedefinedError,
@@ -591,16 +598,79 @@ export function parseBlockScalarMetaVar(
     .replace(/\0/g, "\n");
 }
 
+/**
+ * Parses the raw quantity string inside a `{{...}}` arbitrary scalable.
+ * The input should be the inner part, e.g. `"300%g"` or `"1%bread|500%g"`.
+ *
+ * @param raw - The raw quantity string from inside `{{}}`.
+ * @returns An {@link ArbitraryScalable} with `quantity` and optional `unit`.
+ * @throws {@link InvalidQuantityFormat} if the value is non-numeric.
+ */
+export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
+  const quantityMatch = raw.trim().match(quantityAlternativeRegex);
+  /* v8 ignore next 4 -- @preserve: defensive guard; regex always matches */
+  if (!quantityMatch?.groups) {
+    throw new InvalidQuantityFormat(
+      raw,
+      "Arbitrary quantities must have a numerical value",
+    );
+  }
+  const value = parseQuantityInput(quantityMatch.groups.quantity!);
+  const unit = quantityMatch.groups.unit;
+  if (!value || (value.type === "fixed" && value.value.type === "text")) {
+    throw new InvalidQuantityFormat(
+      raw,
+      "Arbitrary quantities must have a numerical value",
+    );
+  }
+  const arbitrary: ArbitraryScalable = {
+    quantity: value as FixedNumericValue,
+  };
+  if (unit) arbitrary.unit = unit;
+  return arbitrary;
+}
+
 export function parseScalingMetaVar(
   content: string,
   varName: string,
-): [number, string] | undefined {
-  const varMatch = content.match(scalingMetaValueRegex(varName));
+): MetadataScalingVar | undefined {
+  // Try complex format first: e.g. "servings: about {{3%kg}}"
+  const complexMatch = content.match(scalingMetaValueWithUnitRegex(varName));
+  if (complexMatch?.groups?.arbitraryQuantity) {
+    const parsed = parseArbitraryQuantity(
+      complexMatch.groups.arbitraryQuantity,
+    );
+    const result: MetadataScalingVar = {
+      quantity: parsed.quantity,
+    };
+    if (parsed.unit) result.unit = parsed.unit;
+    if (complexMatch.groups.servingsPrefix) {
+      result.textBefore = complexMatch.groups.servingsPrefix;
+    }
+    if (complexMatch.groups.servingsSuffix) {
+      result.textAfter = complexMatch.groups.servingsSuffix;
+    }
+    return result;
+  }
+
+  // Fall back to simple format: e.g. "servings: 4" or "servings: 2, a few"
+  const varMatch = content.match(scalingSimpleMetaValueRegex(varName));
   if (!varMatch) return undefined;
   if (isNaN(Number(varMatch[2]?.trim()))) {
     throw new Error("Scaling variables should be numbers");
   }
-  return [Number(varMatch[2]?.trim()), varMatch[1]!.trim()];
+  const numericValue = Number(varMatch[2]?.trim());
+  const result: MetadataScalingVar = {
+    quantity: {
+      type: "fixed",
+      value: { type: "decimal", decimal: numericValue },
+    },
+  };
+  // If the raw string contains a comma, store text after comma in text
+  if (varMatch[3]) {
+    result.text = `${varMatch[3].trim()}`;
+  }
+  return result;
 }
 
 export function parseListMetaVar(content: string, varName: string) {
@@ -807,6 +877,19 @@ function parseAnyMetaVar(
   return undefined;
 }
 
+/**
+ * Extracts the numeric value from a MetadataScalingVar.
+ */
+export function getNumericValueFromMetaVar(v: MetadataScalingVar): number {
+  /* v8 ignore else -- @preserve */
+  if (v.quantity.type === "fixed" && v.quantity.value.type !== "text") {
+    return getNumericValue(v.quantity.value);
+  }
+  /* v8 ignore else -- @preserve */
+  if (v.quantity.type === "range") return getNumericValue(v.quantity.min);
+  return 0;
+}
+
 export function extractMetadata(content: string): MetadataExtract {
   const metadata: Metadata = {};
   let servings: number | undefined = undefined;
@@ -976,9 +1059,9 @@ export function extractMetadata(content: string): MetadataExtract {
   // Scaling metadata variables (servings, yield, serves)
   for (const metaVar of ["servings", "yield", "serves"] as const) {
     const scalingMetaValue = parseScalingMetaVar(metadataContent, metaVar);
-    if (scalingMetaValue && scalingMetaValue[1]) {
-      metadata[metaVar] = scalingMetaValue[1];
-      servings = scalingMetaValue[0];
+    if (scalingMetaValue) {
+      metadata[metaVar] = scalingMetaValue;
+      servings = getNumericValueFromMetaVar(scalingMetaValue);
     }
   }
 

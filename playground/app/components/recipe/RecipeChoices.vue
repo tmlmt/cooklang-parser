@@ -49,7 +49,7 @@ watch(
 );
 
 // Compute the step based on original servings:
-// - If integer: step = 1
+// - If integer: step = largest power of 10 that divides the number
 // - If < 1: step = servings itself
 // - If > 1 and not integer: divide by smallest integer n until result < 1
 const step = computed(() => {
@@ -58,7 +58,9 @@ const step = computed(() => {
 
   // Check if it's an integer
   if (Number.isInteger(baseServings)) {
-    return 1;
+    const powerOf10Factor = (n: number) =>
+      10 ** (String(n).match(/0+$/) || [""])[0].length;
+    return powerOf10Factor(baseServings);
   }
 
   // If < 1, step is itself
@@ -176,13 +178,12 @@ function setSelectedGrouped(groupKey: string, value: number | undefined) {
         <UInputNumber
           v-model="servings"
           :min="step"
-          :max="100"
           :step="step"
-          class="w-24"
+          class="w-32"
         />
       </div>
       <p v-if="recipe.servings" class="text-xs text-gray-500">
-        Original recipe: {{ recipe.servings }} servings
+        Original recipe: {{ recipe.servings }}
       </p>
     </div>
 

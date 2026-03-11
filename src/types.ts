@@ -15,6 +15,19 @@ export interface MetadataSource {
 }
 
 /**
+ * Represents scaling variable information for a recipe.
+ * @category Types
+ */
+export interface MetadataScalingVar extends QuantityWithPlainUnit {
+  /** The text before the scaling variable. */
+  textBefore?: string;
+  /** The text after the scaling variable. */
+  textAfter?: string;
+  /** The text precising a numerical scaling variable. */
+  text?: string;
+}
+
+/**
  * Represents time information for a recipe.
  * @category Types
  */
@@ -46,6 +59,7 @@ export type MetadataValue =
   | MetadataObject
   | MetadataSource
   | MetadataTime
+  | MetadataScalingVar
   | undefined;
 
 /**
@@ -65,9 +79,10 @@ export interface Metadata {
   /** The author of the recipe (separate from source author). */
   author?: string;
   /** The number of servings the recipe makes.
-   * Should be either a number or a string which starts with a number
-   * (which will be used for scaling) followed by a comma and then
-   * whatever you want.
+   * Can be given either as:
+   * - a number
+   * - a string which starts with a number (which will be used for scaling) followed by a comma and then whatever you want
+   * - or an arbitrary scalable number, optionally preceded and/or followed by text.
    *
    * Interchangeable with `yield` or `serves`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
@@ -82,30 +97,37 @@ export interface Metadata {
    * ```yaml
    * servings: 2, a few
    * ```
+   *
+   * * @example
+   * ```yaml
+   * servings: {{1.5%kg}} of bread
+   * ```
    */
-  servings?: number | string;
+  servings?: MetadataScalingVar;
   /** The yield of the recipe.
-   * Should be either a number or a string which starts with a number
-   * (which will be used for scaling) followed by a comma and then
-   * whatever you want.
+   * Can be given either as:
+   * - a number
+   * - a string which starts with a number (which will be used for scaling) followed by a comma and then whatever you want
+   * - or an arbitrary scalable number, optionally preceded and/or followed by text.
    *
    * Interchangeable with `servings` or `serves`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
    * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
    * for examples.
    */
-  yield?: number | string;
+  yield?: MetadataScalingVar;
   /** The number of people the recipe serves.
-   * Should be either a number or a string which starts with a number
-   * (which will be used for scaling) followed by a comma and then
-   * whatever you want.
+   * Can be given either as:
+   * - a number
+   * - a string which starts with a number (which will be used for scaling) followed by a comma and then whatever you want
+   * - or an arbitrary scalable number, optionally preceded and/or followed by text.
    *
    * Interchangeable with `servings` or `yield`. If multiple ones are defined,
    * the prevailance order for the number which will used for scaling
    * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
    * for examples.
    */
-  serves?: number | string;
+  serves?: MetadataScalingVar;
   /** The course of the recipe. */
   course?: string;
   /** The category of the recipe. */

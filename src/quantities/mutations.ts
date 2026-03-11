@@ -644,13 +644,27 @@ export const flattenPlainUnitGroup = (
 export function applyBestUnit(
   q: QuantityWithExtendedUnit,
   system?: SpecificUnitSystem,
-): QuantityWithExtendedUnit {
+): QuantityWithExtendedUnit;
+export function applyBestUnit(
+  q: QuantityWithPlainUnit,
+  system?: SpecificUnitSystem,
+): QuantityWithPlainUnit;
+export function applyBestUnit(
+  q: QuantityWithExtendedUnit | QuantityWithPlainUnit,
+  system?: SpecificUnitSystem,
+): QuantityWithExtendedUnit | QuantityWithPlainUnit {
+  // Convert into Extended version to handle both types with the same logic
+  const extended: QuantityWithExtendedUnit = { quantity: q.quantity };
+  if (q.unit) {
+    extended.unit = typeof q.unit === "string" ? { name: q.unit } : q.unit;
+  }
+
   // Skip if no unit or text value
-  if (!q.unit?.name) {
+  if (!extended.unit?.name) {
     return q;
   }
 
-  const unitDef = resolveUnit(q.unit.name);
+  const unitDef = resolveUnit(extended.unit.name);
 
   // Skip if unit type is "other" (not convertible)
   if (unitDef.type === "other") {
@@ -658,12 +672,15 @@ export function applyBestUnit(
   }
 
   // Get the value - skip if text
-  if (q.quantity.type === "fixed" && q.quantity.value.type === "text") {
+  if (
+    extended.quantity.type === "fixed" &&
+    extended.quantity.value.type === "text"
+  ) {
     return q;
   }
 
   // string is filtered out in the above if
-  const avgValue = getAverageValue(q.quantity) as number;
+  const avgValue = getAverageValue(extended.quantity) as number;
 
   // Determine effective system: use provided system, or infer from unit
   const effectiveSystem: SpecificUnitSystem =
@@ -685,7 +702,7 @@ export function applyBestUnit(
   );
 
   // Get canonical name of the original unit for comparison
-  const originalCanonicalName = normalizeUnit(q.unit.name)?.name;
+  const originalCanonicalName = normalizeUnit(extended.unit.name)?.name;
 
   // If same unit (by canonical name match), no change needed - preserve original unit name
   if (bestUnit.name === originalCanonicalName) {
@@ -696,10 +713,12 @@ export function applyBestUnit(
   const formattedValue = formatOutputValue(bestValue, bestUnit);
 
   // Handle ranges: scale to the best unit
-  if (q.quantity.type === "range") {
+  if (extended.quantity.type === "range") {
     const bestToBase = getToBase(bestUnit, effectiveSystem);
-    const minValue = (getNumericValue(q.quantity.min) * toBase) / bestToBase;
-    const maxValue = (getNumericValue(q.quantity.max) * toBase) / bestToBase;
+    const minValue =
+      (getNumericValue(extended.quantity.min) * toBase) / bestToBase;
+    const maxValue =
+      (getNumericValue(extended.quantity.max) * toBase) / bestToBase;
 
     return {
       quantity: {
@@ -707,8 +726,9 @@ export function applyBestUnit(
         min: formatOutputValue(minValue, bestUnit),
         max: formatOutputValue(maxValue, bestUnit),
       },
-      unit: { name: bestUnit.name },
-    };
+      unit:
+        typeof q.unit === "string" ? bestUnit.name : { name: bestUnit.name },
+    } as QuantityWithExtendedUnit | QuantityWithPlainUnit;
   }
 
   // Fixed value
@@ -717,8 +737,8 @@ export function applyBestUnit(
       type: "fixed",
       value: formattedValue,
     },
-    unit: { name: bestUnit.name },
-  };
+    unit: typeof q.unit === "string" ? bestUnit.name : { name: bestUnit.name },
+  } as QuantityWithExtendedUnit | QuantityWithPlainUnit;
 }
 
 /**
