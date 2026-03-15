@@ -148,6 +148,8 @@ exports[`parse function > extracts steps correctly 1`] = `
       },
     ],
     "name": "",
+    "optional": undefined,
+    "variants": undefined,
   },
 ]
 `;
@@ -158,6 +160,7 @@ Recipe {
   "choices": {
     "ingredientGroups": Map {},
     "ingredientItems": Map {},
+    "variants": [],
   },
   "cookware": [
     {
@@ -680,6 +683,8 @@ Recipe {
         },
       ],
       "name": "Brown the beef",
+      "optional": undefined,
+      "variants": undefined,
     },
     Section {
       "content": [
@@ -940,6 +945,8 @@ Recipe {
         },
       ],
       "name": "Make the meat sauce",
+      "optional": undefined,
+      "variants": undefined,
     },
     Section {
       "content": [
@@ -1130,6 +1137,8 @@ Recipe {
         },
       ],
       "name": "Prepare the cheese filling",
+      "optional": undefined,
+      "variants": undefined,
     },
     Section {
       "content": [
@@ -1186,6 +1195,8 @@ Recipe {
         },
       ],
       "name": "Layer the lasagna ingredients",
+      "optional": undefined,
+      "variants": undefined,
     },
     Section {
       "content": [
@@ -1242,6 +1253,8 @@ Recipe {
         },
       ],
       "name": "Bake the lasagna",
+      "optional": undefined,
+      "variants": undefined,
     },
   ],
   "servings": 12,
@@ -1401,6 +1414,8 @@ exports[`parse function > parses notes correctly 1`] = `
       },
     ],
     "name": "",
+    "optional": undefined,
+    "variants": undefined,
   },
   Section {
     "content": [
@@ -1415,6 +1430,8 @@ exports[`parse function > parses notes correctly 1`] = `
       },
     ],
     "name": "Section directly after note",
+    "optional": undefined,
+    "variants": undefined,
   },
 ]
 `;

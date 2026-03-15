@@ -27,6 +27,9 @@ export {
 import {
   isAlternativeSelected,
   isGroupedItem,
+  isSectionActive,
+  isStepActive,
+  getEffectiveChoices,
   renderFractionAsVulgar,
   formatNumericValue,
   formatSingleValue,
@@ -46,6 +49,9 @@ import { convertQuantityToSystem } from "./quantities/mutations";
 export {
   isAlternativeSelected,
   isGroupedItem,
+  isSectionActive,
+  isStepActive,
+  getEffectiveChoices,
   renderFractionAsVulgar,
   formatNumericValue,
   formatSingleValue,

@@ -9,8 +9,10 @@ import type {
   Unit,
   QuantityWithExtendedUnit,
   MaybeScalableQuantity,
+  Step,
 } from "../types";
 import { Recipe } from "../classes/recipe";
+import { Section } from "../classes/section";
 
 // ============================================================================
 // Quantity Formatting Helpers
@@ -325,4 +327,136 @@ export function isAlternativeSelected(
   // Inline alternatives: check ingredientItems map
   const selectedIndex = choices?.ingredientItems?.get(item.id);
   return alternativeIndex === selectedIndex;
+}
+
+// ============================================================================
+// Variant Helpers
+// ============================================================================
+
+/**
+ * Determines if a section is active (should be displayed or processed) for a given variant.
+ *
+ * - Sections with no `variants` property are always active.
+ * - When no variant is selected (default), sections tagged `[*]` are active,
+ *   and sections tagged with named variants are not.
+ * - When a named variant is selected, sections whose `variants` array includes
+ *   that name are active.
+ *
+ * @param section - The Section to check
+ * @param variant - The active variant name, or `undefined`/`*` for the default variant
+ * @returns `true` if the section should be displayed
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * const recipe = new Recipe(cooklangText);
+ * for (const section of recipe.sections) {
+ *   if (isSectionActive(section, choices.variant)) {
+ *     // render section
+ *   }
+ * }
+ * ```
+ */
+export function isSectionActive(section: Section, variant?: string): boolean {
+  if (!section.variants) return true;
+  const isDefault = variant === undefined || variant === "*";
+  if (isDefault) {
+    return section.variants.includes("*");
+  }
+  return section.variants.includes(variant);
+}
+
+/**
+ * Determines if a step is active (should be displayed) for a given variant.
+ *
+ * - Steps with no `variants` property are always active.
+ * - When no variant is selected (default), steps tagged `[*]` are active,
+ *   and steps tagged with named variants are not.
+ * - When a named variant is selected, steps whose `variants` array includes
+ *   that name are active.
+ *
+ * @param step - The Step to check
+ * @param variant - The active variant name, or `undefined`/`*` for the default variant
+ * @returns `true` if the step should be displayed
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * for (const item of section.content) {
+ *   if (item.type === 'step' && isStepActive(item, choices.variant)) {
+ *     // render step
+ *   }
+ * }
+ * ```
+ */
+export function isStepActive(step: Step, variant?: string): boolean {
+  if (!step.variants) return true;
+  const isDefault = variant === undefined || variant === "*";
+  if (isDefault) {
+    return step.variants.includes("*");
+  }
+  return step.variants.includes(variant);
+}
+
+/**
+ * Returns the effective choices for a recipe given a variant selection.
+ *
+ * When a named variant is active, this scans ingredient alternatives whose
+ * `note` contains the variant name (case-insensitive substring match) and
+ * returns a `RecipeChoices` object with auto-selected alternatives.
+ *
+ * For inline alternatives: auto-selects the first alternative whose note
+ * matches the variant name.
+ *
+ * For grouped alternatives: auto-selects the first subgroup that has any
+ * alternative whose note matches the variant name.
+ *
+ * @param recipe - The Recipe instance
+ * @param variant - The active variant name, or `undefined`/`*` for defaults
+ * @returns A `RecipeChoices` with the `variant` set and auto-selected alternatives
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * const recipe = new Recipe(cooklangText);
+ * const choices = getEffectiveChoices(recipe, "vegan");
+ * const ingredients = recipe.getIngredientQuantities({ choices });
+ * ```
+ */
+export function getEffectiveChoices(
+  recipe: Recipe,
+  variant?: string,
+): RecipeChoices {
+  const choices: RecipeChoices = { variant };
+
+  // No auto-selection for default variant
+  if (variant === undefined || variant === "*") return choices;
+
+  const variantLower = variant.toLowerCase();
+
+  // Auto-select inline alternatives by note match
+  for (const [itemId, alternatives] of recipe.choices.ingredientItems) {
+    const matchIdx = alternatives.findIndex(
+      (alt) => alt.note && alt.note.toLowerCase().includes(variantLower),
+    );
+    if (matchIdx >= 0) {
+      if (!choices.ingredientItems) choices.ingredientItems = new Map();
+      choices.ingredientItems.set(itemId, matchIdx);
+    }
+  }
+
+  // Auto-select grouped alternatives by note match
+  for (const [groupId, subgroups] of recipe.choices.ingredientGroups) {
+    const matchIdx = subgroups.findIndex((sg) =>
+      sg.some(
+        (alt) => alt.note && alt.note.toLowerCase().includes(variantLower),
+      ),
+    );
+    if (matchIdx >= 0) {
+      if (!choices.ingredientGroups) choices.ingredientGroups = new Map();
+      choices.ingredientGroups.set(groupId, matchIdx);
+    }
+  }
+
+  return choices;
 }

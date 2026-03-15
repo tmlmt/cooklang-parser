@@ -41,6 +41,7 @@ import {
   quantityAlternativeRegex,
   inlineIngredientAlternativesRegex,
   arbitraryScalableRegex,
+  variantTagRegex,
 } from "../regex";
 import {
   flushPendingItems,
@@ -111,6 +112,7 @@ export class Recipe {
   choices: RecipeAlternatives = {
     ingredientItems: new Map(),
     ingredientGroups: new Map(),
+    variants: [],
   };
   /**
    * The parsed recipe ingredients.
@@ -545,6 +547,11 @@ export class Recipe {
     if (itemQuantity) {
       Object.assign(alternative, itemQuantity);
     }
+    // Add note if present
+    const note = groups.gIngredientNote?.trim();
+    if (note) {
+      alternative.note = note;
+    }
 
     const existingSubgroups = this.choices.ingredientGroups.get(groupKey);
     const existingAlternativesFlat = existingSubgroups?.flat();
@@ -664,8 +671,13 @@ export class Recipe {
   private collectQuantityGroups(options?: GetIngredientQuantitiesOptions) {
     const { section, step, choices } = options || {};
 
+    // Active variant (undefined or "*" = default)
+    const activeVariant = choices?.variant;
+    const isDefaultVariant =
+      activeVariant === undefined || activeVariant === "*";
+
     // Determine sections to process
-    const sectionsToProcess =
+    const sectionsToProcess: Section[] =
       section !== undefined
         ? (() => {
             const idx =
@@ -699,11 +711,28 @@ export class Recipe {
     // Track selected ingredients (get quantities + usedAsPrimary) and all referenced ingredients
     const selectedIndices = new Set<number>();
     const referencedIndices = new Set<number>();
+    // Track ingredient indices that should receive the "optional" flag
+    // dynamically due to being in a variant-optional step ([?variant])
+    const dynamicOptionalIndices = new Set<number>();
 
     for (const currentSection of sectionsToProcess) {
+      // Skip sections that don't match the active variant
+      if (currentSection.variants) {
+        if (isDefaultVariant) {
+          // Default variant: skip sections tagged with non-"*" variants
+          if (!currentSection.variants.includes("*")) continue;
+        } else {
+          // Named variant: skip sections that don't include this variant
+          if (!currentSection.variants.includes(activeVariant)) continue;
+        }
+      }
+
       const allSteps = currentSection.content.filter(
         (item): item is Step => item.type === "step",
       );
+
+      // Track whether this section is optional
+      const isOptionalSection = currentSection.optional === true;
 
       // Determine steps to process
       const stepsToProcess =
@@ -718,6 +747,19 @@ export class Recipe {
               : [];
 
       for (const currentStep of stepsToProcess) {
+        // Skip steps that don't match the active variant
+        if (currentStep.variants) {
+          if (isDefaultVariant) {
+            if (!currentStep.variants.includes("*")) continue;
+          } else {
+            if (!currentStep.variants.includes(activeVariant)) continue;
+          }
+        }
+
+        // Track whether this step is variant-optional
+        const isOptionalStep =
+          currentStep.optional === true || isOptionalSection;
+
         for (const item of currentStep.items.filter(
           (item): item is IngredientItem => item.type === "ingredient",
         )) {
@@ -734,14 +776,73 @@ export class Recipe {
           if (isGrouped) {
             const groupChoice = choices?.ingredientGroups?.get(item.group!);
             hasExplicitChoice = groupChoice !== undefined;
-            const targetSubgroupIndex = groupChoice ?? 0;
-            const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
-            isSelected =
-              selectedSubgroup?.some((alt) => alt.itemId === item.id) ?? false;
+
+            // Variant-aware auto-selection for grouped items: when a named
+            // variant is active and no explicit choice, look for subgroups
+            // whose alternatives have a note matching the variant name
+            if (!hasExplicitChoice && !isDefaultVariant) {
+              const matchingSubgroupIdx = groupSubgroups?.findIndex((sg) =>
+                sg.some(
+                  (alt) =>
+                    alt.note &&
+                    alt.note
+                      .toLowerCase()
+                      .includes(activeVariant.toLowerCase()),
+                ),
+              );
+              if (
+                matchingSubgroupIdx !== undefined &&
+                matchingSubgroupIdx >= 0
+              ) {
+                const matchedSubgroup = groupSubgroups![matchingSubgroupIdx]!;
+                isSelected = matchedSubgroup.some(
+                  (alt) => alt.itemId === item.id,
+                );
+                hasExplicitChoice = true; // treat as explicit so alternativeRefs are not built
+                selectedAltIndex = 0;
+              } else {
+                const targetSubgroupIndex = 0;
+                const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
+                isSelected =
+                  selectedSubgroup?.some((alt) => alt.itemId === item.id) ??
+                  false;
+              }
+            } else {
+              const targetSubgroupIndex = groupChoice ?? 0;
+              const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
+              isSelected =
+                selectedSubgroup?.some((alt) => alt.itemId === item.id) ??
+                false;
+            }
           } else {
             const itemChoice = choices?.ingredientItems?.get(item.id);
             hasExplicitChoice = itemChoice !== undefined;
-            selectedAltIndex = itemChoice ?? 0;
+
+            // Variant-aware auto-selection for inline alternatives: when a
+            // named variant is active and no explicit choice, look for
+            // alternatives whose note matches the variant name (substring,
+            // case-insensitive). Multiple matches are kept as alternatives.
+            if (!hasExplicitChoice && !isDefaultVariant) {
+              const matchingIndices = item.alternatives
+                .map((alt, idx) => ({ alt, idx }))
+                .filter(
+                  ({ alt }) =>
+                    alt.note &&
+                    alt.note
+                      .toLowerCase()
+                      .includes(activeVariant.toLowerCase()),
+                )
+                .map(({ idx }) => idx);
+              if (matchingIndices.length > 0) {
+                selectedAltIndex = matchingIndices[0]!;
+                hasExplicitChoice = true; // suppress alternativeRefs for non-matching
+              } else {
+                selectedAltIndex = itemChoice ?? 0;
+              }
+            } else {
+              selectedAltIndex = itemChoice ?? 0;
+            }
+
             isSelected = true;
           }
 
@@ -749,6 +850,11 @@ export class Recipe {
           if (!alternative || !isSelected) continue;
 
           selectedIndices.add(alternative.index);
+
+          // Track dynamic optional flag for ingredients in variant-optional steps
+          if (isOptionalStep) {
+            dynamicOptionalIndices.add(alternative.index);
+          }
 
           // Add all alternatives to referenced set (so indices remain valid in result)
           const allAltsFlat = isGrouped
@@ -893,7 +999,12 @@ export class Recipe {
       }
     }
 
-    return { ingredientGroups, selectedIndices, referencedIndices };
+    return {
+      ingredientGroups,
+      selectedIndices,
+      referencedIndices,
+      dynamicOptionalIndices,
+    };
   }
 
   /**
@@ -915,8 +1026,12 @@ export class Recipe {
   getRawQuantityGroups(
     options?: GetIngredientQuantitiesOptions,
   ): RawQuantityGroup[] {
-    const { ingredientGroups, selectedIndices, referencedIndices } =
-      this.collectQuantityGroups(options);
+    const {
+      ingredientGroups,
+      selectedIndices,
+      referencedIndices,
+      dynamicOptionalIndices,
+    } = this.collectQuantityGroups(options);
 
     const result: RawQuantityGroup[] = [];
 
@@ -925,6 +1040,12 @@ export class Recipe {
 
       const orig = this.ingredients[index]!;
       const usedAsPrimary = selectedIndices.has(index);
+
+      // Merge static flags with dynamic optional flag from variant-optional steps
+      let flags = orig.flags;
+      if (dynamicOptionalIndices.has(index) && !flags?.includes("optional")) {
+        flags = [...(flags ?? []), "optional"];
+      }
 
       // Collect all raw quantities across all signature groups
       const quantities: (
@@ -944,7 +1065,7 @@ export class Recipe {
       result.push({
         name: orig.name,
         ...(usedAsPrimary && { usedAsPrimary: true }),
-        ...(orig.flags && { flags: orig.flags }),
+        ...(flags && { flags }),
         quantities,
       });
     }
@@ -982,8 +1103,12 @@ export class Recipe {
   getIngredientQuantities(
     options?: GetIngredientQuantitiesOptions,
   ): Ingredient[] {
-    const { ingredientGroups, selectedIndices, referencedIndices } =
-      this.collectQuantityGroups(options);
+    const {
+      ingredientGroups,
+      selectedIndices,
+      referencedIndices,
+      dynamicOptionalIndices,
+    } = this.collectQuantityGroups(options);
 
     // Build result
     const result: Ingredient[] = [];
@@ -992,10 +1117,17 @@ export class Recipe {
       if (!referencedIndices.has(index)) continue;
 
       const orig = this.ingredients[index]!;
+
+      // Merge static flags with dynamic optional flag from variant-optional steps
+      let flags = orig.flags;
+      if (dynamicOptionalIndices.has(index) && !flags?.includes("optional")) {
+        flags = [...(flags ?? []), "optional"];
+      }
+
       const ing: Ingredient = {
         name: orig.name,
         ...(orig.preparation && { preparation: orig.preparation }),
-        ...(orig.flags && { flags: orig.flags }),
+        ...(flags && { flags }),
         ...(orig.extras && { extras: orig.extras }),
       };
 
@@ -1064,6 +1196,71 @@ export class Recipe {
   }
 
   /**
+   * Returns the list of cookware items that are used in the active variant.
+   * Cookware in steps/sections not matching the active variant are excluded.
+   * Hidden cookware is always excluded.
+   *
+   * @param options - Options for filtering:
+   *   - `choices`: The choices to apply (only `variant` is used)
+   * @returns Array of Cookware objects referenced by active steps
+   *
+   * @example
+   * ```typescript
+   * // Get all cookware for the default variant
+   * const cookware = recipe.getCookwareForVariant();
+   *
+   * // Get cookware for a specific variant
+   * const veganCookware = recipe.getCookwareForVariant({ choices: { variant: 'vegan' } });
+   * ```
+   */
+  getCookwareForVariant(
+    options?: Pick<GetIngredientQuantitiesOptions, "choices">,
+  ): Cookware[] {
+    const { choices } = options || {};
+    const activeVariant = choices?.variant;
+    const isDefaultVariant =
+      activeVariant === undefined || activeVariant === "*";
+
+    const cookwareIndices = new Set<number>();
+
+    for (const currentSection of this.sections) {
+      // Skip sections that don't match the active variant
+      if (currentSection.variants) {
+        if (isDefaultVariant) {
+          if (!currentSection.variants.includes("*")) continue;
+        } else {
+          if (!currentSection.variants.includes(activeVariant)) continue;
+        }
+      }
+
+      const allSteps = currentSection.content.filter(
+        (item): item is Step => item.type === "step",
+      );
+
+      for (const currentStep of allSteps) {
+        // Skip steps that don't match the active variant
+        if (currentStep.variants) {
+          if (isDefaultVariant) {
+            if (!currentStep.variants.includes("*")) continue;
+          } else {
+            if (!currentStep.variants.includes(activeVariant)) continue;
+          }
+        }
+
+        for (const item of currentStep.items) {
+          if (item.type === "cookware") {
+            cookwareIndices.add(item.index);
+          }
+        }
+      }
+    }
+
+    return this.cookware.filter(
+      (cw, idx) => cookwareIndices.has(idx) && !cw.flags?.includes("hidden"),
+    );
+  }
+
+  /**
    * Parses a recipe from a string.
    * @param content - The recipe content to parse.
    */
@@ -1089,12 +1286,17 @@ export class Recipe {
     const items: Step["items"] = [];
     let noteText = "";
     let inNote = false;
+    let stepVariants: string[] | undefined;
+    let stepOptional: boolean | undefined;
+    const discoveredVariants = new Set<string>();
 
     // We parse content line by line
     for (const line of cleanContent) {
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
-        flushPendingItems(section, items);
+        flushPendingItems(section, items, stepVariants, stepOptional);
+        stepVariants = undefined;
+        stepOptional = undefined;
         flushPendingNote(
           section,
           noteText ? this._parseNoteText(noteText) : [],
@@ -1107,21 +1309,49 @@ export class Recipe {
 
       // New section
       if (line.startsWith("=")) {
-        flushPendingItems(section, items);
+        flushPendingItems(section, items, stepVariants, stepOptional);
+        stepVariants = undefined;
+        stepOptional = undefined;
         flushPendingNote(
           section,
           noteText ? this._parseNoteText(noteText) : [],
         );
         noteText = "";
 
+        // Strip = signs and extract section name
+        let sectionName = line.replace(/^=+|=+$/g, "").trim();
+
+        // Parse variant tag from section name (e.g. "[vegan] Sauce")
+        let sectionVariants: string[] | undefined;
+        let sectionOptional: boolean | undefined;
+        const sectionVarMatch = sectionName.match(variantTagRegex);
+        if (sectionVarMatch?.groups) {
+          const isOptionalPrefix =
+            sectionVarMatch.groups.variantOptionalPrefix === "?";
+          const names = (sectionVarMatch.groups.variantNames ?? "")
+            .split(",")
+            .map((n) => n.trim())
+            .filter((n) => n.length > 0);
+          if (names.length > 0) {
+            sectionVariants = names;
+            for (const v of names) discoveredVariants.add(v);
+          }
+          if (isOptionalPrefix) {
+            sectionOptional = true;
+          }
+          sectionName = sectionName.slice(sectionVarMatch[0].length).trim();
+        }
+
         if (this.sections.length === 0 && section.isBlank()) {
-          section.name = line.replace(/^=+|=+$/g, "").trim();
+          section.name = sectionName;
+          if (sectionVariants) section.variants = sectionVariants;
+          if (sectionOptional) section.optional = true;
         } else {
           /* v8 ignore else -- @preserve */
           if (!section.isBlank()) {
             this.sections.push(section);
           }
-          section = new Section(line.replace(/^=+|=+$/g, "").trim());
+          section = new Section(sectionName, sectionVariants, sectionOptional);
         }
         blankLineBefore = true;
         inNote = false;
@@ -1130,7 +1360,9 @@ export class Recipe {
 
       // New note
       if (blankLineBefore && line.startsWith(">")) {
-        flushPendingItems(section, items);
+        flushPendingItems(section, items, stepVariants, stepOptional);
+        stepVariants = undefined;
+        stepOptional = undefined;
         noteText = line.substring(1).trim();
         inNote = true;
         blankLineBefore = false;
@@ -1148,13 +1380,41 @@ export class Recipe {
         continue;
       }
 
+      // Check for variant tag on the first line of a new step
+      let currentLine = line;
+      if (items.length === 0) {
+        const varMatch = currentLine.match(variantTagRegex);
+        if (varMatch?.groups) {
+          const isOptionalPrefix =
+            varMatch.groups.variantOptionalPrefix === "?";
+          const names = (varMatch.groups.variantNames ?? "")
+            .split(",")
+            .map((n) => n.trim())
+            .filter((n) => n.length > 0);
+          if (names.length > 0) {
+            stepVariants = names;
+            for (const v of names) discoveredVariants.add(v);
+          }
+          // [?] with no variant names means optional for all variants
+          if (isOptionalPrefix) {
+            stepOptional = true;
+          }
+          currentLine = currentLine.slice(varMatch[0].length);
+          // If the line is now empty after stripping the tag, skip it
+          if (currentLine.trim().length === 0) {
+            blankLineBefore = false;
+            continue;
+          }
+        }
+      }
+
       // Detecting items
       let cursor = 0;
-      for (const match of line.matchAll(tokensRegex)) {
+      for (const match of currentLine.matchAll(tokensRegex)) {
         const idx = match.index;
         /* v8 ignore else -- @preserve */
         if (idx > cursor) {
-          items.push(...parseMarkdownSegments(line.slice(cursor, idx)));
+          items.push(...parseMarkdownSegments(currentLine.slice(cursor, idx)));
         }
 
         const groups = match.groups!;
@@ -1234,18 +1494,26 @@ export class Recipe {
         cursor = idx + match[0].length;
       }
 
-      if (cursor < line.length) {
-        items.push(...parseMarkdownSegments(line.slice(cursor)));
+      if (cursor < currentLine.length) {
+        items.push(...parseMarkdownSegments(currentLine.slice(cursor)));
       }
 
       blankLineBefore = false;
     }
 
     // End of content reached: pushing all temporarily saved elements
-    flushPendingItems(section, items);
+    flushPendingItems(section, items, stepVariants, stepOptional);
     flushPendingNote(section, noteText ? this._parseNoteText(noteText) : []);
     if (!section.isBlank()) {
       this.sections.push(section);
+    }
+
+    // Populate discovered variants
+    // Union of metadata variants and discovered step/section variants
+    const metaVariants = this.metadata.variants ?? [];
+    const allVariants = new Set([...metaVariants, ...discoveredVariants]);
+    if (allVariants.size > 0) {
+      this.choices.variants = [...allVariants];
     }
 
     this._populateIngredientQuantities();
@@ -1673,7 +1941,11 @@ export class Recipe {
     newRecipe.metadata = deepClone(this.metadata);
     newRecipe.ingredients = deepClone(this.ingredients);
     newRecipe.sections = this.sections.map((section) => {
-      const newSection = new Section(section.name);
+      const newSection = new Section(
+        section.name,
+        section.variants,
+        section.optional,
+      );
       newSection.content = deepClone(section.content);
       return newSection;
     });

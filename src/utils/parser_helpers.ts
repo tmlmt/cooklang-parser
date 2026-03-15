@@ -63,14 +63,21 @@ export function flushPendingNote(
  * Pushes pending step items and a pending note to the section content.
  * @param section - The current section object.
  * @param items - The list of step items. This array will be cleared.
+ * @param stepVariants - Optional variant names for the step.
+ * @param stepOptional - Optional flag for the step.
  * @returns true if the items were pushed, otherwise false.
  */
 export function flushPendingItems(
   section: SectionObject,
   items: Step["items"],
+  stepVariants?: string[],
+  stepOptional?: boolean,
 ): boolean {
   if (items.length > 0) {
-    section.content.push({ type: "step", items: [...items] });
+    const step: Step = { type: "step", items: [...items] };
+    if (stepVariants) step.variants = stepVariants;
+    if (stepOptional) step.optional = true;
+    section.content.push(step);
     items.length = 0;
     return true;
   }
@@ -939,6 +946,7 @@ export function extractMetadata(content: string): MetadataExtract {
     "serves",
     // List fields
     "tags",
+    "variants",
   ]);
 
   // Simple string metadata variables
@@ -1068,6 +1076,10 @@ export function extractMetadata(content: string): MetadataExtract {
   // Tags
   const tags = parseListMetaVar(metadataContent, "tags");
   if (tags) metadata.tags = tags;
+
+  // Variants
+  const variants = parseListMetaVar(metadataContent, "variants");
+  if (variants) metadata.variants = variants;
 
   // Dynamic parsing: capture all additional keys not handled above
   const allKeys = extractAllMetadataKeys(metadataContent);

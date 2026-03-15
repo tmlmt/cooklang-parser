@@ -1302,6 +1302,7 @@ Another step.
           ],
         ]),
         ingredientItems: new Map(),
+        variants: [],
       });
       // The ingredient items should contain the right fields
       const firstIngredientItem = result.sections[0]?.content[0];
@@ -1525,6 +1526,7 @@ Another step.
           ],
         ]),
         ingredientGroups: new Map(),
+        variants: [],
       });
     });
 
@@ -2360,6 +2362,33 @@ Add @water{1%tbsp} and some more @&water{100%mL}
       const recipeClone = recipe.clone();
       expect(recipeClone).toEqual(recipe);
       expect(recipeClone).not.toBe(recipe);
+    });
+
+    it("preserves section.variants after clone", () => {
+      const recipe = new Recipe(`
+= Base
+
+Mix @flour{200%g}.
+
+= [vegan] Vegan Topping
+
+Spread @tofu{100%g} on top.
+
+= [*] Classic Topping
+
+Spread @cheese{100%g} on top.
+`);
+      const cloned = recipe.clone();
+
+      expect(cloned.sections).toHaveLength(3);
+      expect(cloned.sections[0]!.variants).toBeUndefined();
+      expect(cloned.sections[1]!.variants).toEqual(["vegan"]);
+      expect(cloned.sections[2]!.variants).toEqual(["*"]);
+
+      // choices.variants should also be preserved
+      expect(cloned.choices.variants).toEqual(
+        expect.arrayContaining(["vegan", "*"]),
+      );
     });
   });
 

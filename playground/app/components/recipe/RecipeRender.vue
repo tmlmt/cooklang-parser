@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import {
   formatQuantityWithUnit,
+  isSectionActive,
+  isStepActive,
+  type Ingredient,
   type MetadataScalingVar,
   type Recipe,
   type RecipeChoices,
@@ -43,8 +46,15 @@ const metadataEntries = computed(() => {
   return entries;
 });
 
+/**
+ * Get cookware filtered by the active variant, excluding hidden cookware.
+ */
+const filteredCookware = computed(() => {
+  return props.recipe.getCookwareForVariant({ choices: props.choices });
+});
+
 const hasMetadata = computed(() => metadataEntries.value.length > 0);
-const hasCookware = computed(() => props.recipe.cookware.length > 0);
+const hasCookware = computed(() => filteredCookware.value.length > 0);
 const hasSections = computed(() => props.recipe.sections.length > 0);
 
 /**
@@ -64,7 +74,7 @@ const filteredIngredients = computed(() => {
 /**
  * Check if an ingredient is optional
  */
-function isOptional(ingredient: (typeof filteredIngredients.value)[0]) {
+function isOptional(ingredient: Ingredient) {
   return ingredient.flags?.includes("optional");
 }
 
@@ -75,16 +85,33 @@ const hasIngredients = computed(() => filteredIngredients.value.length > 0);
  */
 const sectionsWithStepNumbers = computed(() => {
   let stepCounter = 0;
+  const activeVariant = props.choices?.variant;
   return props.recipe.sections.map((section) => {
+    const sectionIsActive = isSectionActive(section, activeVariant);
     const contentWithNumbers = section.content.map((item) => {
       if (item.type === "step") {
-        stepCounter++;
-        return { ...item, stepNumber: stepCounter };
+        const stepIsActive =
+          sectionIsActive && isStepActive(item, activeVariant);
+        const stepNumber = stepIsActive ? ++stepCounter : null;
+        return {
+          ...item,
+          stepNumber,
+          active: stepIsActive,
+          optional: item.optional,
+        };
       }
-      return { ...item, stepNumber: null };
+      return {
+        ...item,
+        stepNumber: null,
+        active: sectionIsActive,
+        optional: false,
+      };
     });
     return {
       name: section.name,
+      active: sectionIsActive,
+      variants: section.variants,
+      optional: section.optional,
       content: contentWithNumbers,
     };
   });
@@ -128,7 +155,7 @@ const sectionsWithStepNumbers = computed(() => {
       <h3 class="mb-2 text-lg font-semibold">Cookware</h3>
       <ul class="list-inside list-disc space-y-1">
         <RecipeCookwareItem
-          v-for="(cw, idx) in recipe.cookware"
+          v-for="(cw, idx) in filteredCookware"
           :key="idx"
           :cookware="cw"
         />
@@ -143,6 +170,7 @@ const sectionsWithStepNumbers = computed(() => {
           v-for="(section, sIdx) in sectionsWithStepNumbers"
           :key="sIdx"
           class="section"
+          :class="{ 'opacity-30': !section.active }"
         >
           <!-- Section Name (if any) -->
           <h4
@@ -150,14 +178,33 @@ const sectionsWithStepNumbers = computed(() => {
             class="text-md mb-2 font-semibold text-gray-700 dark:text-gray-200"
           >
             === {{ section.name }} ===
+            <span v-if="section.optional" class="font-normal">(optional)</span>
+            <span
+              v-if="section.variants"
+              class="text-xs font-normal text-gray-400"
+            >
+              [{{ section.variants.join(", ") }}]
+            </span>
           </h4>
 
           <!-- Steps and Notes -->
           <div class="space-y-2">
             <template v-for="(item, cIdx) in section.content" :key="cIdx">
               <!-- Step -->
-              <div v-if="item.type === 'step'" class="step">
-                <div class="font-bold">Step {{ item.stepNumber }}</div>
+              <div
+                v-if="item.type === 'step'"
+                class="step"
+                :class="{ 'opacity-30': !item.active }"
+              >
+                <div class="font-bold">
+                  <span v-if="item.optional" class="font-normal">
+                    (Optional)
+                  </span>
+                  <template v-if="item.active">
+                    Step {{ item.stepNumber }}
+                  </template>
+                  <template v-else>Step (inactive)</template>
+                </div>
                 <div class="ml-4">
                   <RecipeStepContent
                     :step="item"

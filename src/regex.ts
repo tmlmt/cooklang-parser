@@ -225,6 +225,13 @@ export const ingredientWithGroupKeyRegex = createRegex()
     .endGroup()
     .literal(")")
   .endGroup().optional()
+  .startGroup()
+    .literal("[")
+    .startNamedGroup("gIngredientNote")
+      .notAnyOf("\\]").oneOrMore().lazy()
+    .endGroup()
+    .literal("]")
+  .endGroup().optional()
   .toRegExp()
 
 export const ingredientAliasRegex = createRegex()
@@ -455,6 +462,30 @@ export const floatRegex = createRegex()
   .endAnchor()
   .toRegExp()
   
+/**
+ * Matches a variant tag at the start of a step line or in a section name.
+ * - `[*]` — default variant
+ * - `[vegan]` — single variant
+ * - `[vegan,vegetarian]` — multiple variants
+ * - `[?vegan]` — optional step for this variant
+ *
+ * Named groups:
+ * - `variantOptionalPrefix`: the `?` character if present
+ * - `variantNames`: comma-separated variant names (e.g. `"vegan,vegetarian"`), empty when `[?]`
+ */
+export const variantTagRegex = createRegex()
+  .startAnchor()
+  .literal("[")
+  .startNamedGroup("variantOptionalPrefix")
+    .literal("?")
+  .endGroup().optional()
+  .startNamedGroup("variantNames")
+    .notAnyOf("\\]").zeroOrMore()
+  .endGroup()
+  .literal("]")
+  .whitespace().zeroOrMore()
+  .toRegExp()
+
 /** Markdown: escaped character *, _, \` */
 const mdEscaped = createRegex()
   .literal("\\")

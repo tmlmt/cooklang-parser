@@ -160,6 +160,8 @@ export interface Metadata {
    * This stores the original value as written by the user.
    */
   unitSystem?: string;
+  /** The list of available variant names for this recipe. */
+  variants?: string[];
   /**
    * Index signature for additional metadata fields not explicitly typed.
    * Any metadata key in the frontmatter will be captured here.
@@ -432,6 +434,11 @@ export interface RecipeAlternatives {
    *   their own single-element subgroup.
    */
   ingredientGroups: Map<string, IngredientAlternative[][]>;
+  /**
+   * All variant names discovered in the recipe (from metadata, step tags,
+   * and section tags). Includes `*` if any step/section uses the default tag.
+   */
+  variants: string[];
 }
 
 /**
@@ -444,6 +451,8 @@ export interface RecipeChoices {
   ingredientItems?: Map<string, number>;
   /** Map of choices that can be made for Grouped Ingredient StepItem's */
   ingredientGroups?: Map<string, number>;
+  /** The selected variant name */
+  variant?: string;
 }
 
 /**
@@ -590,6 +599,10 @@ export interface Step {
   type: "step";
   /** The items in the step. */
   items: StepItem[];
+  /** Optional list of variant names this step belongs to */
+  variants?: string[];
+  /** Whether the step has been marked as optional ("[?]") */
+  optional?: boolean;
 }
 
 /**

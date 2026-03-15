@@ -11,6 +11,9 @@ import {
   formatItemQuantity,
   isGroupedItem,
   isAlternativeSelected,
+  isSectionActive,
+  isStepActive,
+  getEffectiveChoices,
 } from "../src/utils/render_helpers";
 import { Recipe } from "../src/classes/recipe";
 import type {
@@ -30,6 +33,7 @@ import {
   recipeWithInlineAlternatives,
   recipeWithGroupedAlternatives,
 } from "./fixtures/recipes";
+import { Section } from "../src";
 
 // ============================================================================
 // renderFractionAsVulgar
@@ -419,5 +423,157 @@ describe("isAlternativeSelected", () => {
     ) as IngredientItem;
     expect(isAlternativeSelected(recipe, choicesGrouped, item0)).toBe(true);
     expect(isAlternativeSelected(recipe, choicesGrouped, item1)).toBe(false);
+  });
+});
+
+describe("isSectionActive", () => {
+  it("returns true for sections without variants", () => {
+    const section = new Section("Base");
+    expect(isSectionActive(section)).toBe(true);
+    expect(isSectionActive(section, "vegan")).toBe(true);
+    expect(isSectionActive(section, "*")).toBe(true);
+  });
+
+  it("returns true for [*] section when default variant selected", () => {
+    const section = new Section("Classic", ["*"]);
+    expect(isSectionActive(section)).toBe(true);
+    expect(isSectionActive(section, "*")).toBe(true);
+  });
+
+  it("returns false for [*] section when named variant selected", () => {
+    const section = new Section("Classic", ["*"]);
+    expect(isSectionActive(section, "vegan")).toBe(false);
+  });
+
+  it("returns true for named variant section when that variant is selected", () => {
+    const section = new Section("Vegan Sauce", ["vegan"]);
+    expect(isSectionActive(section, "vegan")).toBe(true);
+  });
+
+  it("returns false for named variant section when default variant selected", () => {
+    const section = new Section("Vegan Sauce", ["vegan"]);
+    expect(isSectionActive(section)).toBe(false);
+  });
+
+  it("returns false for named variant section when different variant selected", () => {
+    const section = new Section("Vegan Sauce", ["vegan"]);
+    expect(isSectionActive(section, "gluten-free")).toBe(false);
+  });
+
+  it("handles multi-variant sections", () => {
+    const section = new Section("Plant-based", ["vegan", "vegetarian"]);
+    expect(isSectionActive(section, "vegan")).toBe(true);
+    expect(isSectionActive(section, "vegetarian")).toBe(true);
+    expect(isSectionActive(section, "gluten-free")).toBe(false);
+    expect(isSectionActive(section)).toBe(false);
+  });
+});
+
+describe("isStepActive", () => {
+  it("returns true for steps without variants", () => {
+    const step: Step = { type: "step", items: [] };
+    expect(isStepActive(step)).toBe(true);
+    expect(isStepActive(step, "vegan")).toBe(true);
+  });
+
+  it("returns true for [*] step when default variant selected", () => {
+    const step: Step = { type: "step", items: [], variants: ["*"] };
+    expect(isStepActive(step)).toBe(true);
+    expect(isStepActive(step, "*")).toBe(true);
+  });
+
+  it("returns false for [*] step when named variant selected", () => {
+    const step: Step = { type: "step", items: [], variants: ["*"] };
+    expect(isStepActive(step, "vegan")).toBe(false);
+  });
+
+  it("returns true for named variant step when that variant is selected", () => {
+    const step: Step = { type: "step", items: [], variants: ["vegan"] };
+    expect(isStepActive(step, "vegan")).toBe(true);
+  });
+
+  it("returns false for named variant step when different variant selected", () => {
+    const step: Step = { type: "step", items: [], variants: ["vegan"] };
+    expect(isStepActive(step, "gluten-free")).toBe(false);
+  });
+
+  it("handles multi-variant steps", () => {
+    const step: Step = {
+      type: "step",
+      items: [],
+      variants: ["vegan", "vegetarian"],
+    };
+    expect(isStepActive(step, "vegan")).toBe(true);
+    expect(isStepActive(step, "vegetarian")).toBe(true);
+    expect(isStepActive(step, "gluten-free")).toBe(false);
+  });
+});
+
+describe("getEffectiveChoices", () => {
+  const recipeWithNoteAutoSelection = `
+---
+servings: 1
+---
+Add @milk{200%ml}|oat milk{200%ml}[for a vegan version]|soy milk{200%ml}[another vegan option] to the mix.
+`;
+
+  const recipeWithGroupedNoteAutoSelection = `
+---
+servings: 1
+---
+Use @|protein|chicken{200%g} or @|protein|tofu{200%g}[for a vegan version] or @|protein|tempeh{200%g}[also vegan] in the stir fry.
+`;
+
+  it("returns empty choices for default variant", () => {
+    const recipe = new Recipe(recipeWithNoteAutoSelection);
+    const choices = getEffectiveChoices(recipe);
+    expect(choices.variant).toBeUndefined();
+    expect(choices.ingredientItems).toBeUndefined();
+    expect(choices.ingredientGroups).toBeUndefined();
+  });
+
+  it("returns empty choices for * variant", () => {
+    const recipe = new Recipe(recipeWithNoteAutoSelection);
+    const choices = getEffectiveChoices(recipe, "*");
+    expect(choices.variant).toBe("*");
+    expect(choices.ingredientItems).toBeUndefined();
+  });
+
+  it("auto-selects inline alternative by note match", () => {
+    const recipe = new Recipe(recipeWithNoteAutoSelection);
+    const choices = getEffectiveChoices(recipe, "vegan");
+
+    expect(choices.variant).toBe("vegan");
+    expect(choices.ingredientItems).toBeDefined();
+    // "for a vegan version" matches "vegan" - index 1 (oat milk)
+    expect(choices.ingredientItems!.get("ingredient-item-0")).toBe(1);
+  });
+
+  it("auto-selects grouped alternative by note match", () => {
+    const recipe = new Recipe(recipeWithGroupedNoteAutoSelection);
+    const choices = getEffectiveChoices(recipe, "vegan");
+
+    expect(choices.variant).toBe("vegan");
+    expect(choices.ingredientGroups).toBeDefined();
+    // Subgroup at index 1 (tofu, with note "for a vegan version") should be selected
+    expect(choices.ingredientGroups!.get("protein")).toBe(1);
+  });
+
+  it("does not auto-select when no note matches", () => {
+    const recipe = new Recipe(recipeWithNoteAutoSelection);
+    const choices = getEffectiveChoices(recipe, "gluten-free");
+
+    expect(choices.variant).toBe("gluten-free");
+    expect(choices.ingredientItems).toBeUndefined();
+  });
+
+  it("is case-insensitive for note matching", () => {
+    const recipe = new Recipe(
+      `Add @milk{200%ml}|oat milk{200%ml}[For a VEGAN Version] to the mix.`,
+    );
+    const choices = getEffectiveChoices(recipe, "vegan");
+
+    expect(choices.ingredientItems).toBeDefined();
+    expect(choices.ingredientItems!.get("ingredient-item-0")).toBe(1);
   });
 });

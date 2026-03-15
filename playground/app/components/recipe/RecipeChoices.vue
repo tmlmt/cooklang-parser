@@ -5,7 +5,7 @@ import type {
   IngredientAlternative,
   SpecificUnitSystem,
 } from "cooklang-parser";
-import { formatItemQuantity } from "cooklang-parser";
+import { formatItemQuantity, getEffectiveChoices } from "cooklang-parser";
 
 const props = defineProps<{
   recipe: Recipe;
@@ -83,6 +83,9 @@ const hasInlineChoices = computed(
 const hasGroupedChoices = computed(
   () => props.recipe.choices.ingredientGroups.size > 0,
 );
+const hasVariants = computed(
+  () => props.recipe.choices.variants.length > 0,
+);
 const hasAnyChoices = computed(
   () => hasInlineChoices.value || hasGroupedChoices.value,
 );
@@ -93,6 +96,30 @@ const inlineChoicesArray = computed(() => {
 });
 const groupedChoicesArray = computed(() => {
   return Array.from(props.recipe.choices.ingredientGroups.entries());
+});
+
+// --- Variant options ---
+interface VariantOption {
+  label: string;
+  value: string | undefined;
+}
+
+const variantOptions = computed<VariantOption[]>(() => {
+  const options: VariantOption[] = [{ label: "Default", value: undefined }];
+  for (const variant of props.recipe.choices.variants) {
+    if (variant === "*") continue; // "*" is represented by "Default"
+    options.push({ label: variant, value: variant });
+  }
+  return options;
+});
+
+const selectedVariant = computed({
+  get: () => choices.value.variant,
+  set: (value: string | undefined) => {
+    // When variant changes, use getEffectiveChoices for auto-selection
+    const effectiveChoices = getEffectiveChoices(props.recipe, value);
+    choices.value = effectiveChoices;
+  },
 });
 
 // --- Build labels and options for dropdowns ---
@@ -241,6 +268,19 @@ function setSelectedGrouped(groupKey: string, value: number | undefined) {
     <!-- Ingredient Choices Section -->
     <div class="flex flex-col gap-4">
       <h3 class="text-sm font-semibold">Possible Ingredient Choices</h3>
+
+      <!-- Variant Selector -->
+      <div v-if="hasVariants" class="flex flex-col gap-2">
+        <h4 class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Recipe Variant
+        </h4>
+        <USelectMenu
+          v-model="selectedVariant"
+          :items="variantOptions"
+          value-key="value"
+          class="w-48"
+        />
+      </div>
 
       <p v-if="!hasAnyChoices" class="text-xs text-gray-500 italic">
         No ingredient alternative available

@@ -16,13 +16,21 @@ export class Section {
   name: string;
   /** An array of steps and notes that make up the content of the section. */
   content: (Step | Note)[] = [];
+  /** Optional list of variant names this section belongs to. */
+  variants?: string[];
+  /** Whether the section has been marked as optional ([?]) */
+  optional?: boolean;
 
   /**
    * Creates an instance of Section.
    * @param name - The name of the section. Defaults to an empty string.
+   * @param variants - Optional variant names for this section.
+   * @param optional - Whether the section is optional.
    */
-  constructor(name: string = "") {
+  constructor(name: string = "", variants?: string[], optional?: boolean) {
     this.name = name;
+    if (variants) this.variants = variants;
+    if (optional) this.optional = true;
   }
 
   /**
