@@ -1,5 +1,24 @@
 # Changelog
 
+## v3.0.0-alpha.18
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.17...v3.0.0-alpha.18)
+
+### 🚀 Enhancements
+
+- Recipe variants, and optional steps / sections ([0cafb0a](https://github.com/tmlmt/cooklang-parser/commit/0cafb0a))
+
+### 📖 Documentation
+
+- **API:** Remove non-public errors ([1b61f28](https://github.com/tmlmt/cooklang-parser/commit/1b61f28))
+- **API:** Classify unclassified types and adds some context for better navigation ([40a853e](https://github.com/tmlmt/cooklang-parser/commit/40a853e))
+- **API:** Fix wrong links in types docstrings ([fce51a2](https://github.com/tmlmt/cooklang-parser/commit/fce51a2))
+- **guides:** Add variants and optional steps/sections to extension guide ([4963208](https://github.com/tmlmt/cooklang-parser/commit/4963208))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.17
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.16...v3.0.0-alpha.17)
