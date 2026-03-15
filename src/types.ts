@@ -348,6 +348,12 @@ export interface Ingredient {
   extras?: IngredientExtras;
 }
 
+/**
+ * Represents a quantity with extended unit and additional information
+ * about its scalability and potential equivalents
+ *
+ * @category Types
+ */
 export type MaybeScalableQuantity = QuantityWithExtendedUnit & {
   /** Indicates whether this quantity should be scaled when the recipe serving size changes. */
   scalable: boolean;
@@ -356,6 +362,15 @@ export type MaybeScalableQuantity = QuantityWithExtendedUnit & {
   equivalents?: QuantityWithExtendedUnit[];
 };
 
+/**
+ * Defines a type containing an optional {@link QuantityWithExtendedUnit} with scalability and potential info about equivalents
+ *
+ * Used in {@link IngredientAlternative}
+ *
+ * @param T - The base type to which the optional quantity properties will be added.
+ *
+ * @category Types
+ */
 export type WithOptionalQuantity<T> =
   | (T & MaybeScalableQuantity)
   | (T & {
@@ -367,8 +382,7 @@ export type WithOptionalQuantity<T> =
     });
 
 /**
- * Represents a single ingredient choice within a single or a group of `IngredientItem`s. It points
- * to a specific ingredient and its corresponding quantity information.
+ * Base type of {@link IngredientAlternative}
  * @category Types
  */
 export type IngredientAlternativeBase = {
@@ -384,6 +398,14 @@ export type IngredientAlternativeBase = {
   itemId?: string;
 };
 
+/**
+ * Represents a single ingredient choice within a single or a group of `IngredientItem`s. It points
+ * to a specific ingredient and its corresponding quantity information.
+ *
+ * Used in {@link IngredientItem} and for the various maps of {@link RecipeAlternatives}
+ *
+ * @category Types
+ */
 export type IngredientAlternative =
   WithOptionalQuantity<IngredientAlternativeBase>;
 
@@ -682,6 +704,9 @@ export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
 
 /**
  * Options for adding a recipe to a shopping list
+ *
+ * Used in {@link ShoppingList.add_recipe}
+ *
  * @category Types
  */
 export type AddedRecipeOptions = {
