@@ -275,3 +275,29 @@ A selection of markdown elements are detected when part of preparation steps or 
 - `***bold+italic***` ***bold+italic*** (alternative syntax: `**_bold+italic_**`, `_**bold+italic**_` or `___bold+italic___`)
 - `[link text](https://url)` link to url
 - ``code``: in-line code
+
+## Recipe variants
+
+Usage: `[<variant1<,variant2<...>>>]`
+
+You can write multiple variants of a recipe by adding comma-separated variant names between brackets as a prefix to section names or steps. `*` is used to indicate sections or steps in the default variant, which are replaced if a specific variant is chosen. Unmarked sections or steps will be used for all variants. Examples:
+
+- `== [vegan] Baking ==` defines a section specific to the `vegan` version
+- `== [*,lactose-free] Mixing ==` defines a section valid for the default and the lactose-free variants
+- `[vegan] Add @oat milk{1%L}` is a step which will only be taken into account in the vegan variant
+- `[*,lactose-free] Put @margarine{1%tbsp} in a #pan` will appear in the default and the lactose-free variants
+
+Variants are also assumed to be defined when part of the [alternative ingredients](#alternative-ingredients)'s `note`. 
+
+Several render helpers are available. In practice for rendering:
+
+- The variant's name should be fed to [getEffectiveChoices](api/functions/getEffectiveChoices) to determine the alternatives still valid after selecting the variant. The resulting choices can then be fed normally to [Recipe.getIngredientQuantities](api/classes/Recipe#getIngredientQuantities)
+- [isStepActive](api/functions/isStepActive) and [isSectionActive](api/functions/isSectionActive) can be used to determine which step or section to display. 
+
+## Optional steps and sections
+
+Usage: `[?<variants>]`
+
+By adding a `?` at the beginning of the bracket markers of a section or a step, all ingredients or cookware in the element will be considered optional, regardless of whether the modifier is present at item level.
+
+Example: `[?] Add @chili and @pilipili is you like it spicy` will show both ingredients in a step which will be marked as optional, and will appear as optional in the ingredients list.
