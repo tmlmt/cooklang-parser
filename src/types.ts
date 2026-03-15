@@ -501,9 +501,9 @@ export interface GetIngredientQuantitiesOptions {
 
 /**
  * Represents a raw (unprocessed) group of quantities for a single ingredient.
- * Returned by {@link Recipe.getRawQuantityGroups | getRawQuantityGroups()},
- * these are the pre-addition quantities that can be fed directly into
- * {@link addEquivalentsAndSimplify} for cross-recipe aggregation.
+ * Returned by {@link Recipe.getRawQuantityGroups},
+ * these are the pre-addition quantities that are fed internally
+ * to another non-public helper function for cross-recipe aggregation.
  * @category Types
  */
 export interface RawQuantityGroup {
@@ -705,7 +705,7 @@ export type AddedRecipe = RecipeWithFactor | RecipeWithServings;
 /**
  * Options for adding a recipe to a shopping list
  *
- * Used in {@link ShoppingList.add_recipe}
+ * Used in {@link ShoppingList.addRecipe}
  *
  * @category Types
  */
