@@ -737,6 +737,9 @@ export function parseNestedMetaVar(
  * Parses a block of indented YAML-like content into a nested object.
  * Recursively handles nested objects when a key has no value but has indented children.
  *
+ * @throws {@link NoTabAsIndentError} if the indentation of the first line contains a tab (not handled)
+ * @throws {@link BadIndentationError} when a line has inconsistent indentation (not the same as base or greater for children)
+ *
  * @remarks
  * Only spaces are allowed for indentation (tabs are rejected), following YAML spec.
  */

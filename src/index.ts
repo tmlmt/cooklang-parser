@@ -249,13 +249,6 @@ export {
 import {
   NoProductCatalogForCartError,
   NoShoppingListForCartError,
-  NoTabAsIndentError,
-  BadIndentationError,
 } from "./errors";
 
-export {
-  NoProductCatalogForCartError,
-  NoShoppingListForCartError,
-  NoTabAsIndentError,
-  BadIndentationError,
-};
+export { NoProductCatalogForCartError, NoShoppingListForCartError };
