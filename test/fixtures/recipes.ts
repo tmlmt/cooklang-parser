@@ -18,7 +18,7 @@ export const complexRecipe = `
 title: Best Lasagna
 source: https://www.tasteofhome.com/recipes/best-lasagna/
 author: Pam Thompson
-servings: 12, 12 slices
+servings: 12
 prep time: 1h
 cook time: 50m
 time: 1h50m
@@ -66,16 +66,9 @@ Remove the cover, and cook for an additional ~{25%min}, until the sauce is bubbl
 Let the lasagna stand for ~{15%min} before slicing and serving.
 `;
 
-export const recipeWithComplexServings = `
----
-servings: 2, a few
----
-Pour @water{1%L}
-`;
-
 export const recipeWithUnitServings = `
 ---
-servings: {{300%g}} of bread
+yield: {{300%g}} of bread
 ---
 Mix @flour{200%g} with @water{100%mL}
 `;

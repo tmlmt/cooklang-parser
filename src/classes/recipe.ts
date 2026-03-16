@@ -27,7 +27,7 @@ import type {
   SpecificUnitSystem,
   Unit,
   MaybeScalableQuantity,
-  MetadataScalingVar,
+  Yield,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -1660,29 +1660,36 @@ export class Recipe {
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
 
-    // Scale metadata scaling variables (servings, yield, serves)
-    for (const metaVar of ["servings", "yield", "serves"] as const) {
-      /* v8 ignore else -- @preserve */
-      if (newRecipe.metadata[metaVar] && this.metadata[metaVar]) {
-        const original = this.metadata[metaVar];
-        const scaledQuantity = multiplyQuantityValue(
-          original.quantity,
-          factor,
-        ) as FixedNumericValue;
-        // Apply best unit optimization
-        const optimized = applyBestUnit(
-          { quantity: scaledQuantity, unit: original.unit },
-          unitSystem,
-        );
-        const scaled: MetadataScalingVar = {
-          quantity: optimized.quantity,
-        };
-        if (optimized.unit) scaled.unit = optimized.unit;
-        if (original.textBefore) scaled.textBefore = original.textBefore;
-        if (original.textAfter) scaled.textAfter = original.textAfter;
-        if (original.text) scaled.text = original.text;
-        newRecipe.metadata[metaVar] = scaled;
+    // Scale metadata: servings and serves (plain numbers)
+    for (const metaVar of ["servings", "serves"] as const) {
+      if (typeof newRecipe.metadata[metaVar] === "number") {
+        newRecipe.metadata[metaVar] = Big(newRecipe.metadata[metaVar])
+          .times(factor)
+          .toNumber();
       }
+    }
+
+    // Scale metadata: yield (Yield object with quantity + optional unit)
+    /* v8 ignore else -- @preserve */
+    if (newRecipe.metadata.yield && this.metadata.yield) {
+      const original = this.metadata.yield;
+      const scaledQuantity = multiplyQuantityValue(
+        original.quantity,
+        factor,
+      ) as FixedNumericValue;
+      // Apply best unit optimization
+      const optimized = applyBestUnit(
+        { quantity: scaledQuantity, unit: original.unit },
+        unitSystem,
+      );
+      const scaled: Yield = {
+        quantity: optimized.quantity,
+      };
+      if (optimized.unit) scaled.unit = optimized.unit;
+      if (original.textBefore) scaled.textBefore = original.textBefore;
+      if (original.textAfter) scaled.textAfter = original.textAfter;
+      if (original.text) scaled.text = original.text;
+      newRecipe.metadata.yield = scaled;
     }
 
     return newRecipe;

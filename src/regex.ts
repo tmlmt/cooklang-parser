@@ -146,7 +146,7 @@ export const inlineIngredientAlternativesRegex = new RegExp("\\|" + ingredientWi
 
 export const quantityAlternativeRegex = createRegex()
   .startNamedGroup("quantity")
-    .notAnyOf("}|%").oneOrMore()
+    .notAnyOf("{}|%").oneOrMore()
   .endGroup().optional()
   .startGroup()
     .literal("%")
@@ -332,9 +332,9 @@ export const tokensRegex = new RegExp(
 
 
 /** Matches optional trimmed text before the `{{...}}` scalable */
-export const servingsPrefixPart = (varName: string): RegExp => createRegex()
+export const yieldPrefixPart = createRegex()
   .startAnchor()
-  .literal(varName)
+  .literal("yield")
   .literal(":")
   .anyOf("\t ").zeroOrMore()
   .startNamedGroup("servingsPrefix")
@@ -348,7 +348,7 @@ export const servingsPrefixPart = (varName: string): RegExp => createRegex()
   .toRegExp()
 
 /** Matches optional trimmed text after the `{{...}}` scalable */
-const servingsSuffixPart = createRegex()
+const yieldSuffixPart = createRegex()
   .anyOf("\t ").zeroOrMore()
   .startNamedGroup("servingsSuffix")
     .nonWhitespace()
@@ -362,37 +362,45 @@ const servingsSuffixPart = createRegex()
   .toRegExp()
 
 
-export const scalingSimpleMetaValueRegex = (varName: string): RegExp => createRegex()
-  .startAnchor()
-  .literal(varName)
-  .literal(":")
-  .anyOf("\\t ").zeroOrMore()
-  .startCaptureGroup()
-    .startCaptureGroup()
-      .notAnyOf(",\\n").oneOrMore()
-    .endGroup()
-    .startGroup()
-      .literal(",")
-      .anyOf("\\t ").zeroOrMore()
-      .startCaptureGroup()
-        .anyCharacter().oneOrMore()
-      .endGroup().optional()
-    .endGroup().optional()
-  .endGroup()
-  .endAnchor()
-  .multiline()
-  .toRegExp()
-
 /** Matches a complex servings value: optional trimmed text prefix, an arbitrary scalable `{{...}}`, and optional trimmed text suffix.
  * Named groups `servingsPrefix` and `servingsSuffix` capture surrounding text without leading/trailing spaces.
  * Inherits `arbitraryName` and `arbitraryQuantity` named groups from {@link arbitraryScalableRegex}.
  */
-export const scalingMetaValueWithUnitRegex = (varName: string): RegExp => new RegExp(
-  servingsPrefixPart(varName).source +
+export const yieldMetaValueWithUnitRegex = new RegExp(
+  yieldPrefixPart.source +
   arbitraryScalableRegex.source +
-  servingsSuffixPart.source, "m"
+  yieldSuffixPart.source, "m"
 );
 
+export const yieldMetaValueAsQuantityRegex = createRegex()
+  .startAnchor()
+  .literal("yield:")
+  .anyOf("\t ").zeroOrMore()
+  .startNamedGroup("quantity")
+    .notAnyOf("{}|%\\n\\r").oneOrMore()
+  .endGroup().optional()
+  .startGroup()
+    .literal("%")
+    .startNamedGroup("unit")
+      .notAnyOf("\\n\\r|}").oneOrMore()
+    .endGroup()
+  .endGroup().optional()
+  .anyOf("\t ").zeroOrMore()
+  .endAnchor()
+  .toRegExp()
+
+
+/** Matches a yield metadata value in two ways (via alternation):
+ * 1. Complex format: `yield: <optional prefix> {{<quantity>%<unit>}} <optional suffix>`
+ * 2. Plain format: `yield: <quantity>%<unit>` (e.g. `yield: 300%g` or `yield: 2`)
+ */
+export const yieldMetaValueRegex = new RegExp(
+  [
+    yieldMetaValueWithUnitRegex.source,
+    yieldMetaValueAsQuantityRegex.source
+  ].join("|"),
+  "m",
+);
 
 export const commentRegex = createRegex()
   .literal("--")

@@ -7,13 +7,14 @@ import type {
   Ingredient,
   NoteItem,
   TextItem,
-  MetadataScalingVar,
+  Yield,
 } from "../src/types";
 import {
   flushPendingNote,
   flushPendingItems,
   parseSimpleMetaVar,
-  parseScalingMetaVar,
+  parseServingsMetaVar,
+  parseYieldMetaVar,
   parseArbitraryQuantity,
   parseListMetaVar,
   parseFixedValue,
@@ -30,7 +31,7 @@ import {
   parseQuantityWithUnit,
   parseDateFromFormat,
   parseFuzzyDate,
-  getNumericValueFromMetaVar,
+  getNumericValueFromYield,
 } from "../src/utils/parser_helpers";
 import {
   NoTabAsIndentError,
@@ -62,69 +63,62 @@ describe("parseSimpleMetaVar", () => {
   });
 });
 
-describe("parseScalingMetaVar", () => {
-  it("should parse canonical string vars", () => {
+describe("parseServingsMetaVar", () => {
+  it("should parse a plain number", () => {
+    expect(parseServingsMetaVar("servings: 6", "servings")).toBe(6);
+  });
+  it("should parse serves", () => {
+    expect(parseServingsMetaVar("serves: 4", "serves")).toBe(4);
+  });
+  it("should parse decimal numbers", () => {
+    expect(parseServingsMetaVar("servings: 1.5", "servings")).toBe(1.5);
+  });
+  it("should throw if value is not a number", () => {
+    expect(() =>
+      parseServingsMetaVar("servings: two", "servings"),
+    ).toThrowError("servings must be a number");
+  });
+  it("should return undefined when not found", () => {
     expect(
-      parseScalingMetaVar("servings: 6", "servings"),
-    ).toEqual<MetadataScalingVar>({
+      parseServingsMetaVar("title: My Recipe", "servings"),
+    ).toBeUndefined();
+  });
+});
+
+describe("parseYieldMetaVar", () => {
+  it("should parse plain quantity without unit", () => {
+    expect(parseYieldMetaVar("yield: 6")).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 6 } },
     });
   });
-  it("should parse scaling type vars", () => {
-    expect(
-      parseScalingMetaVar("yield: 6, 2 people", "yield"),
-    ).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 6 } },
-      text: "2 people",
-    });
-    expect(
-      parseScalingMetaVar("servings: 2, 4 small buckets", "servings"),
-    ).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-      text: "4 small buckets",
+  it("should parse plain quantity with unit", () => {
+    expect(parseYieldMetaVar("yield: 300%g")).toEqual<Yield>({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
+      unit: "g",
     });
   });
-  it("should throw and error if a number is not given as scaling variable", () => {
-    expect(() => parseScalingMetaVar("servings: two", "servings")).toThrowError(
-      "Scaling variables should be numbers",
-    );
-  });
-  it("should accept various space patterns", () => {
-    expect(
-      parseScalingMetaVar("servings: 2,2 people", "servings"),
-    ).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-      text: "2 people",
-    });
-    expect(
-      parseScalingMetaVar("servings:   2 ,  2 people", "servings"),
-    ).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-      text: "2 people",
+  it("should parse plain fraction quantity with unit", () => {
+    expect(parseYieldMetaVar("yield: 1/2%kg")).toEqual<Yield>({
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: "kg",
     });
   });
   it("should parse complex format with unit and prefix", () => {
-    expect(
-      parseScalingMetaVar("servings: about {{3%kg}}", "servings"),
-    ).toEqual<MetadataScalingVar>({
+    expect(parseYieldMetaVar("yield: about {{3%kg}}")).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
       unit: "kg",
       textBefore: "about",
     });
   });
   it("should parse complex format with unit and suffix", () => {
-    expect(
-      parseScalingMetaVar("servings: {{1.5%kg}} of bread", "servings"),
-    ).toEqual<MetadataScalingVar>({
+    expect(parseYieldMetaVar("yield: {{1.5%kg}} of bread")).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1.5 } },
       unit: "kg",
       textAfter: "of bread",
     });
   });
   it("should parse complex format with unit, prefix and suffix", () => {
-    expect(
-      parseScalingMetaVar("servings: about {{3%kg}} of bread", "servings"),
-    ).toEqual<MetadataScalingVar>({
+    expect(parseYieldMetaVar("yield: about {{3%kg}} of bread")).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
       unit: "kg",
       textBefore: "about",
@@ -132,16 +126,15 @@ describe("parseScalingMetaVar", () => {
     });
   });
   it("should parse complex format without unit", () => {
-    expect(
-      parseScalingMetaVar("servings: {{3}}", "servings"),
-    ).toEqual<MetadataScalingVar>({
+    expect(parseYieldMetaVar("yield: {{3}}")).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
     });
   });
-  it("should throw on complex format with non-numeric value", () => {
-    expect(() =>
-      parseScalingMetaVar("servings: {{some%kg}}", "servings"),
-    ).toThrowError("Arbitrary quantities must have a numerical value");
+  it("should return undefined when not found", () => {
+    expect(parseYieldMetaVar("title: My Recipe")).toBeUndefined();
+  });
+  it("should return undefined when only a unit is provided (no quantity)", () => {
+    expect(parseYieldMetaVar("yield: %g")).toBeUndefined();
   });
 });
 
@@ -510,29 +503,11 @@ servings: 2
     `;
     const expected_canonical: MetadataExtract = {
       metadata: {
-        servings: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-        },
+        servings: 2,
       },
       servings: 2,
     };
     expect(extractMetadata(content_canonical)).toEqual(expected_canonical);
-
-    const content_complex = `
----
-servings: 2, a couple
----
-    `;
-    const expected_complex: MetadataExtract = {
-      metadata: {
-        servings: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-          text: "a couple",
-        },
-      },
-      servings: 2,
-    };
-    expect(extractMetadata(content_complex)).toEqual(expected_complex);
   });
 
   it("should extract list metadata fields in both styles correctly", () => {
@@ -569,9 +544,7 @@ tags:      [ one,two, three ]
     const expected: MetadataExtract = {
       metadata: {
         title: "Spaced Out Recipe",
-        servings: {
-          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-        },
+        servings: 2,
         tags: ["one", "two", "three"],
       },
       servings: 2,
@@ -1675,25 +1648,25 @@ describe("parseFuzzyDate", () => {
   });
 });
 
-describe("getNumericValueFromMetaVar", () => {
+describe("getNumericValueFromYield", () => {
   it("should handle ranges", () => {
-    const scalingVar: MetadataScalingVar = {
+    const yieldVar: Yield = {
       quantity: {
         type: "range",
         min: { type: "decimal", decimal: 1 },
         max: { type: "decimal", decimal: 2 },
       },
     };
-    expect(getNumericValueFromMetaVar(scalingVar)).toBe(1);
+    expect(getNumericValueFromYield(yieldVar)).toBe(1);
   });
 
   it("should default to 0", () => {
-    const scalingVar: MetadataScalingVar = {
+    const yieldVar: Yield = {
       quantity: {
         type: "fixed",
         value: { type: "text", text: "eight" },
       },
     };
-    expect(getNumericValueFromMetaVar(scalingVar)).toBe(0);
+    expect(getNumericValueFromYield(yieldVar)).toBe(0);
   });
 });

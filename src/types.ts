@@ -15,15 +15,18 @@ export interface MetadataSource {
 }
 
 /**
- * Represents scaling variable information for a recipe.
+ * Represents a yield metadata value for a recipe.
+ * Supports plain quantities (e.g. `yield: 300%g`), complex format with
+ * surrounding text (e.g. `yield: about {{300%g}} of bread`), or simple
+ * numbers (e.g. `yield: 2`).
  * @category Types
  */
-export interface MetadataScalingVar extends QuantityWithPlainUnit {
-  /** The text before the scaling variable. */
+export interface Yield extends QuantityWithPlainUnit {
+  /** The text before the scaling variable (complex `{{}}` format). */
   textBefore?: string;
-  /** The text after the scaling variable. */
+  /** The text after the scaling variable (complex `{{}}` format). */
   textAfter?: string;
-  /** The text precising a numerical scaling variable. */
+  /** The text precising a numerical scaling variable (comma format, e.g. `yield: 2, some text`). */
   text?: string;
 }
 
@@ -59,7 +62,7 @@ export type MetadataValue =
   | MetadataObject
   | MetadataSource
   | MetadataTime
-  | MetadataScalingVar
+  | Yield
   | undefined;
 
 /**
@@ -78,56 +81,51 @@ export interface Metadata {
   source?: string | MetadataSource;
   /** The author of the recipe (separate from source author). */
   author?: string;
-  /** The number of servings the recipe makes.
-   * Can be given either as:
-   * - a number
-   * - a string which starts with a number (which will be used for scaling) followed by a comma and then whatever you want
-   * - or an arbitrary scalable number, optionally preceded and/or followed by text.
+  /** The number of servings the recipe makes. Must be a plain number.
    *
-   * Interchangeable with `yield` or `serves`. If multiple ones are defined,
-   * the prevailance order for the number which will used for scaling
-   * is `servings` \> `yield` \> `serves`.
+   * Interchangeable with `yield` or `serves` for the purpose of setting
+   * {@link Recipe.servings}. If multiple ones are defined, the prevalence
+   * order is `serves` \> `servings` \> `yield`.
    *
    * @example
    * ```yaml
    * servings: 4
    * ```
+   */
+  servings?: number;
+  /** The yield of the recipe.
+   * Can be given as:
+   * - a plain quantity with optional unit: `yield: 300%g` or `yield: 2`
+   * - a complex format with `{{}}` and optional surrounding text:
+   *   `yield: about {{300%g}} of bread`
+   *
+   * Interchangeable with `servings` or `serves` for the purpose of setting
+   * {@link Recipe.servings}. If multiple ones are defined, the prevalence
+   * order is `serves` \> `servings` \> `yield`.
    *
    * @example
    * ```yaml
-   * servings: 2, a few
+   * yield: 300%g
    * ```
    *
-   * * @example
+   * @example
    * ```yaml
-   * servings: {{1.5%kg}} of bread
+   * yield: about {{300%g}} of bread
    * ```
    */
-  servings?: MetadataScalingVar;
-  /** The yield of the recipe.
-   * Can be given either as:
-   * - a number
-   * - a string which starts with a number (which will be used for scaling) followed by a comma and then whatever you want
-   * - or an arbitrary scalable number, optionally preceded and/or followed by text.
+  yield?: Yield;
+  /** The number of people the recipe serves. Must be a plain number.
    *
-   * Interchangeable with `servings` or `serves`. If multiple ones are defined,
-   * the prevailance order for the number which will used for scaling
-   * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
-   * for examples.
-   */
-  yield?: MetadataScalingVar;
-  /** The number of people the recipe serves.
-   * Can be given either as:
-   * - a number
-   * - a string which starts with a number (which will be used for scaling) followed by a comma and then whatever you want
-   * - or an arbitrary scalable number, optionally preceded and/or followed by text.
+   * Interchangeable with `servings` or `yield` for the purpose of setting
+   * {@link Recipe.servings}. If multiple ones are defined, the prevalence
+   * order is `serves` \> `servings` \> `yield`.
    *
-   * Interchangeable with `servings` or `yield`. If multiple ones are defined,
-   * the prevailance order for the number which will used for scaling
-   * is `servings` \> `yield` \> `serves`. See {@link Metadata.servings | servings}
-   * for examples.
+   * @example
+   * ```yaml
+   * serves: 4
+   * ```
    */
-  serves?: MetadataScalingVar;
+  serves?: number;
   /** The course of the recipe. */
   course?: string;
   /** The category of the recipe. */

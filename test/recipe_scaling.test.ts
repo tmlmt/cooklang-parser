@@ -4,7 +4,7 @@ import type {
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
   Step,
-  MetadataScalingVar,
+  Yield,
 } from "../src/types";
 import { Recipe } from "../src/classes/recipe";
 import {
@@ -12,10 +12,7 @@ import {
   recipeToScaleSomeFixedQuantities,
   recipeWithInlineAlternatives,
 } from "./fixtures/recipes";
-import {
-  recipeWithComplexServings,
-  recipeWithUnitServings,
-} from "./fixtures/recipes";
+import { recipeWithUnitServings } from "./fixtures/recipes";
 
 describe("scaleTo", () => {
   const baseRecipe = new Recipe(recipeToScale);
@@ -90,23 +87,17 @@ describe("scaleTo", () => {
   it("should update the servings property", () => {
     const scaledRecipe = baseRecipe.scaleTo(4);
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-    });
-    expect(scaledRecipe.metadata.serves).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-    });
-    expect(scaledRecipe.metadata.yield).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.servings).toBe(4);
+    expect(scaledRecipe.metadata.serves).toBe(4);
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
     });
   });
 
   it("should update numerical metadata fields", () => {
     const scaledRecipe = baseRecipe.scaleTo(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-    });
-    expect(scaledRecipe.metadata.yield).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.servings).toBe(4);
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
     });
   });
@@ -146,27 +137,6 @@ describe("scaleTo", () => {
     const originalRecipe = baseRecipe.clone();
     baseRecipe.scaleTo(4);
     expect(baseRecipe).toEqual(originalRecipe);
-  });
-
-  it("should handle complex scaling metadata", () => {
-    const recipeWithNonNumericMeta = new Recipe(recipeWithComplexServings);
-
-    const scaledRecipe = recipeWithNonNumericMeta.scaleTo(4);
-    expect(scaledRecipe.ingredients.length).toBe(1);
-    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([
-      {
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 2 },
-        },
-        unit: "L",
-      },
-    ]);
-    expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-      text: "a few",
-    });
   });
 
   it("should handle numbers with repeating decimals", () => {
@@ -260,23 +230,17 @@ describe("scaleBy", () => {
   it("should update the servings property", () => {
     const scaledRecipe = baseRecipe.scaleBy(2);
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.serves).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-    });
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-    });
-    expect(scaledRecipe.metadata.yield).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.serves).toBe(4);
+    expect(scaledRecipe.metadata.servings).toBe(4);
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
     });
   });
 
   it("should update numerical metadata fields", () => {
     const scaledRecipe = baseRecipe.scaleBy(2);
-    expect(scaledRecipe.metadata.serves).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-    });
-    expect(scaledRecipe.metadata.yield).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.serves).toBe(4);
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
     });
   });
@@ -302,49 +266,21 @@ describe("scaleBy", () => {
     expect(baseRecipe).toEqual(originalRecipe);
   });
 
-  it("should scale complex metadata", () => {
-    const recipeWithNonNumericMeta = new Recipe(recipeWithComplexServings);
-
-    const scaledRecipe = recipeWithNonNumericMeta.scaleBy(2);
-    expect(scaledRecipe.ingredients.length).toBe(1);
-    expect(scaledRecipe.ingredients[0]!.quantities).toEqual([
-      {
-        quantity: {
-          type: "fixed",
-          value: { type: "decimal", decimal: 2 },
-        },
-        unit: "L",
-      },
-    ]);
-    expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-      text: "a few",
-    });
-  });
-
   it("should scale numeric part of complex scaling metadata", () => {
     const recipe = new Recipe(`
 ---
-servings: 2, some
-yield: 2, some
-serves: 2, some
+servings: 2
+yield: 2
+serves: 2
 ---
 `);
     const scaledRecipe = recipe.scaleBy(2);
     expect(scaledRecipe.servings).toBe(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.servings).toBe(4);
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-      text: "some",
     });
-    expect(scaledRecipe.metadata.yield).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-      text: "some",
-    });
-    expect(scaledRecipe.metadata.serves).toEqual<MetadataScalingVar>({
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 4 } },
-      text: "some",
-    });
+    expect(scaledRecipe.metadata.serves).toBe(4);
   });
 
   it("should scale alternative ingredients when scaling by", () => {
@@ -701,10 +637,10 @@ Add {{sauce:100%g}} of sauce.
 });
 
 describe("scaleBy with best unit optimization", () => {
-  it("should scale servings with unit using complex format", () => {
+  it("should scale yield with unit using complex format", () => {
     const recipe = new Recipe(recipeWithUnitServings);
     expect(recipe.servings).toBe(300);
-    expect(recipe.metadata.servings).toEqual<MetadataScalingVar>({
+    expect(recipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
       unit: "g",
       textAfter: "of bread",
@@ -712,23 +648,23 @@ describe("scaleBy with best unit optimization", () => {
 
     // Scale by 4x: 300g * 4 = 1200g → 1.2kg (best unit)
     const scaledRecipe = recipe.scaleBy(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1.2 } },
       unit: "kg",
       textAfter: "of bread",
     });
   });
 
-  it("should scale servings with unit and prefix using complex format", () => {
+  it("should scale yield with unit and prefix using complex format", () => {
     const recipe = new Recipe(`
 ---
-servings: about {{300%g}}
+yield: about {{300%g}}
 ---
 Mix @flour{200%g}
     `);
 
     const scaledRecipe = recipe.scaleBy(4);
-    expect(scaledRecipe.metadata.servings).toEqual<MetadataScalingVar>({
+    expect(scaledRecipe.metadata.yield).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1.2 } },
       unit: "kg",
       textBefore: "about",

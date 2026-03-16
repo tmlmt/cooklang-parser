@@ -4,7 +4,7 @@ import {
   isSectionActive,
   isStepActive,
   type Ingredient,
-  type MetadataScalingVar,
+  type Yield,
   type Recipe,
   type RecipeChoices,
 } from "cooklang-parser";
@@ -26,14 +26,17 @@ const metadataEntries = computed(() => {
   for (const [key, value] of Object.entries(metadata)) {
     if (key === "title") continue;
     if (value === undefined || value === null) continue;
-    if (["servings", "yield", "serves"].includes(key)) {
-      const servingsValue = value as MetadataScalingVar;
-      // If it's an array or something else, just stringify it
+    if (key === "yield") {
+      const yieldValue = value as Yield;
       entries.push({
-        key: "Servings",
+        key: "yield",
         value:
-          `${servingsValue.textBefore ?? ""} ${formatQuantityWithUnit(servingsValue.quantity, servingsValue.unit)} ${servingsValue.textAfter ?? ""}`.trim(),
+          `${yieldValue.textBefore ?? ""} ${formatQuantityWithUnit(yieldValue.quantity, yieldValue.unit)} ${yieldValue.textAfter ?? ""}`.trim(),
       });
+      continue;
+    }
+    if (key === "servings" || key === "serves") {
+      entries.push({ key: "servings", value: String(value) });
       continue;
     }
     // Format arrays as comma-separated strings

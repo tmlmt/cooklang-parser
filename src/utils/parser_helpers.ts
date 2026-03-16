@@ -16,7 +16,7 @@ import type {
   TextAttribute,
   ArbitraryScalable,
   FixedNumericValue,
-  MetadataScalingVar,
+  Yield,
 } from "../types";
 import {
   metadataRegex,
@@ -25,8 +25,7 @@ import {
   numericValueRegex,
   rangeRegex,
   numberLikeRegex,
-  scalingSimpleMetaValueRegex,
-  scalingMetaValueWithUnitRegex,
+  yieldMetaValueRegex,
   quantityAlternativeRegex,
   markdownRegex,
 } from "../regex";
@@ -637,47 +636,68 @@ export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
   return arbitrary;
 }
 
-export function parseScalingMetaVar(
+/**
+ * Parses a servings or serves metadata value.
+ * Only accepts a plain number (e.g. `servings: 4`).
+ *
+ * @param content - The metadata content string.
+ * @param varName - The metadata variable name (`"servings"` or `"serves"`).
+ * @returns The numeric value, or undefined if not found.
+ * @throws Error if the value is not a valid number.
+ */
+export function parseServingsMetaVar(
   content: string,
-  varName: string,
-): MetadataScalingVar | undefined {
-  // Try complex format first: e.g. "servings: about {{3%kg}}"
-  const complexMatch = content.match(scalingMetaValueWithUnitRegex(varName));
-  if (complexMatch?.groups?.arbitraryQuantity) {
-    const parsed = parseArbitraryQuantity(
-      complexMatch.groups.arbitraryQuantity,
-    );
-    const result: MetadataScalingVar = {
+  varName: "servings" | "serves",
+): number | undefined {
+  const raw = parseSimpleMetaVar(content, varName);
+  if (raw === undefined) return undefined;
+  const num = Number(raw);
+  if (isNaN(num)) {
+    throw new Error(`${varName} must be a number`);
+  }
+  return num;
+}
+
+/**
+ * Parses a yield metadata value.
+ * Accepts both:
+ * - Complex format: `yield: about {{300%g}} of bread`
+ * - Plain format: `yield: 300%g` or `yield: 2`
+ *
+ * @param content - The metadata content string.
+ * @returns A {@link Yield} object, or undefined if not found.
+ * @throws {@link InvalidQuantityFormat} if the value is non-numeric.
+ */
+export function parseYieldMetaVar(content: string): Yield | undefined {
+  const match = content.match(yieldMetaValueRegex);
+  if (!match) return undefined;
+
+  // Complex format branch: matched the {{...}} pattern
+  if (match.groups?.arbitraryQuantity) {
+    const parsed = parseArbitraryQuantity(match.groups.arbitraryQuantity);
+    const result: Yield = {
       quantity: parsed.quantity,
     };
     if (parsed.unit) result.unit = parsed.unit;
-    if (complexMatch.groups.servingsPrefix) {
-      result.textBefore = complexMatch.groups.servingsPrefix;
+    if (match.groups.servingsPrefix) {
+      result.textBefore = match.groups.servingsPrefix;
     }
-    if (complexMatch.groups.servingsSuffix) {
-      result.textAfter = complexMatch.groups.servingsSuffix;
+    if (match.groups.servingsSuffix) {
+      result.textAfter = match.groups.servingsSuffix;
     }
     return result;
   }
 
-  // Fall back to simple format: e.g. "servings: 4" or "servings: 2, a few"
-  const varMatch = content.match(scalingSimpleMetaValueRegex(varName));
-  if (!varMatch) return undefined;
-  if (isNaN(Number(varMatch[2]?.trim()))) {
-    throw new Error("Scaling variables should be numbers");
+  // Plain format branch: matched quantityAlternativeRegex (e.g. "300%g" or "2")
+  if (match.groups?.quantity) {
+    const result: Yield = {
+      quantity: parseQuantityInput(match.groups.quantity) as FixedNumericValue,
+    };
+    if (match.groups.unit) result.unit = match.groups.unit;
+    return result;
   }
-  const numericValue = Number(varMatch[2]?.trim());
-  const result: MetadataScalingVar = {
-    quantity: {
-      type: "fixed",
-      value: { type: "decimal", decimal: numericValue },
-    },
-  };
-  // If the raw string contains a comma, store text after comma in text
-  if (varMatch[3]) {
-    result.text = `${varMatch[3].trim()}`;
-  }
-  return result;
+
+  return undefined;
 }
 
 export function parseListMetaVar(content: string, varName: string) {
@@ -888,9 +908,9 @@ function parseAnyMetaVar(
 }
 
 /**
- * Extracts the numeric value from a MetadataScalingVar.
+ * Extracts the numeric value from a Yield.
  */
-export function getNumericValueFromMetaVar(v: MetadataScalingVar): number {
+export function getNumericValueFromYield(v: Yield): number {
   /* v8 ignore else -- @preserve */
   if (v.quantity.type === "fixed" && v.quantity.value.type !== "text") {
     return getNumericValue(v.quantity.value);
@@ -1068,11 +1088,17 @@ export function extractMetadata(content: string): MetadataExtract {
   }
 
   // Scaling metadata variables (servings, yield, serves)
-  for (const metaVar of ["servings", "yield", "serves"] as const) {
-    const scalingMetaValue = parseScalingMetaVar(metadataContent, metaVar);
-    if (scalingMetaValue) {
-      metadata[metaVar] = scalingMetaValue;
-      servings = getNumericValueFromMetaVar(scalingMetaValue);
+  // Priority for .servings: serves > servings > yield (last write wins)
+  const yieldValue = parseYieldMetaVar(metadataContent);
+  if (yieldValue) {
+    metadata.yield = yieldValue;
+    servings = getNumericValueFromYield(yieldValue);
+  }
+  for (const metaVar of ["servings", "serves"] as const) {
+    const value = parseServingsMetaVar(metadataContent, metaVar);
+    if (value !== undefined) {
+      metadata[metaVar] = value;
+      servings = value;
     }
   }
 

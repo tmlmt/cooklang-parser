@@ -484,16 +484,7 @@ Recipe {
   ],
   "metadata": {
     "author": "Pam Thompson",
-    "servings": {
-      "quantity": {
-        "type": "fixed",
-        "value": {
-          "decimal": 12,
-          "type": "decimal",
-        },
-      },
-      "text": "12 slices",
-    },
+    "servings": 12,
     "source": "https://www.tasteofhome.com/recipes/best-lasagna/",
     "tags": [
       "pasta",
