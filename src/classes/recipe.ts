@@ -803,9 +803,9 @@ export class Recipe {
               } else {
                 const targetSubgroupIndex = 0;
                 const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
-                isSelected =
-                  selectedSubgroup?.some((alt) => alt.itemId === item.id) ??
-                  false;
+                isSelected = selectedSubgroup!.some(
+                  (alt) => alt.itemId === item.id,
+                );
               }
             } else {
               const targetSubgroupIndex = groupChoice ?? 0;
@@ -1342,17 +1342,10 @@ export class Recipe {
           sectionName = sectionName.slice(sectionVarMatch[0].length).trim();
         }
 
-        if (this.sections.length === 0 && section.isBlank()) {
-          section.name = sectionName;
-          if (sectionVariants) section.variants = sectionVariants;
-          if (sectionOptional) section.optional = true;
-        } else {
-          /* v8 ignore else -- @preserve */
-          if (!section.isBlank()) {
-            this.sections.push(section);
-          }
-          section = new Section(sectionName, sectionVariants, sectionOptional);
+        if (!section.isBlank()) {
+          this.sections.push(section);
         }
+        section = new Section(sectionName, sectionVariants, sectionOptional);
         blankLineBefore = true;
         inNote = false;
         continue;
@@ -1688,7 +1681,6 @@ export class Recipe {
       if (optimized.unit) scaled.unit = optimized.unit;
       if (original.textBefore) scaled.textBefore = original.textBefore;
       if (original.textAfter) scaled.textAfter = original.textAfter;
-      if (original.text) scaled.text = original.text;
       newRecipe.metadata.yield = scaled;
     }
 

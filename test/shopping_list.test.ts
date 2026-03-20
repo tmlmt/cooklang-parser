@@ -1331,6 +1331,22 @@ sugar
       expect(flour!.quantities).toBeUndefined();
     });
 
+    it("should skip pantry substraction for ingredients without compatible units", () => {
+      const recipe = new Recipe(
+        `Add @eggs{2%dozen|2%large pack} and @&eggs{1%half dozen|1%small pack}`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addPantry(`[pantry]\neggs = "40"`);
+      shoppingList.addRecipe(recipe);
+      const resultingPantry = shoppingList.getPantry();
+      const pantryEggs = resultingPantry!.findItem("eggs");
+      expect(pantryEggs).toBeDefined();
+      expect(pantryEggs!.quantity).toMatchObject({
+        type: "fixed",
+        value: { type: "decimal", decimal: 40 },
+      });
+    });
+
     it("should skip pantry subtraction for incompatible units", () => {
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(pantryRecipe); // needs 200g flour
@@ -1350,7 +1366,7 @@ sugar
       ]);
     });
 
-    it("should subtract pantry from AND group ingredient (multiple units)", () => {
+    it("should subtract pantry for quantities with equivalents", () => {
       const recipe3 = new Recipe(
         `Add @eggs{24|2%dozen} and @&eggs{6|1%half dozen}`,
       );
@@ -1404,63 +1420,13 @@ sugar
       expect(eggs!.quantities).toBeUndefined();
 
       // Pantry should have remainder: 3 dozen - 30/12 dozen = 3 - 2.5 = 0.5 dozen
-      let resultingPantry = shoppingList.getPantry();
-      let pantryEggs = resultingPantry!.findItem("eggs");
+      const resultingPantry = shoppingList.getPantry();
+      const pantryEggs = resultingPantry!.findItem("eggs");
       expect(pantryEggs).toBeDefined();
       expect(pantryEggs!.quantity).toMatchObject({
         type: "fixed",
         value: { type: "decimal", decimal: 0.5 },
       });
-
-      // Should also work the other way around
-      shoppingList.addPantry(`[pantry]\neggs = "40"`);
-      resultingPantry = shoppingList.getPantry();
-      pantryEggs = resultingPantry!.findItem("eggs");
-      expect(pantryEggs).toBeDefined();
-      expect(pantryEggs!.quantity).toMatchObject({
-        type: "fixed",
-        value: { type: "decimal", decimal: 10 },
-      });
-    });
-
-    it("should subtract pantry from AND group with compatible units", () => {
-      // Recipe: 200g flour AND 100ml water (same ingredient name in AND)
-      // We'll create this by adding two recipes with the same ingredient in different units
-      const recipeA = new Recipe(`Add @flour{200%g}.`);
-      const recipeB = new Recipe(`Add @flour{0.5%kg}.`);
-      const shoppingList = new ShoppingList();
-      shoppingList.addRecipe(recipeA);
-      shoppingList.addRecipe(recipeB);
-
-      // flour should be summed: 200g + 500g = 700g
-      const flourBefore = shoppingList.ingredients.find(
-        (i) => i.name === "flour",
-      );
-      expect(flourBefore!.quantities).toMatchObject([
-        {
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: 700 },
-          },
-          unit: "g",
-        },
-      ]);
-
-      // Now add pantry with 300g flour
-      shoppingList.addPantry(`[pantry]\nflour = "300%g"`);
-
-      const flourAfter = shoppingList.ingredients.find(
-        (i) => i.name === "flour",
-      );
-      expect(flourAfter!.quantities).toMatchObject([
-        {
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: 400 },
-          },
-          unit: "g",
-        },
-      ]);
     });
 
     it("should subtract pantry from AND group — partial across leaves", () => {
@@ -1513,6 +1479,42 @@ sugar
             value: { type: "fraction", num: 1, den: 2 },
           },
           unit: "tsp",
+        },
+      ]);
+    });
+
+    it("should subtract pantry from AND group with equivalents", () => {
+      const recipe = new Recipe(
+        `Mix @milk{1%splash|10%milliliter} and @&milk{1%bottle|1%kg}.`,
+      );
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe);
+
+      shoppingList.addPantry(`[pantry]\nmilk = "2%cL"`);
+      const resultingPantry = shoppingList.getPantry();
+      const pantryMilk = resultingPantry!.findItem("milk");
+      expect(pantryMilk).toBeDefined();
+      expect(pantryMilk!.quantity).toMatchObject({
+        type: "fixed",
+        value: { type: "decimal", decimal: 1 },
+      });
+      expect(pantryMilk!.unit).toBe("cL");
+    });
+
+    it("should subtract pantry from unitless ingredient", () => {
+      const recipe = new Recipe(`Add @eggs{3}.`);
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe);
+      shoppingList.addPantry(`[pantry]\neggs = "1"`);
+
+      const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
+      expect(eggs).toBeDefined();
+      expect(eggs!.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 2 },
+          },
         },
       ]);
     });

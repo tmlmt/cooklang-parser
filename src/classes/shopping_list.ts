@@ -24,7 +24,9 @@ import {
 } from "../quantities/mutations";
 import { getAverageValue } from "../quantities/numeric";
 import { deepClone } from "../utils/general";
-import { NO_UNIT } from "../units/definitions";
+import { NO_UNIT, normalizeUnit } from "../units/definitions";
+import { areUnitsConvertible } from "../units/compatibility";
+import { getToBase } from "../units/conversion";
 import type { QuantityWithUnitDef } from "../types";
 
 /**
@@ -270,13 +272,20 @@ export class ShoppingList {
           const unitMismatch =
             leafHasUnit !== pantryHasUnit && ratioMap !== undefined;
 
+          const leafDef = normalizeUnit(leaf.unit);
+          const pantryDef = normalizeUnit(pantryExtended.unit?.name);
+
           if (unitMismatch) {
             const leafUnit = leaf.unit ?? NO_UNIT;
             const pantryUnit = pantryExtended.unit?.name ?? NO_UNIT;
-            const ratioFromPantry = ratioMap[leafUnit]?.[pantryUnit];
+            const ratioFromPantry =
+              ratioMap[normalizeUnit(leafUnit)?.name ?? leafUnit]?.[
+                normalizeUnit(pantryUnit)?.name ?? pantryUnit
+              ];
             if (ratioFromPantry !== undefined) {
               const pantryValue = getAverageValue(pantryExtended.quantity);
               const leafValue = getAverageValue(ingredientExtended.quantity);
+              // v8 ignore else -- @preserve: text quantities never reach the equivalence path
               if (
                 typeof pantryValue === "number" &&
                 typeof leafValue === "number"
@@ -295,10 +304,7 @@ export class ShoppingList {
                 };
 
                 // Update pantry remainder: convert consumed back to pantry units
-                const consumedInPantryUnits =
-                  ratioFromPantry !== 0
-                    ? subtracted / ratioFromPantry
-                    : pantryValue;
+                const consumedInPantryUnits = subtracted / ratioFromPantry;
                 const remainingPantryValue = Math.max(
                   pantryValue - consumedInPantryUnits,
                   0,
@@ -316,18 +322,21 @@ export class ShoppingList {
                 continue;
               }
             }
-          }
-
-          try {
+            // Mismatch between units from pantry and leaf, but no equivalent ratio: we cannot subtract
+            else {
+              continue;
+            }
+          } else if (
+            (leafDef && pantryDef && areUnitsConvertible(leafDef, pantryDef)) ||
+            (leaf.unit ?? "").toLowerCase() ===
+              (pantryExtended.unit?.name ?? "").toLowerCase()
+          ) {
+            // Direct subtraction — units are known and convertible
             const remaining = subtractQuantities(
               ingredientExtended,
               pantryExtended,
               { clampToZero: true },
             );
-
-            // Update the pantry remainder: subtract what was consumed
-            // Must happen before writing back into leaf, since toExtendedUnit
-            // may return the same object reference for unitless quantities
             const consumed = subtractQuantities(
               pantryExtended,
               ingredientExtended,
@@ -335,13 +344,69 @@ export class ShoppingList {
             );
             pantryExtended = consumed;
 
-            // Write back into the leaf in-place
             const updated = toPlainUnit(remaining) as QuantityWithPlainUnit;
             leaf.quantity = updated.quantity;
             leaf.unit = updated.unit;
-          } catch {
-            // Incompatible units — skip subtraction for this leaf
+          } else if (ratioMap) {
+            // Indirect subtraction — leaf/pantry incompatible directly,
+            // but an equivalent unit may bridge them via the ratioMap
+            const canonicalLeaf = normalizeUnit(leaf.unit)?.name ?? leaf.unit!;
+            const leafValue = getAverageValue(ingredientExtended.quantity);
+            const pantryValue = getAverageValue(pantryExtended.quantity);
+
+            if (
+              typeof leafValue === "number" &&
+              typeof pantryValue === "number" &&
+              pantryDef
+            ) {
+              for (const [equivUnit, ratios] of Object.entries(ratioMap)) {
+                const ratio = ratios[canonicalLeaf];
+                if (ratio === undefined) continue;
+
+                const equivDef = normalizeUnit(equivUnit);
+                if (!equivDef || !areUnitsConvertible(equivDef, pantryDef))
+                  continue;
+
+                // Convert pantry to equivalent units via base
+                const pantryInEquiv =
+                  (pantryValue * getToBase(pantryDef)) / getToBase(equivDef);
+                // How many leaf units the pantry covers
+                const pantryInLeafUnits = pantryInEquiv / ratio;
+                const subtracted = Math.min(pantryInLeafUnits, leafValue);
+                const remainingLeafValue = Math.max(
+                  leafValue - pantryInLeafUnits,
+                  0,
+                );
+
+                leaf.quantity = {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: remainingLeafValue },
+                };
+
+                // Update pantry remainder in original pantry units
+                const consumedInEquiv = subtracted * ratio;
+                const consumedInPantryUnits =
+                  (consumedInEquiv * getToBase(equivDef)) /
+                  getToBase(pantryDef);
+                const remainingPantryValue = Math.max(
+                  pantryValue - consumedInPantryUnits,
+                  0,
+                );
+                pantryExtended = {
+                  quantity: {
+                    type: "fixed",
+                    value: {
+                      type: "decimal",
+                      decimal: remainingPantryValue,
+                    },
+                  },
+                  ...(pantryExtended.unit && { unit: pantryExtended.unit }),
+                };
+                break;
+              }
+            }
           }
+          // else: truly incompatible units with no equivalence bridge — skip
         }
 
         // Remove zero-valued leaves from AND groups
@@ -358,7 +423,7 @@ export class ShoppingList {
           const ratioMap = this.equivalenceRatios.get(ingredient.name);
           // v8 ignore else --@preserve: defensive type guard
           if (entry.equivalents && ratioMap) {
-            const equivUnits = entry.equivalents.map((e) => e.unit ?? NO_UNIT);
+            const equivUnits = entry.equivalents.map((e) => e.unit!); // equivalents always have units
             entry.equivalents = ShoppingList.recomputeEquivalents(
               entry.and,
               ratioMap,
@@ -373,7 +438,6 @@ export class ShoppingList {
               quantity: single.quantity,
               ...(single.unit && { unit: single.unit }),
               ...(entry.equivalents && { equivalents: entry.equivalents }),
-              ...(entry.alternatives && { alternatives: entry.alternatives }),
             };
           }
         } else if ("equivalents" in entry && entry.equivalents) {
@@ -382,7 +446,7 @@ export class ShoppingList {
           // v8 ignore else --@preserve: defensive type guard
           if (ratioMap) {
             const equivUnits = entry.equivalents.map(
-              (e: QuantityWithPlainUnit) => e.unit ?? NO_UNIT,
+              (e: QuantityWithPlainUnit) => e.unit!, // equivalents always have units
             );
             const recomputed = ShoppingList.recomputeEquivalents(
               [entry as QuantityWithPlainUnit],
@@ -439,8 +503,10 @@ export class ShoppingList {
           if (primary === equiv) continue;
           // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
           const primaryValue = getAverageValue(primary.quantity) as number;
-          const equivUnit = equiv.unit.name;
-          const primaryUnit = primary.unit.name;
+          const equivUnit =
+            normalizeUnit(equiv.unit.name)?.name ?? equiv.unit.name;
+          const primaryUnit =
+            normalizeUnit(primary.unit.name)?.name ?? primary.unit.name;
           ratioMap[equivUnit] ??= {};
           ratioMap[equivUnit][primaryUnit] = equivValue / primaryValue;
         }
@@ -462,13 +528,16 @@ export class ShoppingList {
     const equivalents: QuantityWithPlainUnit[] = [];
 
     for (const equivUnit of equivUnits) {
-      const ratios = ratioMap[equivUnit]!;
+      const ratios = ratioMap[normalizeUnit(equivUnit)?.name ?? equivUnit];
 
       let total = 0;
       for (const primary of primaries) {
-        const pUnit = primary.unit ?? NO_UNIT;
-        // In equivalent unit lists, ratios and pvalues are always defined, and are numbers
-        const ratio = ratios[pUnit]!;
+        const pUnit =
+          normalizeUnit(primary.unit ?? NO_UNIT)?.name ??
+          primary.unit ??
+          NO_UNIT;
+        const ratio = ratios![pUnit];
+        if (ratio === undefined) continue;
         const pValue = getAverageValue(primary.quantity) as number;
         total += pValue * ratio;
       }

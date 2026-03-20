@@ -26,8 +26,6 @@ export interface Yield extends QuantityWithPlainUnit {
   textBefore?: string;
   /** The text after the scaling variable (complex `{{}}` format). */
   textAfter?: string;
-  /** The text precising a numerical scaling variable (comma format, e.g. `yield: 2, some text`). */
-  text?: string;
 }
 
 /**

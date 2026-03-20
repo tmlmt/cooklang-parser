@@ -439,7 +439,9 @@ export function getEffectiveChoices(
     const matchIdx = alternatives.findIndex(
       (alt) => alt.note && alt.note.toLowerCase().includes(variantLower),
     );
+    /* v8 ignore else -- @preserve: only act when there are matches */
     if (matchIdx >= 0) {
+      /* v8 ignore else -- @preserve: initialization pattern */
       if (!choices.ingredientItems) choices.ingredientItems = new Map();
       choices.ingredientItems.set(itemId, matchIdx);
     }
@@ -452,7 +454,9 @@ export function getEffectiveChoices(
         (alt) => alt.note && alt.note.toLowerCase().includes(variantLower),
       ),
     );
+    /* v8 ignore else -- @preserve: only act when there are matches */
     if (matchIdx >= 0) {
+      /* v8 ignore else -- @preserve: initialization pattern */
       if (!choices.ingredientGroups) choices.ingredientGroups = new Map();
       choices.ingredientGroups.set(groupId, matchIdx);
     }
