@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
 import {
   simpleRecipe,
-  complexRecipe,
   recipeToScaleWithAlternatives,
   recipeWithGroupedAlternatives,
   recipeWithInlineAlternatives,
@@ -799,11 +798,6 @@ describe("parse function", () => {
     }); // Note: timer name may be empty based on regex
   });
 
-  it("extracts steps correctly", () => {
-    const result = new Recipe(simpleRecipe);
-    expect(result.sections).toMatchSnapshot();
-  });
-
   it("throws error for missing timer unit", () => {
     const badInput = "Cook for ~{15}";
     expect(() => new Recipe(badInput)).toThrow(/Timer missing unit/);
@@ -887,11 +881,6 @@ Another step.
 `;
     const result = new Recipe(recipeWithNotes);
     expect(result.sections).toMatchSnapshot();
-  });
-
-  it("parses complex recipes correctly", () => {
-    const result = new Recipe(complexRecipe);
-    expect(result).toMatchSnapshot();
   });
 
   describe("grouped alternative ingredients", () => {

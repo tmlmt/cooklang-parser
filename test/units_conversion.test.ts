@@ -92,6 +92,15 @@ describe("findBestUnit", () => {
     expect(result.value).toBe(1.5);
   });
 
+  it("should prefer non-integer values in input family over others", () => {
+    // 352ml in US: fl-oz ≈ 11.90, cup ≈ 1.49 — both non-integer, both in range
+    // fl-oz is in input family, so it should be preferred
+    const flozDef = normalizeUnit("fl-oz")!;
+    const result = findBestUnit(352, "volume", "US", [flozDef]);
+    expect(result.unit.name).toBe("fl-oz");
+    expect(result.value).toBeCloseTo(11.9, 1);
+  });
+
   it("should handle large values outside default max value for largest unit in system", () => {
     // 10,000,000ml = 10,000L (> 999)
     const mlDef = normalizeUnit("ml")!;
