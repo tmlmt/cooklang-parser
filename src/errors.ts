@@ -46,8 +46,7 @@ export class NoProductMatchError extends Error {
   constructor(item_name: string, code: NoProductMatchErrorCode) {
     const messageMap: Record<NoProductMatchErrorCode, string> = {
       incompatibleUnits: `The units of the products in the catalogue are incompatible with ingredient ${item_name} in the shopping list.`,
-      noProduct:
-        "No product was found linked to ingredient name ${item_name} in the shopping list",
+      noProduct: `No product was found linked to ingredient name ${item_name} in the shopping list`,
       textValue: `Ingredient ${item_name} has a text value as quantity and can therefore not be matched with any product in the catalogue.`,
       noQuantity: `Ingredient ${item_name} has no quantity and can therefore not be matched with any product in the catalogue.`,
       textValue_incompatibleUnits: `Multiple alternative quantities were provided for ingredient ${item_name} in the shopping list but they were either text values or no product in catalog were found to have compatible units`,
