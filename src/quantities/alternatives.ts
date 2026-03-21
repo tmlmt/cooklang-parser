@@ -473,9 +473,7 @@ export function recomputeEquivalents(
     let total = 0;
     for (const primary of primaries) {
       const pUnit =
-        normalizeUnit(primary.unit ?? NO_UNIT)?.name ??
-        primary.unit ??
-        NO_UNIT;
+        normalizeUnit(primary.unit ?? NO_UNIT)?.name ?? primary.unit ?? NO_UNIT;
       const ratio = ratios![pUnit];
       if (ratio === undefined) continue;
       const pValue = getAverageValue(primary.quantity) as number;
