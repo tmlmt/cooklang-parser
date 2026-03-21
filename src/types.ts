@@ -79,7 +79,9 @@ export interface Metadata {
   source?: string | MetadataSource;
   /** The author of the recipe (separate from source author). */
   author?: string;
-  /** The number of servings the recipe makes. Must be a plain number.
+  /** The number of servings the recipe makes.
+   * Stored as a number when the value is numeric, or as a string when non-numeric
+   * (e.g. `servings: two`). Non-numeric values default the internal scaling baseline to 1.
    *
    * Interchangeable with `yield` or `serves` for the purpose of setting
    * {@link Recipe.servings}. If multiple ones are defined, the prevalence
@@ -90,7 +92,7 @@ export interface Metadata {
    * servings: 4
    * ```
    */
-  servings?: number;
+  servings?: number | string;
   /** The yield of the recipe.
    * Can be given as:
    * - a plain quantity with optional unit: `yield: 300%g` or `yield: 2`
@@ -112,7 +114,9 @@ export interface Metadata {
    * ```
    */
   yield?: Yield;
-  /** The number of people the recipe serves. Must be a plain number.
+  /** The number of people the recipe serves.
+   * Stored as a number when the value is numeric, or as a string when non-numeric
+   * (e.g. `serves: two`). Non-numeric values default the internal scaling baseline to 1.
    *
    * Interchangeable with `servings` or `yield` for the purpose of setting
    * {@link Recipe.servings}. If multiple ones are defined, the prevalence
@@ -123,7 +127,7 @@ export interface Metadata {
    * serves: 4
    * ```
    */
-  serves?: number;
+  serves?: number | string;
   /** The course of the recipe. */
   course?: string;
   /** The category of the recipe. */

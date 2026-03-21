@@ -1666,22 +1666,30 @@ export class Recipe {
     /* v8 ignore else -- @preserve */
     if (newRecipe.metadata.yield && this.metadata.yield) {
       const original = this.metadata.yield;
-      const scaledQuantity = multiplyQuantityValue(
-        original.quantity,
-        factor,
-      ) as FixedNumericValue;
-      // Apply best unit optimization
-      const optimized = applyBestUnit(
-        { quantity: scaledQuantity, unit: original.unit },
-        unitSystem,
-      );
-      const scaled: Yield = {
-        quantity: optimized.quantity,
-      };
-      if (optimized.unit) scaled.unit = optimized.unit;
-      if (original.textBefore) scaled.textBefore = original.textBefore;
-      if (original.textAfter) scaled.textAfter = original.textAfter;
-      newRecipe.metadata.yield = scaled;
+      // Skip scaling for text-value yields (e.g. "yield: some text")
+      if (
+        original.quantity.type === "fixed" &&
+        original.quantity.value.type === "text"
+      ) {
+        // Keep the yield as-is
+      } else {
+        const scaledQuantity = multiplyQuantityValue(
+          original.quantity,
+          factor,
+        ) as FixedNumericValue;
+        // Apply best unit optimization
+        const optimized = applyBestUnit(
+          { quantity: scaledQuantity, unit: original.unit },
+          unitSystem,
+        );
+        const scaled: Yield = {
+          quantity: optimized.quantity,
+        };
+        if (optimized.unit) scaled.unit = optimized.unit;
+        if (original.textBefore) scaled.textBefore = original.textBefore;
+        if (original.textAfter) scaled.textAfter = original.textAfter;
+        newRecipe.metadata.yield = scaled;
+      }
     }
 
     return newRecipe;

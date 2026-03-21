@@ -637,24 +637,24 @@ export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
 
 /**
  * Parses a servings or serves metadata value.
- * Only accepts a plain number (e.g. `servings: 4`).
+ * Returns both the raw value (number if numeric, string otherwise) and a numeric
+ * value for scaling (defaults to 1 when the raw value is non-numeric).
  *
  * @param content - The metadata content string.
  * @param varName - The metadata variable name (`"servings"` or `"serves"`).
- * @returns The numeric value, or undefined if not found.
- * @throws Error if the value is not a valid number.
+ * @returns An object with `numericValue` and `rawValue`, or undefined if not found.
  */
 export function parseServingsMetaVar(
   content: string,
   varName: "servings" | "serves",
-): number | undefined {
+): { numericValue: number; rawValue: number | string } | undefined {
   const raw = parseSimpleMetaVar(content, varName);
   if (raw === undefined) return undefined;
   const num = Number(raw);
   if (isNaN(num)) {
-    throw new Error(`${varName} must be a number`);
+    return { numericValue: 1, rawValue: raw };
   }
-  return num;
+  return { numericValue: num, rawValue: num };
 }
 
 /**
@@ -690,7 +690,7 @@ export function parseYieldMetaVar(content: string): Yield | undefined {
   // Plain format branch: matched quantityAlternativeRegex (e.g. "300%g" or "2")
   if (match.groups?.quantity) {
     const result: Yield = {
-      quantity: parseQuantityValue(match.groups.quantity) as FixedNumericValue,
+      quantity: parseQuantityValue(match.groups.quantity),
     };
     if (match.groups.unit) result.unit = match.groups.unit;
     return result;
@@ -916,7 +916,7 @@ export function getNumericValueFromYield(v: Yield): number {
   }
   /* v8 ignore else -- @preserve */
   if (v.quantity.type === "range") return getNumericValue(v.quantity.min);
-  return 0;
+  return 1;
 }
 
 export function extractMetadata(content: string): MetadataExtract {
@@ -1094,10 +1094,10 @@ export function extractMetadata(content: string): MetadataExtract {
     servings = getNumericValueFromYield(yieldValue);
   }
   for (const metaVar of ["serves", "servings"] as const) {
-    const value = parseServingsMetaVar(metadataContent, metaVar);
-    if (value !== undefined) {
-      metadata[metaVar] = value;
-      servings = value;
+    const result = parseServingsMetaVar(metadataContent, metaVar);
+    if (result !== undefined) {
+      metadata[metaVar] = result.rawValue;
+      servings = result.numericValue;
     }
   }
 

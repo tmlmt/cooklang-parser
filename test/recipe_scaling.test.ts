@@ -133,6 +133,28 @@ describe("scaleTo", () => {
     });
   });
 
+  it("should handle non-numeric servings (text) gracefully", () => {
+    const recipe = new Recipe(`---\nservings: two\n---\n@water{1%L}`);
+    expect(recipe.metadata.servings).toBe("two");
+    expect(recipe.servings).toBe(1);
+    const scaled = recipe.scaleTo(4);
+    expect(scaled.servings).toBe(4);
+    expect(scaled.metadata.servings).toBe("two");
+  });
+
+  it("should handle non-numeric yield (text) gracefully", () => {
+    const recipe = new Recipe(`---\nyield: some text\n---\n@water{1%L}`);
+    expect(recipe.metadata.yield).toEqual({
+      quantity: { type: "fixed", value: { type: "text", text: "some text" } },
+    });
+    expect(recipe.servings).toBe(1);
+    const scaled = recipe.scaleTo(4);
+    expect(scaled.servings).toBe(4);
+    expect(scaled.metadata.yield).toEqual({
+      quantity: { type: "fixed", value: { type: "text", text: "some text" } },
+    });
+  });
+
   it("should not modify the original recipe", () => {
     const originalRecipe = baseRecipe.clone();
     baseRecipe.scaleTo(4);
@@ -257,6 +279,28 @@ describe("scaleBy", () => {
         value: { type: "decimal", decimal: 2 },
       },
       unit: "L",
+    });
+  });
+
+  it("should handle non-numeric servings (text) gracefully", () => {
+    const recipe = new Recipe(`---\nservings: two\n---\n@water{1%L}`);
+    expect(recipe.metadata.servings).toBe("two");
+    expect(recipe.servings).toBe(1);
+    const scaled = recipe.scaleBy(2);
+    expect(scaled.servings).toBe(2);
+    expect(scaled.metadata.servings).toBe("two");
+  });
+
+  it("should handle non-numeric yield (text) gracefully", () => {
+    const recipe = new Recipe(`---\nyield: some text\n---\n@water{1%L}`);
+    expect(recipe.metadata.yield).toEqual({
+      quantity: { type: "fixed", value: { type: "text", text: "some text" } },
+    });
+    expect(recipe.servings).toBe(1);
+    const scaled = recipe.scaleBy(2);
+    expect(scaled.servings).toBe(2);
+    expect(scaled.metadata.yield).toEqual({
+      quantity: { type: "fixed", value: { type: "text", text: "some text" } },
     });
   });
 

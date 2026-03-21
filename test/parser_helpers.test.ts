@@ -65,18 +65,28 @@ describe("parseSimpleMetaVar", () => {
 
 describe("parseServingsMetaVar", () => {
   it("should parse a plain number", () => {
-    expect(parseServingsMetaVar("servings: 6", "servings")).toBe(6);
+    expect(parseServingsMetaVar("servings: 6", "servings")).toEqual({
+      numericValue: 6,
+      rawValue: 6,
+    });
   });
   it("should parse serves", () => {
-    expect(parseServingsMetaVar("serves: 4", "serves")).toBe(4);
+    expect(parseServingsMetaVar("serves: 4", "serves")).toEqual({
+      numericValue: 4,
+      rawValue: 4,
+    });
   });
   it("should parse decimal numbers", () => {
-    expect(parseServingsMetaVar("servings: 1.5", "servings")).toBe(1.5);
+    expect(parseServingsMetaVar("servings: 1.5", "servings")).toEqual({
+      numericValue: 1.5,
+      rawValue: 1.5,
+    });
   });
-  it("should throw if value is not a number", () => {
-    expect(() =>
-      parseServingsMetaVar("servings: two", "servings"),
-    ).toThrowError("servings must be a number");
+  it("should return text as rawValue and default numericValue to 1 for non-numeric input", () => {
+    expect(parseServingsMetaVar("servings: two", "servings")).toEqual({
+      numericValue: 1,
+      rawValue: "two",
+    });
   });
   it("should return undefined when not found", () => {
     expect(
@@ -135,6 +145,11 @@ describe("parseYieldMetaVar", () => {
   });
   it("should return undefined when only a unit is provided (no quantity)", () => {
     expect(parseYieldMetaVar("yield: %g")).toBeUndefined();
+  });
+  it("should parse non-numeric yield as text value", () => {
+    expect(parseYieldMetaVar("yield: some text")).toEqual<Yield>({
+      quantity: { type: "fixed", value: { type: "text", text: "some text" } },
+    });
   });
 });
 
@@ -1660,13 +1675,13 @@ describe("getNumericValueFromYield", () => {
     expect(getNumericValueFromYield(yieldVar)).toBe(1);
   });
 
-  it("should default to 0", () => {
+  it("should default to 1 for text values", () => {
     const yieldVar: Yield = {
       quantity: {
         type: "fixed",
         value: { type: "text", text: "eight" },
       },
     };
-    expect(getNumericValueFromYield(yieldVar)).toBe(0);
+    expect(getNumericValueFromYield(yieldVar)).toBe(1);
   });
 });
