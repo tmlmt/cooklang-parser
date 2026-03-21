@@ -48,7 +48,7 @@ import {
   flushPendingNote,
   findAndUpsertIngredient,
   findAndUpsertCookware,
-  parseQuantityInput,
+  parseQuantityValue,
   parseArbitraryQuantity,
   extractMetadata,
   unionOfSets,
@@ -263,7 +263,7 @@ export class Recipe {
     const quantities: QuantityWithExtendedUnit[] = [];
     while (quantityMatch?.groups) {
       const value = quantityMatch.groups.quantity
-        ? parseQuantityInput(quantityMatch.groups.quantity)
+        ? parseQuantityValue(quantityMatch.groups.quantity)
         : undefined;
       const unit = quantityMatch.groups.unit;
       if (value) {
@@ -1434,7 +1434,7 @@ export class Recipe {
             flags.push("hidden");
           }
           const quantity = quantityRaw
-            ? parseQuantityInput(quantityRaw)
+            ? parseQuantityValue(quantityRaw)
             : undefined;
           const newCookware: Cookware = {
             name,
@@ -1475,7 +1475,7 @@ export class Recipe {
             throw new Error("Timer missing unit");
           }
           const name = groups.timerName || undefined;
-          const duration = parseQuantityInput(durationStr);
+          const duration = parseQuantityValue(durationStr);
           const timerObj: Timer = {
             name,
             duration,

@@ -18,7 +18,7 @@ import {
   parseArbitraryQuantity,
   parseListMetaVar,
   parseFixedValue,
-  parseQuantityInput,
+  parseQuantityValue,
   parseNestedMetaVar,
   parseNestedBlock,
   parseBlockScalarMetaVar,
@@ -1050,14 +1050,14 @@ describe("parseFixedValue", () => {
   });
 });
 
-describe("parseQuantityInput", () => {
+describe("parseQuantityValue", () => {
   it("correctly parses ranges", () => {
-    expect(parseQuantityInput("1-2")).toEqual({
+    expect(parseQuantityValue("1-2")).toEqual({
       type: "range",
       min: { type: "decimal", decimal: 1 },
       max: { type: "decimal", decimal: 2 },
     });
-    expect(parseQuantityInput("1/2-1")).toEqual({
+    expect(parseQuantityValue("1/2-1")).toEqual({
       type: "range",
       min: { type: "fraction", num: 1, den: 2 },
       max: { type: "decimal", decimal: 1 },
@@ -1065,11 +1065,11 @@ describe("parseQuantityInput", () => {
   });
 
   it("correctly parses fixed values", () => {
-    expect(parseQuantityInput("1")).toEqual({
+    expect(parseQuantityValue("1")).toEqual({
       type: "fixed",
       value: { type: "decimal", decimal: 1 },
     });
-    expect(parseQuantityInput("1.2")).toEqual({
+    expect(parseQuantityValue("1.2")).toEqual({
       type: "fixed",
       value: { type: "decimal", decimal: 1.2 },
     });

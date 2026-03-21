@@ -8,7 +8,7 @@ import type {
 import type { TomlTable } from "smol-toml";
 import {
   isPositiveIntegerString,
-  parseQuantityInput,
+  parseQuantityValue,
   stringifyQuantityValue,
 } from "../utils/parser_helpers";
 import { InvalidProductCatalogFormat } from "../errors";
@@ -81,7 +81,7 @@ export class ProductCatalog {
         const sizeStrings = Array.isArray(size) ? size : [size];
         const sizes: ProductSize[] = sizeStrings.map((sizeStr) => {
           const sizeAndUnitRaw = sizeStr.split("%");
-          const sizeParsed = parseQuantityInput(
+          const sizeParsed = parseQuantityValue(
             sizeAndUnitRaw[0]!,
           ) as FixedNumericValue;
           const productSize: ProductSize = { size: sizeParsed };

@@ -262,8 +262,7 @@ function stringifyFixedValue(quantity: FixedValue): string {
   else return quantity.value.text;
 }
 
-// TODO: rename to parseQuantityValue
-export function parseQuantityInput(input_str: string): FixedValue | Range {
+export function parseQuantityValue(input_str: string): FixedValue | Range {
   const clean_str = String(input_str).trim();
 
   if (rangeRegex.test(clean_str)) {
@@ -294,12 +293,12 @@ export function parseQuantityWithUnit(input: string): {
   const trimmed = input.trim();
   const separatorIndex = trimmed.indexOf("%");
   if (separatorIndex === -1) {
-    return { value: parseQuantityInput(trimmed) };
+    return { value: parseQuantityValue(trimmed) };
   }
   const valuePart = trimmed.slice(0, separatorIndex).trim();
   const unitPart = trimmed.slice(separatorIndex + 1).trim();
   return {
-    value: parseQuantityInput(valuePart),
+    value: parseQuantityValue(valuePart),
     unit: unitPart || undefined,
   };
 }
@@ -621,7 +620,7 @@ export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
       "Arbitrary quantities must have a numerical value",
     );
   }
-  const value = parseQuantityInput(quantityMatch.groups.quantity!);
+  const value = parseQuantityValue(quantityMatch.groups.quantity!);
   const unit = quantityMatch.groups.unit;
   if (!value || (value.type === "fixed" && value.value.type === "text")) {
     throw new InvalidQuantityFormat(
@@ -691,7 +690,7 @@ export function parseYieldMetaVar(content: string): Yield | undefined {
   // Plain format branch: matched quantityAlternativeRegex (e.g. "300%g" or "2")
   if (match.groups?.quantity) {
     const result: Yield = {
-      quantity: parseQuantityInput(match.groups.quantity) as FixedNumericValue,
+      quantity: parseQuantityValue(match.groups.quantity) as FixedNumericValue,
     };
     if (match.groups.unit) result.unit = match.groups.unit;
     return result;
