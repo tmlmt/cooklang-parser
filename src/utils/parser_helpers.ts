@@ -1087,13 +1087,13 @@ export function extractMetadata(content: string): MetadataExtract {
   }
 
   // Scaling metadata variables (servings, yield, serves)
-  // Priority for .servings: serves > servings > yield (last write wins)
+  // Priority for .servings: servings > serves > yield (last write wins)
   const yieldValue = parseYieldMetaVar(metadataContent);
   if (yieldValue) {
     metadata.yield = yieldValue;
     servings = getNumericValueFromYield(yieldValue);
   }
-  for (const metaVar of ["servings", "serves"] as const) {
+  for (const metaVar of ["serves", "servings"] as const) {
     const value = parseServingsMetaVar(metadataContent, metaVar);
     if (value !== undefined) {
       metadata[metaVar] = value;

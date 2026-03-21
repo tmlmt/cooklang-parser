@@ -83,7 +83,7 @@ export interface Metadata {
    *
    * Interchangeable with `yield` or `serves` for the purpose of setting
    * {@link Recipe.servings}. If multiple ones are defined, the prevalence
-   * order is `serves` \> `servings` \> `yield`.
+   * order is `servings` \> `serves` \> `yield`.
    *
    * @example
    * ```yaml
@@ -99,7 +99,7 @@ export interface Metadata {
    *
    * Interchangeable with `servings` or `serves` for the purpose of setting
    * {@link Recipe.servings}. If multiple ones are defined, the prevalence
-   * order is `serves` \> `servings` \> `yield`.
+   * order is `servings` \> `serves` \> `yield`.
    *
    * @example
    * ```yaml
@@ -116,7 +116,7 @@ export interface Metadata {
    *
    * Interchangeable with `servings` or `yield` for the purpose of setting
    * {@link Recipe.servings}. If multiple ones are defined, the prevalence
-   * order is `serves` \> `servings` \> `yield`.
+   * order is `servings` \> `serves` \> `yield`.
    *
    * @example
    * ```yaml
