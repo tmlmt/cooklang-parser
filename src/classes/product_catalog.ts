@@ -39,7 +39,7 @@ import { InvalidProductCatalogFormat } from "../errors";
  * 14141 = { name = "Big pack", size = "6%kg", price = 10 }
  * `
  * const catalog = new ProductCatalog(catalog);
- * const eggs = catalog.find("oeuf");
+ * const eggs = catalog.products.find(p => p.ingredientName === "eggs");
  * ```
  */
 export class ProductCatalog {
