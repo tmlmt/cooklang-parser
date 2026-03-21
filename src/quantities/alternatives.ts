@@ -1,4 +1,9 @@
-import { isNoUnit } from "../units/definitions";
+import {
+  isNoUnit,
+  resolveUnit,
+  normalizeUnit,
+  NO_UNIT,
+} from "../units/definitions";
 import type {
   QuantityWithPlainUnit,
   QuantityWithExtendedUnit,
@@ -9,8 +14,8 @@ import type {
   FlatAndGroup,
   MaybeNestedGroup,
   SpecificUnitSystem,
+  EquivalenceRatioMap,
 } from "../types";
-import { resolveUnit } from "../units/definitions";
 import { multiplyQuantityValue, getAverageValue } from "./numeric";
 import Big from "big.js";
 import {
@@ -418,4 +423,75 @@ export function addEquivalentsAndSimplify(
   } else {
     return { and: regrouped.map(toPlainUnit) };
   }
+}
+
+/**
+ * Builds a ratio map from equivalence lists.
+ * For each equivalence list, stores ratio = equiv_value / primary_value
+ * for every pair of units, so equivalents can be recomputed after
+ * pantry subtraction modifies primary quantities.
+ */
+export function buildEquivalenceRatioMap(
+  unitsLists: QuantityWithUnitDef[][],
+): EquivalenceRatioMap {
+  const ratioMap: EquivalenceRatioMap = {};
+  for (const list of unitsLists) {
+    for (const equiv of list) {
+      // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
+      const equivValue = getAverageValue(equiv.quantity) as number;
+      for (const primary of list) {
+        if (primary === equiv) continue;
+        // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
+        const primaryValue = getAverageValue(primary.quantity) as number;
+        const equivUnit =
+          normalizeUnit(equiv.unit.name)?.name ?? equiv.unit.name;
+        const primaryUnit =
+          normalizeUnit(primary.unit.name)?.name ?? primary.unit.name;
+        ratioMap[equivUnit] ??= {};
+        ratioMap[equivUnit][primaryUnit] = equivValue / primaryValue;
+      }
+    }
+  }
+  return ratioMap;
+}
+
+/**
+ * Recomputes equivalent quantities from current primary values and stored ratios.
+ * For each equivalent unit in equivUnits, new_value = Σ (primary_value × ratio[equivUnit][primaryUnit]).
+ * Returns undefined if all equivalents compute to zero.
+ */
+export function recomputeEquivalents(
+  primaries: QuantityWithPlainUnit[],
+  ratioMap: EquivalenceRatioMap,
+  equivUnits: string[],
+): QuantityWithPlainUnit[] | undefined {
+  const equivalents: QuantityWithPlainUnit[] = [];
+
+  for (const equivUnit of equivUnits) {
+    const ratios = ratioMap[normalizeUnit(equivUnit)?.name ?? equivUnit];
+
+    let total = 0;
+    for (const primary of primaries) {
+      const pUnit =
+        normalizeUnit(primary.unit ?? NO_UNIT)?.name ??
+        primary.unit ??
+        NO_UNIT;
+      const ratio = ratios![pUnit];
+      if (ratio === undefined) continue;
+      const pValue = getAverageValue(primary.quantity) as number;
+      total += pValue * ratio;
+    }
+
+    if (total > 0) {
+      equivalents.push({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: total },
+        },
+        ...(equivUnit !== "" && { unit: equivUnit }),
+      });
+    }
+  }
+
+  return equivalents.length > 0 ? equivalents : undefined;
 }

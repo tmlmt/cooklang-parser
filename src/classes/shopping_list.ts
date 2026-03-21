@@ -11,10 +11,13 @@ import type {
   AddedRecipeOptions,
   PantryOptions,
   SpecificUnitSystem,
+  EquivalenceRatioMap,
 } from "../types";
 import {
   addEquivalentsAndSimplify,
   getEquivalentUnitsLists,
+  buildEquivalenceRatioMap,
+  recomputeEquivalents,
 } from "../quantities/alternatives";
 import {
   flattenPlainUnitGroup,
@@ -27,14 +30,6 @@ import { deepClone } from "../utils/general";
 import { NO_UNIT, normalizeUnit } from "../units/definitions";
 import { areUnitsConvertible } from "../units/compatibility";
 import { getToBase } from "../units/conversion";
-import type { QuantityWithUnitDef } from "../types";
-
-/**
- * Maps equivalent unit name → (primary unit name → ratio).
- * ratio = equiv_quantity_value / primary_quantity_value from the original OR group.
- * Used to recompute equivalents after pantry subtraction modifies primaries.
- */
-type EquivalenceRatioMap = Record<string, Record<string, number>>;
 
 /**
  * Shopping List generator.
@@ -184,7 +179,7 @@ export class ShoppingList {
 
       // Build equivalence ratio map for recomputing equivalents after pantry subtraction
       if (numericEntries.length > 1) {
-        const ratioMap = ShoppingList.buildEquivalenceRatioMap(
+        const ratioMap = buildEquivalenceRatioMap(
           getEquivalentUnitsLists(...numericEntries),
         );
         if (Object.keys(ratioMap).length > 0) {
@@ -424,7 +419,7 @@ export class ShoppingList {
           // v8 ignore else --@preserve: defensive type guard
           if (entry.equivalents && ratioMap) {
             const equivUnits = entry.equivalents.map((e) => e.unit!); // equivalents always have units
-            entry.equivalents = ShoppingList.recomputeEquivalents(
+            entry.equivalents = recomputeEquivalents(
               entry.and,
               ratioMap,
               equivUnits,
@@ -448,7 +443,7 @@ export class ShoppingList {
             const equivUnits = entry.equivalents.map(
               (e: QuantityWithPlainUnit) => e.unit!, // equivalents always have units
             );
-            const recomputed = ShoppingList.recomputeEquivalents(
+            const recomputed = recomputeEquivalents(
               [entry as QuantityWithPlainUnit],
               ratioMap,
               equivUnits,
@@ -483,77 +478,6 @@ export class ShoppingList {
     }
 
     this.resultingPantry = clonedPantry;
-  }
-
-  /**
-   * Builds a ratio map from equivalence lists.
-   * For each equivalence list, stores ratio = equiv_value / primary_value
-   * for every pair of units, so equivalents can be recomputed after
-   * pantry subtraction modifies primary quantities.
-   */
-  private static buildEquivalenceRatioMap(
-    unitsLists: QuantityWithUnitDef[][],
-  ): EquivalenceRatioMap {
-    const ratioMap: EquivalenceRatioMap = {};
-    for (const list of unitsLists) {
-      for (const equiv of list) {
-        // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
-        const equivValue = getAverageValue(equiv.quantity) as number;
-        for (const primary of list) {
-          if (primary === equiv) continue;
-          // Equivalent lists do not include string quantities, so it's safe to assume numeric value here
-          const primaryValue = getAverageValue(primary.quantity) as number;
-          const equivUnit =
-            normalizeUnit(equiv.unit.name)?.name ?? equiv.unit.name;
-          const primaryUnit =
-            normalizeUnit(primary.unit.name)?.name ?? primary.unit.name;
-          ratioMap[equivUnit] ??= {};
-          ratioMap[equivUnit][primaryUnit] = equivValue / primaryValue;
-        }
-      }
-    }
-    return ratioMap;
-  }
-
-  /**
-   * Recomputes equivalent quantities from current primary values and stored ratios.
-   * For each equivalent unit in equivUnits, new_value = Σ (primary_value × ratio[equivUnit][primaryUnit]).
-   * Returns undefined if all equivalents compute to zero.
-   */
-  private static recomputeEquivalents(
-    primaries: QuantityWithPlainUnit[],
-    ratioMap: EquivalenceRatioMap,
-    equivUnits: string[],
-  ): QuantityWithPlainUnit[] | undefined {
-    const equivalents: QuantityWithPlainUnit[] = [];
-
-    for (const equivUnit of equivUnits) {
-      const ratios = ratioMap[normalizeUnit(equivUnit)?.name ?? equivUnit];
-
-      let total = 0;
-      for (const primary of primaries) {
-        const pUnit =
-          normalizeUnit(primary.unit ?? NO_UNIT)?.name ??
-          primary.unit ??
-          NO_UNIT;
-        const ratio = ratios![pUnit];
-        if (ratio === undefined) continue;
-        const pValue = getAverageValue(primary.quantity) as number;
-        total += pValue * ratio;
-      }
-
-      if (total > 0) {
-        equivalents.push({
-          quantity: {
-            type: "fixed",
-            value: { type: "decimal", decimal: total },
-          },
-          ...(equivUnit !== "" && { unit: equivUnit }),
-        });
-      }
-    }
-
-    return equivalents.length > 0 ? equivalents : undefined;
   }
 
   /**

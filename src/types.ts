@@ -1055,6 +1055,14 @@ export type QuantityWithUnitLike =
   | QuantityWithUnitDef;
 
 /**
+ * Maps equivalent unit name → (primary unit name → ratio).
+ * ratio = equiv_quantity_value / primary_quantity_value from the original OR group.
+ * Used to recompute equivalents after pantry subtraction modifies primaries.
+ * @category Types
+ */
+export type EquivalenceRatioMap = Record<string, Record<string, number>>;
+
+/**
  * Represents a flat "or" group of alternative quantities (for alternative units)
  * @category Types
  */
