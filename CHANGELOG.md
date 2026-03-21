@@ -1,5 +1,45 @@
 # Changelog
 
+## v3.0.0-alpha.20
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.19...v3.0.0-alpha.20)
+
+### 🩹 Fixes
+
+- **servings:** Distinguish servings/serves (number) from yield (complex) ([aa6813f](https://github.com/tmlmt/cooklang-parser/commit/aa6813f))
+- Various minor bugs and maximize test coverage along the way ([a494ee4](https://github.com/tmlmt/cooklang-parser/commit/a494ee4))
+- **NoProductMatchError:** Missing backticks for 'noProduct' error code ([6e521c9](https://github.com/tmlmt/cooklang-parser/commit/6e521c9))
+- **servings:** Do not throw errors for non-canonical values of servings, serves and yield. ([841b01a](https://github.com/tmlmt/cooklang-parser/commit/841b01a))
+
+### 💅 Refactors
+
+- **ShoppingList:** Move non-class-specific static functions to helpers file ([688fa46](https://github.com/tmlmt/cooklang-parser/commit/688fa46))
+
+### 📖 Documentation
+
+- **ProductCatalog:** Correct example to retrieve specific product ([21b50f7](https://github.com/tmlmt/cooklang-parser/commit/21b50f7))
+- **playground:** Add yield in example recipe and dintinguish servings and serves in metadata render ([795ec5d](https://github.com/tmlmt/cooklang-parser/commit/795ec5d))
+- **guides:** Add explanation for servings metadata variables ([4a2f44c](https://github.com/tmlmt/cooklang-parser/commit/4a2f44c))
+
+### 🏡 Chore
+
+- **test:** Update snapshots ([707b5b6](https://github.com/tmlmt/cooklang-parser/commit/707b5b6))
+- Drop legacyDeepClone fallback ([f1bd9a2](https://github.com/tmlmt/cooklang-parser/commit/f1bd9a2))
+- **quantities/alternatives:** Lint ([df020bf](https://github.com/tmlmt/cooklang-parser/commit/df020bf))
+
+### ✅ Tests
+
+- Remove snapshots too cumbersome to track over time ([318adbd](https://github.com/tmlmt/cooklang-parser/commit/318adbd))
+
+### 🎨 Styles
+
+- Rename parseQuantityInput to parseQuantityValue ([d57e68d](https://github.com/tmlmt/cooklang-parser/commit/d57e68d))
+- **spec:** Reverse priority order between servings (higher) and serves (lower) ([cdf56c5](https://github.com/tmlmt/cooklang-parser/commit/cdf56c5))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.19
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.18...v3.0.0-alpha.19)
