@@ -36,7 +36,7 @@ const metadataEntries = computed(() => {
       continue;
     }
     if (key === "servings" || key === "serves") {
-      entries.push({ key: "servings", value: String(value) });
+      entries.push({ key, value: String(value) });
       continue;
     }
     // Format arrays as comma-separated strings
