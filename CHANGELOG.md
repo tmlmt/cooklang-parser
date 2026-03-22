@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.21
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.20...v3.0.0-alpha.21)
+
+### 🩹 Fixes
+
+- Handle Big objects in recipe.clone() ([b11d76d](https://github.com/tmlmt/cooklang-parser/commit/b11d76d))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.20
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.19...v3.0.0-alpha.20)
