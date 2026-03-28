@@ -700,6 +700,8 @@ export class Recipe {
         number,
         (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[]
       >;
+      // Track which indices form each subgroup (inner array = one choice option)
+      alternativeSubgroups: number[][];
     };
 
     // Map: ingredientIndex -> alternativeSignature -> accumulated data
@@ -878,7 +880,9 @@ export class Recipe {
             : baseQty;
 
           // Build alternative refs (only when no explicit choice)
-          let alternativeRefs: AlternativeIngredientRef[] | undefined;
+          // Each inner array is one choice option (subgroup); items within
+          // the same inner array are combined with "+" (AND).
+          let alternativeRefs: AlternativeIngredientRef[][] | undefined;
           if (
             !hasExplicitChoice &&
             groupSubgroups &&
@@ -890,7 +894,7 @@ export class Recipe {
             );
             alternativeRefs = groupSubgroups
               .filter((_, idx) => idx !== currentSubgroupIdx)
-              .flatMap((subgroup) =>
+              .map((subgroup) =>
                 subgroup.map((otherAlt) => {
                   const ref: AlternativeIngredientRef = {
                     index: otherAlt.index,
@@ -937,7 +941,7 @@ export class Recipe {
                   };
                   ref.quantities = [altQty];
                 }
-                return ref;
+                return [ref];
               });
           }
 
@@ -966,32 +970,46 @@ export class Recipe {
             groupsForIng.set(signature, {
               quantities: [],
               alternativeQuantities: new Map(),
+              alternativeSubgroups: [],
             });
           }
           const group = groupsForIng.get(signature)!;
 
           group.quantities.push(quantityEntry);
 
+          // Record subgroup structure (only on first encounter for this signature)
+          if (
+            alternativeRefs &&
+            alternativeRefs.length > 0 &&
+            group.alternativeSubgroups.length === 0
+          ) {
+            group.alternativeSubgroups = alternativeRefs.map((subgroup) =>
+              subgroup.map((ref) => ref.index),
+            );
+          }
+
           // Accumulate alternative quantities
-          for (const ref of alternativeRefs ?? []) {
-            if (!group.alternativeQuantities.has(ref.index)) {
-              group.alternativeQuantities.set(ref.index, []);
-            }
-            for (const altQty of ref.quantities ?? []) {
-              const extended = toExtendedUnit({
-                quantity: altQty.quantity,
-                unit: altQty.unit,
-              });
-              if (altQty.equivalents?.length) {
-                const eqEntries: QuantityWithExtendedUnit[] = [
-                  extended,
-                  ...altQty.equivalents.map((eq) => toExtendedUnit(eq)),
-                ];
-                group.alternativeQuantities
-                  .get(ref.index)!
-                  .push({ or: eqEntries });
-              } else {
-                group.alternativeQuantities.get(ref.index)!.push(extended);
+          for (const subgroup of alternativeRefs ?? []) {
+            for (const ref of subgroup) {
+              if (!group.alternativeQuantities.has(ref.index)) {
+                group.alternativeQuantities.set(ref.index, []);
+              }
+              for (const altQty of ref.quantities ?? []) {
+                const extended = toExtendedUnit({
+                  quantity: altQty.quantity,
+                  unit: altQty.unit,
+                });
+                if (altQty.equivalents?.length) {
+                  const eqEntries: QuantityWithExtendedUnit[] = [
+                    extended,
+                    ...altQty.equivalents.map((eq) => toExtendedUnit(eq)),
+                  ];
+                  group.alternativeQuantities
+                    .get(ref.index)!
+                    .push({ or: eqEntries });
+                } else {
+                  group.alternativeQuantities.get(ref.index)!.push(extended);
+                }
               }
             }
           }
@@ -1148,10 +1166,13 @@ export class Recipe {
             );
             const flattened = flattenPlainUnitGroup(summed);
 
-            // Build alternatives from accumulated quantities
-            const alternatives: AlternativeIngredientRef[] | undefined =
-              group.alternativeQuantities.size > 0
-                ? [...group.alternativeQuantities].map(([altIdx, altQtys]) => ({
+            // Build alternatives from accumulated quantities, preserving subgroup structure
+            let alternatives: AlternativeIngredientRef[][] | undefined;
+            if (group.alternativeSubgroups.length > 0) {
+              alternatives = group.alternativeSubgroups.map((subgroupIndices) =>
+                subgroupIndices.map((altIdx) => {
+                  const altQtys = group.alternativeQuantities.get(altIdx)!;
+                  return {
                     index: altIdx,
                     ...(altQtys.length > 0 && {
                       quantities: flattenPlainUnitGroup(
@@ -1161,8 +1182,10 @@ export class Recipe {
                         (item) => ("quantity" in item ? [item] : item.and),
                       ),
                     }),
-                  }))
-                : undefined;
+                  };
+                }),
+              );
+            }
 
             for (const gq of flattened) {
               if ("and" in gq) {

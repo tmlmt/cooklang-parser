@@ -1157,18 +1157,20 @@ Another step.
               },
               unit: "g",
               alternatives: [
-                {
-                  index: 1,
-                  quantities: [
-                    {
-                      quantity: {
-                        type: "fixed",
-                        value: { type: "decimal", decimal: 50 },
+                [
+                  {
+                    index: 1,
+                    quantities: [
+                      {
+                        quantity: {
+                          type: "fixed",
+                          value: { type: "decimal", decimal: 50 },
+                        },
+                        unit: "g",
                       },
-                      unit: "g",
-                    },
-                  ],
-                },
+                    ],
+                  },
+                ],
               ],
             },
           ],
@@ -1197,30 +1199,34 @@ Another step.
             },
             unit: "ml",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 100 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
+                      },
+                      unit: "ml",
                     },
-                    unit: "ml",
-                  },
-                ],
-              },
-              {
-                index: 2,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 150 },
+                  ],
+                },
+              ],
+              [
+                {
+                  index: 2,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 150 },
+                      },
+                      unit: "ml",
                     },
-                    unit: "ml",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1410,6 +1416,75 @@ Another step.
       expect(subgroups![2]).toHaveLength(1);
       expect(subgroups![2]![0]!.displayName).toBe("sub b");
     });
+
+    it("preserves multi-ingredient subgroups as a single alternative choice", () => {
+      const recipe =
+        "Mix @|flour/1|flour{3%tbsp} or @|flour/2|flour{1%tbsp} and @|flour/2|maizena{2%tbsp} and @sugar{125%g}";
+      const result = new Recipe(recipe);
+      expect(result.ingredients).toHaveLength(4); // flour(0), flour(1), maizena(2), sugar(3)
+
+      const ingredients = result.getIngredientQuantities();
+
+      // Primary: flour index 0 with 3 tbsp
+      const primaryFlour = ingredients.find(
+        (ing) => ing.name === "flour" && ing.usedAsPrimary,
+      );
+      expect(primaryFlour).toBeDefined();
+      expect(primaryFlour!.quantities).toHaveLength(1);
+      expect(primaryFlour!.quantities![0]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 3 },
+        },
+        unit: "tbsp",
+      });
+
+      // The alternatives should be a single subgroup (flour/2) with TWO ingredients
+      const alts = primaryFlour!.quantities![0]!.alternatives;
+      expect(alts).toBeDefined();
+      expect(alts).toHaveLength(1); // one "or" choice option
+      expect(alts![0]).toHaveLength(2); // two ingredients in that choice (flour + maizena)
+
+      // First alt: 1 tbsp flour
+      expect(alts![0]![0]).toMatchObject({
+        index: 1,
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 1 },
+            },
+            unit: "tbsp",
+          },
+        ],
+      });
+
+      // Second alt: 2 tbsp maizena
+      expect(alts![0]![1]).toMatchObject({
+        index: 2,
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 2 },
+            },
+            unit: "tbsp",
+          },
+        ],
+      });
+
+      // Sugar standalone
+      const sugar = ingredients.find((ing) => ing.name === "sugar");
+      expect(sugar).toBeDefined();
+      expect(sugar!.usedAsPrimary).toBe(true);
+      expect(sugar!.quantities![0]).toMatchObject({
+        quantity: {
+          type: "fixed",
+          value: { type: "decimal", decimal: 125 },
+        },
+        unit: "g",
+      });
+    });
   });
 
   describe("in-line alternative ingredients", () => {
@@ -1427,30 +1502,34 @@ Another step.
             },
             unit: "ml",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 100 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
+                      },
+                      unit: "ml",
                     },
-                    unit: "ml",
-                  },
-                ],
-              },
-              {
-                index: 2,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 150 },
+                  ],
+                },
+              ],
+              [
+                {
+                  index: 2,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 150 },
+                      },
+                      unit: "ml",
                     },
-                    unit: "ml",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1533,9 +1612,11 @@ Another step.
             },
             unit: undefined,
             alternatives: [
-              {
-                index: 1,
-              },
+              [
+                {
+                  index: 1,
+                },
+              ],
             ],
           },
         ],
@@ -1568,18 +1649,20 @@ Another step.
             },
             unit: "g",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 100 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
           {
@@ -1589,18 +1672,20 @@ Another step.
             },
             unit: "g",
             alternatives: [
-              {
-                index: 2,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 50 },
+              [
+                {
+                  index: 2,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 50 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1626,18 +1711,20 @@ Another step.
             },
             unit: "g",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 100 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
           {
@@ -1647,30 +1734,34 @@ Another step.
             },
             unit: "g",
             alternatives: [
-              {
-                index: 2,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 50 },
+              [
+                {
+                  index: 2,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 50 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 50 },
+                  ],
+                },
+              ],
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 50 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1714,25 +1805,27 @@ Another step.
             },
             unit: undefined,
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 1 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 1 },
+                      },
+                      unit: "large",
                     },
-                    unit: "large",
-                  },
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 2 },
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 2 },
+                      },
+                      unit: "small",
                     },
-                    unit: "small",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1761,30 +1854,34 @@ Another step.
             },
             unit: "g",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 120 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 120 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
-              {
-                index: 2,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 130 },
+                  ],
+                },
+              ],
+              [
+                {
+                  index: 2,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 130 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1889,27 +1986,29 @@ Another step.
               },
             ],
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 1 },
-                    },
-                    unit: "bag",
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 0.25 },
-                        },
-                        unit: "lb",
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 1 },
                       },
-                    ],
-                  },
-                ],
-              },
+                      unit: "bag",
+                      equivalents: [
+                        {
+                          quantity: {
+                            type: "fixed",
+                            value: { type: "decimal", decimal: 0.25 },
+                          },
+                          unit: "lb",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -1998,27 +2097,29 @@ Another step.
               },
             ],
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 1 },
-                    },
-                    unit: "bag",
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 0.25 },
-                        },
-                        unit: "lb",
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 1 },
                       },
-                    ],
-                  },
-                ],
-              },
+                      unit: "bag",
+                      equivalents: [
+                        {
+                          quantity: {
+                            type: "fixed",
+                            value: { type: "decimal", decimal: 0.25 },
+                          },
+                          unit: "lb",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -2128,27 +2229,29 @@ Another step.
               },
             ],
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 1.5 },
-                    },
-                    unit: "bag",
-                    equivalents: [
-                      {
-                        quantity: {
-                          type: "fixed",
-                          value: { type: "decimal", decimal: 0.4 },
-                        },
-                        unit: "lb",
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 1.5 },
                       },
-                    ],
-                  },
-                ],
-              },
+                      unit: "bag",
+                      equivalents: [
+                        {
+                          quantity: {
+                            type: "fixed",
+                            value: { type: "decimal", decimal: 0.4 },
+                          },
+                          unit: "lb",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
             ],
           },
           {
@@ -2174,18 +2277,20 @@ Another step.
             },
             unit: "pinch",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 1 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 1 },
+                      },
+                      unit: "pinch",
                     },
-                    unit: "pinch",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],

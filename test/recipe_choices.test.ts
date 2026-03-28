@@ -24,30 +24,34 @@ describe("getIngredientQuantities", () => {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 200 } },
         unit: "ml",
         alternatives: [
-          {
-            index: 1,
-            quantities: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 100 },
+          [
+            {
+              index: 1,
+              quantities: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 100 },
+                  },
+                  unit: "ml",
                 },
-                unit: "ml",
-              },
-            ],
-          },
-          {
-            index: 2,
-            quantities: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 150 },
+              ],
+            },
+          ],
+          [
+            {
+              index: 2,
+              quantities: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 150 },
+                  },
+                  unit: "ml",
                 },
-                unit: "ml",
-              },
-            ],
-          },
+              ],
+            },
+          ],
         ],
       },
     ]);
@@ -88,18 +92,20 @@ Add @water{1%cup}|juice{1%cup} and @&water{100%g}|&juice{100%g}
             quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
             unit: "cup",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 1 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 1 },
+                      },
+                      unit: "cup",
                     },
-                    unit: "cup",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
           {
@@ -109,18 +115,20 @@ Add @water{1%cup}|juice{1%cup} and @&water{100%g}|&juice{100%g}
             },
             unit: "g",
             alternatives: [
-              {
-                index: 1,
-                quantities: [
-                  {
-                    quantity: {
-                      type: "fixed",
-                      value: { type: "decimal", decimal: 100 },
+              [
+                {
+                  index: 1,
+                  quantities: [
+                    {
+                      quantity: {
+                        type: "fixed",
+                        value: { type: "decimal", decimal: 100 },
+                      },
+                      unit: "g",
                     },
-                    unit: "g",
-                  },
-                ],
-              },
+                  ],
+                },
+              ],
             ],
           },
         ],
@@ -339,25 +347,27 @@ Add @potato{1%=large|1.5%cup}|carrot{1%large} and @&potato{1%=small|0.5%cup}|&ca
         },
       ],
       alternatives: [
-        {
-          index: 1,
-          quantities: [
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 1 },
+        [
+          {
+            index: 1,
+            quantities: [
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 1 },
+                },
+                unit: "large",
               },
-              unit: "large",
-            },
-            {
-              quantity: {
-                type: "fixed",
-                value: { type: "decimal", decimal: 2 },
+              {
+                quantity: {
+                  type: "fixed",
+                  value: { type: "decimal", decimal: 2 },
+                },
+                unit: "small",
               },
-              unit: "small",
-            },
-          ],
-        },
+            ],
+          },
+        ],
       ],
     });
   });

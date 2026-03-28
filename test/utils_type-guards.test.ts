@@ -139,7 +139,7 @@ describe("Type Guards", () => {
       const entryWithAlternatives: IngredientQuantityGroup = {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
         unit: "g",
-        alternatives: [{ index: 1 }],
+        alternatives: [[{ index: 1 }]],
       };
       expect(hasAlternatives(entryWithAlternatives)).toBe(true);
     });
@@ -169,7 +169,7 @@ describe("Type Guards", () => {
             unit: "cup",
           },
         ],
-        alternatives: [{ index: 2 }],
+        alternatives: [[{ index: 2 }]],
       };
       expect(hasAlternatives(andGroupWithAlts)).toBe(true);
     });

@@ -342,30 +342,34 @@ serves: 2
         },
         unit: "ml",
         alternatives: [
-          {
-            index: 1,
-            quantities: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 200 },
+          [
+            {
+              index: 1,
+              quantities: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 200 },
+                  },
+                  unit: "ml",
                 },
-                unit: "ml",
-              },
-            ],
-          },
-          {
-            index: 2,
-            quantities: [
-              {
-                quantity: {
-                  type: "fixed",
-                  value: { type: "decimal", decimal: 300 },
+              ],
+            },
+          ],
+          [
+            {
+              index: 2,
+              quantities: [
+                {
+                  quantity: {
+                    type: "fixed",
+                    value: { type: "decimal", decimal: 300 },
+                  },
+                  unit: "ml",
                 },
-                unit: "ml",
-              },
-            ],
-          },
+              ],
+            },
+          ],
         ],
       },
     ];

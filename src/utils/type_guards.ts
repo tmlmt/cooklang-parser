@@ -106,8 +106,11 @@ export function isValueIntegerLike(q: FixedValue | Range): boolean {
  * for (const entry of ingredient.quantities) {
  *   if (hasAlternatives(entry)) {
  *     // entry.alternatives is available and non-empty
- *     for (const alt of entry.alternatives) {
- *       console.log(`Alternative ingredient index: ${alt.index}`);
+ *     for (const subgroup of entry.alternatives) {
+ *       // Each subgroup is one "or" choice; items within are combined with "+"
+ *       for (const alt of subgroup) {
+ *         console.log(`Alternative ingredient index: ${alt.index}`);
+ *       }
  *     }
  *   }
  * }
@@ -116,7 +119,7 @@ export function isValueIntegerLike(q: FixedValue | Range): boolean {
 export function hasAlternatives(
   entry: IngredientQuantityGroup | IngredientQuantityAndGroup,
 ): entry is (IngredientQuantityGroup | IngredientQuantityAndGroup) & {
-  alternatives: AlternativeIngredientRef[];
+  alternatives: AlternativeIngredientRef[][];
 } {
   return (
     "alternatives" in entry &&

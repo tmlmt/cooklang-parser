@@ -1142,10 +1142,11 @@ export function unionOfSets<T>(s1: Set<T>, s2: Set<T>): Set<T> {
  * @returns A string of sorted indices (e.g., "0,2,5") or null if no alternatives
  */
 export function getAlternativeSignature(
-  alternatives: { index: number }[] | undefined,
+  alternatives: { index: number }[][] | undefined,
 ): string | null {
   if (!alternatives || alternatives.length === 0) return null;
   return alternatives
+    .flat()
     .map((a) => a.index)
     .sort((a, b) => a - b)
     .join(",");

@@ -292,9 +292,12 @@ export interface AlternativeIngredientRef {
 export interface IngredientQuantityGroup extends QuantityWithPlainUnit {
   /**
    * References to alternative ingredients for this quantity group.
+   * Each inner array represents one alternative choice option (subgroup).
+   * Items within the same inner array are combined with "+" (AND),
+   * while different inner arrays represent "or" alternatives.
    * If undefined, this group has no alternatives.
    */
-  alternatives?: AlternativeIngredientRef[];
+  alternatives?: AlternativeIngredientRef[][];
 }
 
 /**
@@ -309,9 +312,12 @@ export interface IngredientQuantityAndGroup extends FlatAndGroup<QuantityWithPla
   equivalents?: QuantityWithPlainUnit[];
   /**
    * References to alternative ingredients for this quantity group.
+   * Each inner array represents one alternative choice option (subgroup).
+   * Items within the same inner array are combined with "+" (AND),
+   * while different inner arrays represent "or" alternatives.
    * If undefined, this group has no alternatives.
    */
-  alternatives?: AlternativeIngredientRef[];
+  alternatives?: AlternativeIngredientRef[][];
 }
 
 /**

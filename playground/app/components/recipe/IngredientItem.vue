@@ -43,7 +43,7 @@ type DisplayMode =
   | {
       type: "single-with-alts";
       entry: IngredientQuantityEntry & {
-        alternatives: AlternativeIngredientRef[];
+        alternatives: AlternativeIngredientRef[][];
       };
     }
   | { type: "and-group"; entry: IngredientQuantityAndGroup }
@@ -185,24 +185,30 @@ const displayMode = computed<DisplayMode>(() => {
       <span class="text-gray-500 dark:text-gray-300">
         {{ " " }}(or
         <template
-          v-for="(alt, idx) in displayMode.entry.alternatives"
-          :key="idx"
+          v-for="(subgroup, sgIdx) in displayMode.entry.alternatives"
+          :key="sgIdx"
         >
-          <template v-if="idx > 0">, or </template>
-          <template v-if="alt.quantities?.length">
-            <template v-for="(altQty, qtyIdx) in alt.quantities" :key="qtyIdx">
-              <template v-if="qtyIdx > 0"> + </template>
-              <RecipeQuantityWithEquivalents
-                :quantity="altQty.quantity"
-                :unit="altQty.unit"
-                :equivalents="altQty.equivalents"
-                wrapper-start="["
-                wrapper-end="]"
-              />
+          <template v-if="sgIdx > 0">, or </template>
+          <template v-for="(alt, idx) in subgroup" :key="idx">
+            <template v-if="idx > 0"> + </template>
+            <template v-if="alt.quantities?.length">
+              <template
+                v-for="(altQty, qtyIdx) in alt.quantities"
+                :key="qtyIdx"
+              >
+                <template v-if="qtyIdx > 0"> + </template>
+                <RecipeQuantityWithEquivalents
+                  :quantity="altQty.quantity"
+                  :unit="altQty.unit"
+                  :equivalents="altQty.equivalents"
+                  wrapper-start="["
+                  wrapper-end="]"
+                />
+              </template>
+              {{ " " }}
             </template>
-            {{ " " }}
-          </template>
-          {{ getIngredientName(alt.index) }}</template
+            {{ getIngredientName(alt.index) }}</template
+          > </template
         >)
       </span>
     </template>
@@ -295,25 +301,28 @@ const displayMode = computed<DisplayMode>(() => {
             <span class="text-gray-500 dark:text-gray-300">
               {{ " " }}(or
               <template
-                v-for="(alt, altIdx) in entry.alternatives"
-                :key="altIdx"
+                v-for="(subgroup, sgIdx) in entry.alternatives"
+                :key="sgIdx"
               >
-                <template v-if="altIdx > 0">, </template>
-                <template v-if="alt.quantities?.length">
-                  <template
-                    v-for="(altQty, qtyIdx) in alt.quantities"
-                    :key="qtyIdx"
-                  >
-                    <template v-if="qtyIdx > 0"> + </template>
-                    <RecipeQuantityWithEquivalents
-                      :quantity="altQty.quantity"
-                      :unit="altQty.unit"
-                      :equivalents="altQty.equivalents"
-                    />
+                <template v-if="sgIdx > 0">, </template>
+                <template v-for="(alt, altIdx) in subgroup" :key="altIdx">
+                  <template v-if="altIdx > 0"> + </template>
+                  <template v-if="alt.quantities?.length">
+                    <template
+                      v-for="(altQty, qtyIdx) in alt.quantities"
+                      :key="qtyIdx"
+                    >
+                      <template v-if="qtyIdx > 0"> + </template>
+                      <RecipeQuantityWithEquivalents
+                        :quantity="altQty.quantity"
+                        :unit="altQty.unit"
+                        :equivalents="altQty.equivalents"
+                      />
+                    </template>
+                    {{ " " }}
                   </template>
-                  {{ " " }}
-                </template>
-                {{ getIngredientName(alt.index) }}</template
+                  {{ getIngredientName(alt.index) }}</template
+                > </template
               >)
             </span>
           </template>
