@@ -258,7 +258,7 @@ export interface IngredientExtras {
    * Used if: the ingredient is a recipe
    *
    * @example
-   * ```cooklang
+   * ```yaml
    * Take @./essentials/doughs/pizza dough{1} out of the freezer and let it unfreeze overnight
    * ```
    * Would lead to:

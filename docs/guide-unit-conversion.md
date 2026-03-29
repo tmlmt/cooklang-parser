@@ -14,7 +14,7 @@ When quantities are added together (e.g., from [referenced ingredients](/guide-e
 
 You can specify a unit system in your recipe metadata to control how ambiguous units are resolved:
 
-```cooklang
+```yaml
 ---
 unit system: UK
 ---
