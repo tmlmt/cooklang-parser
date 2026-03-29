@@ -266,7 +266,18 @@ Add @|flour|&flour tipo 00{100%g} or @|flour|flour tipo 1{50%g}
 Add @|spices|-salt{} or @|spices|?pepper{}
 ```
 
+#### Subgroup keys
 
+By default, each ingredient in a group is an independent alternative. To bind multiple ingredients together as a single selectable option, use a **subgroup key** with the syntax: `@|groupKey/subgroupKey|ingredientName{}`
+
+Ingredients sharing the same group key and subgroup key are selected together as one unit. This is useful when a recipe offers alternative *combinations* of ingredients:
+
+```
+Add @|sweetener/1|milk{1%L} and @|sweetener/1|sugar{1%tsp},
+ or @|sweetener/2|oat milk{1%L} and @|sweetener/2|honey{1%tsp}
+```
+
+Here, choosing subgroup `1` activates both milk and sugar together, while choosing subgroup `2` activates oat milk and honey together. Ingredients without a subgroup key each form their own single-element subgroup.
 
 ## Markdown
 
