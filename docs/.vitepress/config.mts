@@ -38,6 +38,7 @@ export default defineConfig({
           { text: "Cooklang specs", link: "/guide-cooklang-specs" },
           { text: "Extensions", link: "/guide-extensions" }, 
           { text: "Unit conversion", link: "/guide-unit-conversion" }, 
+          { text: "Rendering recipes", link: "/guide-rendering" },
         ],
         collapsed: true
       },
