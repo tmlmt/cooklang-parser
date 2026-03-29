@@ -47,4 +47,50 @@ The above example would therefore result in the following [`Ingredient`](/api/in
 
 ## Metadata
 
-Only metadata items of the [canonical metadata list](https://cooklang.org/docs/spec/#canonical-metadata) are parsed. Others are ignored. 
+Metadata from the [canonical metadata list](https://cooklang.org/docs/conventions/#canonical-metadata) is parsed with dedicated logic (see in particular the [distinction between scaling variables](#distinction-between-servingsserves-and-yield-metadata-variables) below).
+
+```yaml
+---
+title: Chocolate Cake
+author: Jane Doe
+servings: 8
+---
+```
+
+Any additional metadata keys beyond the canonical list are also captured automatically. They are parsed as YAML objects, lists, numbers, or strings depending on their format.
+
+```yaml
+---
+wine pairing: Pinot Noir
+nutrition:
+  calories: 350
+  fat: 12g
+allergens: [gluten, eggs, dairy]
+---
+```
+
+Block scalar syntax is supported for multi-line values such as description and introduction. Starting a block with `|` (literal) preserves newlines, while `>` (folded) replaces single newlines with spaces (double newlines are preserved as paragraph breaks). Trailing whitespace is stripped, so these behave like |- and >- in standard YAML. The parser is more lenient than strict YAML with indentation: the indent level is determined by the first non-empty line in the block (minimum one space), and subsequent lines need only be indented by at least that amount.
+
+```yaml
+---
+description: >
+  A rich and moist chocolate cake
+  perfect for celebrations.
+
+  Serve with whipped cream.
+introduction: |
+  Step 1: Preheat the oven.
+  Step 2: Mix dry ingredients.
+---
+```
+
+In this example, description is folded into `A rich and moist chocolate cake perfect for celebrations.\nServe with whipped cream.` (the double newline creates a paragraph break), while introduction preserves its newlines literally as `Step 1: Preheat the oven.\nStep 2: Mix dry ingredients.`
+
+### Distinction between `servings`/`serves` and `yield` metadata variables
+
+Servings-related metadata variables are distinguished to enable settings the value for scaling the recipe separately from its yield, which can now be expressed with a unit (and which gets scaled accordingly).
+
+- `servings`/`serves` can either be provided as a number (which then also sets the recipe's internal `servings` value) or a string (the recipe's internal `servings` is then set to a default value of 1)
+- `yield` accepts two different formats to encapsulate a quantity with unit and is parsed as a [Yield](/api/interfaces/Yield) value. If none of these formats are detected, the raw input is interpreted as a [TextValue](/api/interfaces/TextValue) within Yield.quantity. If only `yield` is provided and no `servings`/`serves` the numerical value of the yield variable is used for recipe scaling (defaulting to 1 for raw text)
+  - Complex format: <code v-pre>yield: about {{300%g}} of bread</code>
+  - Plain format: `yield: 300%g` or `yield: 2`

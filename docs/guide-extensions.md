@@ -266,6 +266,8 @@ Add @|flour|&flour tipo 00{100%g} or @|flour|flour tipo 1{50%g}
 Add @|spices|-salt{} or @|spices|?pepper{}
 ```
 
+
+
 ## Markdown
 
 A selection of markdown elements are detected when part of preparation steps or notes. The corresponding [`TextItem`](/api/interfaces/TextItem) gets an additional `attribute` property, as well as a `href` property for links.
@@ -301,12 +303,3 @@ Usage: `[?<variants>]`
 By adding a `?` at the beginning of the bracket markers of a section or a step, all ingredients or cookware in the element will be considered optional, regardless of whether the modifier is present at item level.
 
 Example: `[?] Add @chili and @pilipili is you like it spicy` will show both ingredients in a step which will be marked as optional, and will appear as optional in the ingredients list.
-
-## Distinction between `servings`/`serves` and `yield` metadata variables
-
-Servings-related metadata variables are distinguished to enable settings the value for scaling the recipe separately from its yield, which can now be expressed with a unit (and which gets scaled accordingly).
-
-- `servings`/`serves` can either be provided as a number (which then also sets the recipe's internal `servings` value) or a string (the recipe's internal `servings` is then set to a default value of 1)
-- `yield` accepts two different formats to encapsulate a quantity with unit and is parsed as a [Yield](/api/interfaces/Yield) value. If none of these formats are detected, the raw input is interpreted as a [TextValue](/api/interfaces/TextValue) within Yield.quantity. If only `yield` is provided and no `servings`/`serves` the numerical value of the yield variable is used for recipe scaling (defaulting to 1 for raw text)
-  - Complex format: <code v-pre>yield: about {{300%g}} of bread</code>
-  - Plain format: `yield: 300%g` or `yield: 2`
