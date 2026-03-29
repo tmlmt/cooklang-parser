@@ -293,7 +293,7 @@ export function isGroupedItem(item: IngredientItem): boolean {
  * for (const item of step.items) {
  *   if (item.type === 'ingredient') {
  *     item.alternatives.forEach((alt, idx) => {
- *       const isSelected = isAlternativeSelected(item, idx, recipe, choices);
+ *       const isSelected = isAlternativeSelected(recipe, choices, item, idx);
  *       // Render differently based on isSelected
  *     });
  *   }
