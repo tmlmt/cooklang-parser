@@ -79,15 +79,15 @@ export function renderFractionAsVulgar(num: number, den: number): string {
  * Format a numeric value (decimal or fraction) to a string.
  *
  * @param value - The decimal or fraction value to format
- * @param useVulgar - Whether to use Unicode vulgar fraction characters (default: false)
+ * @param useVulgar - Whether to use Unicode vulgar fraction characters (default: true)
  * @returns The formatted string representation
  * @category Helpers
  *
  * @example
  * ```typescript
  * formatNumericValue({ type: "decimal", decimal: 1.5 }); // "1.5"
- * formatNumericValue({ type: "fraction", num: 1, den: 2 }); // "1/2"
- * formatNumericValue({ type: "fraction", num: 1, den: 2 }, true); // "½"
+ * formatNumericValue({ type: "fraction", num: 1, den: 2 }); // "½"
+ * formatNumericValue({ type: "fraction", num: 1, den: 2 }, false); // "1/2"
  * formatNumericValue({ type: "fraction", num: 5, den: 4 }, true); // "1¼"
  * ```
  */
