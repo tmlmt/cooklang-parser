@@ -27,7 +27,7 @@ features:
   - title: Cooklang + Typescript
     details: Fully-typed, compliant with the Cooklang Specifications
   - title: Useful extensions
-    details: Additional features to the original specs
+    details: Many additional features to the original specs
   - title: Parsing and scaling
     details: Classes to parse and scale recipes
   - title: Shopping
