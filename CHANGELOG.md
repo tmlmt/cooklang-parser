@@ -1,5 +1,28 @@
 # Changelog
 
+## v3.0.0-elpha.22
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.21...v3.0.0-elpha.22)
+
+### 🩹 Fixes
+
+- Multiple ingredients used as a single alternative were not grouped together ([b85e2e5](https://github.com/tmlmt/cooklang-parser/commit/b85e2e5))
+
+### 📖 Documentation
+
+- Move distinction between `servings` and `yield` to spec guide and improve metadata behavior description ([c93c60c](https://github.com/tmlmt/cooklang-parser/commit/c93c60c))
+- Replace cooklang lang by yaml in code blocks ([369d8a1](https://github.com/tmlmt/cooklang-parser/commit/369d8a1))
+- **formatNumericValue:** Correct default for useVulgar and corresponding examples ([849f1e7](https://github.com/tmlmt/cooklang-parser/commit/849f1e7))
+- **isAlternativeSelected:** Fix parameter order in example ([ca1e78c](https://github.com/tmlmt/cooklang-parser/commit/ca1e78c))
+- **index:** Many additional features ([47a33f5](https://github.com/tmlmt/cooklang-parser/commit/47a33f5))
+- Add guide for rendering recipes ([0afaf97](https://github.com/tmlmt/cooklang-parser/commit/0afaf97))
+- **guides:** Add paragraph about subgroup keys for grouped ingredients in extensions guide ([cabe8d6](https://github.com/tmlmt/cooklang-parser/commit/cabe8d6))
+- Fix multiple inconsistencies ([4e59c67](https://github.com/tmlmt/cooklang-parser/commit/4e59c67))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.21
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.20...v3.0.0-alpha.21)
