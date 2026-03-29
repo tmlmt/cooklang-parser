@@ -21,7 +21,7 @@ unit system: UK
 Add @water{1%cup} and some more @&water{1%fl-oz}
 ```
 
-Valid values (case insensitive) are: `metric`, `US`, `UK`, `JP` (see [Unit Reference Table](#unit-reference-table) above)
+Valid values (case insensitive) are: `metric`, `US`, `UK`, `JP` (see [Unit Reference Table](/reference-units) above)
 
 When no `unit system` is specified:
 - Units with a **metric** definition (like `tsp`, `tbsp`) default to metric
@@ -79,7 +79,7 @@ The per-unit configuration is detailed in the [Units Reference](/reference-units
 It is also possible to convert an entire recipe into a specific unit system, using the [`convertTo()`](/api/classes/Recipe.html#convertto) method of the Recipe instance which returns a new Recipe with the specific conversion applied. 
 
 ```typescript
-function convertTo(unit: SpecificUnitSystem, method: method: "keep" | "replace" | "remove"): Recipe
+function convertTo(system: SpecificUnitSystem, method: "keep" | "replace" | "remove"): Recipe
 ```
 
 There are three modes for full-recipe unit conversion:

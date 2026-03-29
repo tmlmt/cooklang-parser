@@ -24,7 +24,7 @@ If none of those are found and the `servings` property is undefined, it will def
 Use the [`scaleBy()`](/api/classes/Recipe.html#scaleby) method.
 
 ```typescript
-const recipe = Recipe(`...`)
+const recipe = new Recipe(`...`)
 const scaledRecipe = recipe.scaleBy(2)
 ```
 
@@ -38,7 +38,7 @@ In the above example, will be multiplied by 2:
 Use the [`scaleTo()`](/api/classes/Recipe.html#scaleto) method.
 
 ```typescript
-const recipe = Recipe(`...`)
+const recipe = new Recipe(`...`)
 const scaledRecipe = recipe.scaleTo(4)
 // In this case, this is equivalent to 
 // const scaledRecipe = recipe.scaleBy(2)

@@ -13,7 +13,7 @@ A quick start example is provided in the corresponding [API page](/api/classes/S
 You can specify a number of servings for which the recipe should be scaled before being added with [`addRecipe()`](/api/classes/ShoppingList.html#addRecipe). Example:
 
 ```typescript
-shoppingList.addRecipe(myRecipe, 4)
+shoppingList.addRecipe(myRecipe, { scaling: { servings: 4 } })
 ```
 
 When adding a recipe, the combined list of ingredients of the shopping list is automatically calculated, and the ingredients categorized if a `CategoryConfig` has been set.

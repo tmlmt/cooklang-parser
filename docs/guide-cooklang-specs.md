@@ -20,7 +20,7 @@ Below are a few details about some behavioral aspects.
 
 ###  Fixed quantities
 
-Prefixing an ingredient's quantity with `=` will prevent it from scaling. For example, when writing `@salt{1%pinch}`, salt will always stay at 1 pinch regardless of serving size. 
+Prefixing an ingredient's quantity with `=` will prevent it from scaling. For example, when writing `@salt{=1%pinch}`, salt will always stay at 1 pinch regardless of serving size. 
 
 This does not work with cookware or timers which do not scale anyway.
 
@@ -35,11 +35,13 @@ This parser:
 
 The above example would therefore result in the following [`Ingredient`](/api/interfaces/Ingredient.html) entry:
 ```ts
-{ 
+{
   name: "Hollandaise",
-  quantity: { type: "fixed", value: { type: "decimal", value: 150 } },
-  unit: "g",
-  quantityParts: [value: { type: "fixed", value: { type: "decimal", value: 150 } }, unit: "g", scalable: true]
+  usedAsPrimary: true,
+  quantities: [{
+    quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+    unit: "g"
+  }],
   flags: ["recipe"],
   extras: { path: "sauces/Hollandaise.cook" }
 }

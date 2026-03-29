@@ -113,7 +113,8 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
     },
     "ingredientGroups": {
       "Map(0)": {}
-    }
+    },
+    "variants": []
   },
   "ingredients": [
     {
@@ -151,19 +152,17 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
                 {
                   "index": 0,
                   "displayName": "wheat flour",
-                  "itemQuantity": {
-                    "quantity": {
-                      "type": "fixed",
-                      "value": {
-                        "type": "decimal",
-                        "decimal": 100
-                      }
-                    },
-                    "unit": {
-                      "name": "g"
-                    },
-                    "scalable": true
-                  }
+                  "quantity": {
+                    "type": "fixed",
+                    "value": {
+                      "type": "decimal",
+                      "decimal": 100
+                    }
+                  },
+                  "unit": {
+                    "name": "g"
+                  },
+                  "scalable": true
                 }
               ]
             },
@@ -178,19 +177,17 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
                 {
                   "index": 0,
                   "displayName": "flour",
-                  "itemQuantity": {
-                    "quantity": {
-                      "type": "fixed",
-                      "value": {
-                        "type": "decimal",
-                        "decimal": 50
-                      }
-                    },
-                    "unit": {
-                      "name": "g"
-                    },
-                    "scalable": true
-                  }
+                  "quantity": {
+                    "type": "fixed",
+                    "value": {
+                      "type": "decimal",
+                      "decimal": 50
+                    }
+                  },
+                  "unit": {
+                    "name": "g"
+                  },
+                  "scalable": true
                 }
               ]
             }
@@ -243,7 +240,7 @@ Use cases:
 - `@milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`
 - `@sugar{100%g}|brown sugar{100%g}[for a richer flavor]`
 
-When inline alternatives are defined, the recipe's [`choices`](/api/interfaces/RecipeChoices) property will be populated. You can then use the `calc_ingredient_quantities()` method to compute quantities corresponding to the user's choices.
+When inline alternatives are defined, the recipe's [`choices`](/api/interfaces/RecipeAlternatives) property will be populated. You can then use the `getIngredientQuantities()` method to compute quantities corresponding to the user's choices.
 
 All modifiers (`&`, `-`, `?`) work with inline alternatives:
 `@&milk{200%ml}|-almond milk{100%ml}[vegan version]|?soy milk{150%ml}[another vegan option]`
@@ -258,7 +255,7 @@ Use cases:
 - `Add @|milk|milk{200%ml} or @|milk|almond milk{100%ml} or @|milk|oat milk{150%ml} for a vegan version`
 - `Add some @|spices|salt{} or maybe some @|spices|pepper{}`
 
-When grouped alternatives are defined, the recipe's [`choices`](/api/interfaces/RecipeChoices) property will be populated with available alternatives for each group. You can then use the `calc_ingredient_quantities()` method to compute quantities corresponding to the user's choices.
+When grouped alternatives are defined, the recipe's [`choices`](/api/interfaces/RecipeAlternatives) property will be populated with available alternatives for each group. You can then use the `getIngredientQuantities()` method to compute quantities corresponding to the user's choices.
 
 All modifiers (`&`, `-`, `?`) work with grouped alternatives:
 ```
