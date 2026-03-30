@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.23
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.22...v3.0.0-alpha.23)
+
+### 🩹 Fixes
+
+- Parsing of list of objects in metadata ([f5bf3a8](https://github.com/tmlmt/cooklang-parser/commit/f5bf3a8))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.22
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.21...v3.0.0-alpha.22)
