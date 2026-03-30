@@ -56,7 +56,7 @@ export interface MetadataObject {
 export type MetadataValue =
   | string
   | number
-  | (string | number)[]
+  | (string | number | MetadataObject)[]
   | MetadataObject
   | MetadataSource
   | MetadataTime

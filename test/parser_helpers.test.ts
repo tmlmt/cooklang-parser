@@ -1151,6 +1151,14 @@ aThirdKey: yeah
       aThirdKey: "yeah",
     });
   });
+
+  it("should return undefined when content is a list", () => {
+    const testString = `
+    - item 1
+    - item 2
+    `;
+    expect(parseNestedBlock(testString)).toBeUndefined();
+  });
 });
 
 describe("parseNestedMetaVar", () => {
@@ -1290,6 +1298,40 @@ describe("parseNestedMetaVar", () => {
       "clé française": "valeur",
       日本語キー: "値",
     });
+  });
+
+  it("should parse list of objects", () => {
+    const testString = `sources:
+  - author: First Name
+    name: Source recipe
+  - author: Second Name
+    url: https://www.recipes.com`;
+    const result = parseNestedMetaVar(testString, "sources");
+    expect(result).toEqual([
+      { author: "First Name", name: "Source recipe" },
+      { author: "Second Name", url: "https://www.recipes.com" },
+    ]);
+  });
+
+  it("should parse list of objects with single item", () => {
+    const testString = `sources:
+  - author: Only Author
+    name: Only Source`;
+    const result = parseNestedMetaVar(testString, "sources");
+    expect(result).toEqual([{ author: "Only Author", name: "Only Source" }]);
+  });
+
+  it("should parse list of objects with single property", () => {
+    const testString = `sources:
+  - author: Only Author
+  - name: Only Source
+  - empty: `;
+    const result = parseNestedMetaVar(testString, "sources");
+    expect(result).toEqual([
+      { author: "Only Author" },
+      { name: "Only Source" },
+      { empty: "" },
+    ]);
   });
 });
 
@@ -1503,6 +1545,21 @@ cook time: 30m
     expect(result.metadata.time).toEqual({
       cook: "30m",
     });
+  });
+
+  it("should parse list of objects in metadata", () => {
+    const content = `---
+sources:
+  - author: First Name
+    name: Source recipe
+  - author: Second Name
+    url: https://www.recipes.com
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.sources).toEqual([
+      { author: "First Name", name: "Source recipe" },
+      { author: "Second Name", url: "https://www.recipes.com" },
+    ]);
   });
 
   it("should handle duration as alias for total time", () => {

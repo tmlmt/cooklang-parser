@@ -4,10 +4,17 @@ import {
   isSectionActive,
   isStepActive,
   type Ingredient,
+  type MetadataObject,
+  type MetadataValue,
   type Yield,
   type Recipe,
   type RecipeChoices,
 } from "cooklang-parser";
+
+type MetadataEntry =
+  | { key: string; type: "simple"; value: string }
+  | { key: string; type: "object"; value: MetadataObject }
+  | { key: string; type: "objectList"; value: MetadataObject[] };
 
 const props = defineProps<{
   recipe: Recipe;
@@ -18,11 +25,22 @@ const title = computed(() => {
   return props.recipe.metadata.title || "Untitled Recipe";
 });
 
+function isMetadataObject(v: unknown): v is MetadataObject {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function formatMetadataValue(value: MetadataValue): MetadataEntry["type"] {
+  if (Array.isArray(value) && value.some((item) => isMetadataObject(item))) {
+    return "objectList";
+  }
+  if (isMetadataObject(value)) return "object";
+  return "simple";
+}
+
 const metadataEntries = computed(() => {
-  const entries: Array<{ key: string; value: string }> = [];
+  const entries: MetadataEntry[] = [];
   const metadata = props.recipe.metadata;
 
-  // Iterate through metadata, excluding title (shown as heading)
   for (const [key, value] of Object.entries(metadata)) {
     if (key === "title") continue;
     if (value === undefined || value === null) continue;
@@ -30,20 +48,31 @@ const metadataEntries = computed(() => {
       const yieldValue = value as Yield;
       entries.push({
         key: "yield",
+        type: "simple",
         value:
           `${yieldValue.textBefore ?? ""} ${formatQuantityWithUnit(yieldValue.quantity, yieldValue.unit)} ${yieldValue.textAfter ?? ""}`.trim(),
       });
       continue;
     }
     if (key === "servings" || key === "serves") {
-      entries.push({ key, value: String(value) });
+      entries.push({ key, type: "simple", value: String(value) });
       continue;
     }
-    // Format arrays as comma-separated strings
-    const displayValue = Array.isArray(value)
-      ? value.join(", ")
-      : String(value);
-    entries.push({ key, value: displayValue });
+
+    const entryType = formatMetadataValue(value);
+    if (entryType === "objectList") {
+      const items = (value as (string | number | MetadataObject)[]).filter(
+        isMetadataObject,
+      ) as MetadataObject[];
+      entries.push({ key, type: "objectList", value: items });
+    } else if (entryType === "object") {
+      entries.push({ key, type: "object", value: value as MetadataObject });
+    } else {
+      const displayValue = Array.isArray(value)
+        ? value.join(", ")
+        : String(value);
+      entries.push({ key, type: "simple", value: displayValue });
+    }
   }
 
   return entries;
@@ -134,7 +163,34 @@ const sectionsWithStepNumbers = computed(() => {
           <div class="font-medium text-gray-600 dark:text-gray-300">
             {{ entry.key }}
           </div>
-          <div class="col-span-3">{{ entry.value }}</div>
+          <!-- Simple string value -->
+          <div v-if="entry.type === 'simple'" class="col-span-3">
+            {{ entry.value }}
+          </div>
+          <!-- Single object -->
+          <div v-else-if="entry.type === 'object'" class="col-span-3">
+            <ul class="list-inside list-disc">
+              <li v-for="(v, k) in entry.value" :key="k">
+                <span class="font-medium">{{ k }}:</span> {{ v }}
+              </li>
+            </ul>
+          </div>
+          <!-- List of objects -->
+          <div v-else class="col-span-3 space-y-1">
+            <ul
+              v-for="(obj, idx) in entry.value"
+              :key="idx"
+              class="list-inside"
+            >
+              <li
+                v-for="(v, k, kIdx) in obj"
+                :key="k"
+                :class="kIdx === 0 ? 'list-disc' : 'ml-4 list-none'"
+              >
+                <span class="font-medium">{{ k }}:</span> {{ v }}
+              </li>
+            </ul>
+          </div>
         </template>
       </div>
     </section>

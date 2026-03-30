@@ -744,11 +744,20 @@ function extractAllMetadataKeys(content: string): string[] {
 export function parseNestedMetaVar(
   content: string,
   varName: string,
-): MetadataObject | undefined {
+): MetadataObject | (string | number | MetadataObject)[] | undefined {
   const match = content.match(nestedMetaVarRegex(varName));
   if (!match) return undefined;
 
   const nestedContent = match[1]!;
+  const lines = nestedContent
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== "");
+
+  // If the block is a list, parse it as list items (may contain objects)
+  if (lines.length > 0 && lines[0]!.trim().startsWith("- ")) {
+    return parseListItems(lines);
+  }
+
   return parseNestedBlock(nestedContent);
 }
 
@@ -803,7 +812,7 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
     }
 
     // Parse key: value from this line
-    const keyValueMatch = line.match(/^[ ]*([^:\n]+?):\s*(.*)$/);
+    const keyValueMatch = line.match(/^ *([^:\n]+?):\s*(.*)$/);
     if (!keyValueMatch) {
       i++;
       continue;
@@ -819,7 +828,7 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
       let j = i + 1;
       while (j < lines.length) {
         const childLine = lines[j]!;
-        const childIndent = childLine.match(/^([ ]*)/)?.[1]?.length;
+        const childIndent = childLine.match(/^( *)/)?.[1]?.length;
         if (childIndent && childIndent > baseIndent) {
           childLines.push(childLine);
           j++;
@@ -828,20 +837,11 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
         }
       }
 
-      // v8 ignore else -- @preserve
       if (childLines.length > 0) {
         // Check if children are a list (start with `-`)
         const firstChildTrimmed = childLines[0]!.trim();
         if (firstChildTrimmed.startsWith("- ")) {
-          // Reconstruct content and reuse parseListMetaVar
-          const reconstructedContent = `${key}:\n${childLines.join("\n")}`;
-          const listResult = parseListMetaVar(reconstructedContent, key);
-          // v8 ignore else -- @preserve
-          if (listResult) {
-            result[key] = listResult.map(
-              (item) => parseMetadataValue(item) as string | number,
-            );
-          }
+          result[key] = parseListItems(childLines);
         } else {
           // Parse as nested object
           const childContent = childLines.join("\n");
@@ -851,11 +851,13 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
             result[key] = nested;
           }
         }
+      } else {
+        result[key] = "";
       }
       i = j;
     } else {
       // Has a value, parse it
-      result[key] = parseMetadataValue(rawValue);
+      result[key] = parseSingleLineMetadataValue(rawValue);
       i++;
     }
   }
@@ -864,9 +866,81 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
 }
 
 /**
+ * Parses YAML-style list child lines into an array of values or objects.
+ * Handles both simple list items (`- value`) and object items (`- key: value\n  key2: value2`).
+ */
+function parseListItems(
+  childLines: string[],
+): (string | number | MetadataObject)[] {
+  // Determine the indent level of list markers (the regex also matches 0 space)
+  const listIndent = childLines[0]!.match(/^( *)/)?.[1]?.length as number;
+
+  // Split child lines into groups, each starting with a `- ` line
+  const groups: string[][] = [];
+  let currentGroup: string[] = [];
+
+  for (const line of childLines) {
+    const indent = line.match(/^( *)/)?.[1]?.length as number; // the regex also matches 0 space
+    if (indent === listIndent && line.trim().startsWith("- ")) {
+      if (currentGroup.length > 0) {
+        groups.push(currentGroup);
+      }
+      currentGroup = [line];
+    } else {
+      currentGroup.push(line);
+    }
+  }
+  groups.push(currentGroup);
+
+  // Check if any item is object-style (multi-line or key: value on single line)
+  const isObjectItem = (group: string[]) => {
+    if (group.length > 1) return true;
+    const value = group[0]!.replace(/^\s*-\s*/, "").trim();
+    return /^[^:\n]+:\s/.test(value);
+  };
+  const hasObjectItems = groups.some(isObjectItem);
+
+  if (!hasObjectItems) {
+    // Simple list: extract value after `- `
+    return groups.map((group) => {
+      const value = group[0]!.replace(/^\s*-\s*/, "").trim();
+      return parseSingleLineMetadataValue(value) as string | number;
+    });
+  }
+
+  // List of objects: parse each group as a nested object
+  const items: (string | number | MetadataObject)[] = [];
+  for (const group of groups) {
+    const firstLine = group[0]!;
+    const afterDash = firstLine.replace(/^\s*-\s*/, "");
+
+    // Determine content indent (position after `- `)
+    const dashPrefixMatch = firstLine.match(/^( *-\s*)/);
+    const contentIndent = dashPrefixMatch?.[1]?.length as number; // the regex always matches
+
+    // Reconstruct lines at uniform indent for parseNestedBlock
+    const objectLines: string[] = [" ".repeat(contentIndent) + afterDash];
+    for (let k = 1; k < group.length; k++) {
+      objectLines.push(group[k]!);
+    }
+
+    const parsed = parseNestedBlock(objectLines.join("\n"));
+    /* v8 ignore else -- @preserve: empty non nested block will in practice be detected earlier */
+    if (parsed) {
+      items.push(parsed);
+    } else {
+      items.push(
+        parseSingleLineMetadataValue(afterDash.trim()) as string | number,
+      );
+    }
+  }
+  return items;
+}
+
+/**
  * Parses a raw string value into appropriate type (number, string, or array).
  */
-function parseMetadataValue(rawValue: string): MetadataValue {
+function parseSingleLineMetadataValue(rawValue: string): MetadataValue {
   // Check for inline array [a, b, c]
   if (rawValue.startsWith("[") && rawValue.endsWith("]")) {
     return rawValue
@@ -901,7 +975,7 @@ function parseAnyMetaVar(
 
   // Try simple value
   const simple = parseSimpleMetaVar(content, varName);
-  if (simple) return parseMetadataValue(simple);
+  if (simple) return parseSingleLineMetadataValue(simple);
 
   return undefined;
 }
@@ -1003,7 +1077,7 @@ export function extractMetadata(content: string): MetadataExtract {
   const sourceUrl = parseSimpleMetaVar(metadataContent, "source.url");
   const sourceAuthor = parseSimpleMetaVar(metadataContent, "source.author");
 
-  if (sourceNested) {
+  if (sourceNested && !Array.isArray(sourceNested)) {
     // YAML-style nested object
     const source: MetadataSource = {};
     // v8 ignore else -- @preserve
@@ -1041,7 +1115,7 @@ export function extractMetadata(content: string): MetadataExtract {
     parseSimpleMetaVar(metadataContent, "time") ??
     parseSimpleMetaVar(metadataContent, "duration");
 
-  if (timeNested) {
+  if (timeNested && !Array.isArray(timeNested)) {
     // YAML-style nested object
     const time: MetadataTime = {};
     // v8 ignore else -- @preserve
