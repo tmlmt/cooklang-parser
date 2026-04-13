@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.24
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.23...v3.0.0-alpha.24)
+
+### 🩹 Fixes
+
+- **metadata:** Parse various time format for time metadata values as per convention ([a3f9377](https://github.com/tmlmt/cooklang-parser/commit/a3f9377))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.23
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.22...v3.0.0-alpha.23)
