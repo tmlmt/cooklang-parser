@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.0.0-alpha.25
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.24...v3.0.0-alpha.25)
+
+#### ⚠️ Breaking Changes
+
+- The package now declares `engines.node >= 18` for further transparency and guidance to package managers. This will cause pnpm to reject installation on Node.js < 18. The build target is raised from ES2020 to ES2022, though the output remains identical as no ES2022-specific syntax is currently used.
+
+### 📦 Build
+
+- ⚠️ Align tsup target with tsconfig and add engines field ([a1d17b7](https://github.com/tmlmt/cooklang-parser/commit/a1d17b7))
+
+### 🤖 CI
+
+- Upgrade to Node 24 and bump GitHub Actions ([fa389a2](https://github.com/tmlmt/cooklang-parser/commit/fa389a2))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.24
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.23...v3.0.0-alpha.24)
