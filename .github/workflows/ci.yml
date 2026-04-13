@@ -20,11 +20,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org/"
       - run: pnpm install
       - run: pnpm lint
@@ -36,16 +36,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org/"
-      - uses: pnpm/action-setup@v4
-      - name: Re-install npm
-        # TODO: OIDC requires npm >=11.5.1.
-        # Until Node.js v24 is LTS (with npm 11 as the default), we need to bump.
-        run: npm install -g npm@11
+      - uses: pnpm/action-setup@v5
       - run: pnpm install
       - run: pnpm build
       - name: Publish to npm
@@ -71,13 +67,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: main
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: "pnpm"
       - name: Install dependencies (main branch)
         run: pnpm install
@@ -88,7 +84,7 @@ jobs:
           mkdir -p combined/v2
           mv docs/.vitepress/dist/* combined/v2/
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.ref }}
           clean: false
@@ -105,7 +101,7 @@ jobs:
       - name: Copy v2 docs to root for default access
         run: cp -r combined/v2/* combined/
       - name: Deploy docs to production server
-        uses: easingthemes/ssh-deploy@main
+        uses: easingthemes/ssh-deploy@v6
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
@@ -119,13 +115,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.ref }}
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: "pnpm"
       - name: Install and build parent package
         run: |
@@ -140,7 +136,7 @@ jobs:
           NUXT_APP_BASE_URL: ${{ secrets.PLAYGROUND_BASE_URL }}
         run: pnpm generate
       - name: Deploy playground to production server
-        uses: easingthemes/ssh-deploy@main
+        uses: easingthemes/ssh-deploy@v6
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
