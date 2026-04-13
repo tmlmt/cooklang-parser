@@ -5,6 +5,7 @@ import {
   isStepActive,
   type Ingredient,
   type MetadataObject,
+  type MetadataTime,
   type MetadataValue,
   type Yield,
   type Recipe,
@@ -37,6 +38,23 @@ function formatMetadataValue(value: MetadataValue): MetadataEntry["type"] {
   return "simple";
 }
 
+function formatMinutes(val: number | string): string {
+  if (typeof val === "string") return val;
+  const d = Math.floor(val / 1440);
+  const h = Math.floor((val % 1440) / 60);
+  const m = val % 60;
+  if (d > 0) {
+    const parts = [`${d} d`];
+    if (h > 0) parts.push(`${h} h`);
+    if (m > 0) parts.push(`${m} min`);
+    return parts.join(" ");
+  }
+  if (h > 0) {
+    return m > 0 ? `${h} h ${m} min` : `${h} h`;
+  }
+  return `${m} min`;
+}
+
 const metadataEntries = computed(() => {
   const entries: MetadataEntry[] = [];
   const metadata = props.recipe.metadata;
@@ -56,6 +74,15 @@ const metadataEntries = computed(() => {
     }
     if (key === "servings" || key === "serves") {
       entries.push({ key, type: "simple", value: String(value) });
+      continue;
+    }
+    if (key === "time") {
+      const time = value as MetadataTime;
+      const formatted: MetadataObject = {};
+      if (time.prep !== undefined) formatted.prep = formatMinutes(time.prep);
+      if (time.cook !== undefined) formatted.cook = formatMinutes(time.cook);
+      if (time.total !== undefined) formatted.total = formatMinutes(time.total);
+      entries.push({ key, type: "object", value: formatted });
       continue;
     }
 

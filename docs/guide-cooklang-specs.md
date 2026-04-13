@@ -96,3 +96,26 @@ Servings-related metadata variables are distinguished to enable settings the val
 - `yield` accepts two different formats to encapsulate a quantity with unit and is parsed as a [Yield](/api/interfaces/Yield) value. If none of these formats are detected, the raw input is interpreted as a [TextValue](/api/interfaces/TextValue) within Yield.quantity. If only `yield` is provided and no `servings`/`serves` the numerical value of the yield variable is used for recipe scaling (defaulting to 1 for raw text)
   - Complex format: <code v-pre>yield: about {{300%g}} of bread</code>
   - Plain format: `yield: 300%g` or `yield: 2`
+
+### Time metadata parsing
+
+Time values (`prep time`, `cook time`, `time required`, `time`, `duration`, or the nested `time:` object with `prep`/`cook`/`total` keys) are parsed into **minutes** as a number. If parsing fails, the raw string is preserved as-is.
+
+Three formats are tried in order:
+
+1. **Plain number** — interpreted as minutes: `30` → `30`, `"30"` → `30`
+2. **Compact `DdHhMm`** — no spaces, integers only, case-insensitive:
+   `1h` → `60`, `1h30m` → `90`, `1d1h1m` → `1501`
+3. **Unit-based** — space-separated `<number><unit>` or `<number> <unit>` pairs (floats allowed). Pairs must be separated by at least one space:
+   `1 hour 30 min` → `90`, `1.5 hours` → `90`, `45 secs` → `1` (rounded)
+
+   Recognized units: `s`/`sec`/`secs`/`second`/`seconds`/`seconde`/`secondes`, `m`/`min`/`minute`/`minutes`, `h`/`hour`/`hours`/`heure`/`heures`, `d`/`day`/`days`/`j`/`jour`/`jours`
+
+```yaml
+---
+time:
+  prep: 1h30m       # → 90 (minutes)
+  cook: 45 minutes   # → 45
+  total: 2h          # → 120
+---
+```

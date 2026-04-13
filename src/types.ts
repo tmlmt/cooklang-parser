@@ -33,12 +33,12 @@ export interface Yield extends QuantityWithPlainUnit {
  * @category Types
  */
 export interface MetadataTime {
-  /** The preparation time (not parsed into DateTime format). */
-  prep?: string;
-  /** The cooking time (not parsed into DateTime format). */
-  cook?: string;
-  /** The total time required (not parsed into DateTime format). */
-  total?: string;
+  /** The preparation time in minutes, or the raw string if it could not be parsed. */
+  prep?: number | string;
+  /** The cooking time in minutes, or the raw string if it could not be parsed. */
+  cook?: number | string;
+  /** The total time required in minutes, or the raw string if it could not be parsed. */
+  total?: number | string;
 }
 
 /**

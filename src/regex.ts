@@ -637,3 +637,45 @@ export const markdownRegex = new RegExp(
     .join("|"),
   "g",
 );
+
+
+/** Compact format regex: `1d2h30m`, `1h30m`, `30m`, `1h`, `2d`, etc. */
+export const compactTimeRegex = createRegex()
+  .startAnchor()
+  .startGroup()
+    .startCaptureGroup()
+      .digit().oneOrMore()
+    .endGroup()
+    .literal("d")
+  .endGroup().optional()
+  .startGroup()
+    .startCaptureGroup()
+      .digit().oneOrMore()
+    .endGroup()
+    .literal("h")
+  .endGroup().optional()
+  .startGroup()
+    .startCaptureGroup()
+      .digit().oneOrMore()
+    .endGroup()
+    .literal("m")
+  .endGroup().optional()
+  .endAnchor()
+  .nonSensitive()
+  .toRegExp();
+
+/** Unit-based token regex: a number (int or float) optionally followed by a unit. */
+export const timeUnitTokenRegex = createRegex()
+  .startCaptureGroup()
+    .digit().oneOrMore()
+    .startGroup()
+      .literal(".")
+      .digit().oneOrMore()
+    .endGroup().optional()
+  .endGroup()
+  .anyOf("\t ").zeroOrMore()
+  .startCaptureGroup()
+    .letter().oneOrMore()
+  .endGroup()
+  .global()
+  .toRegExp();

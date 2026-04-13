@@ -40,6 +40,7 @@ import {
   BadIndentationError,
   ReferencedItemCannotBeRedefinedError,
 } from "../errors";
+import { parseTimeToMinutes } from "./time";
 
 /**
  * Pushes a pending note to the section content if it has items.
@@ -1118,19 +1119,28 @@ export function extractMetadata(content: string): MetadataExtract {
   if (timeNested && !Array.isArray(timeNested)) {
     // YAML-style nested object
     const time: MetadataTime = {};
-    // v8 ignore else -- @preserve
-    if (typeof timeNested.prep === "string") time.prep = timeNested.prep;
-    // v8 ignore else -- @preserve
-    if (typeof timeNested.cook === "string") time.cook = timeNested.cook;
-    // v8 ignore else -- @preserve
-    if (typeof timeNested.total === "string") time.total = timeNested.total;
+    /* v8 ignore else -- @preserve: skip parsing if non-existent or not a valid format */
+    if (timeNested.prep !== undefined) {
+      const raw = timeNested.prep as string | number;
+      time.prep = parseTimeToMinutes(raw) ?? String(raw);
+    }
+    /* v8 ignore else -- @preserve: skip parsing if non-existent or not a valid format */
+    if (timeNested.cook !== undefined) {
+      const raw = timeNested.cook as string | number;
+      time.cook = parseTimeToMinutes(raw) ?? String(raw);
+    }
+    /* v8 ignore else -- @preserve: skip parsing if non-existent or not a valid format */
+    if (timeNested.total !== undefined) {
+      const raw = timeNested.total as string | number;
+      time.total = parseTimeToMinutes(raw) ?? String(raw);
+    }
     // v8 ignore else -- @preserve
     if (Object.keys(time).length > 0) metadata.time = time;
   } else if (prepTime || cookTime || totalTime) {
     const time: MetadataTime = {};
-    if (prepTime) time.prep = prepTime;
-    if (cookTime) time.cook = cookTime;
-    if (totalTime) time.total = totalTime;
+    if (prepTime) time.prep = parseTimeToMinutes(prepTime) ?? prepTime;
+    if (cookTime) time.cook = parseTimeToMinutes(cookTime) ?? cookTime;
+    if (totalTime) time.total = parseTimeToMinutes(totalTime) ?? totalTime;
     metadata.time = time;
   }
 

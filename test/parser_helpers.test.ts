@@ -622,9 +622,9 @@ images: [https://static01.nyt.com/images/2021/12/28/dining/yf-baked-feta/yf-bake
           "https://cooking.nytimes.com/recipes/1021277-sheet-pan-baked-feta-with-broccolini-tomatoes-and-lemon",
         author: "Yasmin Fahr",
         time: {
-          prep: "10m",
-          cook: "15m",
-          total: "25m",
+          prep: 10,
+          cook: 15,
+          total: 25,
         },
         difficulty: "easy",
         cuisine: "continental",
@@ -1397,9 +1397,9 @@ time:
 ---`;
     const result = extractMetadata(content);
     expect(result.metadata.time).toEqual({
-      prep: "15 minutes",
-      cook: "30 minutes",
-      total: "45 minutes",
+      prep: 15,
+      cook: 30,
+      total: 45,
     });
   });
 
@@ -1426,8 +1426,8 @@ prep time: 15m
 ---`;
     const result = extractMetadata(content);
     expect(result.metadata.time).toEqual({
-      prep: "10m",
-      cook: "20m",
+      prep: 10,
+      cook: 20,
     });
   });
 
@@ -1543,7 +1543,7 @@ cook time: 30m
 ---`;
     const result = extractMetadata(content);
     expect(result.metadata.time).toEqual({
-      cook: "30m",
+      cook: 30,
     });
   });
 
@@ -1568,7 +1568,36 @@ duration: 1 hour
 ---`;
     const result = extractMetadata(content);
     expect(result.metadata.time).toEqual({
-      total: "1 hour",
+      total: 60,
+    });
+  });
+
+  it("should fall back to string when time value is not parseable", () => {
+    const content = `---
+time:
+  prep: about an hour
+  cook: a day or so
+  total: quite a bit
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.time).toEqual({
+      prep: "about an hour",
+      cook: "a day or so",
+      total: "quite a bit",
+    });
+  });
+
+  it("should fall back to string for legacy time keys that are not parseable", () => {
+    const content = `---
+cook time: a long time
+prep time: not sure
+time: hours
+---`;
+    const result = extractMetadata(content);
+    expect(result.metadata.time).toEqual({
+      cook: "a long time",
+      prep: "not sure",
+      total: "hours",
     });
   });
 });
