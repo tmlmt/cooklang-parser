@@ -7,5 +7,5 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false, // single-file outputs for libraries
-  target: "es2020",
+  target: "es2022",
 });

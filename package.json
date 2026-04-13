@@ -81,6 +81,9 @@
     "recipes"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "big.js": "7.0.1",
     "smol-toml": "1.6.1",
