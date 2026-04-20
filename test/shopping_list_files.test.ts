@@ -74,6 +74,14 @@ choices:
       ]);
     });
 
+    it("should parse recipe ref with decimal servings", () => {
+      const list = new ShoppingList();
+      const refs = list.loadFile("./Recipe{2.5}\n");
+      expect(refs).toMatchObject<ShoppingListRecipeRef[]>([
+        { path: "./Recipe", servings: 2.5 },
+      ]);
+    });
+
     it("should parse recipe ref without servings", () => {
       const list = new ShoppingList();
       const refs = list.loadFile("./Recipe\n");
