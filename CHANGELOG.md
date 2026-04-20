@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.26
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.25...v3.0.0-alpha.26)
+
+### 🚀 Enhancements
+
+- Parse and serialize .shopping-list and .shopping-checked files ([1d5440d](https://github.com/tmlmt/cooklang-parser/commit/1d5440d))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.25
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.24...v3.0.0-alpha.25)
