@@ -119,3 +119,21 @@ time:
   total: 2h          # → 120
 ---
 ```
+
+## Shopping List files
+
+As the basic cooklang specs do not include alternative ingredients or recipe variants, the official cooklang [convention for shopping list file syntax](https://cooklang.org/docs/conventions/#list-definition) does not specify anything in that regard, and does not specify how additional info in general, besides comments can be stored in such file.
+
+This parser chooses to add a yaml frontmatter for this purpose, thereby keeping the core of the file as per the convention.
+
+```yaml
+choices:
+  "./Complex Recipe":
+    variant: spicy
+    ingredientItems:
+      flour: 1
+    ingredientGroups:
+      sauce: 0
+---
+./Complex Recipe{2}
+```

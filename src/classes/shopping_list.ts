@@ -12,6 +12,8 @@ import type {
   PantryOptions,
   SpecificUnitSystem,
   EquivalenceRatioMap,
+  RecipeChoices,
+  ShoppingListRecipeRef,
 } from "../types";
 import {
   addEquivalentsAndSimplify,
@@ -30,6 +32,15 @@ import { deepClone } from "../utils/general";
 import { NO_UNIT, normalizeUnit } from "../units/definitions";
 import { areUnitsConvertible } from "../units/compatibility";
 import { getToBase } from "../units/conversion";
+import {
+  leadingWhitespacesRegex,
+  manualIngredientRegex,
+  metadataRegex,
+  recipeRefLineRegex,
+} from "../regex";
+import { parseQuantityWithUnit } from "../utils/parser_helpers";
+import { formatQuantity } from "../utils/render_helpers";
+import { NoTabAsIndentError, UnknownRecipePathError } from "../errors";
 
 /**
  * Shopping List generator.
@@ -94,6 +105,23 @@ export class ShoppingList {
    * Recomputed on every {@link ShoppingList.calculateIngredients | calculateIngredients()} call.
    */
   private resultingPantry?: Pantry;
+  /**
+   * Free-hand ingredient lines not tied to any recipe.
+   */
+  manualItems: AddedIngredient[] = [];
+  /**
+   * Set of checked ingredient names (lowercased for case-insensitive matching).
+   */
+  checkedItems: Set<string> = new Set();
+  /**
+   * Map of unresolved recipe refs from {@link ShoppingList.loadFile | loadFile()},
+   * keyed by path. Consumed by {@link ShoppingList.hydrateRecipe | hydrateRecipe()}.
+   * @internal
+   */
+  private unresolvedRefs = new Map<
+    string,
+    { servings?: number; choices?: RecipeChoices }
+  >();
 
   /**
    * Creates a new ShoppingList instance
@@ -145,6 +173,22 @@ export class ShoppingList {
           const existing = rawQuantitiesMap.get(group.name) ?? [];
           existing.push(...group.quantities);
           rawQuantitiesMap.set(group.name, existing);
+        }
+      }
+    }
+
+    // Inject manual items into the raw quantities map
+    for (const item of this.manualItems) {
+      trackName(item.name);
+      if (item.quantities) {
+        const existing = rawQuantitiesMap.get(item.name) ?? [];
+        // manual items always have single quantities
+        for (const q of item.quantities as QuantityWithPlainUnit[]) {
+          existing.push(toExtendedUnit(q));
+        }
+        // v8 ignore else -- @preserve
+        if (existing.length > 0) {
+          rawQuantitiesMap.set(item.name, existing);
         }
       }
     }
@@ -502,6 +546,7 @@ export class ShoppingList {
         recipe,
         factor: options.scaling ?? 1,
         choices: options.choices,
+        path: options.path,
       });
     } else {
       if ("factor" in options.scaling) {
@@ -509,12 +554,14 @@ export class ShoppingList {
           recipe,
           factor: options.scaling.factor,
           choices: options.choices,
+          path: options.path,
         });
       } else {
         this.recipes.push({
           recipe,
           servings: options.scaling.servings,
           choices: options.choices,
+          path: options.path,
         });
       }
     }
@@ -667,5 +714,535 @@ export class ShoppingList {
     }
 
     this.categories = categories;
+  }
+
+  /**
+   * Parse a `.shopping-list` file content string and populate internal state.
+   * Returns the unresolved recipe refs — the consuming app must load each
+   * Recipe object and call {@link ShoppingList.hydrateRecipe | hydrateRecipe()} for each one.
+   * @param content - The `.shopping-list` file content.
+   * @returns Array of recipe references to resolve.
+   */
+  loadFile(content: string): ShoppingListRecipeRef[] {
+    this.unresolvedRefs.clear();
+    this.manualItems = [];
+
+    let body = content;
+
+    // Extract frontmatter using shared regex
+    const fmMatch = body.match(metadataRegex);
+    if (fmMatch) {
+      const yamlBlock = fmMatch[2]!;
+      body = body.slice(fmMatch[0].length);
+      this.parseFrontmatter(yamlBlock);
+    }
+
+    const refs: ShoppingListRecipeRef[] = [];
+
+    // Stack of path prefixes for nested recipe refs.
+    // Each entry is { indent, prefix } where prefix includes trailing "/".
+    const prefixStack: { indent: number; prefix: string }[] = [];
+
+    // Pending ref line — resolved when the next ref line (or EOF) reveals
+    // whether this line is a prefix-only node or an actual recipe ref.
+    let pending: { trimmed: string; indent: number } | undefined;
+
+    const resolvePending = (nextRefIndent: number | undefined) => {
+      if (!pending) return;
+      const { trimmed, indent } = pending;
+
+      // Pop stack entries at or beyond this indent level
+      while (
+        prefixStack.length > 0 &&
+        prefixStack[prefixStack.length - 1]!.indent >= indent
+      ) {
+        prefixStack.pop();
+      }
+
+      // Build full path by prepending the accumulated prefix
+      const parentPrefix =
+        prefixStack.length > 0
+          ? prefixStack[prefixStack.length - 1]!.prefix
+          : "";
+      const fullLine = parentPrefix ? parentPrefix + trimmed.slice(2) : trimmed;
+
+      const ref = this.parseRecipeRefLine(fullLine);
+
+      // If the next ref line is deeper indented, this is a prefix-only node
+      const isPrefix = nextRefIndent !== undefined && nextRefIndent > indent;
+
+      if (!isPrefix) {
+        refs.push(ref);
+        const existing = this.unresolvedRefs.get(ref.path);
+        this.unresolvedRefs.set(ref.path, {
+          servings: ref.servings ?? existing?.servings,
+          choices: existing?.choices,
+        });
+      }
+
+      // Always push to prefix stack
+      prefixStack.push({ indent, prefix: ref.path + "/" });
+
+      pending = undefined;
+    };
+
+    for (const rawLine of body.split(/\r?\n/)) {
+      const trimmed = rawLine.trim();
+      if (trimmed === "" || trimmed.startsWith("--")) continue;
+
+      if (trimmed.startsWith("./")) {
+        // Detect indent level (spaces only — tabs rejected by convention)
+        // Regex always matches
+        const leadingMatch = rawLine.match(leadingWhitespacesRegex)!;
+        const leading = leadingMatch[1]!;
+        if (leading.includes("\t")) {
+          throw new NoTabAsIndentError();
+        }
+        const indent = leading.length;
+
+        resolvePending(indent);
+        pending = { trimmed, indent };
+      } else {
+        this.manualItems.push(this.parseManualItemLine(trimmed));
+      }
+    }
+
+    // Flush last pending as leaf
+    resolvePending(undefined);
+
+    return refs;
+  }
+
+  /**
+   * After {@link ShoppingList.loadFile | loadFile()}, call this for each recipe ref once
+   * the `.cook` file has been loaded and parsed into a Recipe object.
+   * @param path - The recipe path as returned by `loadFile()`.
+   * @param recipe - The parsed Recipe object.
+   * @throws Error if the path was not found in the loaded refs.
+   */
+  hydrateRecipe(path: string, recipe: Recipe): void {
+    const ref = this.unresolvedRefs.get(path);
+    if (!ref) {
+      throw new UnknownRecipePathError(path);
+    }
+    this.addRecipe(recipe, {
+      path,
+      scaling: ref.servings ? { servings: ref.servings } : undefined,
+      choices: ref.choices,
+    });
+    this.unresolvedRefs.delete(path);
+  }
+
+  /**
+   * Parse a `.shopping-checked` file content string and populate {@link ShoppingList.checkedItems | checkedItems}.
+   * Replays the append-only log: last entry per ingredient wins.
+   * @param content - The `.shopping-checked` file content.
+   */
+  loadCheckedFile(content: string): void {
+    this.checkedItems.clear();
+    for (const rawLine of content.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (line === "" || line.startsWith("--")) continue;
+      // v8 ignore else -- @preserve: invalid lines are ignored
+      if (line.startsWith("+ ")) {
+        this.checkedItems.add(line.slice(2).toLowerCase());
+      } else if (line.startsWith("- ")) {
+        this.checkedItems.delete(line.slice(2).toLowerCase());
+      }
+    }
+  }
+
+  /**
+   * Serialize current state to `.shopping-list` file content string.
+   * @returns The serialized file content.
+   */
+  serializeFile(): string {
+    const lines: string[] = [];
+
+    // Collect recipes with choices that have a path
+    const recipesWithChoices = this.recipes.filter(
+      (r) =>
+        r.path &&
+        r.choices &&
+        (r.choices.variant ||
+          (r.choices.ingredientItems && r.choices.ingredientItems.size > 0) ||
+          (r.choices.ingredientGroups && r.choices.ingredientGroups.size > 0)),
+    );
+
+    // Emit frontmatter if choices exist
+    if (recipesWithChoices.length > 0) {
+      lines.push("---");
+      lines.push("choices:");
+      for (const addedRecipe of recipesWithChoices) {
+        lines.push(`  "${addedRecipe.path}":`);
+        const c = addedRecipe.choices!;
+        if (c.variant) {
+          lines.push(`    variant: ${c.variant}`);
+        }
+        if (c.ingredientItems && c.ingredientItems.size > 0) {
+          lines.push(`    ingredientItems:`);
+          for (const [k, v] of c.ingredientItems) {
+            lines.push(`      ${k}: ${v}`);
+          }
+        }
+        if (c.ingredientGroups && c.ingredientGroups.size > 0) {
+          lines.push(`    ingredientGroups:`);
+          for (const [k, v] of c.ingredientGroups) {
+            lines.push(`      ${k}: ${v}`);
+          }
+        }
+      }
+      lines.push("---");
+    }
+
+    // Emit recipe refs (sorted and nested by common path prefixes)
+    const recipeLines = this.serializeRecipeRefs();
+
+    lines.push(...recipeLines);
+
+    // Separator between recipes and manual items
+    if (recipeLines.length > 0 && this.manualItems.length > 0) {
+      lines.push("");
+    }
+
+    lines.push(...this.manualItems.map((i) => this.serializeManualItem(i)));
+    lines.push(""); // trailing newline
+
+    return lines.join("\n");
+  }
+
+  /**
+   * Serialize {@link ShoppingList.checkedItems | checkedItems} to `.shopping-checked` file content string (compacted).
+   * One `+ name` line per checked item, sorted alphabetically.
+   * @returns The serialized file content.
+   */
+  serializeCheckedFile(): string {
+    const sorted = [...this.checkedItems].sort();
+    if (sorted.length === 0) return "";
+    return sorted.map((name) => `+ ${name}`).join("\n") + "\n";
+  }
+
+  /**
+   * Mark an ingredient as checked (case-insensitive).
+   * @param ingredientName - The ingredient name.
+   */
+  check(ingredientName: string): void {
+    this.checkedItems.add(ingredientName.toLowerCase());
+  }
+
+  /**
+   * Mark an ingredient as unchecked (case-insensitive).
+   * @param ingredientName - The ingredient name.
+   */
+  uncheck(ingredientName: string): void {
+    this.checkedItems.delete(ingredientName.toLowerCase());
+  }
+
+  /**
+   * Query whether an ingredient is checked (case-insensitive).
+   * @param ingredientName - The ingredient name.
+   * @returns True if the ingredient is checked.
+   */
+  isChecked(ingredientName: string): boolean {
+    return this.checkedItems.has(ingredientName.toLowerCase());
+  }
+
+  /**
+   * Clear all checked items.
+   */
+  uncheckAll(): void {
+    this.checkedItems.clear();
+  }
+
+  /**
+   * Generate a single line to append to a `.shopping-checked` file.
+   * @param ingredientName - The ingredient name.
+   * @param checked - Whether the ingredient is being checked or unchecked.
+   * @returns A line like `"+ name\n"` or `"- name\n"`.
+   */
+  static checkedAppendLine(ingredientName: string, checked: boolean): string {
+    return `${checked ? "+" : "-"} ${ingredientName}\n`;
+  }
+
+  /**
+   * Compact a `.shopping-checked` file content string.
+   * Replays the log and returns a clean file with only final `+` entries, sorted.
+   * @param content - The raw `.shopping-checked` file content.
+   * @returns The compacted file content.
+   */
+  static compactCheckedFile(content: string): string {
+    const checked = new Set<string>();
+    for (const rawLine of content.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (line === "" || line.startsWith("--")) continue;
+      // v8 ignore else -- @preserve: invalid lines are ignored
+      if (line.startsWith("+ ")) {
+        checked.add(line.slice(2).toLowerCase());
+      } else if (line.startsWith("- ")) {
+        checked.delete(line.slice(2).toLowerCase());
+      }
+    }
+    const sorted = [...checked].sort();
+    if (sorted.length === 0) return "";
+    return sorted.map((name) => `+ ${name}`).join("\n") + "\n";
+  }
+
+  /**
+   * Parse a recipe reference line like `./path{servings}`.
+   * @internal
+   */
+  private parseRecipeRefLine(line: string): ShoppingListRecipeRef {
+    // this function is always called for lines starting with "./" so regex always matches
+    const match = line.match(recipeRefLineRegex)!;
+    return {
+      path: match[1]!,
+      servings: match[2] ? Number(match[2]) : undefined,
+    };
+  }
+
+  /**
+   * Parse a manual ingredient line like `name{qty%unit}` or just `name`.
+   * @internal
+   */
+  private parseManualItemLine(line: string): AddedIngredient {
+    const match = line.match(manualIngredientRegex);
+    const groups = match!.groups as { name: string; quantity?: string };
+    const name = groups.name.trim();
+    if (groups.quantity) {
+      const parsed = parseQuantityWithUnit(groups.quantity);
+      return {
+        name,
+        quantities: [
+          {
+            quantity: parsed.value,
+            ...(parsed.unit && { unit: parsed.unit }),
+          },
+        ],
+      };
+    }
+    return { name };
+  }
+
+  /**
+   * Serialize a manual item back to file format.
+   * @internal
+   */
+  private serializeManualItem(item: AddedIngredient): string {
+    if (!item.quantities || item.quantities.length === 0) {
+      return item.name;
+    }
+    const q = item.quantities[0]!;
+    /* v8 ignore next -- @preserve: manual items never have AND groups */
+    if ("and" in q) return item.name;
+    const qtyStr = formatQuantity(q.quantity);
+    return q.unit
+      ? `${item.name}{${qtyStr}%${q.unit}}`
+      : `${item.name}{${qtyStr}}`;
+  }
+
+  /**
+   * Build nested recipe ref lines from `this.recipes`, sorted alphabetically
+   * and grouped by common path prefixes.
+   * @internal
+   */
+  private serializeRecipeRefs(): string[] {
+    interface TrieNode {
+      children: Map<string, TrieNode>;
+      suffix?: string;
+    }
+
+    // Collect entries with servings suffix
+    const entries: { path: string; suffix: string }[] = [];
+    for (const addedRecipe of this.recipes) {
+      if (!addedRecipe.path) continue;
+      let suffix = "";
+      if ("servings" in addedRecipe) {
+        suffix = `{${addedRecipe.servings}}`;
+      } else if (addedRecipe.factor !== 1) {
+        const baseServings = addedRecipe.recipe.servings;
+        /* v8 ignore else -- @preserve: recipe only scaled if base servings is defined */
+        if (baseServings) {
+          suffix = `{${baseServings * addedRecipe.factor}}`;
+        }
+      }
+      entries.push({ path: addedRecipe.path, suffix });
+    }
+
+    if (entries.length === 0) return [];
+
+    // Build trie — paths start with "./" so strip it for segment splitting
+    const root: TrieNode = { children: new Map() };
+    for (const entry of entries) {
+      const segments = entry.path.slice(2).split("/");
+      let node = root;
+      for (const seg of segments) {
+        if (!node.children.has(seg)) {
+          node.children.set(seg, { children: new Map() });
+        }
+        node = node.children.get(seg)!;
+      }
+      node.suffix = entry.suffix;
+    }
+
+    // Emit lines with collapsing and nesting
+    const lines: string[] = [];
+
+    const emitChildren = (node: TrieNode, depth: number) => {
+      const sorted = [...node.children.entries()].sort((a, b) =>
+        a[0].localeCompare(b[0]),
+      );
+      for (const [segment, child] of sorted) {
+        // Collapse single-child non-leaf chains
+        let collapsedPath = segment;
+        let current = child;
+        while (current.children.size === 1 && current.suffix === undefined) {
+          const [nextSeg, nextChild] = [...current.children.entries()][0]!;
+          collapsedPath += "/" + nextSeg;
+          current = nextChild;
+        }
+
+        const indent = "  ".repeat(depth);
+
+        if (current.suffix !== undefined && current.children.size === 0) {
+          // Pure leaf
+          lines.push(`${indent}./${collapsedPath}${current.suffix}`);
+        } else if (current.suffix !== undefined) {
+          // Leaf with children — emit leaf, then children at same depth
+          // to avoid data loss (prefix-only nodes are not recipe refs)
+          lines.push(`${indent}./${collapsedPath}${current.suffix}`);
+          emitDescendantsFlat(current, collapsedPath, depth);
+        } else {
+          // Non-leaf with children — emit as prefix line, nest children
+          lines.push(`${indent}./${collapsedPath}`);
+          emitChildren(current, depth + 1);
+        }
+      }
+    };
+
+    const emitDescendantsFlat = (
+      node: TrieNode,
+      pathPrefix: string,
+      depth: number,
+    ) => {
+      const sorted = [...node.children.entries()].sort((a, b) =>
+        a[0].localeCompare(b[0]),
+      );
+      const indent = "  ".repeat(depth);
+      for (const [segment, child] of sorted) {
+        const fullPath = `${pathPrefix}/${segment}`;
+        if (child.suffix !== undefined) {
+          lines.push(`${indent}./${fullPath}${child.suffix}`);
+        }
+        emitDescendantsFlat(child, fullPath, depth);
+      }
+    };
+
+    emitChildren(root, 0);
+
+    return lines;
+  }
+
+  /**
+   * Parse YAML frontmatter block and extract choices.
+   * @internal
+   */
+  private parseFrontmatter(yaml: string): void {
+    const lines = yaml.split(/\r?\n/);
+    let i = 0;
+
+    // Skip to "choices:" key
+    while (i < lines.length) {
+      if (lines[i]!.trim() === "choices:") {
+        i++;
+        break;
+      }
+      i++;
+    }
+    if (i >= lines.length) return;
+
+    // Parse each recipe path entry under choices
+    let currentPath: string | undefined;
+    let currentChoices: RecipeChoices = {};
+    let currentSubKey: string | undefined;
+    let currentSubMap = new Map<string, number>();
+
+    const flushSub = () => {
+      if (currentSubKey && currentSubMap.size > 0) {
+        // v8 ignore else -- @preserve: only these two subkeys are valid and should be flushed
+        if (currentSubKey === "ingredientItems") {
+          currentChoices.ingredientItems = new Map(currentSubMap);
+        } else if (currentSubKey === "ingredientGroups") {
+          currentChoices.ingredientGroups = new Map(currentSubMap);
+        }
+        currentSubKey = undefined;
+        currentSubMap = new Map();
+      }
+    };
+
+    const flushPath = () => {
+      flushSub();
+      if (
+        currentPath &&
+        (currentChoices.variant ||
+          currentChoices.ingredientItems ||
+          currentChoices.ingredientGroups)
+      ) {
+        this.unresolvedRefs.set(currentPath, {
+          choices: currentChoices,
+        });
+      }
+    };
+
+    while (i < lines.length) {
+      const line = lines[i]!;
+      const leadingWhitespace = line.match(leadingWhitespacesRegex)?.[1];
+      if (leadingWhitespace && leadingWhitespace.includes("\t")) {
+        throw new NoTabAsIndentError();
+      }
+      const indent = leadingWhitespace!.length;
+      const trimmed = line.trim();
+
+      if (trimmed === "" || trimmed.startsWith("--")) {
+        i++;
+        continue;
+      }
+
+      // v8 ignore else -- @preserve: only specific keys and structure are supported in frontmatter
+      if (indent === 2 && trimmed.endsWith(":")) {
+        // New recipe path entry
+        flushPath();
+        // Remove surrounding quotes and trailing colon
+        currentPath = trimmed.slice(0, -1).replace(/^["']|["']$/g, "");
+        currentChoices = {};
+        currentSubKey = undefined;
+        currentSubMap = new Map();
+      } else if (indent === 4 && trimmed.includes(":")) {
+        // Key within recipe path
+        flushSub();
+        const colonIdx = trimmed.indexOf(":");
+        const key = trimmed.slice(0, colonIdx).trim();
+        const value = trimmed.slice(colonIdx + 1).trim();
+        if (value) {
+          // v8 ignore else -- @preserve: only this key should be handled
+          if (key === "variant") {
+            currentChoices.variant = value;
+          }
+        } else {
+          // Sub-object follows
+          currentSubKey = key;
+          currentSubMap = new Map();
+        }
+      } else if (indent === 6 && trimmed.includes(":")) {
+        // Key within sub-object
+        const colonIdx = trimmed.indexOf(":");
+        const key = trimmed.slice(0, colonIdx).trim();
+        const value = trimmed.slice(colonIdx + 1).trim();
+        currentSubMap.set(key, Number(value));
+      }
+
+      i++;
+    }
+
+    flushPath();
   }
 }

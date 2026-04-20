@@ -153,6 +153,7 @@ import type {
   RecipeAlternatives,
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
+  ShoppingListRecipeRef,
 } from "./types";
 
 export {
@@ -242,6 +243,7 @@ export {
   RecipeAlternatives,
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
+  ShoppingListRecipeRef,
 };
 
 // Errors
@@ -249,6 +251,11 @@ export {
 import {
   NoProductCatalogForCartError,
   NoShoppingListForCartError,
+  UnknownRecipePathError,
 } from "./errors";
 
-export { NoProductCatalogForCartError, NoShoppingListForCartError };
+export {
+  NoProductCatalogForCartError,
+  NoShoppingListForCartError,
+  UnknownRecipePathError,
+};

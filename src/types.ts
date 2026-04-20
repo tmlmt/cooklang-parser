@@ -687,6 +687,8 @@ export interface RecipeWithFactor {
   factor: number;
   /** The choices for alternative ingredients. */
   choices?: RecipeChoices;
+  /** The recipe file path for serialization (e.g. "./Complex Recipe") */
+  path?: string;
 }
 
 /**
@@ -700,6 +702,8 @@ export interface RecipeWithServings {
   servings: number;
   /** The choices for alternative ingredients. */
   choices?: RecipeChoices;
+  /** The recipe file path for serialization (e.g. "./Complex Recipe") */
+  path?: string;
 }
 
 /**
@@ -720,6 +724,8 @@ export type AddedRecipeOptions = {
   scaling?: { factor: number } | { servings: number };
   /** The choices for alternative ingredients. */
   choices?: RecipeChoices;
+  /** The recipe file path for serialization (e.g. "./Complex Recipe") */
+  path?: string;
 };
 
 /**
@@ -727,6 +733,19 @@ export type AddedRecipeOptions = {
  * @category Types
  */
 export type AddedIngredient = Pick<Ingredient, "name" | "quantities">;
+
+/**
+ * Represents a recipe reference parsed from a `.shopping-list` file.
+ * Returned by {@link ShoppingList.loadFile} so the consuming app knows
+ * which `.cook` files to load before calling {@link ShoppingList.hydrateRecipe}.
+ * @category Types
+ */
+export interface ShoppingListRecipeRef {
+  /** Relative path as written in the file (e.g. "./Complex Recipe") */
+  path: string;
+  /** Servings multiplier. undefined if not specified in the file. */
+  servings?: number;
+}
 
 /**
  * Represents an ingredient in a category.

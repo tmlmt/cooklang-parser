@@ -104,3 +104,12 @@ export class BadIndentationError extends Error {
     this.name = "BadIndentationError";
   }
 }
+
+export class UnknownRecipePathError extends Error {
+  constructor(path: string) {
+    super(
+      `Unknown recipe path: "${path}". It was not found in the loaded refs.`,
+    );
+    this.name = "UnknownRecipePathError";
+  }
+}
