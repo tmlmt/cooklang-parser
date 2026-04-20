@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.27
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.26...v3.0.0-alpha.27)
+
+### 🩹 Fixes
+
+- **shopping-list:** Allow decimal servings ([40f797f](https://github.com/tmlmt/cooklang-parser/commit/40f797f))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.26
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.25...v3.0.0-alpha.26)
