@@ -338,6 +338,31 @@ Both functions follow the same logic:
 
 When a variant is active, ingredient alternatives can be auto-selected too. See [Applying choices](#applying-choices) for the full explanation and examples.
 
+**Auto-selection by note matching:**
+
+Call [`getEffectiveChoices()`](/api/functions/getEffectiveChoices) to auto-build a `RecipeChoices` that selects alternatives whose `note` matches the variant name:
+
+```typescript
+import { getEffectiveChoices } from "@tmlmt/cooklang-parser";
+
+const choices = getEffectiveChoices(recipe, "vegan");
+const ingredients = recipe.getIngredientQuantities({ choices });
+```
+
+**Filtering available choices by variant:**
+
+To show only the ingredient choices available for a given variant in your UI, use the [`getChoicesForVariant()`](/api/classes/Recipe.html#getchoicesforvariant) method on the recipe. It returns a filtered [`RecipeAlternatives`](/api/interfaces/RecipeAlternatives) containing only alternatives that are linked to the active variant (or untagged, making them available in all variants):
+
+```typescript
+const variant = "vegan"; // or undefined for default
+
+// Get variant-filtered alternatives
+const variantChoices = recipe.getChoicesForVariant(variant);
+
+// variantChoices.ingredientItems contains only alternatives linked to [vegan]
+// variantChoices.ingredientGroups contains only grouped alternatives linked to [vegan]
+```
+
 ## Handling alternative selections
 
 Ingredient alternatives (both [inline](/guide-extensions#inline-alternatives) and [grouped](/guide-extensions#grouped-alternatives)) appear in the step items as an `alternatives` array on [`IngredientItem`](/api/interfaces/IngredientItem).

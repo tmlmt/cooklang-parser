@@ -1130,9 +1130,7 @@ export class ShoppingList {
       const indent = "  ".repeat(depth);
       for (const [segment, child] of sorted) {
         const fullPath = `${pathPrefix}/${segment}`;
-        if (child.suffix !== undefined) {
-          lines.push(`${indent}./${fullPath}${child.suffix}`);
-        }
+        lines.push(`${indent}./${fullPath}${child.suffix}`);
         emitDescendantsFlat(child, fullPath, depth);
       }
     };

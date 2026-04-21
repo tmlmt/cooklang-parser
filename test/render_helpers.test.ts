@@ -576,4 +576,25 @@ Use @|protein|chicken{200%g} or @|protein|tofu{200%g}[for a vegan version] or @|
     expect(choices.ingredientItems).toBeDefined();
     expect(choices.ingredientItems!.get("ingredient-item-0")).toBe(1);
   });
+
+  it("ignores note matches from inactive variant-linked steps", () => {
+    const recipe = new Recipe(`
+[*] Add @milk{200%ml}|oat milk{200%ml}[for vegan default note].
+
+[vegan] Add @water{100%ml}|broth{100%ml}[for vegan].
+
+[*] Use @|protein|chicken{200%g} or @|protein|turkey{200%g}[vegan marker].
+
+[vegan] Use @|protein|tofu{200%g}[for vegan] or @|protein|tempeh{200%g}[for vegan].
+`);
+
+    const choices = getEffectiveChoices(recipe, "vegan");
+
+    // Only the [vegan] inline item should be selectable.
+    expect(choices.ingredientItems).toBeDefined();
+    expect(Array.from(choices.ingredientItems!.values())).toEqual([1]);
+
+    // The [vegan] grouped subgroups should be selected, not default ones.
+    expect(choices.ingredientGroups?.get("protein")).toBe(0);
+  });
 });

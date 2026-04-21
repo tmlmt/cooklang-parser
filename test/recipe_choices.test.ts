@@ -299,6 +299,65 @@ Add @sugar{50%g}`);
     });
   });
 
+  it("correctly calculate ingredient quantities for alternatives of a certain variant", () => {
+    const recipeWithVariantLinkedChoices = `
+---
+servings: 1
+---
+[*] Add @milk{200%ml}|oat milk{200%ml}.
+
+[vegetarian,vegan] Add @water{100%ml}|broth{100%ml}[for vegan].
+
+[*] Use @|protein|chicken{200%g} or @|protein|turkey{200%g}.
+
+[vegetarian,vegan] Use @|protein|tofu{200%g} or @|protein|tempeh{200%g}.
+`;
+
+    const recipe = new Recipe(recipeWithVariantLinkedChoices);
+    // Choose the vegan variant which should select the vegan alternatives in both cases
+    const choices: RecipeChoices = {
+      variant: "vegan",
+      ingredientGroups: new Map([["protein", 1]]), // Explicitly choose the second subgroup alternative (tempeh) for the protein group
+      ingredientItems: new Map([["ingredient-item-0", 1]]), // Explicitly choose oat milk for the first alternative
+    };
+    const ingredients = recipe.getIngredientQuantities({ choices });
+    expect(ingredients).toHaveLength(4);
+    expect(ingredients).toEqual([
+      {
+        name: "water",
+      },
+      {
+        name: "broth",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 100 },
+            },
+            unit: "ml",
+          },
+        ],
+        usedAsPrimary: true,
+      },
+      {
+        name: "tofu",
+      },
+      {
+        name: "tempeh",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 200 },
+            },
+            unit: "g",
+          },
+        ],
+        usedAsPrimary: true,
+      },
+    ]);
+  });
+
   it("should handle alternatives with AND groups (incompatible units)", () => {
     // This test covers the branch where alternative quantities form an AND group
     // because they have incompatible units that can't be summed

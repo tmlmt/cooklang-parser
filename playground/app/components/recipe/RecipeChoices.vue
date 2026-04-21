@@ -77,25 +77,27 @@ const step = computed(() => {
 });
 
 // --- Compute available choices ---
+const variantFilteredChoices = computed(() => {
+  return props.recipe.getChoicesForVariant(selectedVariant.value);
+});
+
 const hasInlineChoices = computed(
-  () => props.recipe.choices.ingredientItems.size > 0,
+  () => variantFilteredChoices.value.ingredientItems.size > 0,
 );
 const hasGroupedChoices = computed(
-  () => props.recipe.choices.ingredientGroups.size > 0,
+  () => variantFilteredChoices.value.ingredientGroups.size > 0,
 );
-const hasVariants = computed(
-  () => props.recipe.choices.variants.length > 0,
-);
+const hasVariants = computed(() => props.recipe.choices.variants.length > 0);
 const hasAnyChoices = computed(
   () => hasInlineChoices.value || hasGroupedChoices.value,
 );
 
 // Convert Maps to arrays for iteration
 const inlineChoicesArray = computed(() => {
-  return Array.from(props.recipe.choices.ingredientItems.entries());
+  return Array.from(variantFilteredChoices.value.ingredientItems.entries());
 });
 const groupedChoicesArray = computed(() => {
-  return Array.from(props.recipe.choices.ingredientGroups.entries());
+  return Array.from(variantFilteredChoices.value.ingredientGroups.entries());
 });
 
 // --- Variant options ---

@@ -191,6 +191,61 @@ export class Recipe {
   }
 
   /**
+   * Computes variant linkage for parsed items based on section and step tags.
+   * Undefined means no variant restriction.
+   */
+  private getLinkedVariants(
+    sectionVariants?: string[],
+    stepVariants?: string[],
+  ): string[] | undefined {
+    if (!sectionVariants && !stepVariants) {
+      return undefined;
+    }
+    if (!sectionVariants) {
+      return [...stepVariants!];
+    }
+    if (!stepVariants) {
+      return [...sectionVariants];
+    }
+    const stepSet = new Set(stepVariants);
+    const intersection = sectionVariants.filter((v) => stepSet.has(v));
+    return intersection;
+  }
+
+  /**
+   * Checks whether an alternative linked to specific variants is active
+   * for the requested variant.
+   */
+  private isAlternativeLinkedToVariant(
+    alternative: IngredientAlternative,
+    variant?: string,
+  ): boolean {
+    const linked = alternative.linkedVariants;
+    if (!linked || linked.length === 0) {
+      return true;
+    }
+    const isDefaultVariant = variant === undefined || variant === "*";
+    if (isDefaultVariant) {
+      return linked.includes("*");
+    }
+    return linked.includes(variant);
+  }
+
+  /**
+   * Filters grouped choice subgroups based on active variant linkage.
+   */
+  private filterGroupSubgroupsForVariant(
+    subgroups: IngredientAlternative[][],
+    variant?: string,
+  ): IngredientAlternative[][] {
+    return subgroups.filter((subgroup) =>
+      subgroup.every((alternative) =>
+        this.isAlternativeLinkedToVariant(alternative, variant),
+      ),
+    );
+  }
+
+  /**
    * Creates a new Recipe instance.
    * @param content - The recipe content to parse.
    */
@@ -292,6 +347,7 @@ export class Recipe {
   private _parseIngredientWithAlternativeRecursive(
     ingredientMatchString: string,
     items: Step["items"],
+    linkedVariants?: string[],
   ): void {
     const alternatives: IngredientAlternative[] = [];
     let testString = ingredientMatchString;
@@ -391,6 +447,7 @@ export class Recipe {
       const alternative: IngredientAlternative = {
         index: idxInList,
         displayName,
+        ...(linkedVariants && { linkedVariants: [...linkedVariants] }),
       };
       // Only add quantity fields and note if they exist
       const note = groups.ingredientNote?.trim();
@@ -448,6 +505,7 @@ export class Recipe {
   private _parseIngredientWithGroupKey(
     ingredientMatchString: string,
     items: Step["items"],
+    linkedVariants?: string[],
   ): void {
     const match = ingredientMatchString.match(ingredientWithGroupKeyRegex);
     // This is a type guard to ensure match and match.groups are defined
@@ -542,6 +600,7 @@ export class Recipe {
     const alternative: IngredientAlternative = {
       index: idxInList,
       displayName,
+      ...(linkedVariants && { linkedVariants: [...linkedVariants] }),
     };
     // Only add quantity fields if it exists
     if (itemQuantity) {
@@ -766,8 +825,14 @@ export class Recipe {
           (item): item is IngredientItem => item.type === "ingredient",
         )) {
           const isGrouped = "group" in item && item.group !== undefined;
-          const groupSubgroups = isGrouped
+          const allGroupSubgroups = isGrouped
             ? this.choices.ingredientGroups.get(item.group!)
+            : undefined;
+          const groupSubgroups = allGroupSubgroups
+            ? this.filterGroupSubgroupsForVariant(
+                allGroupSubgroups,
+                activeVariant,
+              )
             : undefined;
 
           // Determine selection state
@@ -776,6 +841,7 @@ export class Recipe {
           let hasExplicitChoice: boolean;
 
           if (isGrouped) {
+            const availableSubgroups = groupSubgroups!;
             const groupChoice = choices?.ingredientGroups?.get(item.group!);
             hasExplicitChoice = groupChoice !== undefined;
 
@@ -783,7 +849,7 @@ export class Recipe {
             // variant is active and no explicit choice, look for subgroups
             // whose alternatives have a note matching the variant name
             if (!hasExplicitChoice && !isDefaultVariant) {
-              const matchingSubgroupIdx = groupSubgroups?.findIndex((sg) =>
+              const matchingSubgroupIdx = availableSubgroups.findIndex((sg) =>
                 sg.some(
                   (alt) =>
                     alt.note &&
@@ -796,25 +862,25 @@ export class Recipe {
                 matchingSubgroupIdx !== undefined &&
                 matchingSubgroupIdx >= 0
               ) {
-                const matchedSubgroup = groupSubgroups![matchingSubgroupIdx]!;
+                const matchedSubgroup =
+                  availableSubgroups[matchingSubgroupIdx]!;
                 isSelected = matchedSubgroup.some(
                   (alt) => alt.itemId === item.id,
                 );
                 hasExplicitChoice = true; // treat as explicit so alternativeRefs are not built
                 selectedAltIndex = 0;
               } else {
-                const targetSubgroupIndex = 0;
-                const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
-                isSelected = selectedSubgroup!.some(
+                isSelected = availableSubgroups[0]!.some(
                   (alt) => alt.itemId === item.id,
                 );
               }
             } else {
               const targetSubgroupIndex = groupChoice ?? 0;
-              const selectedSubgroup = groupSubgroups?.[targetSubgroupIndex];
-              isSelected =
-                selectedSubgroup?.some((alt) => alt.itemId === item.id) ??
-                false;
+              const selectedSubgroup = availableSubgroups[targetSubgroupIndex];
+              if (!selectedSubgroup) continue;
+              isSelected = selectedSubgroup.some(
+                (alt) => alt.itemId === item.id,
+              );
             }
           } else {
             const itemChoice = choices?.ingredientItems?.get(item.id);
@@ -859,9 +925,9 @@ export class Recipe {
           }
 
           // Add all alternatives to referenced set (so indices remain valid in result)
-          const allAltsFlat = isGrouped
-            ? groupSubgroups!.flat()
-            : item.alternatives;
+          const allAltsFlat = (
+            isGrouped ? groupSubgroups!.flat() : item.alternatives
+          ).filter((alt): alt is IngredientAlternative => alt !== undefined);
           for (const alt of allAltsFlat) {
             referencedIndices.add(alt.index);
           }
@@ -1022,6 +1088,39 @@ export class Recipe {
       selectedIndices,
       referencedIndices,
       dynamicOptionalIndices,
+    };
+  }
+
+  /**
+   * Returns choices available for a given active variant.
+   *
+   * For grouped alternatives, only groups with at least two available
+   * subgroups are returned.
+   */
+  getChoicesForVariant(variant?: string): RecipeAlternatives {
+    const ingredientItems = new Map<string, IngredientAlternative[]>();
+    for (const [itemId, alternatives] of this.choices.ingredientItems) {
+      const isVisible = alternatives.some((alternative) =>
+        this.isAlternativeLinkedToVariant(alternative, variant),
+      );
+      if (isVisible) {
+        ingredientItems.set(itemId, alternatives);
+      }
+    }
+
+    const ingredientGroups = new Map<string, IngredientAlternative[][]>();
+    for (const [groupId, subgroups] of this.choices.ingredientGroups) {
+      const filtered = this.filterGroupSubgroupsForVariant(subgroups, variant);
+      // v8 ignore else -- @preserve: only include groups with at least 2 subgroups (otherwise it's not really a choice)
+      if (filtered.length > 1) {
+        ingredientGroups.set(groupId, filtered);
+      }
+    }
+
+    return {
+      ingredientItems,
+      ingredientGroups,
+      variants: [...this.choices.variants],
     };
   }
 
@@ -1426,6 +1525,10 @@ export class Recipe {
 
       // Detecting items
       let cursor = 0;
+      const linkedVariants = this.getLinkedVariants(
+        section.variants,
+        stepVariants,
+      );
       for (const match of currentLine.matchAll(tokensRegex)) {
         const idx = match.index;
         /* v8 ignore else -- @preserve */
@@ -1437,11 +1540,15 @@ export class Recipe {
 
         // Ingredient items with potential in-line alternatives
         if (groups.mIngredientName || groups.sIngredientName) {
-          this._parseIngredientWithAlternativeRecursive(match[0], items);
+          this._parseIngredientWithAlternativeRecursive(
+            match[0],
+            items,
+            linkedVariants,
+          );
         }
         // Ingredient items part of a group of alternative ingredients
         else if (groups.gmIngredientName || groups.gsIngredientName) {
-          this._parseIngredientWithGroupKey(match[0], items);
+          this._parseIngredientWithGroupKey(match[0], items, linkedVariants);
         }
         // Cookware items
         else if (groups.mCookwareName || groups.sCookwareName) {

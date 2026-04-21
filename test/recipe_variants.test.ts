@@ -113,6 +113,19 @@ Add @tofu{50%g} to the mix.
 Add @chicken{200%g}.
 `;
 
+const recipeWithVariantLinkedChoices = `
+---
+servings: 1
+---
+[*] Add @milk{200%ml}|oat milk{200%ml}.
+
+[vegan] Add @water{100%ml}|broth{100%ml}[for vegan].
+
+[*] Use @|protein|chicken{200%g} or @|protein|turkey{200%g}.
+
+[vegan] Use @|protein|tofu{200%g}[for vegan] or @|protein|tempeh{200%g}[for vegan].
+`;
+
 const recipeWithUniversalOptionalStep = `
 ---
 servings: 1
@@ -332,6 +345,49 @@ describe("recipe variants", () => {
 
       // Third subgroup (tempeh) - has note
       expect(subgroups![2]![0]!.note).toBe("also vegan");
+    });
+
+    it("stores linked variants on parsed alternatives", () => {
+      const recipe = new Recipe(recipeWithVariantLinkedChoices);
+
+      const defaultInline =
+        recipe.choices.ingredientItems.get("ingredient-item-0");
+      const veganInline =
+        recipe.choices.ingredientItems.get("ingredient-item-1");
+      expect(defaultInline).toBeDefined();
+      expect(veganInline).toBeDefined();
+      expect(defaultInline![0]!.linkedVariants).toEqual(["*"]);
+      expect(veganInline![0]!.linkedVariants).toEqual(["vegan"]);
+
+      const protein = recipe.choices.ingredientGroups.get("protein");
+      expect(protein).toBeDefined();
+      expect(protein).toHaveLength(4);
+      expect(protein![0]![0]!.linkedVariants).toEqual(["*"]);
+      expect(protein![2]![0]!.linkedVariants).toEqual(["vegan"]);
+    });
+
+    it("filters choices by variant with getChoicesForVariant", () => {
+      const recipe = new Recipe(recipeWithVariantLinkedChoices);
+
+      const defaultChoices = recipe.getChoicesForVariant();
+      expect(defaultChoices.ingredientItems.has("ingredient-item-0")).toBe(
+        true,
+      );
+      expect(defaultChoices.ingredientItems.has("ingredient-item-1")).toBe(
+        false,
+      );
+      expect(defaultChoices.ingredientGroups.get("protein")).toHaveLength(2);
+
+      const veganChoices = recipe.getChoicesForVariant("vegan");
+      expect(veganChoices.ingredientItems.has("ingredient-item-0")).toBe(false);
+      expect(veganChoices.ingredientItems.has("ingredient-item-1")).toBe(true);
+      expect(veganChoices.ingredientGroups.get("protein")).toHaveLength(2);
+      expect(
+        veganChoices.ingredientGroups
+          .get("protein")!
+          .flat()
+          .every((alt) => alt.linkedVariants?.includes("vegan")),
+      ).toBe(true);
     });
   });
 

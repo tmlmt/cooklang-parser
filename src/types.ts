@@ -396,6 +396,11 @@ export type IngredientAlternativeBase = {
   index: number;
   /** The alias/name of the ingredient as it should be displayed for this occurrence. */
   displayName: string;
+  /**
+   * Variants this alternative is linked to, based on step/section tags
+   * where it was parsed. If undefined, it is available in all variants.
+   */
+  linkedVariants?: string[];
   /** An optional note for this specific choice (e.g., "for a vegan version"). */
   note?: string;
   /** When {@link Recipe.choices} is populated for alternatives ingredients

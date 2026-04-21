@@ -433,9 +433,10 @@ export function getEffectiveChoices(
   if (variant === undefined || variant === "*") return choices;
 
   const variantLower = variant.toLowerCase();
+  const variantChoices = recipe.getChoicesForVariant(variant);
 
   // Auto-select inline alternatives by note match
-  for (const [itemId, alternatives] of recipe.choices.ingredientItems) {
+  for (const [itemId, alternatives] of variantChoices.ingredientItems) {
     const matchIdx = alternatives.findIndex(
       (alt) => alt.note && alt.note.toLowerCase().includes(variantLower),
     );
@@ -448,7 +449,7 @@ export function getEffectiveChoices(
   }
 
   // Auto-select grouped alternatives by note match
-  for (const [groupId, subgroups] of recipe.choices.ingredientGroups) {
+  for (const [groupId, subgroups] of variantChoices.ingredientGroups) {
     const matchIdx = subgroups.findIndex((sg) =>
       sg.some(
         (alt) => alt.note && alt.note.toLowerCase().includes(variantLower),
