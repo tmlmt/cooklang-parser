@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.0.0-alpha.28
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.27...v3.0.0-alpha.28)
+
+### 🚀 Enhancements
+
+- **recipe:** ⚠️  Make alternative choices variant-aware ([d01eaa0](https://github.com/tmlmt/cooklang-parser/commit/d01eaa0))
+
+### 🏡 Chore
+
+- **playground:** Pre-bundle deps to avoid page reloads ([85eeb89](https://github.com/tmlmt/cooklang-parser/commit/85eeb89))
+- Lint ([c45ae10](https://github.com/tmlmt/cooklang-parser/commit/c45ae10))
+
+#### ⚠️ Breaking Changes
+
+- **recipe:** ⚠️  Make alternative choices variant-aware ([d01eaa0](https://github.com/tmlmt/cooklang-parser/commit/d01eaa0))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.27
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.26...v3.0.0-alpha.27)
