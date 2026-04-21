@@ -431,11 +431,11 @@ export function toPlainUnit(
   else if (isOrGroup(quantity)) {
     return {
       or: quantity.or.map(toPlainUnit),
-    } as MaybeNestedGroup<QuantityWithPlainUnit>;
+    };
   } else {
     return {
       and: quantity.and.map(toPlainUnit),
-    } as MaybeNestedGroup<QuantityWithPlainUnit>;
+    };
   }
 }
 

@@ -488,7 +488,7 @@ export class ShoppingList {
               (e: QuantityWithPlainUnit) => e.unit!, // equivalents always have units
             );
             const recomputed = recomputeEquivalents(
-              [entry as QuantityWithPlainUnit],
+              [entry],
               ratioMap,
               equivUnits,
             );

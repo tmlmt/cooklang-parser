@@ -44,5 +44,5 @@ export const qWithUnitDef = (
 ): QuantityWithUnitDef => {
   const quantity = q(amount, unit, integerProtected);
   const resolvedUnit = resolveUnit(quantity.unit?.name, integerProtected);
-  return { ...quantity, unit: resolvedUnit } as QuantityWithUnitDef;
+  return { ...quantity, unit: resolvedUnit };
 };

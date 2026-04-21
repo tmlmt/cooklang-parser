@@ -2009,12 +2009,12 @@ export class Recipe {
         // v8 ignore else -- @preserve
         if (alternative.quantity) {
           const converted = convertAlternativeQuantity(
-            alternative as IngredientAlternative & MaybeScalableQuantity,
+            alternative,
           );
           alternative.quantity = converted.quantity;
           alternative.unit = converted.unit;
           (
-            alternative as IngredientAlternative & MaybeScalableQuantity
+            alternative
           ).scalable = converted.scalable;
           alternative.equivalents = converted.equivalents;
         }
