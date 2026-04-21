@@ -740,6 +740,57 @@ Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
         /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
       );
     });
+
+    it("should only require choices expected for the selected variant", () => {
+      const shoppingList = new ShoppingList();
+      const recipeWithVariantLinkedChoices = new Recipe(`
+---
+servings: 1
+---
+[*] Add @milk{200%ml}|oat milk{200%ml}.
+
+[vegan] Add @water{100%ml}|broth{100%ml}.
+
+[*] Use @|protein|chicken{200%g} or @|protein|turkey{200%g}.
+
+[vegan] Use @|protein|tofu{200%g} or @|protein|tempeh{200%g}.
+`);
+
+      expect(() =>
+        shoppingList.addRecipe(recipeWithVariantLinkedChoices, {
+          choices: {
+            variant: "vegan",
+            ingredientItems: new Map([["ingredient-item-1", 1]]),
+            ingredientGroups: new Map([["protein", 1]]),
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    it("should only require choices expected for the default variant", () => {
+      const shoppingList = new ShoppingList();
+      const recipeWithVariantLinkedChoices = new Recipe(`
+---
+servings: 1
+---
+[*] Add @milk{200%ml}|oat milk{200%ml}.
+
+[vegan] Add @water{100%ml}|broth{100%ml}[for vegan].
+
+[*] Use @|protein|chicken{200%g} or @|protein|turkey{200%g}.
+
+[vegan] Use @|protein|tofu{200%g}[for vegan] or @|protein|tempeh{200%g}[for vegan].
+`);
+
+      expect(() =>
+        shoppingList.addRecipe(recipeWithVariantLinkedChoices, {
+          choices: {
+            ingredientItems: new Map([["ingredient-item-0", 1]]),
+            ingredientGroups: new Map([["protein", 1]]),
+          },
+        }),
+      ).not.toThrow();
+    });
   });
 
   describe("Association with CategoryConfig", () => {

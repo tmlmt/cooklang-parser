@@ -579,18 +579,20 @@ export class ShoppingList {
     recipe: Recipe,
     choices?: import("../types").RecipeChoices,
   ): string | undefined {
+    const activeVariant = choices?.variant;
+    const expectedAlternatives = recipe.getChoicesForVariant(activeVariant);
     const missingItems: string[] = [];
     const missingGroups: string[] = [];
 
     // Check for inline alternatives without choices
-    for (const itemId of recipe.choices.ingredientItems.keys()) {
+    for (const itemId of expectedAlternatives.ingredientItems.keys()) {
       if (!choices?.ingredientItems?.has(itemId)) {
         missingItems.push(itemId);
       }
     }
 
     // Check for grouped alternatives without choices
-    for (const groupId of recipe.choices.ingredientGroups.keys()) {
+    for (const groupId of expectedAlternatives.ingredientGroups.keys()) {
       // v8 ignore else -- @preserve: detection if
       if (!choices?.ingredientGroups?.has(groupId)) {
         missingGroups.push(groupId);
