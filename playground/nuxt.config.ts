@@ -12,4 +12,10 @@ export default defineNuxtConfig({
   ],
 
   css: ["~/assets/css/main.css"],
+
+  vite: {
+    optimizeDeps: {
+      include: ["smol-toml", "big.js", "yalps"],
+    },
+  },
 });
