@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.29
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.28...v3.0.0-alpha.29)
+
+### 🩹 Fixes
+
+- **ShoppingList:** Only require choices expected for the selected variant when adding a recipe ([05897a7](https://github.com/tmlmt/cooklang-parser/commit/05897a7))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.28
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.27...v3.0.0-alpha.28)
