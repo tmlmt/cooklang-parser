@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.30
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.29...v3.0.0-alpha.30)
+
+### 🚀 Enhancements
+
+- **ShoppingList:** AddManualItem and removeManualItem ([6de988b](https://github.com/tmlmt/cooklang-parser/commit/6de988b))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.29
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.28...v3.0.0-alpha.29)
