@@ -632,6 +632,31 @@ export class ShoppingList {
   }
 
   /**
+   * Adds a free-hand ingredient item to the shopping list, then automatically
+   * recalculates the quantities and recategorize the ingredients.
+   * @param item - The ingredient item to add.
+   */
+  addManualItem(item: AddedIngredient): void {
+    this.manualItems.push(item);
+    this.calculateIngredients();
+    this.categorize();
+  }
+
+  /**
+   * Removes a free-hand ingredient item from the shopping list, then automatically
+   * recalculates the quantities and recategorize the ingredients.
+   * @param index - The index of the item to remove within {@link ShoppingList.manualItems}.
+   */
+  removeManualItem(index: number): void {
+    if (index < 0 || index >= this.manualItems.length) {
+      throw new Error("Index out of bounds");
+    }
+    this.manualItems.splice(index, 1);
+    this.calculateIngredients();
+    this.categorize();
+  }
+
+  /**
    * Adds a pantry to the shopping list. On-hand pantry quantities will be
    * subtracted from recipe ingredient needs on each recalculation.
    * @param pantry - A Pantry instance or a TOML string to parse.

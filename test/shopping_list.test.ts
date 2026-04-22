@@ -1160,6 +1160,104 @@ sugar
     });
   });
 
+  describe("Manual items", () => {
+    it("should add a manual item and recalculate ingredients", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addManualItem({
+        name: "bread",
+        quantities: [
+          {
+            quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+            unit: "loaf",
+          },
+        ],
+      });
+      expect(shoppingList.manualItems).toHaveLength(1);
+      expect(shoppingList.ingredients).toEqual([
+        {
+          name: "bread",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 1 },
+              },
+              unit: "loaf",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("should add a manual item without quantities", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addManualItem({ name: "olive oil" });
+      expect(shoppingList.manualItems).toHaveLength(1);
+      expect(shoppingList.ingredients).toEqual([{ name: "olive oil" }]);
+    });
+
+    it("should merge a manual item with an existing recipe ingredient", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe1);
+      shoppingList.addManualItem({
+        name: "flour",
+        quantities: [
+          {
+            quantity: {
+              type: "fixed",
+              value: { type: "decimal", decimal: 50 },
+            },
+            unit: "g",
+          },
+        ],
+      });
+      const flour = shoppingList.ingredients.find((i) => i.name === "flour");
+      expect(flour?.quantities?.[0]).toMatchObject<{
+        quantity: object;
+        unit: string;
+      }>({
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+        unit: "g",
+      });
+    });
+
+    it("should remove a manual item and recalculate ingredients", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addManualItem({ name: "bread" });
+      shoppingList.addManualItem({ name: "olive oil" });
+      shoppingList.removeManualItem(0);
+      expect(shoppingList.manualItems).toHaveLength(1);
+      expect(shoppingList.manualItems[0]!.name).toBe("olive oil");
+      expect(shoppingList.ingredients).toEqual([{ name: "olive oil" }]);
+    });
+
+    it("should throw an error when removing a manual item with an invalid index", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addManualItem({ name: "bread" });
+      expect(() => shoppingList.removeManualItem(1)).toThrow(
+        "Index out of bounds",
+      );
+      expect(() => shoppingList.removeManualItem(-1)).toThrow(
+        "Index out of bounds",
+      );
+    });
+
+    it("should re-categorize after adding a manual item", () => {
+      const shoppingList = new ShoppingList(`[Bakery]\nbread`);
+      shoppingList.addManualItem({ name: "bread" });
+      expect(shoppingList.categories?.Bakery).toBeDefined();
+      expect(shoppingList.categories!.Bakery![0]!.name).toBe("bread");
+    });
+
+    it("should re-categorize after removing a manual item", () => {
+      const shoppingList = new ShoppingList(`[Bakery]\nbread`);
+      shoppingList.addManualItem({ name: "bread" });
+      shoppingList.addManualItem({ name: "butter" });
+      shoppingList.removeManualItem(0);
+      expect(shoppingList.categories?.Bakery).toEqual([]);
+    });
+  });
+
   describe("Pantry integration", () => {
     const pantryRecipe = new Recipe(
       `Add @flour{200%g} and @sugar{100%g} and @eggs{3}.`,
