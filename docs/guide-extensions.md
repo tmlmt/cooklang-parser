@@ -284,7 +284,7 @@ A selection of markdown elements are detected when part of preparation steps or 
 - `*italic*` *italic* (alternative syntax: `_italic_`)
 - `***bold+italic***` ***bold+italic*** (alternative syntax: `**_bold+italic_**`, `_**bold+italic**_` or `___bold+italic___`)
 - `[link text](https://url)` link to url
-- ``code``: in-line code
+- `` `code` ``: in-line code
 
 ## Recipe variants
 
