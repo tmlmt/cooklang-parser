@@ -782,4 +782,120 @@ Serve on a #plate{}.
       });
     });
   });
+
+  // ============================================================================
+  // variant option in getIngredientQuantities — step-number interpretation
+  // ============================================================================
+
+  describe("variant step-index interpretation", () => {
+    // recipeWithStepVariants steps (all-steps order):
+    //   0: "Preheat..."            — no variant (active everywhere)
+    //   1: "[vegan] Use flax eggs" — vegan only
+    //   2: "[*] Crack eggs"        — default only
+    //   3: "Mix flour and sugar"   — no variant (active everywhere)
+    //
+    // Visible in "vegan" variant: [0, 1, 3]  → indices 0, 1, 2
+    // Visible in "*"    variant:  [0, 2, 3]  → indices 0, 1, 2
+
+    it("without variant option, step index uses raw all-steps order (backward compat)", () => {
+      const recipe = new Recipe(recipeWithStepVariants);
+      // Step index 3 in all-steps = "Mix flour and sugar"
+      const ingredients = recipe.getIngredientQuantities({ step: 3 });
+      const names = ingredients
+        .filter((i) => i.usedAsPrimary)
+        .map((i) => i.name);
+      expect(names).toContain("flour");
+      expect(names).toContain("sugar");
+    });
+
+    it("with variant='vegan', step 1 maps to the [vegan] step", () => {
+      const recipe = new Recipe(recipeWithStepVariants);
+      const ingredients = recipe.getIngredientQuantities({
+        step: 1,
+        variant: "vegan",
+        choices: { variant: "vegan" },
+      });
+      const names = ingredients
+        .filter((i) => i.usedAsPrimary)
+        .map((i) => i.name);
+      expect(names).toContain("flax eggs");
+      expect(names).not.toContain("eggs");
+    });
+
+    it("with variant='*', step 1 maps to the [*] step", () => {
+      const recipe = new Recipe(recipeWithStepVariants);
+      const ingredients = recipe.getIngredientQuantities({
+        step: 1,
+        variant: "*",
+      });
+      const names = ingredients
+        .filter((i) => i.usedAsPrimary)
+        .map((i) => i.name);
+      expect(names).toContain("eggs");
+      expect(names).not.toContain("flax eggs");
+    });
+
+    it("with variant='vegan', step 2 maps to the last active step (Mix)", () => {
+      const recipe = new Recipe(recipeWithStepVariants);
+      // vegan-active steps: [Preheat(0), UseFlaxEggs(1), Mix(2)]
+      const ingredients = recipe.getIngredientQuantities({
+        step: 2,
+        variant: "vegan",
+        choices: { variant: "vegan" },
+      });
+      const names = ingredients
+        .filter((i) => i.usedAsPrimary)
+        .map((i) => i.name);
+      expect(names).toContain("flour");
+      expect(names).toContain("sugar");
+    });
+
+    it("out-of-bounds step index with variant returns no primary ingredients", () => {
+      const recipe = new Recipe(recipeWithStepVariants);
+      // vegan-active steps: 3 steps (indices 0-2); index 3 is out-of-bounds
+      const ingredients = recipe.getIngredientQuantities({
+        step: 3,
+        variant: "vegan",
+        choices: { variant: "vegan" },
+      });
+      const primaries = ingredients.filter((i) => i.usedAsPrimary);
+      expect(primaries).toHaveLength(0);
+    });
+
+    it("step object reference is unaffected by variant option", () => {
+      const recipe = new Recipe(recipeWithStepVariants);
+      const steps = recipe.sections[0]!.content.filter(
+        (item): item is Step => item.type === "step",
+      );
+      // Pass the [vegan] step object directly — variant option should not change behaviour
+      const ingredients = recipe.getIngredientQuantities({
+        step: steps[1]!,
+        variant: "vegan",
+        choices: { variant: "vegan" },
+      });
+      const names = ingredients
+        .filter((i) => i.usedAsPrimary)
+        .map((i) => i.name);
+      expect(names).toContain("flax eggs");
+    });
+
+    it("works correctly combined with section filter", () => {
+      const recipe = new Recipe(recipeWithSectionAndStepVariants);
+      // Section 0 "[vegan] Plant-based Additions":
+      //   all steps: [paneer step (vegetarian), tofu step (untagged)]
+      //   vegan-active steps: [tofu step] (paneer excluded as it's [vegetarian])
+      // So step index 0 with variant="vegan" → tofu step
+      const ingredients = recipe.getIngredientQuantities({
+        section: 0,
+        step: 0,
+        variant: "vegan",
+        choices: { variant: "vegan" },
+      });
+      const names = ingredients
+        .filter((i) => i.usedAsPrimary)
+        .map((i) => i.name);
+      expect(names).toContain("tofu");
+      expect(names).not.toContain("paneer");
+    });
+  });
 });

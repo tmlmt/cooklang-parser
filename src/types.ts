@@ -504,6 +504,16 @@ export interface GetIngredientQuantitiesOptions {
    */
   step?: Step | number;
   /**
+   * When `step` is a number, interpret it as a 0-based index into the steps
+   * that are active for this variant (i.e., the steps that would be visible
+   * when rendering with this variant), rather than into all steps in the section.
+   *
+   * Has no effect when `step` is a {@link Step} object or when `step` is `undefined`.
+   *
+   * Use `"*"` to refer to the default variant (steps tagged `[*]` and untagged steps).
+   */
+  variant?: string;
+  /**
    * The choices to apply when computing quantities.
    * If not provided, uses primary alternatives (index 0 for all).
    */

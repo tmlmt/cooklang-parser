@@ -246,6 +246,17 @@ export class Recipe {
   }
 
   /**
+   * Returns whether a step is active (visible) for the given variant.
+   * Steps with no `variants` tag are active in all variants.
+   * Use `"*"` for the default variant.
+   */
+  private isStepActiveForVariant(step: Step, variant: string): boolean {
+    if (!step.variants) return true;
+    if (variant === "*") return step.variants.includes("*");
+    return step.variants.includes(variant);
+  }
+
+  /**
    * Creates a new Recipe instance.
    * @param content - The recipe content to parse.
    */
@@ -728,7 +739,7 @@ export class Recipe {
   // Defined as a static type alias for the private method's return type
   /** @internal */
   private collectQuantityGroups(options?: GetIngredientQuantitiesOptions) {
-    const { section, step, choices } = options || {};
+    const { section, step, variant: indexingVariant, choices } = options || {};
 
     // Active variant (undefined or "*" = default)
     const activeVariant = choices?.variant;
@@ -795,13 +806,23 @@ export class Recipe {
       // Track whether this section is optional
       const isOptionalSection = currentSection.optional === true;
 
+      // When a variant is given for step-index interpretation, limit indexing
+      // to the steps active in that variant — matching how step numbers are
+      // assigned during rendering (inactive steps are skipped/unnumbered).
+      const stepsForIndexing =
+        indexingVariant !== undefined
+          ? allSteps.filter((s) =>
+              this.isStepActiveForVariant(s, indexingVariant),
+            )
+          : allSteps;
+
       // Determine steps to process
       const stepsToProcess =
         step === undefined
           ? allSteps
           : typeof step === "number"
-            ? step >= 0 && step < allSteps.length
-              ? [allSteps[step]!]
+            ? step >= 0 && step < stepsForIndexing.length
+              ? [stepsForIndexing[step]!]
               : []
             : allSteps.includes(step)
               ? [step]
@@ -2008,14 +2029,10 @@ export class Recipe {
       for (const alternative of alternatives) {
         // v8 ignore else -- @preserve
         if (alternative.quantity) {
-          const converted = convertAlternativeQuantity(
-            alternative,
-          );
+          const converted = convertAlternativeQuantity(alternative);
           alternative.quantity = converted.quantity;
           alternative.unit = converted.unit;
-          (
-            alternative
-          ).scalable = converted.scalable;
+          alternative.scalable = converted.scalable;
           alternative.equivalents = converted.equivalents;
         }
       }
