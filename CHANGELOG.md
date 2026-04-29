@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.0.0-alpha.31
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.30...v3.0.0-alpha.31)
+
+### 🚀 Enhancements
+
+- **recipe:** Add variant-aware step index interpretation to getIngredientQuantities ([ddfa812](https://github.com/tmlmt/cooklang-parser/commit/ddfa812))
+
+### 📖 Documentation
+
+- **guide-extensions:** Properly show backticks in example for in-line code markdown ([90465e5](https://github.com/tmlmt/cooklang-parser/commit/90465e5))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.30
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.29...v3.0.0-alpha.30)
