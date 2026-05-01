@@ -662,6 +662,8 @@ export interface Note {
   type: "note";
   /** The items in the note. */
   items: NoteItem[];
+  /** Optional list of variant names this note belongs to */
+  variants?: string[];
 }
 
 /**

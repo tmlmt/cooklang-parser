@@ -1450,11 +1450,13 @@ export class Recipe {
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
         flushPendingItems(section, items, stepVariants, stepOptional);
+        const pendingVariants = inNote ? stepVariants : undefined;
         stepVariants = undefined;
         stepOptional = undefined;
         flushPendingNote(
           section,
           noteText ? this._parseNoteText(noteText) : [],
+          pendingVariants,
         );
         noteText = "";
         blankLineBefore = true;
@@ -1465,11 +1467,13 @@ export class Recipe {
       // New section
       if (line.startsWith("=")) {
         flushPendingItems(section, items, stepVariants, stepOptional);
+        const pendingVariantsForNote = inNote ? stepVariants : undefined;
         stepVariants = undefined;
         stepOptional = undefined;
         flushPendingNote(
           section,
           noteText ? this._parseNoteText(noteText) : [],
+          pendingVariantsForNote,
         );
         noteText = "";
 
@@ -1509,7 +1513,7 @@ export class Recipe {
       // New note
       if (blankLineBefore && line.startsWith(">")) {
         flushPendingItems(section, items, stepVariants, stepOptional);
-        stepVariants = undefined;
+        // stepVariants (set by a standalone tag line) carry over to the note
         stepOptional = undefined;
         noteText = line.substring(1).trim();
         inNote = true;
@@ -1548,9 +1552,19 @@ export class Recipe {
             stepOptional = true;
           }
           currentLine = currentLine.slice(varMatch[0].length);
-          // If the line is now empty after stripping the tag, skip it
-          if (currentLine.trim().length === 0) {
+          // If the trimmed remainder starts with ">", this is an inline variant note
+          if (currentLine.trimStart().startsWith(">")) {
+            // noteText is always empty here: reaching this block requires inNote=false,
+            // which implies noteText was already cleared. Pass [] directly.
+            flushPendingNote(section, []);
+            noteText = currentLine.trimStart().substring(1).trim();
+            inNote = true;
             blankLineBefore = false;
+            continue;
+          }
+          // If the line is now empty after stripping the tag, skip it
+          // (keep blankLineBefore=true so the next ">" line can start a note)
+          if (currentLine.trim().length === 0) {
             continue;
           }
         }
@@ -1659,7 +1673,12 @@ export class Recipe {
 
     // End of content reached: pushing all temporarily saved elements
     flushPendingItems(section, items, stepVariants, stepOptional);
-    flushPendingNote(section, noteText ? this._parseNoteText(noteText) : []);
+    const pendingVariantsAtEnd = inNote ? stepVariants : undefined;
+    flushPendingNote(
+      section,
+      noteText ? this._parseNoteText(noteText) : [],
+      pendingVariantsAtEnd,
+    );
     if (!section.isBlank()) {
       this.sections.push(section);
     }

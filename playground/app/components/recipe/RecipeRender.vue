@@ -3,6 +3,7 @@ import {
   formatQuantityWithUnit,
   isSectionActive,
   isStepActive,
+  isNoteActive,
   type Ingredient,
   type MetadataObject,
   type MetadataTime,
@@ -159,6 +160,14 @@ const sectionsWithStepNumbers = computed(() => {
           optional: item.optional,
         };
       }
+      if (item.type === "note") {
+        const noteIsActive =
+          sectionIsActive && isNoteActive(item, activeVariant);
+        return {
+          ...item,
+          active: noteIsActive,
+        };
+      }
       return {
         ...item,
         stepNumber: null,
@@ -304,6 +313,7 @@ const sectionsWithStepNumbers = computed(() => {
               <div
                 v-else-if="item.type === 'note'"
                 class="note ml-4 text-gray-600 italic dark:text-gray-300"
+                :class="{ 'opacity-30': !item.active }"
               >
                 Note:
                 <RecipeNoteContent :note="item" :recipe="recipe" />

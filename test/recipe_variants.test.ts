@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
-import type { Step } from "../src/types";
+import { isNoteActive } from "../src/index";
+import type { Note, Step } from "../src/types";
 
 // ============================================================================
 // Test Fixtures
@@ -896,6 +897,197 @@ Serve on a #plate{}.
         .map((i) => i.name);
       expect(names).toContain("tofu");
       expect(names).not.toContain("paneer");
+    });
+  });
+
+  // ============================================================================
+  // Variant-specific notes
+  // ============================================================================
+
+  describe("variant-specific notes", () => {
+    const notes = (recipe: Recipe) =>
+      recipe.sections[0]!.content.filter(
+        (item): item is Note => item.type === "note",
+      );
+
+    describe("parsing", () => {
+      it("parses inline variant note: [vegan] > text", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[vegan]> This note is only for vegans.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan"]);
+        expect(ns[0]!.items[0]).toMatchObject({
+          type: "text",
+          value: "This note is only for vegans.",
+        });
+      });
+
+      it("allows spaces between variant tag and > (inline)", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[vegan]   > Extra spaces before the arrow.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan"]);
+      });
+
+      it("parses standalone variant note: [vegan] on own line then > text", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[vegan]
+> This note is only for vegans.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan"]);
+      });
+
+      it("parses [*] variant note", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[*] > Default-only note.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["*"]);
+      });
+
+      it("parses multiple variants on a note", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[vegan,vegetarian] > Plant-based note.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan", "vegetarian"]);
+      });
+
+      it("[?variant] on a note extracts variant names but sets no optional property", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[?vegan] > Vegan note.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan"]);
+        expect(
+          (ns[0] as Note & { optional?: boolean }).optional,
+        ).toBeUndefined();
+      });
+
+      it("multiline note with inline variant tag keeps variants on the whole note", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[vegan] > First line.
+Second line.
+Third line.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan"]);
+        // All text should be in one note
+        const text = ns[0]!.items
+          .map((i) => ("value" in i ? i.value : ""))
+          .join("");
+        expect(text).toContain("First line.");
+        expect(text).toContain("Second line.");
+        expect(text).toContain("Third line.");
+      });
+
+      it("adds discovered note variants to choices.variants", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[vegan] > Vegan note.
+`);
+        expect(recipe.choices.variants).toContain("vegan");
+      });
+
+      it("[?] prefix on a note discards optional flag and sets no variants", () => {
+        const recipe = new Recipe(`
+Mix flour.
+
+[?] > Note for all.
+`);
+        const ns = notes(recipe);
+        expect(ns).toHaveLength(1);
+        // [?] has no variant names → no variants property
+        expect(ns[0]!.variants).toBeUndefined();
+        expect(
+          (ns[0] as Note & { optional?: boolean }).optional,
+        ).toBeUndefined();
+      });
+
+      it("standalone tag is not consumed by a preceding step", () => {
+        const recipe = new Recipe(`
+[vegan]
+> This is a vegan note, not a step.
+`);
+        const steps = recipe.sections[0]!.content.filter(
+          (item): item is Step => item.type === "step",
+        );
+        const ns = notes(recipe);
+        expect(steps).toHaveLength(0);
+        expect(ns).toHaveLength(1);
+        expect(ns[0]!.variants).toEqual(["vegan"]);
+      });
+    });
+
+    describe("isNoteActive helper", () => {
+      it("returns true for untagged note regardless of variant", () => {
+        const note: Note = { type: "note", items: [] };
+        expect(isNoteActive(note)).toBe(true);
+        expect(isNoteActive(note, "vegan")).toBe(true);
+        expect(isNoteActive(note, "*")).toBe(true);
+      });
+
+      it("returns true for [*] note when no variant selected", () => {
+        const note: Note = { type: "note", items: [], variants: ["*"] };
+        expect(isNoteActive(note)).toBe(true);
+        expect(isNoteActive(note, "*")).toBe(true);
+      });
+
+      it("returns false for [*] note when a named variant is selected", () => {
+        const note: Note = { type: "note", items: [], variants: ["*"] };
+        expect(isNoteActive(note, "vegan")).toBe(false);
+      });
+
+      it("returns true for [vegan] note when vegan variant selected", () => {
+        const note: Note = { type: "note", items: [], variants: ["vegan"] };
+        expect(isNoteActive(note, "vegan")).toBe(true);
+      });
+
+      it("returns false for [vegan] note when other variant selected", () => {
+        const note: Note = { type: "note", items: [], variants: ["vegan"] };
+        expect(isNoteActive(note, "keto")).toBe(false);
+      });
+
+      it("returns false for [vegan] note when no variant selected", () => {
+        const note: Note = { type: "note", items: [], variants: ["vegan"] };
+        expect(isNoteActive(note)).toBe(false);
+      });
+
+      it("returns true for multi-variant note when any variant matches", () => {
+        const note: Note = {
+          type: "note",
+          items: [],
+          variants: ["vegan", "vegetarian"],
+        };
+        expect(isNoteActive(note, "vegetarian")).toBe(true);
+        expect(isNoteActive(note, "vegan")).toBe(true);
+        expect(isNoteActive(note, "keto")).toBe(false);
+      });
     });
   });
 });

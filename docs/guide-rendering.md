@@ -307,15 +307,17 @@ Recipes can define [variants](/guide-extensions#variants) — sections and steps
 
 ### Checking active content
 
-Use [`isSectionActive()`](/api/functions/isSectionActive) and [`isStepActive()`](/api/functions/isStepActive) to determine which content to display:
+Use [`isSectionActive()`](/api/functions/isSectionActive), [`isStepActive()`](/api/functions/isStepActive), and [`isNoteActive()`](/api/functions/isNoteActive) to determine which content to display:
 
 ```typescript
-import { Recipe, isSectionActive, isStepActive } from "@tmlmt/cooklang-parser";
+import { Recipe, isSectionActive, isStepActive, isNoteActive } from "@tmlmt/cooklang-parser";
 
 const recipe = new Recipe(`Preheat the oven.
 
 [vegan] Use @oat milk{200%mL}.
-[*] Use @whole milk{200%mL}.`);
+[*] Use @whole milk{200%mL}.
+
+[vegan] > Oat milk froths better at lower temperatures.`);
 
 const variant = "vegan"; // or undefined for default
 
@@ -324,12 +326,13 @@ for (const section of recipe.sections) {
 
   for (const block of section.content) {
     if (block.type === "step" && !isStepActive(block, variant)) continue;
+    if (block.type === "note" && !isNoteActive(block, variant)) continue;
     // render block...
   }
 }
 ```
 
-Both functions follow the same logic:
+All three functions follow the same logic:
 - Content without a `variants` property is always active
 - When no variant is selected, content tagged `[*]` is active
 - When a named variant is selected, content whose `variants` array includes that name is active

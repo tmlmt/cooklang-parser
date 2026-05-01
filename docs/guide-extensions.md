@@ -301,13 +301,18 @@ You can write multiple variants of a recipe by adding comma-separated variant na
 - `== [*,lactose-free] Mixing ==` defines a section valid for the default and the lactose-free variants
 - `[vegan] Add @oat milk{1%L}` is a step which will only be taken into account in the vegan variant
 - `[*,lactose-free] Put @margarine{1%tbsp} in a #pan` will appear in the default and the lactose-free variants
+- `[vegan] > This note only shows for the vegan variant` is a note specific to the vegan variant (inline syntax)
+- A tag on its own line also works for notes: `[vegan]` on one line, then `> Note text` on the next
+
+Notes cannot be optional — the `?` prefix is silently ignored on notes.
 
 Variants are also assumed to be defined when part of the [alternative ingredients](#alternative-ingredients)'s `note`. 
 
 Several render helpers are available. In practice for rendering:
 
 - The variant's name should be fed to [getEffectiveChoices](api/functions/getEffectiveChoices) to determine the alternatives still valid after selecting the variant. The resulting choices can then be fed normally to [Recipe.getIngredientQuantities](api/classes/Recipe#getIngredientQuantities)
-- [isStepActive](api/functions/isStepActive) and [isSectionActive](api/functions/isSectionActive) can be used to determine which step or section to display. 
+- [isStepActive](api/functions/isStepActive) and [isSectionActive](api/functions/isSectionActive) can be used to determine which step or section to display.
+- [isNoteActive](api/functions/isNoteActive) can be used to determine which notes to display for a given variant, with the same logic as `isStepActive`.
 
 ## Optional steps and sections
 

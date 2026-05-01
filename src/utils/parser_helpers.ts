@@ -46,14 +46,21 @@ import { parseTimeToMinutes } from "./time";
  * Pushes a pending note to the section content if it has items.
  * @param section - The current section object.
  * @param noteItems - The note items array.
+ * @param variants - Optional variant names for the note.
  * @returns An empty array if the note was pushed, otherwise the original items.
  */
 export function flushPendingNote(
   section: SectionObject,
   noteItems: NoteItem[],
+  variants?: string[],
 ): NoteItem[] {
   if (noteItems.length > 0) {
-    section.content.push({ type: "note", items: [...noteItems] });
+    const note: { type: "note"; items: NoteItem[]; variants?: string[] } = {
+      type: "note",
+      items: [...noteItems],
+    };
+    if (variants) note.variants = variants;
+    section.content.push(note);
     return [];
   }
   return noteItems;

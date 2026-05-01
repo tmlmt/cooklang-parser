@@ -10,6 +10,7 @@ import type {
   QuantityWithExtendedUnit,
   MaybeScalableQuantity,
   Step,
+  Note,
 } from "../types";
 import { Recipe } from "../classes/recipe";
 import { Section } from "../classes/section";
@@ -396,6 +397,32 @@ export function isStepActive(step: Step, variant?: string): boolean {
     return step.variants.includes("*");
   }
   return step.variants.includes(variant);
+}
+
+/**
+ * Determines if a note is active (should be displayed) for a given variant.
+ *
+ * @param note - The Note to check
+ * @param variant - The active variant name, or `undefined`/`*` for the default variant
+ * @returns `true` if the note should be displayed
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * for (const item of section.content) {
+ *   if (item.type === 'note' && isNoteActive(item, choices.variant)) {
+ *     // render note
+ *   }
+ * }
+ * ```
+ */
+export function isNoteActive(note: Note, variant?: string): boolean {
+  if (!note.variants) return true;
+  const isDefault = variant === undefined || variant === "*";
+  if (isDefault) {
+    return note.variants.includes("*");
+  }
+  return note.variants.includes(variant);
 }
 
 /**
