@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.33
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.32...v3.0.0-alpha.33)
+
+### 🏡 Chore
+
+- Update lock file ([cc684ec](https://github.com/tmlmt/cooklang-parser/commit/cc684ec))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.32
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.31...v3.0.0-alpha.32)
