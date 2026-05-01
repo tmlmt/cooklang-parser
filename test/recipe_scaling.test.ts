@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type {
+  CookwareItem,
   IngredientAlternative,
   IngredientItem,
   IngredientQuantityGroup,
@@ -13,6 +14,7 @@ import {
   recipeToScale,
   recipeToScaleSomeFixedQuantities,
   recipeWithInlineAlternatives,
+  recipeCookwareScaling,
 } from "./fixtures/recipes";
 import { recipeWithUnitServings } from "./fixtures/recipes";
 
@@ -1031,6 +1033,99 @@ Add @cream{1%cup|a pinch%ml}.
     expect(alt.equivalents![0]).toMatchObject<QuantityWithExtendedUnit>({
       quantity: { type: "fixed", value: { type: "text", text: "a pinch" } },
       unit: { name: "ml" },
+    });
+  });
+});
+
+describe("scaleBy cookware quantities", () => {
+  const baseRecipe = new Recipe(recipeCookwareScaling);
+
+  it("should scale up cookware quantities, rounding up integers and applying minimum 1", () => {
+    const scaled = baseRecipe.scaleBy(1.5);
+    // bowl{1}: integer → 1 * 1.5 = 1.5 → ceil → 2
+    expect(scaled.cookware[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 2 },
+    });
+    // sticks{2.5}: non-integer → 2.5 * 1.5 = 3.75, no rounding
+    expect(scaled.cookware[1]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 3.75 },
+    });
+    // oven: no quantity → stays undefined
+    expect(scaled.cookware[2]!.quantity).toBeUndefined();
+  });
+
+  it("should scale down cookware quantities applying minimum 1 for integers", () => {
+    const scaled = baseRecipe.scaleBy(0.5);
+    // bowl{1}: integer → 1 * 0.5 = 0.5 → ceil → 1 → max(1, 1) = 1
+    expect(scaled.cookware[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 1 },
+    });
+    // sticks{2.5}: non-integer → 2.5 * 0.5 = 1.25, no rounding
+    expect(scaled.cookware[1]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 1.25 },
+    });
+    // oven: no quantity → stays undefined
+    expect(scaled.cookware[2]!.quantity).toBeUndefined();
+  });
+
+  it("should also scale CookwareItem.quantity in steps", () => {
+    const scaled = baseRecipe.scaleBy(1.5);
+    const step = scaled.sections[0]!.content[0] as Step;
+    const bowlItem = step.items[0] as CookwareItem;
+    const sticksItem = step.items[1] as CookwareItem;
+    const ovenItem = step.items[2] as CookwareItem;
+    // bowl: integer → ceil(1.5) = 2
+    expect(bowlItem.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 2 },
+    });
+    // sticks: non-integer → 3.75
+    expect(sticksItem.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 3.75 },
+    });
+    // oven: no quantity
+    expect(ovenItem.quantity).toBeUndefined();
+  });
+
+  it("should scale integer range cookware quantities, ceiling each bound", () => {
+    const recipe = new Recipe("#pans{1-2}");
+    const scaled = recipe.scaleBy(1.5);
+    // 1 * 1.5 = 1.5 → ceil → 2; 2 * 1.5 = 3 → ceil → 3
+    expect(scaled.cookware[0]!.quantity).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 2 },
+      max: { type: "decimal", decimal: 3 },
+    });
+  });
+
+  it("should not apply ceiling to non-integer range cookware", () => {
+    const recipe = new Recipe("#pans{1.5-2.5}");
+    const scaled = recipe.scaleBy(2);
+    // non-integer range: 1.5*2=3, 2.5*2=5 — no ceiling
+    expect(scaled.cookware[0]!.quantity).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 3 },
+      max: { type: "decimal", decimal: 5 },
+    });
+  });
+
+  it("should not modify the original recipe when scaling cookware", () => {
+    const original = baseRecipe.clone();
+    baseRecipe.scaleBy(2);
+    expect(baseRecipe).toEqual(original);
+  });
+
+  it("should leave text cookware quantities unchanged", () => {
+    const recipe = new Recipe("#bowl{some}");
+    const scaled = recipe.scaleBy(3);
+    expect(scaled.cookware[0]!.quantity).toEqual({
+      type: "fixed",
+      value: { type: "text", text: "some" },
     });
   });
 });

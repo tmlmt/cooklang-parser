@@ -128,6 +128,12 @@ servings: 1
 ---
 Mix @milk{200%ml}|almond milk{100%ml}[vegan version]|soy milk{150%ml}[another vegan option]`;
 
+export const recipeCookwareScaling = `
+#bowl{1}
+#sticks{2.5}
+#oven
+`;
+
 export const recipeWithGroupedAlternatives = `
 ---
 servings: 1

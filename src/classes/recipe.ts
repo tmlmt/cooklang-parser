@@ -21,6 +21,10 @@ import type {
   IngredientQuantityAndGroup,
   ArbitraryScalable,
   FixedNumericValue,
+  FixedValue,
+  Range,
+  DecimalValue,
+  FractionValue,
   StepItem,
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
@@ -56,7 +60,11 @@ import {
   parseMarkdownSegments,
 } from "../utils/parser_helpers";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
-import { multiplyQuantityValue, getAverageValue } from "../quantities/numeric";
+import {
+  multiplyQuantityValue,
+  getAverageValue,
+  getNumericValue,
+} from "../quantities/numeric";
 import {
   toPlainUnit,
   toExtendedUnit,
@@ -1801,6 +1809,51 @@ export class Recipe {
       }
     }
 
+    function scaleCookwareQuantity(
+      quantity: FixedValue | Range,
+      factor: number | Big,
+    ): FixedValue | Range {
+      // Text quantities cannot be scaled; return as-is
+      if (quantity.type === "fixed" && quantity.value.type === "text") {
+        return quantity;
+      }
+
+      const isInteger = (q: FixedValue | Range): boolean => {
+        if (q.type === "fixed") {
+          return Number.isInteger(
+            getNumericValue(q.value as DecimalValue | FractionValue),
+          );
+        }
+        return (
+          Number.isInteger(getNumericValue(q.min)) &&
+          Number.isInteger(getNumericValue(q.max))
+        );
+      };
+
+      const scaled = multiplyQuantityValue(quantity, factor);
+
+      if (!isInteger(quantity)) return scaled;
+
+      if (scaled.type === "fixed") {
+        const n = getNumericValue(scaled.value as DecimalValue | FractionValue);
+        return {
+          type: "fixed",
+          value: { type: "decimal", decimal: Math.max(1, Math.ceil(n)) },
+        };
+      }
+      return {
+        type: "range",
+        min: {
+          type: "decimal",
+          decimal: Math.max(1, Math.ceil(getNumericValue(scaled.min))),
+        },
+        max: {
+          type: "decimal",
+          decimal: Math.max(1, Math.ceil(getNumericValue(scaled.max))),
+        },
+      };
+    }
+
     // Scale IngredientItems
     for (const section of newRecipe.sections) {
       for (const step of section.content.filter(
@@ -1811,6 +1864,28 @@ export class Recipe {
         )) {
           scaleAlternativesBy(item.alternatives, factor);
         }
+      }
+    }
+
+    // Scale CookwareItem quantities in steps
+    for (const section of newRecipe.sections) {
+      for (const step of section.content.filter(
+        (item) => item.type === "step",
+      )) {
+        for (const item of step.items.filter(
+          (item) => item.type === "cookware",
+        )) {
+          if (item.quantity) {
+            item.quantity = scaleCookwareQuantity(item.quantity, factor);
+          }
+        }
+      }
+    }
+
+    // Scale Recipe.cookware[] quantities
+    for (const cookware of newRecipe.cookware) {
+      if (cookware.quantity) {
+        cookware.quantity = scaleCookwareQuantity(cookware.quantity, factor);
       }
     }
 

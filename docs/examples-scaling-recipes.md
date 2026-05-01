@@ -30,6 +30,7 @@ const scaledRecipe = recipe.scaleBy(2)
 
 In the above example, will be multiplied by 2:
 - All the ingredients (including alternative units and alternative ingredients) with scalable numerical quantities
+- [Cookware quantities](/guide-extensions.html#cookware-quantities) (integer quantities are rounded up, with a minimum of 1)
 - The scaling metadata and `servings` value
 - [Arbitrary scalable quantities](/guide-extensions.html#arbitrary-scalable-quantities)
 
@@ -46,5 +47,6 @@ const scaledRecipe = recipe.scaleTo(4)
 
 In the above example, will be adjusted by a factor of 4/2: 
 - All the ingredients (including alternative units and alternative ingredients) with scalable numerical quantities have their quantities adjusted by a factor of 4/2 in this case
+- [Cookware quantities](/guide-extensions.html#cookware-quantities) (integer quantities are rounded up, with a minimum of 1)
 - The scaling metadata and `servings` value
 - [Arbitrary scalable quantities](/guide-extensions.html#arbitrary-scalable-quantities)

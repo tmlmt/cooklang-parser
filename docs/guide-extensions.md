@@ -206,6 +206,11 @@ Example: .cook string `Mix @wheat flour{100%g} with additional @&wheat flour|flo
 
 - Cookware can also be quantified (without any unit, e.g. `#bowls{2}`)
 - Quantities will be added similarly as ingredients if cookware is referenced, e.g. `#&bowls{2}`
+- Cookware quantities are scaled by [`scaleBy`](/api/classes/Recipe#scaleBy) and [`scaleTo`](/api/classes/Recipe#scaleTo), with two special rules:
+  - **Integer quantities** are rounded up (ceiling) after scaling, with a minimum of `1`. For example, `#bowl{1}` scaled by `0.5` stays `1` (not `0.5`), and scaled by `1.5` becomes `2`.
+  - **Non-integer quantities** are scaled as-is without rounding. For example, `#sticks{2.5}` scaled by `1.5` becomes `3.75`.
+  - **Range quantities** (e.g. `#pans{1-2}`) follow the same rules — if both bounds are integers, each is individually rounded up after scaling.
+- Cookware without a quantity (e.g. `#oven`) is never affected by scaling.
 
 ## Arbitrary scalable quantities
 
