@@ -56,7 +56,7 @@ import {
   parseMarkdownSegments,
 } from "../utils/parser_helpers";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
-import { multiplyQuantityValue } from "../quantities/numeric";
+import { multiplyQuantityValue, getAverageValue } from "../quantities/numeric";
 import {
   toPlainUnit,
   toExtendedUnit,
@@ -64,7 +64,7 @@ import {
   convertQuantityToSystem,
   applyBestUnit,
 } from "../quantities/mutations";
-import { resolveUnit } from "../units/definitions";
+import { resolveUnit, normalizeUnit } from "../units/definitions";
 import { isUnitCompatibleWithSystem } from "../units/compatibility";
 import Big from "big.js";
 import { deepClone } from "../utils/general";
@@ -1758,6 +1758,44 @@ export class Recipe {
             alternative.equivalents = alternative.equivalents.map((eq) =>
               applyBestUnit(eq, unitSystem),
             );
+
+            // Drop equivalents that, after unit optimization, have become identical to the
+            // primary or to a preceding equivalent (same canonical unit name + same value).
+            // This happens when scaling causes a unit upgrade: e.g. 8 fl-oz × 2 = 16 fl-oz
+            // exceeds maxValue and is promoted to 1 cup, which is the same as the 1 cup
+            // equivalent that was scaled in parallel.
+            const primaryCanonical = normalizeUnit(
+              alternative.unit?.name ?? "",
+            )?.name;
+            const primaryValue =
+              alternative.quantity.type !== "fixed" ||
+              alternative.quantity.value.type !== "text"
+                ? getAverageValue(alternative.quantity)
+                : null;
+
+            const seen = new Set<string>();
+            if (primaryCanonical !== undefined && primaryValue !== null) {
+              seen.add(`${primaryCanonical}:${primaryValue}`);
+            }
+
+            alternative.equivalents = alternative.equivalents.filter((eq) => {
+              const canonicalName = normalizeUnit(eq.unit?.name ?? "")?.name;
+              if (canonicalName === undefined) return true;
+              const value =
+                eq.quantity.type !== "fixed" ||
+                eq.quantity.value.type !== "text"
+                  ? getAverageValue(eq.quantity)
+                  : null;
+              if (value === null) return true;
+              const key = `${canonicalName}:${value}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+
+            if (alternative.equivalents.length === 0) {
+              delete alternative.equivalents;
+            }
           }
         }
       }

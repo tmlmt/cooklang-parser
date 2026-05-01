@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import type {
+  IngredientAlternative,
   IngredientItem,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
+  QuantityWithExtendedUnit,
   Step,
   Yield,
 } from "../src/types";
@@ -922,6 +924,113 @@ Add @cream{1%cup}.
     expect(step(scaled).alternatives[0]).toMatchObject({
       quantity: { type: "fixed", value: { type: "fraction", num: 3, den: 2 } },
       unit: { name: "cup" },
+    });
+  });
+});
+
+describe("scaleBy equivalent deduplication", () => {
+  const step = (r: Recipe) =>
+    (r.sections[0]!.content[0]! as Step).items.find(
+      (i) => i.type === "ingredient",
+    ) as IngredientItem;
+
+  it("should drop equivalent that becomes identical to primary after unit upgrade (fl-oz → cup)", () => {
+    // 8 fl-oz and 1 cup are the same amount. Scaled ×2:
+    //   8 fl-oz → 16 fl-oz > maxValue(15) → best unit = 2 cup (primary)
+    //   1 cup   → 2 cup (equivalent)
+    // After optimization both are "2 cup" → equivalent is dropped.
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @cream{8%fl-oz|1%cup}.
+    `);
+    const scaled = recipe.scaleBy(2);
+    const alt = step(scaled).alternatives[0]!;
+    expect(alt).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+      unit: { name: "cup" },
+    });
+    expect(alt.equivalents).toBeUndefined();
+  });
+
+  it("should drop equivalent that becomes identical to primary after unit upgrade (oz → lb)", () => {
+    // 16 oz and 1 lb are the same. Scaled ×2:
+    //   16 oz → 32 oz > maxValue(31) → best unit = 2 lb (primary)
+    //   1 lb  → 2 lb (equivalent)
+    // Both are "2 lb" → equivalent is dropped.
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @butter{16%oz|1%lb}.
+    `);
+    const scaled = recipe.scaleBy(2);
+    const alt = step(scaled).alternatives[0]!;
+    expect(alt).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+      unit: { name: "lb" },
+    });
+    expect(alt.equivalents).toBeUndefined();
+  });
+
+  it("should keep equivalent when same unit but different value (inconsistent input)", () => {
+    // 4 fl-oz (half a cup) paired with 1 cup gives contradictory amounts — kept as-is.
+    // Scaled ×2: 4 fl-oz → 8 fl-oz (in range, stays fl-oz); 1 cup → 2 cup
+    // Different values → not deduplicated.
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @cream{4%fl-oz|1%cup}.
+    `);
+    const scaled = recipe.scaleBy(2);
+    const alt = step(scaled).alternatives[0]!;
+    expect(alt).toMatchObject({ unit: { name: "fl-oz" } });
+    expect(alt.equivalents).toHaveLength(1);
+    expect(alt.equivalents![0]).toMatchObject({ unit: { name: "cup" } });
+  });
+
+  it("should keep numeric equivalent when primary has a text value", () => {
+    // Primary "to taste" is a text quantity → primaryValue = null → seen stays empty.
+    // Equivalent 5g scaled ×2 = 10g is kept (nothing in seen to match against).
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @salt{to taste|5%g}.
+    `);
+    const scaled = recipe.scaleBy(2);
+    const alt = step(scaled).alternatives[0]!;
+    expect(alt).toMatchObject<Partial<IngredientAlternative>>({
+      quantity: { type: "fixed", value: { type: "text", text: "to taste" } },
+    });
+    expect(alt.equivalents).toHaveLength(1);
+    expect(alt.equivalents![0]).toMatchObject<QuantityWithExtendedUnit>({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 10 } },
+      unit: { name: "g" },
+    });
+  });
+
+  it("should keep text-value equivalent that has a unit", () => {
+    // Equivalent "a pinch%ml" has a known unit but a text value → value = null → kept.
+    // Scaled ×2: primary 1 cup → 2 cup; equivalent "a pinch" stays unchanged.
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @cream{1%cup|a pinch%ml}.
+    `);
+    const scaled = recipe.scaleBy(2);
+    const alt = step(scaled).alternatives[0]!;
+    expect(alt).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+      unit: { name: "cup" },
+    });
+    expect(alt.equivalents).toHaveLength(1);
+    expect(alt.equivalents![0]).toMatchObject<QuantityWithExtendedUnit>({
+      quantity: { type: "fixed", value: { type: "text", text: "a pinch" } },
+      unit: { name: "ml" },
     });
   });
 });
