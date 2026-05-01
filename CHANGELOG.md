@@ -1,5 +1,24 @@
 # Changelog
 
+## v3.0.0-alpha.32
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.31...v3.0.0-alpha.32)
+
+#### ⚠️ Breaking Changes
+
+- `scaleBy` and `scaleTo` now emit `FractionValue` instead of `DecimalValue` for scaled quantities whose result can be expressed as an allowed fraction on a fraction-enabled unit (e.g. 0.5 on `cup` → `{type:"fraction", num:1, den:2}`). This affects units that have fractions.enabled set (cup, lb, oz, tsp, tbsp, fl-oz, etc.).
+  Units without fraction support (g, ml, kg, l, piece, …) are unaffected.
+  Callers that branch on value.type or access value.decimal directly for these units must handle `FractionValue` alongside `DecimalValue`.
+
+### 🩹 Fixes
+
+- **units:** ⚠️ Prefer input-family unit for non-integer scaled values ([4a3b830](https://github.com/tmlmt/cooklang-parser/commit/4a3b830))
+- **scaling:** Drop duplicate equivalents after quantity scaling ([84d557a](https://github.com/tmlmt/cooklang-parser/commit/84d557a))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.31
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.30...v3.0.0-alpha.31)
@@ -46,7 +65,7 @@
 
 ### 🚀 Enhancements
 
-- **recipe:** ⚠️  Make alternative choices variant-aware ([d01eaa0](https://github.com/tmlmt/cooklang-parser/commit/d01eaa0))
+- **recipe:** ⚠️ Make alternative choices variant-aware ([d01eaa0](https://github.com/tmlmt/cooklang-parser/commit/d01eaa0))
 
 ### 🏡 Chore
 
@@ -55,7 +74,7 @@
 
 #### ⚠️ Breaking Changes
 
-- **recipe:** ⚠️  Make alternative choices variant-aware ([d01eaa0](https://github.com/tmlmt/cooklang-parser/commit/d01eaa0))
+- **recipe:** ⚠️ Make alternative choices variant-aware ([d01eaa0](https://github.com/tmlmt/cooklang-parser/commit/d01eaa0))
 
 ### ❤️ Contributors
 
