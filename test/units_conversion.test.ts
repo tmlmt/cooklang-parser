@@ -58,8 +58,9 @@ describe("findBestUnit", () => {
     expect(result.value).toBe(240);
   });
 
-  it("should prefer the smallest integer of all integers in any family over non-integers in input family", () => {
-    // 236.6 ml = ~1 cup or ~8 fl-oz
+  it("should prefer the smallest integer of all integers in any family over non-integers in input family (when input family unit has no fractions)", () => {
+    // 236.6 ml in US system: mL is metric (not US-compatible), so excluded from candidates.
+    // cup ≈ 1 (integer, any family) wins. This is the system-conversion case.
     const mLDef = normalizeUnit("mL")!;
     const result = findBestUnit(236.6, "volume", "US", [mLDef]);
     expect(result.unit.name).toBe("cup");
@@ -135,5 +136,45 @@ describe("findBestUnit", () => {
     // vs tsp at 0.06 (distance to 1 is 0.94)
     expect(result.unit.name).toBe("tsp");
     expect(result.value).toBeCloseTo(0.06, 2);
+  });
+
+  it("should prefer non-integer value in input family over integer in another family (Option B)", () => {
+    // 118.294 ml = 0.5 cup (fraction, input family) vs 4 fl-oz (integer, other family)
+    // Priority 2: non-integer in input family wins → cup
+    const cupDef = normalizeUnit("cup")!;
+    const result = findBestUnit(118.294, "volume", "US", [cupDef]);
+    expect(result.unit.name).toBe("cup");
+    expect(result.value).toBeCloseTo(0.5);
+
+    // 0.5 lb (input family) vs 8 oz (integer, other family)
+    const lbDef = normalizeUnit("lb")!;
+    const result2 = findBestUnit(226.796, "mass", "US", [lbDef]);
+    expect(result2.unit.name).toBe("lb");
+    expect(result2.value).toBeCloseTo(0.5);
+
+    // 1.5 cups (input family, non-integer) vs 12 fl-oz (integer, other family)
+    const result3 = findBestUnit(354.882, "volume", "US", [cupDef]);
+    expect(result3.unit.name).toBe("cup");
+    expect(result3.value).toBeCloseTo(1.5);
+  });
+
+  it("should sort multiple non-integer input-family candidates by largest value first", () => {
+    // 350ml in US, input=[cup, fl-oz]: cup≈1.479, fl-oz≈11.834 — both non-integer, both in range
+    // Sort descending by value → fl-oz wins (exercises the sort comparator when 2+ candidates)
+    const cupDef = normalizeUnit("cup")!;
+    const flozDef = normalizeUnit("fl-oz")!;
+    const result = findBestUnit(350, "volume", "US", [cupDef, flozDef]);
+    expect(result.unit.name).toBe("fl-oz");
+    expect(result.value).toBeCloseTo(11.83, 1);
+  });
+
+  it("should pick smallest non-integer in range when input unit is out of range", () => {
+    // 30ml in US with tsp as input: tsp≈6.09 is above maxValue(5) so out of range.
+    // fl-oz≈1.015 and tbsp≈2.03 are both non-integer and in range but not in input family.
+    // Fourth priority picks smallest: fl-oz=1.015 < tbsp=2.03
+    const tspDef = normalizeUnit("tsp")!;
+    const result = findBestUnit(30, "volume", "US", [tspDef]);
+    expect(result.unit.name).toBe("fl-oz");
+    expect(result.value).toBeCloseTo(1.015, 2);
   });
 });

@@ -703,13 +703,21 @@ export function applyBestUnit(
 
   // Get canonical name of the original unit for comparison
   const originalCanonicalName = normalizeUnit(extended.unit.name)?.name;
+  const isSameUnit = bestUnit.name === originalCanonicalName;
 
-  // If same unit (by canonical name match), no change needed - preserve original unit name
-  if (bestUnit.name === originalCanonicalName) {
-    return q;
-  }
+  // Determine the output unit representation:
+  // - When upgrading/downgrading to a different unit, use the canonical best-unit name.
+  // - When keeping the same unit, preserve the original alias (e.g. "cups" stays "cups").
+  const outputUnit = isSameUnit
+    ? q.unit
+    : typeof q.unit === "string"
+      ? bestUnit.name
+      : { name: bestUnit.name };
 
-  // Format the value for the best unit
+  // Format the value for the best unit (applies fraction representation when the unit supports
+  // it, e.g. 0.5 cup → {type:"fraction", num:1, den:2}).
+  // This is done even when the unit hasn't changed, because the scaling factor may have
+  // produced a decimal that can now be expressed as a nicer fraction (e.g. 0.5 → 1/2).
   const formattedValue = formatOutputValue(bestValue, bestUnit);
 
   // Handle ranges: scale to the best unit
@@ -726,8 +734,7 @@ export function applyBestUnit(
         min: formatOutputValue(minValue, bestUnit),
         max: formatOutputValue(maxValue, bestUnit),
       },
-      unit:
-        typeof q.unit === "string" ? bestUnit.name : { name: bestUnit.name },
+      unit: outputUnit,
     } as QuantityWithExtendedUnit | QuantityWithPlainUnit;
   }
 
@@ -737,7 +744,7 @@ export function applyBestUnit(
       type: "fixed",
       value: formattedValue,
     },
-    unit: typeof q.unit === "string" ? bestUnit.name : { name: bestUnit.name },
+    unit: outputUnit,
   } as QuantityWithExtendedUnit | QuantityWithPlainUnit;
 }
 

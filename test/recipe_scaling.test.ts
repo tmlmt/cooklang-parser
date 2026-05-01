@@ -850,4 +850,78 @@ Add @eggs{5%piece}.
       unit: { name: "piece" },
     });
   });
+
+  it("should keep 1/2 cup after round-trip scale ×2 then ×0.5 (not convert to 4 fl-oz)", () => {
+    // @cream{1/2%cup} → ×2 = 1 cup ✓ → ×0.5 should return to 1/2 cup, NOT 4 fl-oz
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @cream{1/2%cup}.
+    `);
+    const step = (r: Recipe) =>
+      (r.sections[0]!.content[0]! as Step).items.find(
+        (i) => i.type === "ingredient",
+      ) as IngredientItem;
+
+    const doubled = recipe.scaleBy(2);
+    expect(step(doubled).alternatives[0]).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "cup" },
+    });
+
+    const roundTrip = doubled.scaleBy(0.5);
+    // 0.5 cup is an allowed fraction (1/2), so it's returned as FractionValue
+    expect(step(roundTrip).alternatives[0]).toMatchObject({
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: { name: "cup" },
+    });
+  });
+
+  it("should keep 1/2 lb after round-trip scale ×2 then ×0.5 (not convert to 8 oz)", () => {
+    const recipe = new Recipe(`
+---
+servings: 1
+---
+Add @butter{1/2%lb}.
+    `);
+    const step = (r: Recipe) =>
+      (r.sections[0]!.content[0]! as Step).items.find(
+        (i) => i.type === "ingredient",
+      ) as IngredientItem;
+
+    const doubled = recipe.scaleBy(2);
+    expect(step(doubled).alternatives[0]).toMatchObject({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "lb" },
+    });
+
+    const roundTrip = doubled.scaleBy(0.5);
+    // 0.5 lb is an allowed fraction (1/2), so it's returned as FractionValue
+    expect(step(roundTrip).alternatives[0]).toMatchObject({
+      quantity: { type: "fixed", value: { type: "fraction", num: 1, den: 2 } },
+      unit: { name: "lb" },
+    });
+  });
+
+  it("should keep 1.5 cups as cups rather than converting to 12 fl-oz", () => {
+    // 1 cup × 1.5 = 1.5 cups: non-integer in input family should beat integer in another family
+    const recipe = new Recipe(`
+---
+servings: 2
+---
+Add @cream{1%cup}.
+    `);
+    const step = (r: Recipe) =>
+      (r.sections[0]!.content[0]! as Step).items.find(
+        (i) => i.type === "ingredient",
+      ) as IngredientItem;
+
+    const scaled = recipe.scaleTo(3); // 1 cup for 2 servings → 1.5 cups for 3 servings
+    // 1.5 cup = 3/2, which is an allowed fraction of cup, so it's returned as FractionValue
+    expect(step(scaled).alternatives[0]).toMatchObject({
+      quantity: { type: "fixed", value: { type: "fraction", num: 3, den: 2 } },
+      unit: { name: "cup" },
+    });
+  });
 });

@@ -1371,8 +1371,12 @@ describe("applyBestUnit", () => {
       unit: { name: "mL" },
     };
     const result = applyBestUnit(q);
-    expect(result).toBe(q);
+    // Same unit; value is a whole number so stays decimal (mL has no fractions)
     expect(result.unit?.name).toBe("mL");
+    expect(result.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 100 },
+    });
   });
 
   it("should preserve unit alias when best unit is the same (cups stays cups)", () => {
@@ -1381,8 +1385,12 @@ describe("applyBestUnit", () => {
       unit: { name: "cups" },
     };
     const result = applyBestUnit(q);
-    expect(result).toBe(q);
+    // Same unit; 2 is a whole number so stays decimal
     expect(result.unit?.name).toBe("cups");
+    expect(result.quantity).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 2 },
+    });
   });
 
   it("should infer metric system from unit when system not provided", () => {
@@ -1453,6 +1461,25 @@ describe("applyBestUnit", () => {
       type: "range",
       min: { type: "decimal", decimal: 0.5 },
       max: { type: "decimal", decimal: 1.5 },
+    });
+  });
+
+  it("should apply fraction formatting to range values when unit stays the same", () => {
+    // 0.5-1 cup stays as cup but min should become fraction 1/2
+    const q: QuantityWithExtendedUnit = {
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 0.5 },
+        max: { type: "decimal", decimal: 1 },
+      },
+      unit: { name: "cup" },
+    };
+    const result = applyBestUnit(q);
+    expect(result.unit).toEqual({ name: "cup" });
+    expect(result.quantity).toEqual({
+      type: "range",
+      min: { type: "fraction", num: 1, den: 2 },
+      max: { type: "decimal", decimal: 1 },
     });
   });
 });

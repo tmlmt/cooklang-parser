@@ -122,22 +122,28 @@ export function findBestUnit(
       return integersInInputFamily.sort((a, b) => a.value - b.value)[0]!;
     }
 
-    // Second priority: integers in any family (prefer system-appropriate units)
+    // Second priority: non-integers in input family (prefer keeping user's unit even if fractional).
+    // !isCloseToInteger is implicit here: any input-family integer would have been caught by
+    // priority 1 above, so the candidates reaching here are guaranteed non-integer.
+    // Sorted descending by value so we pick the largest (most natural) fraction.
+    const nonIntegersInInputFamily = inRange.filter((c) =>
+      inputUnitNames.has(c.unit.name),
+    );
+    if (nonIntegersInInputFamily.length > 0) {
+      return nonIntegersInInputFamily.sort((a, b) => b.value - a.value)[0]!;
+    }
+
+    // Third priority: integers in any family (prefer system-appropriate units)
     const integersAny = inRange.filter((c) => isCloseToInteger(c.value));
     if (integersAny.length > 0) {
       // Sort by value
       return integersAny.sort((a, b) => a.value - b.value)[0]!;
     }
 
-    // Third priority: smallest value in range (prioritizing input family)
-    return inRange.sort((a, b) => {
-      // Prioritize input family
-      const aInFamily = inputUnitNames.has(a.unit.name) ? 0 : 1;
-      const bInFamily = inputUnitNames.has(b.unit.name) ? 0 : 1;
-      if (aInFamily !== bInFamily) return aInFamily - bInFamily;
-      // Then by smallest value
-      return a.value - b.value;
-    })[0]!;
+    // Fourth priority: smallest non-integer value in range
+    // At this point, all inRange candidates are guaranteed to be non-input-family (since any
+    // input-family unit in range would have been caught by priority 1 or 2 above).
+    return inRange.sort((a, b) => a.value - b.value)[0]!;
   }
 
   return candidatesWithValues.sort((a, b) => {
