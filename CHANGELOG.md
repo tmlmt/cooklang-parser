@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.0.0-alpha.35
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.34...v3.0.0-alpha.35)
+
+### 🚀 Enhancements
+
+- Add variant-specific notes support ([14b2cb6](https://github.com/tmlmt/cooklang-parser/commit/14b2cb6))
+
+### 🩹 Fixes
+
+- **recipe:** Correctly filter cross-variant subgroup alternatives by variant ([317d2f0](https://github.com/tmlmt/cooklang-parser/commit/317d2f0))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.34
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.33...v3.0.0-alpha.34)
