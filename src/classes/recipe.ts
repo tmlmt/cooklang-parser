@@ -241,16 +241,20 @@ export class Recipe {
 
   /**
    * Filters grouped choice subgroups based on active variant linkage.
+   * Within each subgroup, only alternatives linked to the given variant are
+   * kept. Subgroups that become empty after filtering are removed.
    */
   private filterGroupSubgroupsForVariant(
     subgroups: IngredientAlternative[][],
     variant?: string,
   ): IngredientAlternative[][] {
-    return subgroups.filter((subgroup) =>
-      subgroup.every((alternative) =>
-        this.isAlternativeLinkedToVariant(alternative, variant),
-      ),
-    );
+    return subgroups
+      .map((subgroup) =>
+        subgroup.filter((alternative) =>
+          this.isAlternativeLinkedToVariant(alternative, variant),
+        ),
+      )
+      .filter((subgroup) => subgroup.length > 0);
   }
 
   /**

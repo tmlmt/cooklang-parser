@@ -533,5 +533,69 @@ Add @potato{1%=large|1.5%cup}|carrot{1%large} and @&potato{1%=small|0.5%cup}|&ca
       expect(syrup?.usedAsPrimary).toBeUndefined();
       expect(syrup?.quantities).toBeUndefined();
     });
+
+    it("correctly filters subgroup alternatives when multiple variants share the same subgroup key", () => {
+      const recipe = new Recipe(`
+[*] Add @|sour/1|simple syrup{15%ml}, @|sour/1|lemon juice{30%ml}, @gin{45%ml} and stir. You can replace the simple syrup and lemon juice by @|sour|sour mix{30%ml}
+
+[Tom Collins] Add @|sour/1|simple syrup{15%ml}, @|sour/1|lemon juice{30%ml}, @Old Tom Gin{45%ml} and stir. You can replace the simple syrup and lemon juice by @|sour|sour mix{30%ml}
+`);
+
+      // --- default variant ---
+      const defaultChoices = recipe.getChoicesForVariant("*");
+      const defaultSourSubgroups = defaultChoices.ingredientGroups.get("sour");
+      // Expect two sub-choices: [simple syrup + lemon juice] OR [sour mix]
+      expect(defaultSourSubgroups).toHaveLength(2);
+      expect(defaultSourSubgroups![0]!.map((a) => a.displayName)).toEqual([
+        "simple syrup",
+        "lemon juice",
+      ]);
+      expect(defaultSourSubgroups![1]!.map((a) => a.displayName)).toEqual([
+        "sour mix",
+      ]);
+
+      // Default variant should select the first subgroup (simple syrup + lemon juice)
+      const defaultIngredients = recipe.getIngredientQuantities({
+        choices: { variant: "*" },
+      });
+      const simpleSyrupDefault = defaultIngredients.find(
+        (ing) => ing.name === "simple syrup",
+      );
+      expect(simpleSyrupDefault?.usedAsPrimary).toBe(true);
+      expect(simpleSyrupDefault?.quantities).toBeDefined();
+
+      const sourMixDefault = defaultIngredients.find(
+        (ing) => ing.name === "sour mix",
+      );
+      expect(sourMixDefault?.usedAsPrimary).toBeUndefined();
+      expect(sourMixDefault?.quantities).toBeUndefined();
+
+      // --- Tom Collins variant ---
+      const tcChoices = recipe.getChoicesForVariant("Tom Collins");
+      const tcSourSubgroups = tcChoices.ingredientGroups.get("sour");
+      // Expect two sub-choices: [simple syrup + lemon juice] OR [sour mix]
+      expect(tcSourSubgroups).toHaveLength(2);
+      expect(tcSourSubgroups![0]!.map((a) => a.displayName)).toEqual([
+        "simple syrup",
+        "lemon juice",
+      ]);
+      expect(tcSourSubgroups![1]!.map((a) => a.displayName)).toEqual([
+        "sour mix",
+      ]);
+
+      // Tom Collins variant should also select the first subgroup by default
+      const tcIngredients = recipe.getIngredientQuantities({
+        choices: { variant: "Tom Collins" },
+      });
+      const simpleSyrupTC = tcIngredients.find(
+        (ing) => ing.name === "simple syrup",
+      );
+      expect(simpleSyrupTC?.usedAsPrimary).toBe(true);
+      expect(simpleSyrupTC?.quantities).toBeDefined();
+
+      const sourMixTC = tcIngredients.find((ing) => ing.name === "sour mix");
+      expect(sourMixTC?.usedAsPrimary).toBeUndefined();
+      expect(sourMixTC?.quantities).toBeUndefined();
+    });
   });
 });
