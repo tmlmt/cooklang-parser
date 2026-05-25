@@ -105,6 +105,10 @@ export class BadIndentationError extends Error {
   }
 }
 
+/**
+ * Error thrown when trying to access a recipe path that does not exist in the index.
+ * @category Errors
+ */
 export class UnknownRecipePathError extends Error {
   constructor(path: string) {
     super(
