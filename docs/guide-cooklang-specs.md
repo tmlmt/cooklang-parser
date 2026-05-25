@@ -137,3 +137,18 @@ choices:
 ---
 ./Complex Recipe{2}
 ```
+
+## Pantry
+
+The shopping list and pantry features of this package include two specific behaviours beyond basic quantity subtraction. 
+
+### Bare ingredients covered by the pantry
+
+When a recipe uses a bare ingredient (no quantity, e.g. `@salt`), the normal subtraction logic does not apply. Instead, if the pantry has a **non-zero** quantity for that ingredient, the ingredient is considered fully covered and removed from the shopping list. A depleted pantry entry (quantity of `0`) does **not** count as coverage, and the bare ingredient stays on the list.
+
+### Unlimited pantry entries
+
+An empty TOML table (`salt = {}`) signals that the pantry holds an unlimited supply of that ingredient. When this sentinel is used:
+
+- Any use of the ingredient — whether quantified (`@salt{1%tsp}`) or bare (`@salt`) — is removed from the shopping list.
+- The resulting pantry entry is left unchanged (its quantity remains `undefined`), since there is nothing to deplete.
