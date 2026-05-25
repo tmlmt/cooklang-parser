@@ -1476,13 +1476,36 @@ sugar
       expect(flour).toBeUndefined();
     });
 
-    it("should skip pantry subtraction for ingredients without quantity", () => {
+    it("should remove no-quantity ingredient when pantry has a non-zero quantity for it", () => {
       const recipeNoQty = new Recipe(`Add @flour and @sugar{100%g}.`);
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipeNoQty);
       shoppingList.addPantry(`[pantry]\nflour = "100%g"`);
 
-      // flour has no quantity in recipe, should remain as-is
+      // flour has no quantity in recipe but pantry has 100g → should be removed
+      const flour = shoppingList.ingredients.find((i) => i.name === "flour");
+      expect(flour).toBeUndefined();
+    });
+
+    it("should keep no-quantity ingredient when pantry entry is depleted (zero)", () => {
+      const recipeNoQty = new Recipe(`Add @flour and @sugar{100%g}.`);
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipeNoQty);
+      shoppingList.addPantry(`[pantry]\nflour = "0%g"`);
+
+      // flour has no quantity in recipe and pantry is depleted → should remain
+      const flour = shoppingList.ingredients.find((i) => i.name === "flour");
+      expect(flour).toBeDefined();
+      expect(flour!.quantities).toBeUndefined();
+    });
+
+    it("should keep no-quantity ingredient when no pantry entry exists for it", () => {
+      const recipeNoQty = new Recipe(`Add @flour and @sugar{100%g}.`);
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipeNoQty);
+      shoppingList.addPantry(`[pantry]\nsugar = "50%g"`);
+
+      // flour has no quantity in recipe and no pantry entry → should remain
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
       expect(flour).toBeDefined();
       expect(flour!.quantities).toBeUndefined();

@@ -279,11 +279,23 @@ export class ShoppingList {
       clonedPantry.setCategoryConfig(this.categoryConfig);
     }
 
-    for (const ingredient of this.ingredients) {
-      if (!ingredient.quantities || ingredient.quantities.length === 0)
-        continue;
+    // Track ingredient names that the pantry covers without quantity subtraction
+    const pantryRemovedNames = new Set<string>();
 
+    for (const ingredient of this.ingredients) {
       const pantryItem = clonedPantry.findItem(ingredient.name);
+
+      // No-quantity ingredient (bare @salt): remove if pantry has a non-zero quantity for it
+      if (!ingredient.quantities || ingredient.quantities.length === 0) {
+        if (pantryItem && pantryItem.quantity) {
+          const pantryValue = getAverageValue(pantryItem.quantity);
+          if (typeof pantryValue === "number" && pantryValue > 0) {
+            pantryRemovedNames.add(ingredient.name);
+          }
+        }
+        continue;
+      }
+
       if (!pantryItem || !pantryItem.quantity) continue;
 
       let pantryExtended: QuantityWithExtendedUnit = {
@@ -524,9 +536,11 @@ export class ShoppingList {
     // Remove ingredients that were fully covered by the pantry.
     // Pantry-cleared ingredients have `quantities` explicitly set to undefined
     // while ingredients that never had any quantity simply lack the key entirely
-    // — those must stay.
+    // — those must stay unless the pantry covers them (pantryRemovedNames).
     this.ingredients = this.ingredients.filter(
-      (ingr) => !("quantities" in ingr) || ingr.quantities !== undefined,
+      (ingr) =>
+        !pantryRemovedNames.has(ingr.name) &&
+        (!("quantities" in ingr) || ingr.quantities !== undefined),
     );
 
     this.resultingPantry = clonedPantry;
