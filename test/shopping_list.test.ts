@@ -1287,8 +1287,16 @@ sugar
       shoppingList.addPantry(`[pantry]\nflour = "500%g"`);
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      expect(flour).toBeDefined();
-      expect(flour!.quantities).toBeUndefined();
+      expect(flour).toBeUndefined();
+    });
+
+    it("should remove ingredient with unknown unit when pantry fully covers it", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(new Recipe(`Add @cumin{1%càc}.`));
+      shoppingList.addPantry(`[pantry]\ncumin = "100%càc"`);
+
+      const cumin = shoppingList.ingredients.find((i) => i.name === "cumin");
+      expect(cumin).toBeUndefined();
     });
 
     it("should update resulting pantry after subtraction", () => {
@@ -1464,8 +1472,8 @@ sugar
       shoppingList.addPantry(`[pantry]\nflour = "1%kg"`); // has 1kg = 1000g
 
       const flour = shoppingList.ingredients.find((i) => i.name === "flour");
-      // 200g - 1kg → fully covered, quantities removed
-      expect(flour!.quantities).toBeUndefined();
+      // 200g - 1kg → fully covered, ingredient removed
+      expect(flour).toBeUndefined();
     });
 
     it("should skip pantry subtraction for ingredients without quantity", () => {
@@ -1565,8 +1573,7 @@ sugar
       shoppingList.addPantry(`[pantry]\neggs = "3%dozen"`);
 
       const eggs = shoppingList.ingredients.find((i) => i.name === "eggs");
-      expect(eggs).toBeDefined();
-      expect(eggs!.quantities).toBeUndefined();
+      expect(eggs).toBeUndefined();
 
       // Pantry should have remainder: 3 dozen - 30/12 dozen = 3 - 2.5 = 0.5 dozen
       const resultingPantry = shoppingList.getPantry();

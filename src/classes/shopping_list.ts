@@ -521,6 +521,14 @@ export class ShoppingList {
       }
     }
 
+    // Remove ingredients that were fully covered by the pantry.
+    // Pantry-cleared ingredients have `quantities` explicitly set to undefined
+    // while ingredients that never had any quantity simply lack the key entirely
+    // — those must stay.
+    this.ingredients = this.ingredients.filter(
+      (ingr) => !("quantities" in ingr) || ingr.quantities !== undefined,
+    );
+
     this.resultingPantry = clonedPantry;
   }
 
