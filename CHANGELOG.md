@@ -1,5 +1,28 @@
 # Changelog
 
+## v3.0.0-alpha.36
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.35...v3.0.0-alpha.36)
+
+### 🚀 Enhancements
+
+- **shopping-list:** Remove no-quantity ingredients covered by pantry ([70b3b66](https://github.com/tmlmt/cooklang-parser/commit/70b3b66))
+- **shopping-list:** Pantry item with unlimited quantity ([f63a066](https://github.com/tmlmt/cooklang-parser/commit/f63a066))
+
+### 🩹 Fixes
+
+- **shopping-list:** Remove pantry-covered ingredients from ingredients list ([80648fb](https://github.com/tmlmt/cooklang-parser/commit/80648fb))
+
+### 📖 Documentation
+
+- Correctly tag UnknownRecipePathError as error ([cec06cc](https://github.com/tmlmt/cooklang-parser/commit/cec06cc))
+- **guide:** Add the two new behavior related to pantry quantities ([8008f27](https://github.com/tmlmt/cooklang-parser/commit/8008f27))
+- Fix regression causing duplicated in sidebar by pinning typedoc-plugin-markdown to v4.10.0 ([be14090](https://github.com/tmlmt/cooklang-parser/commit/be14090))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.35
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.34...v3.0.0-alpha.35)
