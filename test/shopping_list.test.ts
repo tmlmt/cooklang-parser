@@ -1511,6 +1511,35 @@ sugar
       expect(flour!.quantities).toBeUndefined();
     });
 
+    it("should remove quantified ingredient when pantry has an unlimited entry ({})", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(new Recipe(`Add @salt{1%tsp}.`));
+      shoppingList.addPantry(`[pantry]\nsalt = {}`);
+
+      const salt = shoppingList.ingredients.find((i) => i.name === "salt");
+      expect(salt).toBeUndefined();
+    });
+
+    it("should remove no-quantity ingredient when pantry has an unlimited entry ({})", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(new Recipe(`Add @salt.`));
+      shoppingList.addPantry(`[pantry]\nsalt = {}`);
+
+      const salt = shoppingList.ingredients.find((i) => i.name === "salt");
+      expect(salt).toBeUndefined();
+    });
+
+    it("should leave resulting pantry quantity undefined for unlimited entry", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(new Recipe(`Add @salt{1%tsp}.`));
+      shoppingList.addPantry(`[pantry]\nsalt = {}`);
+
+      const resultingPantry = shoppingList.getPantry();
+      const pantryItem = resultingPantry!.findItem("salt");
+      expect(pantryItem).toBeDefined();
+      expect(pantryItem!.quantity).toBeUndefined();
+    });
+
     it("should skip pantry substraction for ingredients without compatible units", () => {
       const recipe = new Recipe(
         `Add @eggs{2%dozen|2%large pack} and @&eggs{1%half dozen|1%small pack}`,

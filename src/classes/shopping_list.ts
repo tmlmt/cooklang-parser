@@ -285,18 +285,30 @@ export class ShoppingList {
     for (const ingredient of this.ingredients) {
       const pantryItem = clonedPantry.findItem(ingredient.name);
 
-      // No-quantity ingredient (bare @salt): remove if pantry has a non-zero quantity for it
+      // No-quantity ingredient (bare @salt):
+      // - remove if pantry has a non-zero quantity for it
+      // - remove if pantry has an unlimited entry (quantity: undefined)
       if (!ingredient.quantities || ingredient.quantities.length === 0) {
-        if (pantryItem && pantryItem.quantity) {
-          const pantryValue = getAverageValue(pantryItem.quantity);
-          if (typeof pantryValue === "number" && pantryValue > 0) {
+        if (pantryItem) {
+          if (!pantryItem.quantity) {
+            // Unlimited pantry entry (salt = {}) → remove bare ingredient
             pantryRemovedNames.add(ingredient.name);
+          } else {
+            const pantryValue = getAverageValue(pantryItem.quantity);
+            if (typeof pantryValue === "number" && pantryValue > 0) {
+              pantryRemovedNames.add(ingredient.name);
+            }
           }
         }
         continue;
       }
 
-      if (!pantryItem || !pantryItem.quantity) continue;
+      if (!pantryItem) continue;
+      // Unlimited pantry entry (salt = {}) → remove quantified ingredient too
+      if (!pantryItem.quantity) {
+        pantryRemovedNames.add(ingredient.name);
+        continue;
+      }
 
       let pantryExtended: QuantityWithExtendedUnit = {
         quantity: pantryItem.quantity,
