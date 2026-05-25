@@ -5,7 +5,7 @@
   "docsRoot": "./docs",
   "navigation": {
     "includeCategories": true,
-    "includeGroups": false,
+    "includeGroups": true,
     "includeFolders": false,
     "compactFolders": true,
     "excludeReferences": true
