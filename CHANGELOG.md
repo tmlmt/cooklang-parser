@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.37
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.36...v3.0.0-alpha.37)
+
+### 🩹 Fixes
+
+- **shopping-list:** Match category ingredients case-insensitively ([f16d704](https://github.com/tmlmt/cooklang-parser/commit/f16d704))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.36
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.35...v3.0.0-alpha.36)
