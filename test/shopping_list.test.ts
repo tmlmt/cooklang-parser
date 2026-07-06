@@ -978,6 +978,21 @@ sugar
       expect(shoppingList.categories).toEqual(expected);
     });
 
+    it("should categorize ingredients case-insensitively", () => {
+      const shoppingList = new ShoppingList();
+      shoppingList.addRecipe(recipe1);
+      // recipe1 has "flour" (lowercase); config uses "Flour" (capitalized)
+      const config = `
+[Bakery]
+Flour
+Sugar
+      `;
+      shoppingList.setCategoryConfig(config);
+      expect(shoppingList.categories!["Bakery"]?.map((i) => i.name)).toContain(
+        "flour",
+      );
+    });
+
     it('should categorize all ingredients as "other" if no category config is set', () => {
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipe1);

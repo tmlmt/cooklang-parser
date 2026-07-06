@@ -759,7 +759,11 @@ export class ShoppingList {
       let found = false;
       for (const category of this.categoryConfig.categories) {
         for (const categoryIngredient of category.ingredients) {
-          if (categoryIngredient.aliases.includes(ingredient.name)) {
+          if (
+            categoryIngredient.aliases
+              .map((a) => a.toLowerCase())
+              .includes(ingredient.name.toLowerCase())
+          ) {
             categories[category.name]!.push(ingredient);
             found = true;
             break;
