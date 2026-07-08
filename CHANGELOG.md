@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.0.0-alpha.38
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.37...v3.0.0-alpha.38)
+
+### 🩹 Fixes
+
+- **quantities:** Round range bounds when multiplying by non-clean factor ([da024f5](https://github.com/tmlmt/cooklang-parser/commit/da024f5))
+
+### 📦 Build
+
+- Migrate from tsup to tsdown ([1569272](https://github.com/tmlmt/cooklang-parser/commit/1569272))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.37
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.36...v3.0.0-alpha.37)
