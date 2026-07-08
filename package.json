@@ -38,31 +38,31 @@
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
-    "@eslint/compat": "2.0.5",
+    "@eslint/compat": "2.1.0",
     "@eslint/js": "10.0.1",
-    "@iconify-json/material-symbols": "1.2.69",
-    "@types/big.js": "6.2.2",
+    "@iconify-json/material-symbols": "1.2.83",
+    "@types/big.js": "7.0.0",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.19.17",
-    "@vitest/coverage-v8": "4.1.5",
-    "@vitest/ui": "4.1.5",
-    "eslint": "10.2.1",
+    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/ui": "4.1.10",
+    "eslint": "10.6.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-tsdoc": "0.5.2",
     "execa": "9.6.1",
-    "globals": "17.5.0",
+    "globals": "17.7.0",
     "human-regex": "2.2.0",
-    "prettier": "3.8.3",
+    "prettier": "3.9.4",
     "rimraf": "6.1.3",
     "tsup": "8.5.1",
-    "typedoc": "0.28.19",
-    "typedoc-plugin-markdown": "4.10.0",
-    "typedoc-vitepress-theme": "1.1.2",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.59.1",
+    "typedoc": "0.28.20",
+    "typedoc-plugin-markdown": "4.12.0",
+    "typedoc-vitepress-theme": "1.1.3",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.63.0",
     "vitepress": "2.0.0-alpha.15",
-    "vitest": "4.1.5",
-    "vue": "3.5.33"
+    "vitest": "4.1.10",
+    "vue": "3.5.39"
   },
   "bugs": {
     "url": "https://github.com/tmlmt/cooklang-parser/issues",
@@ -86,7 +86,7 @@
   },
   "dependencies": {
     "big.js": "7.0.1",
-    "smol-toml": "1.6.1",
+    "smol-toml": "1.7.0",
     "yalps": "0.6.4"
   }
 }
