@@ -250,17 +250,16 @@ export function multiplyQuantityValue(
   value: FixedValue | Range,
   factor: number | Big,
 ): FixedValue | Range {
+  const isCleanFactor =
+    Big(factor).toNumber() === parseInt(Big(factor).toString()) || // e.g. 2 === int
+    Big(1).div(factor).toNumber() === parseInt(Big(1).div(factor).toString()); // e.g. 0.25 => 4 === int
+
   if (value.type === "fixed") {
     const newValue = multiplyNumericValue(
       value.value as DecimalValue | FractionValue,
       Big(factor),
     );
-    if (
-      newValue.type === "fraction" &&
-      (Big(factor).toNumber() === parseInt(Big(factor).toString()) || // e.g. 2 === int
-        Big(1).div(factor).toNumber() ===
-          parseInt(Big(1).div(factor).toString())) // e.g. 0.25 => 4 === int
-    ) {
+    if (newValue.type === "fraction" && isCleanFactor) {
       // Preserve fractions
       return {
         type: "fixed",
@@ -274,10 +273,19 @@ export function multiplyQuantityValue(
     };
   }
 
+  const scaledMin = multiplyNumericValue(value.min, factor);
+  const scaledMax = multiplyNumericValue(value.max, factor);
+
   return {
     type: "range",
-    min: multiplyNumericValue(value.min, factor),
-    max: multiplyNumericValue(value.max, factor),
+    min:
+      scaledMin.type === "fraction" && isCleanFactor
+        ? scaledMin
+        : toRoundedDecimal(scaledMin),
+    max:
+      scaledMax.type === "fraction" && isCleanFactor
+        ? scaledMax
+        : toRoundedDecimal(scaledMax),
   };
 }
 

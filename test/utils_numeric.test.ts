@@ -7,7 +7,12 @@ import {
   multiplyQuantityValue,
   getAverageValue,
 } from "../src/quantities/numeric";
-import type { DecimalValue, FractionValue, FixedValue } from "../src/types";
+import type {
+  DecimalValue,
+  FractionValue,
+  FixedValue,
+  Range,
+} from "../src/types";
 import Big from "big.js";
 
 describe("simplifyFraction", () => {
@@ -177,6 +182,36 @@ describe("multiplyQuantityValue", () => {
     expect(multiplyQuantityValue(val, 3)).toEqual({
       type: "fixed",
       value: { type: "decimal", decimal: 3.6 },
+    });
+  });
+
+  it("should round range bounds when factor produces repeating decimals", () => {
+    // e.g. {2-3} at 6 servings scaled to 7: factor = 7/6
+    const val: Range = {
+      type: "range",
+      min: { type: "decimal", decimal: 2 },
+      max: { type: "decimal", decimal: 4 },
+    };
+    const result = multiplyQuantityValue(val, Big(7).div(6));
+    expect(result).toEqual<Range>({
+      type: "range",
+      min: { type: "decimal", decimal: 2.33 },
+      max: { type: "decimal", decimal: 4.67 },
+    });
+  });
+
+  it("should preserve fraction range bounds when scaled by a clean factor", () => {
+    // 1/3 * 2 = 2/3 (stays a fraction), 3/4 * 2 = 3/2 (stays a fraction)
+    const val: Range = {
+      type: "range",
+      min: { type: "fraction", num: 1, den: 3 },
+      max: { type: "fraction", num: 3, den: 4 },
+    };
+    const result = multiplyQuantityValue(val, 2);
+    expect(result).toEqual<Range>({
+      type: "range",
+      min: { type: "fraction", num: 2, den: 3 },
+      max: { type: "fraction", num: 3, den: 2 },
     });
   });
 });
