@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.39
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.38...v3.0.0-alpha.39)
+
+### 🩹 Fixes
+
+- **package:** Correctly refer to parser files built with tsdown ([f644cf0](https://github.com/tmlmt/cooklang-parser/commit/f644cf0))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.38
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.37...v3.0.0-alpha.38)
