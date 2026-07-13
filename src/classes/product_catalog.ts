@@ -21,6 +21,15 @@ import { InvalidProductCatalogFormat } from "../errors";
  * You can either directly populate the products by feeding the {@link ProductCatalog.products | products} property. Alternatively,
  * you can provide a catalog in TOML format to either the constructor itself or to the {@link ProductCatalog.parse | parse()} method.
  *
+ * ## Catalog format
+ *
+ * Product catalogs are TOML tables grouped by ingredient name. Each ingredient table can contain:
+ * - an optional `aliases` array with alternate ingredient names,
+ * - product entries whose keys are any string except the reserved `aliases` key,
+ *   - each product entry must define `name`, `size`, and `price`.
+ * `size` can be a single string such as `"1"` or `"100%g"`, or an array of equivalent sizes such as `['1%dozen', '12']`.
+ *   - arbitrary metadata on each product entry, which is preserved when parsing.
+ *
  * @category Classes
  *
  * @example
@@ -179,9 +188,6 @@ export class ProductCatalog {
             return false;
           }
         } else {
-          if (!isPositiveIntegerString(id)) {
-            return false;
-          }
           if (typeof obj !== "object" || obj === null) {
             return false;
           }

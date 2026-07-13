@@ -113,6 +113,38 @@ aliases = ["oeuf", "huevo"]
       ]);
     });
 
+    it("should parse a product catalog with non-numeric product ids", () => {
+      const catalog = new ProductCatalog();
+      const products = catalog.parse(`[eggs]
+aliases = ["oeuf", "huevo"]
+single = { name = "Single Egg", size = "1", price = 2 }
+pack-6 = { name = "Pack of 6 eggs", size = "6", price = 10 }`);
+
+      expect(products.length).toBe(2);
+      expect(products).toEqual([
+        {
+          id: "single",
+          productName: "Single Egg",
+          ingredientName: "eggs",
+          ingredientAliases: ["oeuf", "huevo"],
+          price: 2,
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+          ],
+        },
+        {
+          id: "pack-6",
+          productName: "Pack of 6 eggs",
+          ingredientName: "eggs",
+          ingredientAliases: ["oeuf", "huevo"],
+          price: 10,
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 6 } } },
+          ],
+        },
+      ]);
+    });
+
     it("should parse a product catalog with multiple sizes", () => {
       const catalog = new ProductCatalog();
       const products = catalog.parse(`[eggs]
@@ -167,10 +199,7 @@ aliases = ["oeuf", "huevo"]
 01123 = { name = "Single Egg", size = "1" }`,
       // No size
       `[eggs]
-Text = { name = "Single Egg", size = "1", price = 2 }`,
-      // No ingredient name
-      `
-01234 = { name = "Single Egg", size = "1", price = 2 }`,
+    no-size = { name = "Single Egg", price = 2 }`,
       // No product name
       `[eggs]
 01234 = { size = "1", price = 2 }`,
@@ -196,6 +225,42 @@ aliases = "not an array"`,
       catalog.products = exampleProductOptions;
       const stringified = catalog.stringify();
       expect(stringified).toBe(exampleTomlContentAlt);
+    });
+
+    it("should stringify products with arbitrary ids", () => {
+      const catalog = new ProductCatalog();
+      catalog.products = [
+        {
+          id: "single",
+          productName: "Single Egg",
+          ingredientName: "eggs",
+          price: 2,
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 1 } } },
+          ],
+        },
+        {
+          id: "pack-6",
+          productName: "Pack of 6 eggs",
+          ingredientName: "eggs",
+          price: 10,
+          sizes: [
+            { size: { type: "fixed", value: { type: "decimal", decimal: 6 } } },
+          ],
+        },
+      ];
+
+      const stringified = catalog.stringify();
+      expect(stringified).toBe(`[eggs.single]
+price = 2
+name = "Single Egg"
+size = "1"
+
+[eggs.pack-6]
+price = 10
+name = "Pack of 6 eggs"
+size = "6"
+`);
     });
 
     it("should handle products with aliases", () => {
