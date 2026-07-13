@@ -39,6 +39,7 @@ export default defineConfig({
           { text: "Extensions", link: "/guide-extensions" }, 
           { text: "Unit conversion", link: "/guide-unit-conversion" }, 
           { text: "Rendering recipes", link: "/guide-rendering" },
+          { text: "Product catalog syntax", link: "/guide-product-catalog" },
         ],
         collapsed: true
       },

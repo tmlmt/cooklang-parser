@@ -30,6 +30,8 @@ import { InvalidProductCatalogFormat } from "../errors";
  * `size` can be a single string such as `"1"` or `"100%g"`, or an array of equivalent sizes such as `['1%dozen', '12']`.
  *   - arbitrary metadata on each product entry, which is preserved when parsing.
  *
+ *  See the [product catalog guide](/guide-product-catalog) for the full syntax and examples.
+ *
  * @category Classes
  *
  * @example
