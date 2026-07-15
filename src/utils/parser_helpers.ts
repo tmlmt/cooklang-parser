@@ -229,7 +229,24 @@ export function findAndUpsertCookware(
   return cookware.push(newCookware) - 1;
 }
 
-// Parser when we know the input is either a number-like value
+/**
+ * Parse a single quantity value string into a fixed value.
+ *
+ * A number-like input is parsed into a {@link DecimalValue} or
+ * {@link FractionValue}; anything else is returned as a {@link TextValue}.
+ * This is the value-level inverse of {@link formatSingleValue}.
+ *
+ * @param input_str - The raw value string (e.g. `"1.5"`, `"1/2"`, `"a pinch"`)
+ * @returns The parsed fixed value
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * parseFixedValue("1.5"); // { type: "decimal", decimal: 1.5 }
+ * parseFixedValue("1/2"); // { type: "fraction", num: 1, den: 2 }
+ * parseFixedValue("a pinch"); // { type: "text", text: "a pinch" }
+ * ```
+ */
 export const parseFixedValue = (
   input_str: string,
 ): TextValue | DecimalValue | FractionValue => {
@@ -254,6 +271,23 @@ export const parseFixedValue = (
   return { type: "decimal", decimal: Number(s) };
 };
 
+/**
+ * Stringify a quantity value back into its canonical Cooklang source form.
+ *
+ * This is the inverse of {@link parseQuantityValue}: fractions render as
+ * `num/den`, decimals as their number, and ranges as `min-max`. Unlike
+ * {@link formatQuantity}, it does not apply any display formatting.
+ *
+ * @param quantity - The quantity to stringify
+ * @returns The canonical string representation
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * stringifyQuantityValue({ type: "fixed", value: { type: "fraction", num: 1, den: 2 } }); // "1/2"
+ * stringifyQuantityValue({ type: "range", min: { type: "decimal", decimal: 1 }, max: { type: "decimal", decimal: 2 } }); // "1-2"
+ * ```
+ */
 export function stringifyQuantityValue(quantity: FixedValue | Range): string {
   if (quantity.type === "fixed") {
     return stringifyFixedValue(quantity);
@@ -270,6 +304,24 @@ function stringifyFixedValue(quantity: FixedValue): string {
   else return quantity.value.text;
 }
 
+/**
+ * Parse a quantity string into a fixed value or a range.
+ *
+ * A `min-max` input (where both sides are number-like) is parsed into a
+ * {@link Range}; otherwise the whole string is parsed as a single fixed value
+ * via {@link parseFixedValue}. This is the value-level inverse of
+ * {@link stringifyQuantityValue}.
+ *
+ * @param input_str - The raw quantity string (e.g. `"1"`, `"1/2"`, `"1-2"`)
+ * @returns The parsed quantity
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * parseQuantityValue("2"); // { type: "fixed", value: { type: "decimal", decimal: 2 } }
+ * parseQuantityValue("1-2"); // { type: "range", min: {...}, max: {...} }
+ * ```
+ */
 export function parseQuantityValue(input_str: string): FixedValue | Range {
   const clean_str = String(input_str).trim();
 
@@ -277,11 +329,9 @@ export function parseQuantityValue(input_str: string): FixedValue | Range {
     const range_parts = clean_str.split("-");
     // As we've tested for it, we know that we have Number-like Quantities to parse
     const min = parseFixedValue(range_parts[0]!.trim()) as
-      | DecimalValue
-      | FractionValue;
+      DecimalValue | FractionValue;
     const max = parseFixedValue(range_parts[1]!.trim()) as
-      | DecimalValue
-      | FractionValue;
+      DecimalValue | FractionValue;
     return { type: "range", min, max };
   }
 
@@ -293,6 +343,13 @@ export function parseQuantityValue(input_str: string): FixedValue | Range {
  * If no `%` is present, the entire string is treated as a value with no unit.
  * @param input - The quantity string to parse.
  * @returns An object with parsed `value` and optional `unit`.
+ * @category Helpers
+ *
+ * @example
+ * ```typescript
+ * parseQuantityWithUnit("500%g"); // { value: { type: "fixed", decimal: 500 }, unit: "g" }
+ * parseQuantityWithUnit("2"); // { value: { type: "fixed", decimal: 2 } }
+ * ```
  */
 export function parseQuantityWithUnit(input: string): {
   value: FixedValue | Range;
@@ -1212,10 +1269,6 @@ export function extractMetadata(content: string): MetadataExtract {
   }
 
   return { metadata, servings, unitSystem };
-}
-
-export function isPositiveIntegerString(str: string): boolean {
-  return /^\d+$/.test(str);
 }
 
 export function unionOfSets<T>(s1: Set<T>, s2: Set<T>): Set<T> {

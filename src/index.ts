@@ -46,6 +46,12 @@ import {
   hasAlternatives,
 } from "./utils/type_guards";
 import { convertQuantityToSystem } from "./quantities/mutations";
+import {
+  parseFixedValue,
+  parseQuantityValue,
+  parseQuantityWithUnit,
+  stringifyQuantityValue,
+} from "./utils/parser_helpers";
 
 export {
   isAlternativeSelected,
@@ -66,6 +72,10 @@ export {
   isSimpleGroup,
   hasAlternatives,
   convertQuantityToSystem,
+  parseFixedValue,
+  parseQuantityValue,
+  parseQuantityWithUnit,
+  stringifyQuantityValue,
 };
 
 // Types

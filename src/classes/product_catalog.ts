@@ -7,7 +7,6 @@ import type {
 } from "../types";
 import type { TomlTable } from "smol-toml";
 import {
-  isPositiveIntegerString,
   parseQuantityValue,
   stringifyQuantityValue,
 } from "../utils/parser_helpers";
