@@ -1,5 +1,22 @@
 # Changelog
 
+## v3.0.0-alpha.40
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.39...v3.0.0-alpha.40)
+
+### 🚀 Enhancements
+
+- **ProductCatalog:** Allow any string as productId ([1240f53](https://github.com/tmlmt/cooklang-parser/commit/1240f53))
+- **helpers:** Export parseFixedValue(), parseQuantityValue(), parseQuantityWithUnit() and stringifyQuantityValue() ([013d430](https://github.com/tmlmt/cooklang-parser/commit/013d430))
+
+### 📖 Documentation
+
+- Add guide for product catalog syntax ([2fd1d45](https://github.com/tmlmt/cooklang-parser/commit/2fd1d45))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.39
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.38...v3.0.0-alpha.39)
