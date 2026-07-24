@@ -20,17 +20,22 @@ const timeUnitToMinutes: Record<string, number> = {
   seconds: 1 / 60,
   seconde: 1 / 60,
   secondes: 1 / 60,
+  秒: 1 / 60,
   // minutes
   m: 1,
   min: 1,
   minute: 1,
   minutes: 1,
+  分: 1,
+  分間: 1,
   // hours
   h: 60,
   hour: 60,
   hours: 60,
   heure: 60,
   heures: 60,
+  時: 60,
+  時間: 60,
   // days
   d: 1440,
   day: 1440,
@@ -38,6 +43,8 @@ const timeUnitToMinutes: Record<string, number> = {
   j: 1440,
   jour: 1440,
   jours: 1440,
+  日: 1440,
+  日間: 1440,
 };
 
 /**
