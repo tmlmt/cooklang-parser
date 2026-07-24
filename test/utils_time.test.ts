@@ -115,6 +115,22 @@ describe("parseTimeToMinutes", () => {
       expect(parseTimeToMinutes("2 jours")).toBe(2880);
     });
 
+    it("handles Japanese time units", () => {
+      expect(parseTimeToMinutes("30秒")).toBe(1);
+      expect(parseTimeToMinutes("45 秒")).toBe(1);
+      expect(parseTimeToMinutes("30分")).toBe(30);
+      expect(parseTimeToMinutes("30 分間")).toBe(30);
+      expect(parseTimeToMinutes("1時間")).toBe(60);
+      expect(parseTimeToMinutes("2 時")).toBe(120);
+      expect(parseTimeToMinutes("1日")).toBe(1440);
+      expect(parseTimeToMinutes("2 日間")).toBe(2880);
+    });
+
+    it("parses multiple space-separated Japanese pairs", () => {
+      expect(parseTimeToMinutes("1時間 30分")).toBe(90);
+      expect(parseTimeToMinutes("1日 2時間 30分")).toBe(1590);
+    });
+
     it("handles all second aliases", () => {
       expect(parseTimeToMinutes("60 s")).toBe(1);
       expect(parseTimeToMinutes("60 sec")).toBe(1);
