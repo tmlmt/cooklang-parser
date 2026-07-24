@@ -2,6 +2,7 @@ const fullWidthSyntaxMap: Record<string, string> = {
   "＠": "@",
   "＃": "#",
   "～": "~",
+  "〜": "~",
   "｛": "{",
   "｝": "}",
   "（": "(",
