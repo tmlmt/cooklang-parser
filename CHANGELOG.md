@@ -1,5 +1,30 @@
 # Changelog
 
+## v3.0.0-alpha.41
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.40...v3.0.0-alpha.41)
+
+### 🚀 Enhancements
+
+- **render-helpers:** Add optional unit-first quantity formatting ([#106](https://github.com/tmlmt/cooklang-parser/pull/106))
+- **parser:** Normalize full-width input syntax ([#108](https://github.com/tmlmt/cooklang-parser/pull/108))
+
+### 🩹 Fixes
+
+- **parseTimeToMinutes:** Support Japanese time unit aliases ([#107](https://github.com/tmlmt/cooklang-parser/pull/107))
+
+### 📦 Build
+
+- **deps:** ⚠️  Upgrade dev tools and require node 22 ([#110](https://github.com/tmlmt/cooklang-parser/pull/110))
+
+#### ⚠️ Breaking Changes
+
+- **deps:** ⚠️  Upgrade dev tools and require node 22 ([#110](https://github.com/tmlmt/cooklang-parser/pull/110))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.40
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.39...v3.0.0-alpha.40)
