@@ -59,6 +59,7 @@ import {
   getAlternativeSignature,
   parseMarkdownSegments,
 } from "../utils/parser_helpers";
+import { normalizeInputString } from "../utils/normalization";
 import { addEquivalentsAndSimplify } from "../quantities/alternatives";
 import {
   multiplyQuantityValue,
@@ -775,8 +776,7 @@ export class Recipe {
     // Type for accumulated quantities
     type QuantityAccumulator = {
       quantities: (
-        | QuantityWithExtendedUnit
-        | FlatOrGroup<QuantityWithExtendedUnit>
+        QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
       )[];
       alternativeQuantities: Map<
         number,
@@ -1199,8 +1199,7 @@ export class Recipe {
 
       // Collect all raw quantities across all signature groups
       const quantities: (
-        | QuantityWithExtendedUnit
-        | FlatOrGroup<QuantityWithExtendedUnit>
+        QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
       )[] = [];
 
       if (usedAsPrimary) {
@@ -1287,8 +1286,7 @@ export class Recipe {
         const groupsForIng = ingredientGroups.get(index);
         if (groupsForIng) {
           const quantityGroups: (
-            | IngredientQuantityGroup
-            | IngredientQuantityAndGroup
+            IngredientQuantityGroup | IngredientQuantityAndGroup
           )[] = [];
 
           for (const [, group] of groupsForIng) {
@@ -1421,10 +1419,12 @@ export class Recipe {
    */
   parse(content: string) {
     // Remove noise
-    const cleanContent = content
-      .replace(metadataRegex, "")
-      .replace(commentRegex, "")
-      .replace(blockCommentRegex, "")
+    const cleanContent = normalizeInputString(
+      content
+        .replace(metadataRegex, "")
+        .replace(commentRegex, "")
+        .replace(blockCommentRegex, ""),
+    )
       .trim()
       .split(/\r\n?|\n/);
 

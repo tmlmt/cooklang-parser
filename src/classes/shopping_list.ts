@@ -41,6 +41,7 @@ import {
 import { parseQuantityWithUnit } from "../utils/parser_helpers";
 import { formatQuantity } from "../utils/render_helpers";
 import { NoTabAsIndentError, UnknownRecipePathError } from "../errors";
+import { normalizeInputString } from "../utils/normalization";
 
 /**
  * Shopping List generator.
@@ -206,8 +207,7 @@ export class ShoppingList {
       // Separate text-value quantities (cannot be summed) from numeric ones
       const textEntries: QuantityWithExtendedUnit[] = [];
       const numericEntries: (
-        | QuantityWithExtendedUnit
-        | FlatOrGroup<QuantityWithExtendedUnit>
+        QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
       )[] = [];
       for (const q of rawQuantities) {
         if (
@@ -1058,7 +1058,7 @@ export class ShoppingList {
    */
   private parseRecipeRefLine(line: string): ShoppingListRecipeRef {
     // this function is always called for lines starting with "./" so regex always matches
-    const match = line.match(recipeRefLineRegex)!;
+    const match = normalizeInputString(line).match(recipeRefLineRegex)!;
     return {
       path: match[1]!,
       servings: match[2] ? Number(match[2]) : undefined,
@@ -1070,7 +1070,7 @@ export class ShoppingList {
    * @internal
    */
   private parseManualItemLine(line: string): AddedIngredient {
-    const match = line.match(manualIngredientRegex);
+    const match = normalizeInputString(line).match(manualIngredientRegex);
     const groups = match!.groups as { name: string; quantity?: string };
     const name = groups.name.trim();
     if (groups.quantity) {

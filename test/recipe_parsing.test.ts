@@ -12,6 +12,7 @@ import {
   ReferencedItemCannotBeRedefinedError,
 } from "../src/errors";
 import type {
+  Cookware,
   Ingredient,
   IngredientItem,
   Note,
@@ -801,6 +802,34 @@ describe("parse function", () => {
   it("throws error for missing timer unit", () => {
     const badInput = "Cook for ~{15}";
     expect(() => new Recipe(badInput)).toThrow(/Timer missing unit/);
+  });
+
+  it("normalizes full-width Cooklang tokens", () => {
+    const result = new Recipe(
+      "＠味噌｛２％大さじ｝を＃鍋｛１｝で〜煮る｛１０％分｝。｛｛３００％g｝｝",
+    );
+    expect(result.ingredients[0]).toMatchObject<Ingredient>({
+      name: "味噌",
+      quantities: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+          unit: "大さじ",
+        },
+      ],
+    });
+    expect(result.cookware[0]).toMatchObject<Cookware>({
+      name: "鍋",
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+    });
+    expect(result.timers[0]).toEqual({
+      name: "煮る",
+      duration: { type: "fixed", value: { type: "decimal", decimal: 10 } },
+      unit: "分",
+    });
+    expect(result.arbitraries[0]).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
+      unit: "g",
+    });
   });
 
   it("ignores comments and comments blocks", () => {
