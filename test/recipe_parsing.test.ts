@@ -7,10 +7,6 @@ import {
   recipeWithInlineAlternatives,
   recipeWithSubgroupAlternatives,
 } from "./fixtures/recipes";
-import {
-  InvalidQuantityFormat,
-  ReferencedItemCannotBeRedefinedError,
-} from "../src/errors";
 import type {
   Cookware,
   Ingredient,
@@ -70,9 +66,14 @@ describe("parse function", () => {
       ]);
     });
 
-    it("throw an error if quantity has invalid format", () => {
+    it("collects invalid-quantity diagnostic for bad quantity format", () => {
       const recipe = "Add @flour{%two}";
-      expect(() => new Recipe(recipe)).toThrowError(InvalidQuantityFormat);
+      const result = new Recipe(recipe);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "invalid-quantity",
+        severity: "error",
+      });
     });
 
     it("extracts plain unquantified single-word ingredient correctly", () => {
@@ -678,18 +679,24 @@ describe("parse function", () => {
       ]);
     });
 
-    it("should throw an error if referenced ingredient does not exist", () => {
+    it("collects diagnostic when referenced ingredient does not exist", () => {
       const recipe = `Add @&flour{100%g}.`;
-      expect(() => new Recipe(recipe)).toThrow(
-        /Referenced ingredient "flour" not found/,
-      );
+      const result = new Recipe(recipe);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "referenced-ingredient-not-found",
+        severity: "error",
+      });
     });
 
-    it("should throw an error if referenced ingredient does not have the same flags", () => {
+    it("collects diagnostic when referenced ingredient is redefined with different flags", () => {
       const recipe = `Add @flour{100%g} and more @&-flour{100%g}.`;
-      expect(() => new Recipe(recipe)).toThrowError(
-        ReferencedItemCannotBeRedefinedError,
-      );
+      const result = new Recipe(recipe);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "referenced-item-redefined",
+        severity: "error",
+      });
     });
 
     it("simply add quantities to the referenced ingredients as separate ones if units are incompatible", () => {
@@ -782,11 +789,14 @@ describe("parse function", () => {
       });
     });
 
-    it("should throw an error if referenced cookware does not have the same flags", () => {
+    it("collects diagnostic when referenced cookware is redefined with different flags", () => {
       const recipe = `Potentially use an #oven once, and potentially the same #&?oven again`;
-      expect(() => new Recipe(recipe)).toThrowError(
-        ReferencedItemCannotBeRedefinedError,
-      );
+      const result = new Recipe(recipe);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "referenced-item-redefined",
+        severity: "error",
+      });
     });
   });
 
@@ -799,9 +809,14 @@ describe("parse function", () => {
     }); // Note: timer name may be empty based on regex
   });
 
-  it("throws error for missing timer unit", () => {
+  it("collects diagnostic for missing timer unit", () => {
     const badInput = "Cook for ~{15}";
-    expect(() => new Recipe(badInput)).toThrow(/Timer missing unit/);
+    const result = new Recipe(badInput);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject({
+      code: "timer-missing-unit",
+      severity: "error",
+    });
   });
 
   it("normalizes full-width Cooklang tokens", () => {
@@ -2473,9 +2488,14 @@ Add @water{1%tbsp} and some more @&water{100%mL}
       });
     });
 
-    it("throws an error if arbitrary scalable quantity has no numeric value", () => {
+    it("collects diagnostic if arbitrary scalable quantity has no numeric value", () => {
       const recipe = "{{calory-factor}}";
-      expect(() => new Recipe(recipe)).toThrowError(InvalidQuantityFormat);
+      const result = new Recipe(recipe);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "invalid-quantity",
+        severity: "error",
+      });
     });
   });
 

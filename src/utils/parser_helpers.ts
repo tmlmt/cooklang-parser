@@ -39,6 +39,8 @@ import {
   NoTabAsIndentError,
   BadIndentationError,
   ReferencedItemCannotBeRedefinedError,
+  ReferencedIngredientNotFoundError,
+  ReferencedCookwareNotFoundError,
 } from "../errors";
 import { parseTimeToMinutes } from "./time";
 import { normalizeInputString } from "./normalization";
@@ -114,9 +116,7 @@ export function findAndUpsertIngredient(
     );
 
     if (indexFind === -1) {
-      throw new Error(
-        `Referenced ingredient "${name}" not found. A referenced ingredient must be declared before being referenced with '&'.`,
-      );
+      throw new ReferencedIngredientNotFoundError(name);
     }
 
     // Ingredient already exists
@@ -171,9 +171,7 @@ export function findAndUpsertCookware(
     );
 
     if (index === -1) {
-      throw new Error(
-        `Referenced cookware "${name}" not found. A referenced cookware must be declared before being referenced with '&'.`,
-      );
+      throw new ReferencedCookwareNotFoundError(name);
     }
 
     const existingCookware = cookware[index]!;

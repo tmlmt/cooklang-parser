@@ -11,6 +11,9 @@ importers:
       big.js:
         specifier: 7.0.1
         version: 7.0.1
+      nostics:
+        specifier: ^1.1.4
+        version: 1.1.4
       smol-toml:
         specifier: 1.7.0
         version: 1.7.0
@@ -5545,6 +5548,9 @@ packages:
 
   nostics@0.2.0:
     resolution: {integrity: sha512-/WQpI46UMbqvy1okYb+V+9wW3J8/m6GJ33wm691n/tyi6YtJiZ6ssJjENAU7y4evfYrrgYN9HllKDzPvffil1w==}
+
+  nostics@1.1.4:
+    resolution: {integrity: sha512-U4FApICSLCQ0dYiN59pxUCEZC053palQXi57yLaNdMaL6TBY4C4q3qZrJKUGcor2dGv8EhEwt8y5KvU2bo2kFg==}
 
   npm-run-path@5.3.0:
     resolution: {integrity: sha512-ppwTtiJZq0O/ai0z7yfudtBpWIoxM8yE6nHi1X47eFR2EWORqfbu6CnPlNsjeN683eT0qG6H/Pyf9fCcvjnnnQ==}
@@ -12874,6 +12880,8 @@ snapshots:
       magic-string: 0.30.21
       oxc-parser: 0.132.0
       unplugin: 3.0.0
+
+  nostics@1.1.4: {}
 
   npm-run-path@5.3.0:
     dependencies:

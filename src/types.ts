@@ -536,8 +536,7 @@ export interface RawQuantityGroup {
   flags?: IngredientFlag[];
   /** The raw, unprocessed quantities for this ingredient across all its mentions. */
   quantities: (
-    | QuantityWithExtendedUnit
-    | FlatOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[];
 }
 
@@ -628,11 +627,7 @@ export interface ArbitraryScalableItem {
  * @category Types
  */
 export type StepItem =
-  | TextItem
-  | IngredientItem
-  | CookwareItem
-  | TimerItem
-  | ArbitraryScalableItem;
+  TextItem | IngredientItem | CookwareItem | TimerItem | ArbitraryScalableItem;
 
 /**
  * Represents a step in a recipe.
@@ -1096,9 +1091,7 @@ export interface QuantityWithUnitDef extends QuantityBase {
  * @category Types
  */
 export type QuantityWithUnitLike =
-  | QuantityWithPlainUnit
-  | QuantityWithExtendedUnit
-  | QuantityWithUnitDef;
+  QuantityWithPlainUnit | QuantityWithExtendedUnit | QuantityWithUnitDef;
 
 /**
  * Maps equivalent unit name → (primary unit name → ratio).
@@ -1144,33 +1137,93 @@ export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
  * @category Types
  */
 export type FlatGroup<T = QuantityWithUnitLike> =
-  | FlatAndGroup<T>
-  | FlatOrGroup<T>;
+  FlatAndGroup<T> | FlatOrGroup<T>;
 /**
  * Represents any group type that may include nested groups
  * @category Types
  */
 export type MaybeNestedGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedAndGroup<T>
-  | MaybeNestedOrGroup<T>;
+  MaybeNestedAndGroup<T> | MaybeNestedOrGroup<T>;
 /**
  * Represents any group type (flat or nested)
  * @category Types
  */
 export type Group<T = QuantityWithUnitLike> =
-  | MaybeNestedGroup<T>
-  | FlatGroup<T>;
+  MaybeNestedGroup<T> | FlatGroup<T>;
 /**
  * Represents any "or" group (flat or nested)
  * @category Types
  */
 export type OrGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedOrGroup<T>
-  | FlatOrGroup<T>;
+  MaybeNestedOrGroup<T> | FlatOrGroup<T>;
 /**
  * Represents any "and" group (flat or nested)
  * @category Types
  */
 export type AndGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedAndGroup<T>
-  | FlatAndGroup<T>;
+  MaybeNestedAndGroup<T> | FlatAndGroup<T>;
+
+// ---------------------------------------------------------------------------
+// Diagnostics
+// ---------------------------------------------------------------------------
+
+/**
+ * A position within a source string.
+ * @category Types
+ */
+export interface SourcePosition {
+  /** 0-based byte offset from the start of the source string. */
+  offset: number;
+  /** 1-based line number. */
+  line: number;
+  /** 1-based column number. */
+  column: number;
+}
+
+/**
+ * A half-open range `[start, end)` within a source string.
+ * @category Types
+ */
+export interface SourceSpan {
+  start: SourcePosition;
+  end: SourcePosition;
+}
+
+/**
+ * A single diagnostic emitted during recipe parsing.
+ * @category Types
+ */
+export interface CooklangParseDiagnostic {
+  /** Stable code identifying the problem (e.g. `"invalid-quantity"`). */
+  code: string;
+  /** Human-readable description of what went wrong. */
+  message: string;
+  /** Actionable instructions on how to fix the problem, if available. */
+  fix?: string;
+  /** Link to extended documentation, if available. */
+  docs?: string;
+  /** Severity level. */
+  severity: "error" | "warning";
+  /** Location of the problem in the cleaned recipe source. */
+  span?: SourceSpan;
+}
+
+/**
+ * The result of a successful (or partial) recipe parse.
+ * @category Types
+ */
+export interface ParseResult {
+  /** The parsed recipe. */
+  recipe: Recipe;
+  /**
+   * Diagnostics collected during parsing.
+   * An empty array means the parse was clean.
+   */
+  diagnostics: CooklangParseDiagnostic[];
+  /**
+   * The cleaned recipe body text (metadata and comments stripped, trimmed)
+   * that was fed to the parser. Span positions refer to this string.
+   * Pass to {@link formatDiagnostic} to render code-frame output.
+   */
+  source: string;
+}

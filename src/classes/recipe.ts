@@ -77,7 +77,27 @@ import { resolveUnit, normalizeUnit } from "../units/definitions";
 import { isUnitCompatibleWithSystem } from "../units/compatibility";
 import Big from "big.js";
 import { deepClone } from "../utils/general";
-import { InvalidQuantityFormat } from "../errors";
+import {
+  InvalidQuantityFormat,
+  ReferencedIngredientNotFoundError,
+  ReferencedCookwareNotFoundError,
+  ReferencedItemCannotBeRedefinedError,
+  NoTabAsIndentError,
+  BadIndentationError,
+  CooklangParseError,
+} from "../errors";
+import {
+  invalidQuantityDiagnostic,
+  timerMissingUnitDiagnostic,
+  referencedIngredientNotFoundDiagnostic,
+  referencedCookwareNotFoundDiagnostic,
+  referencedItemRedefinedDiagnostic,
+  noTabIndentDiagnostic,
+  badIndentationDiagnostic,
+  metadataParseErrorDiagnostic,
+} from "../diagnostics";
+import { buildLineOffsets, makeSpan } from "../utils/spans";
+import type { CooklangParseDiagnostic, ParseResult } from "../types";
 
 /**
  * Recipe parser.
@@ -144,6 +164,11 @@ export class Recipe {
    */
   arbitraries: ArbitraryScalable[] = [];
   /**
+   * Diagnostics collected during the last call to {@link Recipe.parse}.
+   * An empty array means the parse was clean.
+   */
+  diagnostics: CooklangParseDiagnostic[] = [];
+  /**
    * The parsed recipe servings. Used for scaling. Parsed from one of
    * {@link Metadata.servings}, {@link Metadata.yield} or {@link Metadata.serves}
    * metadata fields.
@@ -167,6 +192,11 @@ export class Recipe {
    * Used for resolving ambiguous units during quantity addition.
    */
   private static unitSystems = new WeakMap<Recipe, SpecificUnitSystem>();
+
+  /** Line offsets of the cleaned source — rebuilt on each parse() call. */
+  private _lineOffsets: number[] = [];
+  /** The cleaned body source for the current parse — rebuilt on each parse() call. */
+  private _cleanedSource: string = "";
 
   /**
    * External storage for item count (not a property on instances).
@@ -282,6 +312,25 @@ export class Recipe {
   }
 
   /**
+   * Parses `content` and throws a {@link CooklangParseError} if any
+   * error-severity diagnostics were collected.
+   *
+   * Warnings alone do **not** cause a throw.
+   *
+   * @param content - The recipe content to parse.
+   * @returns The fully parsed Recipe.
+   * @throws {@link CooklangParseError} if error-severity diagnostics exist.
+   */
+  static parseOrThrow(content: string): Recipe {
+    const recipe = new Recipe(content);
+    const errors = recipe.diagnostics.filter((d) => d.severity === "error");
+    if (errors.length > 0) {
+      throw new CooklangParseError(errors, recipe._cleanedSource);
+    }
+    return recipe;
+  }
+
+  /**
    * Parses a matched arbitrary scalable quantity and adds it to the given array.
    * @private
    * @param regexMatchGroups - The regex match groups from arbitrary scalable regex.
@@ -337,6 +386,9 @@ export class Recipe {
 
   private _parseQuantityRecursive(
     quantityRaw: string,
+    lineIdx: number,
+    matchStart: number,
+    matchLength: number,
   ): QuantityWithExtendedUnit[] {
     let quantityMatch = quantityRaw.match(quantityAlternativeRegex);
     const quantities: QuantityWithExtendedUnit[] = [];
@@ -359,7 +411,13 @@ export class Recipe {
         }
         quantities.push(newQuantity);
       } else {
-        throw new InvalidQuantityFormat(quantityRaw);
+        this._collectParseError(
+          new InvalidQuantityFormat(quantityRaw),
+          lineIdx,
+          matchStart,
+          matchLength,
+        );
+        return [];
       }
       quantityMatch = quantityMatch.groups.alternative
         ? quantityMatch.groups.alternative.match(quantityAlternativeRegex)
@@ -371,6 +429,8 @@ export class Recipe {
   private _parseIngredientWithAlternativeRecursive(
     ingredientMatchString: string,
     items: Step["items"],
+    lineIdx: number,
+    matchStart: number,
     linkedVariants?: string[],
   ): void {
     const alternatives: IngredientAlternative[] = [];
@@ -443,11 +503,22 @@ export class Recipe {
         newIngredient.extras = extras;
       }
 
-      const idxInList = findAndUpsertIngredient(
-        this.ingredients,
-        newIngredient,
-        reference,
-      );
+      let idxInList: number;
+      try {
+        idxInList = findAndUpsertIngredient(
+          this.ingredients,
+          newIngredient,
+          reference,
+        );
+      } catch (e) {
+        this._collectParseError(
+          e,
+          lineIdx,
+          matchStart,
+          ingredientMatchString.length,
+        );
+        return;
+      }
 
       // 2. We build up the ingredient item
       // -- alternative quantities
@@ -455,6 +526,9 @@ export class Recipe {
       if (groups.ingredientQuantity) {
         const parsedQuantities = this._parseQuantityRecursive(
           groups.ingredientQuantity,
+          lineIdx,
+          matchStart,
+          ingredientMatchString.length,
         );
         const [primary, ...rest] = parsedQuantities;
         if (primary) {
@@ -529,6 +603,8 @@ export class Recipe {
   private _parseIngredientWithGroupKey(
     ingredientMatchString: string,
     items: Step["items"],
+    lineIdx: number,
+    matchStart: number,
     linkedVariants?: string[],
   ): void {
     const match = ingredientMatchString.match(ingredientWithGroupKeyRegex);
@@ -598,11 +674,22 @@ export class Recipe {
       newIngredient.extras = extras;
     }
 
-    const idxInList = findAndUpsertIngredient(
-      this.ingredients,
-      newIngredient,
-      reference,
-    );
+    let idxInList: number;
+    try {
+      idxInList = findAndUpsertIngredient(
+        this.ingredients,
+        newIngredient,
+        reference,
+      );
+    } catch (e) {
+      this._collectParseError(
+        e,
+        lineIdx,
+        matchStart,
+        ingredientMatchString.length,
+      );
+      return;
+    }
 
     // 2. We build up the ingredient item
     // -- alternative quantities
@@ -610,6 +697,9 @@ export class Recipe {
     if (groups.gIngredientQuantity) {
       const parsedQuantities = this._parseQuantityRecursive(
         groups.gIngredientQuantity,
+        lineIdx,
+        matchStart,
+        ingredientMatchString.length,
       );
       const [primary, ...rest] = parsedQuantities;
       itemQuantity = {
@@ -1415,25 +1505,52 @@ export class Recipe {
 
   /**
    * Parses a recipe from a string.
+   *
+   * Diagnostics are collected rather than thrown; check
+   * {@link Recipe.diagnostics} or inspect the returned {@link ParseResult}.
+   * Use {@link Recipe.parseOrThrow} if you prefer throwing on error-severity
+   * problems.
+   *
    * @param content - The recipe content to parse.
+   * @returns A {@link ParseResult} containing the recipe, diagnostics, and
+   *   the cleaned source text for code-frame formatting.
    */
-  parse(content: string) {
-    // Remove noise
-    const cleanContent = normalizeInputString(
+  parse(content: string): ParseResult {
+    // Reset diagnostic state
+    this.diagnostics = [];
+
+    // Build cleaned source + line-offset map (for span computation)
+    this._cleanedSource = normalizeInputString(
       content
         .replace(metadataRegex, "")
         .replace(commentRegex, "")
         .replace(blockCommentRegex, ""),
-    )
-      .trim()
-      .split(/\r\n?|\n/);
+    ).trim();
+    this._lineOffsets = buildLineOffsets(this._cleanedSource);
 
-    // Metadata
-    const { metadata, servings, unitSystem }: MetadataExtract =
-      extractMetadata(content);
-    this.metadata = metadata;
-    this.servings = servings;
-    if (unitSystem) Recipe.unitSystems.set(this, unitSystem);
+    // Split into lines for the parse loop
+    const cleanContent = this._cleanedSource.split(/\r\n?|\n/);
+
+    // Metadata (errors collected, not thrown)
+    try {
+      const { metadata, servings, unitSystem }: MetadataExtract =
+        extractMetadata(content);
+      this.metadata = metadata;
+      this.servings = servings;
+      if (unitSystem) Recipe.unitSystems.set(this, unitSystem);
+    } catch (e) {
+      if (e instanceof NoTabAsIndentError) {
+        this.diagnostics.push(noTabIndentDiagnostic());
+      } else if (e instanceof BadIndentationError) {
+        this.diagnostics.push(badIndentationDiagnostic());
+      } /* v8 ignore else -- @preserve: defensive catch-all for unexpected metadata errors */ else if (
+        e instanceof Error
+      ) {
+        this.diagnostics.push(
+          metadataParseErrorDiagnostic({ detail: e.message }),
+        );
+      }
+    }
 
     // Initializing utility variables and property bearers
     let blankLineBefore = true;
@@ -1446,6 +1563,7 @@ export class Recipe {
     const discoveredVariants = new Set<string>();
 
     // We parse content line by line
+    let lineIdx = 0;
     for (const line of cleanContent) {
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
@@ -1590,12 +1708,20 @@ export class Recipe {
           this._parseIngredientWithAlternativeRecursive(
             match[0],
             items,
+            lineIdx,
+            idx,
             linkedVariants,
           );
         }
         // Ingredient items part of a group of alternative ingredients
         else if (groups.gmIngredientName || groups.gsIngredientName) {
-          this._parseIngredientWithGroupKey(match[0], items, linkedVariants);
+          this._parseIngredientWithGroupKey(
+            match[0],
+            items,
+            lineIdx,
+            idx,
+            linkedVariants,
+          );
         }
         // Cookware items
         else if (groups.mCookwareName || groups.sCookwareName) {
@@ -1623,42 +1749,59 @@ export class Recipe {
             newCookware.flags = flags;
           }
 
-          // Add cookware in cookware list
-          const idxInList = findAndUpsertCookware(
-            this.cookware,
-            newCookware,
-            reference,
-          );
-
-          // Adding the item itself in the preparation
-          const newItem: CookwareItem = {
-            type: "cookware",
-            index: idxInList,
-          };
-          if (quantity) {
-            newItem.quantity = quantity;
+          // Add cookware in cookware list (errors collected, not thrown)
+          try {
+            const idxInList = findAndUpsertCookware(
+              this.cookware,
+              newCookware,
+              reference,
+            );
+            // Adding the item itself in the preparation
+            const newItem: CookwareItem = {
+              type: "cookware",
+              index: idxInList,
+            };
+            if (quantity) {
+              newItem.quantity = quantity;
+            }
+            items.push(newItem);
+          } catch (e) {
+            this._collectParseError(e, lineIdx, idx, match[0].length);
           }
-          items.push(newItem);
         }
         // Arbitrary scalable quantities
         else if (groups.arbitraryQuantity) {
-          this._parseArbitraryScalable(groups, items);
+          try {
+            this._parseArbitraryScalable(groups, items);
+          } catch (e) {
+            this._collectParseError(e, lineIdx, idx, match[0].length);
+          }
         }
         // Then it's necessarily a timer which was matched
         else {
           const durationStr = groups.timerQuantity!.trim();
           const unit = (groups.timerUnit || "").trim();
           if (!unit) {
-            throw new Error("Timer missing unit");
+            const span = makeSpan(
+              this._lineOffsets,
+              lineIdx,
+              idx,
+              match[0].length,
+            );
+            this.diagnostics.push(timerMissingUnitDiagnostic(span));
+          } else {
+            const name = groups.timerName || undefined;
+            const duration = parseQuantityValue(durationStr);
+            const timerObj: Timer = {
+              name,
+              duration,
+              unit,
+            };
+            items.push({
+              type: "timer",
+              index: this.timers.push(timerObj) - 1,
+            });
           }
-          const name = groups.timerName || undefined;
-          const duration = parseQuantityValue(durationStr);
-          const timerObj: Timer = {
-            name,
-            duration,
-            unit,
-          };
-          items.push({ type: "timer", index: this.timers.push(timerObj) - 1 });
         }
 
         cursor = idx + match[0].length;
@@ -1669,6 +1812,7 @@ export class Recipe {
       }
 
       blankLineBefore = false;
+      lineIdx++;
     }
 
     // End of content reached: pushing all temporarily saved elements
@@ -1692,6 +1836,58 @@ export class Recipe {
     }
 
     this._populateIngredientQuantities();
+
+    return {
+      recipe: this,
+      diagnostics: this.diagnostics,
+      source: this._cleanedSource,
+    };
+  }
+
+  /**
+   * Converts a caught error from a parse-time helper into a diagnostic and
+   * pushes it onto {@link Recipe.diagnostics}.
+   */
+  private _collectParseError(
+    e: unknown,
+    lineIdx: number,
+    column: number,
+    length: number,
+  ): void {
+    const span = makeSpan(this._lineOffsets, lineIdx, column, length);
+    if (e instanceof InvalidQuantityFormat) {
+      const valueMatch = e.message.match(/found in: (.+?)(?:\s*\(|$)/);
+      const value = valueMatch?.[1]?.trim() ?? "";
+      this.diagnostics.push(invalidQuantityDiagnostic({ value }, span));
+    } else if (e instanceof ReferencedIngredientNotFoundError) {
+      this.diagnostics.push(
+        referencedIngredientNotFoundDiagnostic(
+          { name: e.ingredientName },
+          span,
+        ),
+      );
+    } else if (e instanceof ReferencedCookwareNotFoundError) {
+      this.diagnostics.push(
+        referencedCookwareNotFoundDiagnostic({ name: e.cookwareName }, span),
+      );
+    } else if (e instanceof ReferencedItemCannotBeRedefinedError) {
+      this.diagnostics.push(
+        referencedItemRedefinedDiagnostic(
+          {
+            itemType: e.itemType,
+            name: e.itemName,
+            flag: String(e.modifier),
+          },
+          span,
+        ),
+      );
+    } /* v8 ignore else -- @preserve: defensive catch-all; all known parse errors are typed above */ else if (
+      e instanceof Error
+    ) {
+      this.diagnostics.push(
+        metadataParseErrorDiagnostic({ detail: e.message }),
+      );
+    }
   }
 
   /**
@@ -2243,6 +2439,9 @@ export class Recipe {
     newRecipe.timers = deepClone(this.timers);
     newRecipe.arbitraries = deepClone(this.arbitraries);
     newRecipe.servings = this.servings;
+    newRecipe.diagnostics = [...this.diagnostics];
+    newRecipe._cleanedSource = this._cleanedSource;
+    newRecipe._lineOffsets = [...this._lineOffsets];
     return newRecipe;
   }
 }

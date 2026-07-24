@@ -5,6 +5,10 @@ import { Pantry } from "../src/classes/pantry";
 import type { CategorizedIngredients, Ingredient } from "../src/types";
 import { Recipe } from "../src/classes/recipe";
 import {
+  IndexOutOfBoundsError,
+  UnresolvedAlternativesError,
+} from "../src/errors";
+import {
   recipeForShoppingList1,
   recipeForShoppingList2,
   recipeForShoppingList3,
@@ -723,21 +727,21 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       });
     });
 
-    it("should throw an error when adding a recipe with inline alternatives without choices", () => {
+    it("should throw an UnresolvedAlternativesError when adding a recipe with inline alternatives without choices", () => {
       const shoppingList = new ShoppingList();
       // recipeAlt has inline alternatives (ingredient-item-0)
       expect(() => shoppingList.addRecipe(recipeAlt)).toThrowError(
-        /Recipe has unresolved alternatives.*ingredientItems.*ingredient-item-0/,
+        UnresolvedAlternativesError,
       );
     });
 
-    it("should throw an error when adding a recipe with grouped alternatives without choices", () => {
+    it("should throw an UnresolvedAlternativesError when adding a recipe with grouped alternatives without choices", () => {
       const shoppingList = new ShoppingList();
       const recipeWithGroups = new Recipe(`
 Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
 `);
       expect(() => shoppingList.addRecipe(recipeWithGroups)).toThrowError(
-        /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
+        UnresolvedAlternativesError,
       );
     });
 
@@ -1168,10 +1172,10 @@ Sugar
         },
       ]);
     });
-    it("should throw an error when removing a recipe with an invalid index", () => {
+    it("should throw an IndexOutOfBoundsError when removing a recipe with an invalid index", () => {
       const shoppingList = new ShoppingList();
       shoppingList.addRecipe(recipe1);
-      expect(() => shoppingList.removeRecipe(1)).toThrow("Index out of bounds");
+      expect(() => shoppingList.removeRecipe(1)).toThrow(IndexOutOfBoundsError);
     });
   });
 
@@ -1246,14 +1250,14 @@ Sugar
       expect(shoppingList.ingredients).toEqual([{ name: "olive oil" }]);
     });
 
-    it("should throw an error when removing a manual item with an invalid index", () => {
+    it("should throw an IndexOutOfBoundsError when removing a manual item with an invalid index", () => {
       const shoppingList = new ShoppingList();
       shoppingList.addManualItem({ name: "bread" });
       expect(() => shoppingList.removeManualItem(1)).toThrow(
-        "Index out of bounds",
+        IndexOutOfBoundsError,
       );
       expect(() => shoppingList.removeManualItem(-1)).toThrow(
-        "Index out of bounds",
+        IndexOutOfBoundsError,
       );
     });
 

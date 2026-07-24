@@ -166,6 +166,10 @@ import type {
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
   ShoppingListRecipeRef,
+  SourcePosition,
+  SourceSpan,
+  CooklangParseDiagnostic,
+  ParseResult,
 } from "./types";
 
 export {
@@ -256,18 +260,63 @@ export {
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
   ShoppingListRecipeRef,
+  SourcePosition,
+  SourceSpan,
+  CooklangParseDiagnostic,
+  ParseResult,
 };
 
 // Errors
 
 import {
+  CooklangParseError,
+  InternalError,
+  ReferencedIngredientNotFoundError,
+  ReferencedCookwareNotFoundError,
+  ReferencedItemCannotBeRedefinedError,
   NoProductCatalogForCartError,
   NoShoppingListForCartError,
   UnknownRecipePathError,
+  DuplicateCategoryError,
+  IngredientWithoutCategoryError,
+  DuplicateIngredientAliasError,
+  IndexOutOfBoundsError,
+  UnresolvedAlternativesError,
+  InvalidProductCatalogFormat,
+  CannotAddTextValueError,
+  IncompatibleUnitsError,
+  InvalidQuantityFormat,
+  NoTabAsIndentError,
+  BadIndentationError,
 } from "./errors";
 
 export {
+  CooklangParseError,
+  InternalError,
+  ReferencedIngredientNotFoundError,
+  ReferencedCookwareNotFoundError,
+  ReferencedItemCannotBeRedefinedError,
   NoProductCatalogForCartError,
   NoShoppingListForCartError,
   UnknownRecipePathError,
+  DuplicateCategoryError,
+  IngredientWithoutCategoryError,
+  DuplicateIngredientAliasError,
+  IndexOutOfBoundsError,
+  UnresolvedAlternativesError,
+  InvalidProductCatalogFormat,
+  CannotAddTextValueError,
+  IncompatibleUnitsError,
+  InvalidQuantityFormat,
+  NoTabAsIndentError,
+  BadIndentationError,
 };
+
+// Diagnostics formatters
+
+import {
+  formatDiagnostic,
+  formatDiagnostics,
+} from "./utils/code_frame";
+
+export { formatDiagnostic, formatDiagnostics };
