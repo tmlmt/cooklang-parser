@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { CategoryConfig } from "../src/classes/category_config";
+import {
+  DuplicateCategoryError,
+  DuplicateIngredientAliasError,
+  IngredientWithoutCategoryError,
+} from "../src/errors";
 
 describe("parse_category_config", () => {
   it("parses a simple config", () => {
@@ -107,47 +112,39 @@ describe("parse_category_config", () => {
     });
   });
 
-  it("throws an error for duplicate categories", () => {
+  it("throws a DuplicateCategoryError for duplicate categories", () => {
     const config = `
             [produce]
             [produce]
         `;
-    expect(() => new CategoryConfig(config)).toThrow(
-      "Duplicate category found: produce",
-    );
+    expect(() => new CategoryConfig(config)).toThrow(DuplicateCategoryError);
   });
 
-  it("throws an error for duplicate ingredients", () => {
+  it("throws a DuplicateIngredientAliasError for duplicate ingredients", () => {
     const config = `
             [produce]
             potatoes
             [dairy]
             potatoes
         `;
-    expect(() => new CategoryConfig(config)).toThrow(
-      "Duplicate ingredient/alias found: potatoes",
-    );
+    expect(() => new CategoryConfig(config)).toThrow(DuplicateIngredientAliasError);
   });
 
-  it("throws an error for duplicate aliases", () => {
+  it("throws a DuplicateIngredientAliasError for duplicate aliases", () => {
     const config = `
             [produce]
             potato|spud
             [dairy]
             spud
         `;
-    expect(() => new CategoryConfig(config)).toThrow(
-      "Duplicate ingredient/alias found: spud",
-    );
+    expect(() => new CategoryConfig(config)).toThrow(DuplicateIngredientAliasError);
   });
 
-  it("throws an error for ingredients without a category", () => {
+  it("throws an IngredientWithoutCategoryError for ingredients without a category", () => {
     const config = `
             potatoes
             [produce]
         `;
-    expect(() => new CategoryConfig(config)).toThrow(
-      "Ingredient found without a category: potatoes",
-    );
+    expect(() => new CategoryConfig(config)).toThrow(IngredientWithoutCategoryError);
   });
 });

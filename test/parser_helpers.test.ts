@@ -37,6 +37,8 @@ import {
   NoTabAsIndentError,
   BadIndentationError,
   ReferencedItemCannotBeRedefinedError,
+  ReferencedIngredientNotFoundError,
+  ReferencedCookwareNotFoundError,
 } from "../src/errors";
 
 describe("parseSimpleMetaVar", () => {
@@ -906,10 +908,10 @@ describe("findAndUpsertCookware", () => {
     expect(cookware.length).toEqual(2);
   });
 
-  it("should throw an error if a reference cookware does not exist", () => {
+  it("should throw a ReferencedCookwareNotFoundError if a reference cookware does not exist", () => {
     const newCookware: Cookware = { name: "unreferenced-cookware", flags: [] };
     expect(() => findAndUpsertCookware([], newCookware, true)).toThrowError(
-      "Referenced cookware \"unreferenced-cookware\" not found. A referenced cookware must be declared before being referenced with '&'.",
+      ReferencedCookwareNotFoundError,
     );
   });
 
@@ -1047,7 +1049,7 @@ describe("findAndUpsertIngredient", () => {
     expect(() =>
       findAndUpsertIngredient(ingredients, newIngredient, true),
     ).toThrowError(
-      "Referenced ingredient \"unreferenced-ingredient\" not found. A referenced ingredient must be declared before being referenced with '&'.",
+      ReferencedIngredientNotFoundError,
     );
   });
 
