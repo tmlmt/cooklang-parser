@@ -250,6 +250,24 @@ describe("formatQuantityWithUnit", () => {
     };
     expect(formatQuantityWithUnit(range, "tsp")).toBe("1-2 tsp");
   });
+
+  it("should format quantity with unit first and no space", () => {
+    const fixed: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 1 },
+    };
+    expect(formatQuantityWithUnit(fixed, "大さじ", "unit-first")).toBe(
+      "大さじ1",
+    );
+  });
+
+  it("should ignore unit order when unit is missing", () => {
+    const fixed: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 3 },
+    };
+    expect(formatQuantityWithUnit(fixed, undefined, "unit-first")).toBe("3");
+  });
 });
 
 // ============================================================================
@@ -270,6 +288,14 @@ describe("formatExtendedQuantity", () => {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
     };
     expect(formatExtendedQuantity(item)).toBe("2");
+  });
+
+  it("should support unit-first formatting", () => {
+    const item: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "大さじ" },
+    };
+    expect(formatExtendedQuantity(item, "unit-first")).toBe("大さじ1");
   });
 });
 
@@ -334,6 +360,23 @@ describe("formatItemQuantity", () => {
       scalable: true,
     };
     expect(formatItemQuantity(itemQty)).toBe("240 ml | 1 cup | 8 fl oz");
+  });
+
+  it("should thread unit-first formatting to primary and equivalents", () => {
+    const itemQty: MaybeScalableQuantity = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "大さじ" },
+      equivalents: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+          unit: { name: "小さじ" },
+        },
+      ],
+      scalable: true,
+    };
+    expect(formatItemQuantity(itemQty, " | ", "unit-first")).toBe(
+      "大さじ1 | 小さじ3",
+    );
   });
 });
 
