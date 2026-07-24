@@ -70,6 +70,12 @@ describe("parseServingsMetaVar", () => {
       rawValue: 6,
     });
   });
+  it("should parse full-width separators and digits", () => {
+    expect(parseServingsMetaVar("servings：６", "servings")).toEqual({
+      numericValue: 6,
+      rawValue: 6,
+    });
+  });
   it("should parse serves", () => {
     expect(parseServingsMetaVar("serves: 4", "serves")).toEqual({
       numericValue: 4,
@@ -103,6 +109,12 @@ describe("parseYieldMetaVar", () => {
   });
   it("should parse plain quantity with unit", () => {
     expect(parseYieldMetaVar("yield: 300%g")).toEqual<Yield>({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
+      unit: "g",
+    });
+  });
+  it("should parse full-width quantity punctuation and digits", () => {
+    expect(parseYieldMetaVar("yield：３００％g")).toEqual<Yield>({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
       unit: "g",
     });
@@ -156,6 +168,12 @@ describe("parseYieldMetaVar", () => {
 describe("parseArbitraryQuantity", () => {
   it("should parse a quantity with unit", () => {
     expect(parseArbitraryQuantity("300%g")).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
+      unit: "g",
+    });
+  });
+  it("should parse full-width quantity punctuation and digits", () => {
+    expect(parseArbitraryQuantity("３００％g")).toEqual({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
       unit: "g",
     });
@@ -463,6 +481,27 @@ describe("extractMetadata", () => {
   it("should return an empty object if no metadata block is present", () => {
     const content = "Just some recipe content without metadata.";
     expect(extractMetadata(content)).toEqual({ metadata: {} });
+  });
+
+  it("should parse full-width separators and digits in metadata", () => {
+    const content = `---
+servings：２
+yield：３００％g
+time：１時間 ３０分
+---`;
+    expect(extractMetadata(content)).toEqual<MetadataExtract>({
+      metadata: {
+        servings: 2,
+        yield: {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 300 } },
+          unit: "g",
+        },
+        time: {
+          total: 90,
+        },
+      },
+      servings: 2,
+    });
   });
 
   it("should return an empty object if metavars are declared outside of block", () => {
@@ -1077,6 +1116,11 @@ describe("parseQuantityValue", () => {
       min: { type: "fraction", num: 1, den: 2 },
       max: { type: "decimal", decimal: 1 },
     });
+    expect(parseQuantityValue("１－２")).toEqual({
+      type: "range",
+      min: { type: "decimal", decimal: 1 },
+      max: { type: "decimal", decimal: 2 },
+    });
   });
 
   it("correctly parses fixed values", () => {
@@ -1085,6 +1129,10 @@ describe("parseQuantityValue", () => {
       value: { type: "decimal", decimal: 1 },
     });
     expect(parseQuantityValue("1.2")).toEqual({
+      type: "fixed",
+      value: { type: "decimal", decimal: 1.2 },
+    });
+    expect(parseQuantityValue("１．２")).toEqual({
       type: "fixed",
       value: { type: "decimal", decimal: 1.2 },
     });
@@ -1605,6 +1653,15 @@ time: hours
 describe("parseQuantityWithUnit", () => {
   it("should parse value and unit separated by %", () => {
     const result = parseQuantityWithUnit("500%g");
+    expect(result.value).toMatchObject({
+      type: "fixed",
+      value: { type: "decimal", decimal: 500 },
+    });
+    expect(result.unit).toBe("g");
+  });
+
+  it("should parse full-width quantity punctuation and digits", () => {
+    const result = parseQuantityWithUnit("５００％g");
     expect(result.value).toMatchObject({
       type: "fixed",
       value: { type: "decimal", decimal: 500 },

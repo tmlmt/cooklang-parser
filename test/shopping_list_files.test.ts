@@ -187,6 +187,26 @@ olive oil
       ]);
     });
 
+    it("should parse manual item with full-width quantity syntax", () => {
+      const content = `味噌｛２％大さじ｝\n`;
+      const list = new ShoppingList();
+      list.loadFile(content);
+      expect(list.manualItems).toMatchObject<AddedIngredient[]>([
+        {
+          name: "味噌",
+          quantities: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 2 },
+              },
+              unit: "大さじ",
+            },
+          ],
+        },
+      ]);
+    });
+
     it("should parse manual item with quantity but no unit", () => {
       const content = `eggs{6}\n`;
       const list = new ShoppingList();

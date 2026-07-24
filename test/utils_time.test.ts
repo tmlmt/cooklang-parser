@@ -131,6 +131,12 @@ describe("parseTimeToMinutes", () => {
       expect(parseTimeToMinutes("1日 2時間 30分")).toBe(1590);
     });
 
+    it("normalizes full-width digits and punctuation", () => {
+      expect(parseTimeToMinutes("１０分")).toBe(10);
+      expect(parseTimeToMinutes("１時間　３０分")).toBe(90);
+      expect(parseTimeToMinutes("１．５時間")).toBe(90);
+    });
+
     it("handles all second aliases", () => {
       expect(parseTimeToMinutes("60 s")).toBe(1);
       expect(parseTimeToMinutes("60 sec")).toBe(1);

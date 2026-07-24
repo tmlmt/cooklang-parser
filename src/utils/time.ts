@@ -9,6 +9,7 @@
  */
 
 import { compactTimeRegex, timeUnitTokenRegex } from "../regex";
+import { normalizeInputString } from "./normalization";
 
 /** Maps unit strings to their value in minutes. */
 const timeUnitToMinutes: Record<string, number> = {
@@ -60,7 +61,7 @@ export function parseTimeToMinutes(input: string | number): number | undefined {
     return input;
   }
 
-  const trimmed = input.trim();
+  const trimmed = normalizeInputString(input).trim();
   if (trimmed === "") return undefined;
 
   // Strategy 1: Plain number string → minutes

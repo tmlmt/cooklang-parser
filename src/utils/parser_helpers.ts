@@ -41,6 +41,7 @@ import {
   ReferencedItemCannotBeRedefinedError,
 } from "../errors";
 import { parseTimeToMinutes } from "./time";
+import { normalizeInputString } from "./normalization";
 
 /**
  * Pushes a pending note to the section content if it has items.
@@ -250,12 +251,13 @@ export function findAndUpsertCookware(
 export const parseFixedValue = (
   input_str: string,
 ): TextValue | DecimalValue | FractionValue => {
-  if (!numberLikeRegex.test(input_str)) {
-    return { type: "text", text: input_str };
+  const normalizedInput = normalizeInputString(input_str);
+  if (!numberLikeRegex.test(normalizedInput)) {
+    return { type: "text", text: normalizedInput };
   }
 
   // After this we know that s is either a fraction or a decimal value
-  const s = input_str.trim().replace(",", ".");
+  const s = normalizedInput.trim().replace(",", ".");
 
   // fraction
   if (s.includes("/")) {
@@ -323,7 +325,7 @@ function stringifyFixedValue(quantity: FixedValue): string {
  * ```
  */
 export function parseQuantityValue(input_str: string): FixedValue | Range {
-  const clean_str = String(input_str).trim();
+  const clean_str = normalizeInputString(String(input_str)).trim();
 
   if (rangeRegex.test(clean_str)) {
     const range_parts = clean_str.split("-");
@@ -355,7 +357,7 @@ export function parseQuantityWithUnit(input: string): {
   value: FixedValue | Range;
   unit?: string;
 } {
-  const trimmed = input.trim();
+  const trimmed = normalizeInputString(input).trim();
   const separatorIndex = trimmed.indexOf("%");
   if (separatorIndex === -1) {
     return { value: parseQuantityValue(trimmed) };
@@ -677,11 +679,12 @@ export function parseBlockScalarMetaVar(
  * @throws {@link InvalidQuantityFormat} if the value is non-numeric.
  */
 export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
-  const quantityMatch = raw.trim().match(quantityAlternativeRegex);
+  const normalizedRaw = normalizeInputString(raw);
+  const quantityMatch = normalizedRaw.trim().match(quantityAlternativeRegex);
   /* v8 ignore next 4 -- @preserve: defensive guard; regex always matches */
   if (!quantityMatch?.groups) {
     throw new InvalidQuantityFormat(
-      raw,
+      normalizedRaw,
       "Arbitrary quantities must have a numerical value",
     );
   }
@@ -689,7 +692,7 @@ export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
   const unit = quantityMatch.groups.unit;
   if (!value || (value.type === "fixed" && value.value.type === "text")) {
     throw new InvalidQuantityFormat(
-      raw,
+      normalizedRaw,
       "Arbitrary quantities must have a numerical value",
     );
   }
@@ -713,11 +716,12 @@ export function parseServingsMetaVar(
   content: string,
   varName: "servings" | "serves",
 ): { numericValue: number; rawValue: number | string } | undefined {
-  const raw = parseSimpleMetaVar(content, varName);
+  const raw = parseSimpleMetaVar(normalizeInputString(content), varName);
   if (raw === undefined) return undefined;
-  const num = Number(raw);
+  const normalizedRaw = normalizeInputString(String(raw));
+  const num = Number(normalizedRaw);
   if (isNaN(num)) {
-    return { numericValue: 1, rawValue: raw };
+    return { numericValue: 1, rawValue: normalizedRaw };
   }
   return { numericValue: num, rawValue: num };
 }
@@ -733,7 +737,7 @@ export function parseServingsMetaVar(
  * @throws {@link InvalidQuantityFormat} if the value is non-numeric.
  */
 export function parseYieldMetaVar(content: string): Yield | undefined {
-  const match = content.match(yieldMetaValueRegex);
+  const match = normalizeInputString(content).match(yieldMetaValueRegex);
   if (!match) return undefined;
 
   // Complex format branch: matched the {{...}} pattern
@@ -1006,21 +1010,22 @@ function parseListItems(
  * Parses a raw string value into appropriate type (number, string, or array).
  */
 function parseSingleLineMetadataValue(rawValue: string): MetadataValue {
+  const normalizedRawValue = normalizeInputString(rawValue);
   // Check for inline array [a, b, c]
-  if (rawValue.startsWith("[") && rawValue.endsWith("]")) {
-    return rawValue
+  if (normalizedRawValue.startsWith("[") && normalizedRawValue.endsWith("]")) {
+    return normalizedRawValue
       .slice(1, -1)
       .split(",")
       .map((item) => item.trim());
   }
 
   // Check for number (integer or decimal)
-  if (numericValueRegex.test(rawValue)) {
-    return Number(rawValue);
+  if (numericValueRegex.test(normalizedRawValue)) {
+    return Number(normalizedRawValue);
   }
 
   // Return as string
-  return rawValue;
+  return normalizedRawValue;
 }
 
 /**
@@ -1063,7 +1068,9 @@ export function extractMetadata(content: string): MetadataExtract {
   let servings: number | undefined = undefined;
 
   // Is there front-matter at all?
-  const metadataContent = content.match(metadataRegex)?.[2];
+  const metadataContent = normalizeInputString(
+    content.match(metadataRegex)?.[2] ?? "",
+  );
   if (!metadataContent) {
     return { metadata };
   }
