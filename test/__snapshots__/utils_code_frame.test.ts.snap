@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatDiagnostic > renders a diagnostic with span as a code frame 1`] = `
+"error[invalid-quantity]: Invalid quantity format: "%two"
+  ┌─ recipe:1:11
+  │
+1 │ Add @flour{%two} and @water{200%mL}
+  │           ^^^^^
+  = fix: Use a number (3), range (1-2), or fraction (1/2).
+  = see: https://cooklang-parser.tmlmt.com/e/invalid-quantity"
+`;
+
+exports[`formatDiagnostic > renders correctly for a multi-digit line number 1`] = `
+"error[invalid-quantity]: Invalid quantity format: "%bad"
+   ┌─ recipe:10:11
+   │
+10 │ Add @flour{%bad}
+   │           ^^^^^"
+`;

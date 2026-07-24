@@ -1193,3 +1193,68 @@ export type OrGroup<T = QuantityWithUnitLike> =
  */
 export type AndGroup<T = QuantityWithUnitLike> =
   MaybeNestedAndGroup<T> | FlatAndGroup<T>;
+
+// ---------------------------------------------------------------------------
+// Diagnostics
+// ---------------------------------------------------------------------------
+
+/**
+ * A position within a source string.
+ * @category Types
+ */
+export interface SourcePosition {
+  /** 0-based byte offset from the start of the source string. */
+  offset: number;
+  /** 1-based line number. */
+  line: number;
+  /** 1-based column number. */
+  column: number;
+}
+
+/**
+ * A half-open range `[start, end)` within a source string.
+ * @category Types
+ */
+export interface SourceSpan {
+  start: SourcePosition;
+  end: SourcePosition;
+}
+
+/**
+ * A single diagnostic emitted during recipe parsing.
+ * @category Types
+ */
+export interface CooklangParseDiagnostic {
+  /** Stable code identifying the problem (e.g. `"invalid-quantity"`). */
+  code: string;
+  /** Human-readable description of what went wrong. */
+  message: string;
+  /** Actionable instructions on how to fix the problem, if available. */
+  fix?: string;
+  /** Link to extended documentation, if available. */
+  docs?: string;
+  /** Severity level. */
+  severity: "error" | "warning";
+  /** Location of the problem in the cleaned recipe source. */
+  span?: SourceSpan;
+}
+
+/**
+ * The result of a successful (or partial) recipe parse.
+ * @category Types
+ */
+export interface ParseResult {
+  /** The parsed recipe. */
+  recipe: Recipe;
+  /**
+   * Diagnostics collected during parsing.
+   * An empty array means the parse was clean.
+   */
+  diagnostics: CooklangParseDiagnostic[];
+  /**
+   * The cleaned recipe body text (metadata and comments stripped, trimmed)
+   * that was fed to the parser. Span positions refer to this string.
+   * Pass to {@link formatDiagnostic} to render code-frame output.
+   */
+  source: string;
+}

@@ -13,11 +13,12 @@ import type {
   FixedValue,
   Range,
 } from "../src/types";
+import { InternalError } from "../src/errors";
 import Big from "big.js";
 
 describe("simplifyFraction", () => {
-  it("should throw an error when the denominator is zero", () => {
-    expect(() => simplifyFraction(1, 0)).toThrow("Denominator cannot be zero.");
+  it("should throw an InternalError when the denominator is zero", () => {
+    expect(() => simplifyFraction(1, 0)).toThrow(InternalError);
   });
 
   it("should simplify a fraction correctly", () => {

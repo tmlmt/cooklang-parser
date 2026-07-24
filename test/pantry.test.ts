@@ -98,6 +98,26 @@ describe("Pantry", () => {
       expect(eggs.unit).toBeUndefined();
     });
 
+    it("should parse ingredient names with spaces using quoted TOML keys", () => {
+      const pantry = new Pantry(
+        `[pantry]\n"ground beef" = { quantity = "500%g" }`,
+      );
+      expect(pantry.items).toHaveLength(1);
+      expect(pantry.items[0]).toMatchObject<Partial<PantryItem>>({
+        name: "ground beef",
+        location: "pantry",
+      });
+    });
+
+    it("should find items with spaces by name", () => {
+      const pantry = new Pantry(
+        `[pantry]\n"ground beef" = { quantity = "500%g" }`,
+      );
+      const item = pantry.findItem("ground beef");
+      expect(item).toBeDefined();
+      expect(item).toMatchObject<Partial<PantryItem>>({ name: "ground beef" });
+    });
+
     it("should parse via constructor", () => {
       const pantry = new Pantry(simplePantryToml);
       expect(pantry.items.length).toBeGreaterThan(0);

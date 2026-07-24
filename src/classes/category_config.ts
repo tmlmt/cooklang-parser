@@ -1,4 +1,9 @@
 import type { Category, CategoryIngredient } from "../types";
+import {
+  DuplicateCategoryError,
+  IngredientWithoutCategoryError,
+  DuplicateIngredientAliasError,
+} from "../errors";
 
 /**
  * Parser for category configurations specified à-la-cooklang.
@@ -70,7 +75,7 @@ export class CategoryConfig {
           .trim();
 
         if (categoryNames.has(categoryName)) {
-          throw new Error(`Duplicate category found: ${categoryName}`);
+          throw new DuplicateCategoryError(categoryName);
         }
         categoryNames.add(categoryName);
 
@@ -78,15 +83,13 @@ export class CategoryConfig {
         this.categories.push(currentCategory);
       } else {
         if (currentCategory === null) {
-          throw new Error(
-            `Ingredient found without a category: ${trimmedLine}`,
-          );
+          throw new IngredientWithoutCategoryError(trimmedLine);
         }
 
         const aliases = trimmedLine.split("|").map((s) => s.trim());
         for (const alias of aliases) {
           if (ingredientNames.has(alias)) {
-            throw new Error(`Duplicate ingredient/alias found: ${alias}`);
+            throw new DuplicateIngredientAliasError(alias);
           }
           ingredientNames.add(alias);
         }
