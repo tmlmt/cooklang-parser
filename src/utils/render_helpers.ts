@@ -188,11 +188,16 @@ export function formatUnit(unit: string | Unit | undefined): string {
 export function formatQuantityWithUnit(
   quantity: FixedValue | Range | undefined,
   unit: string | Unit | undefined,
+  unitOrder: "quantity-first" | "unit-first" = "quantity-first",
 ): string {
   if (!quantity) return "";
   const qty = formatQuantity(quantity);
   const unitStr = formatUnit(unit);
-  return unitStr ? `${qty} ${unitStr}` : qty;
+  if (!unitStr) return qty;
+  if (unitOrder === "unit-first") {
+    return `${unitStr}${qty}`;
+  }
+  return `${qty} ${unitStr}`;
 }
 
 /**
@@ -202,8 +207,11 @@ export function formatQuantityWithUnit(
  * @returns The formatted string
  * @category Helpers
  */
-export function formatExtendedQuantity(item: QuantityWithExtendedUnit): string {
-  return formatQuantityWithUnit(item.quantity, item.unit);
+export function formatExtendedQuantity(
+  item: QuantityWithExtendedUnit,
+  unitOrder: "quantity-first" | "unit-first" = "quantity-first",
+): string {
+  return formatQuantityWithUnit(item.quantity, item.unit, unitOrder);
 }
 
 /**
@@ -224,16 +232,17 @@ export function formatExtendedQuantity(item: QuantityWithExtendedUnit): string {
 export function formatItemQuantity(
   itemQuantity: MaybeScalableQuantity,
   separator: string = " | ",
+  unitOrder: "quantity-first" | "unit-first" = "quantity-first",
 ): string {
   const parts: string[] = [];
 
   // Primary quantity
-  parts.push(formatExtendedQuantity(itemQuantity));
+  parts.push(formatExtendedQuantity(itemQuantity, unitOrder));
 
   // Equivalents
   if (itemQuantity.equivalents) {
     for (const eq of itemQuantity.equivalents) {
-      parts.push(formatExtendedQuantity(eq));
+      parts.push(formatExtendedQuantity(eq, unitOrder));
     }
   }
 
