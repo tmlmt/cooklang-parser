@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.43
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.42...v3.0.0-alpha.43)
+
+### 🩹 Fixes
+
+- **render_helpers:** Auto-resolve unitOrder from string units in formatQuantityWithUnit ([b441b4c](https://github.com/tmlmt/cooklang-parser/commit/b441b4c))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.42
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.41...v3.0.0-alpha.42)
