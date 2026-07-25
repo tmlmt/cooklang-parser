@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.42
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.41...v3.0.0-alpha.42)
+
+### 🩹 Fixes
+
+- **render_helpers:** Infer baseOrder from unit name and support JP tsp/tbsp ([36bd80f](https://github.com/tmlmt/cooklang-parser/commit/36bd80f))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.41
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.40...v3.0.0-alpha.41)
