@@ -261,6 +261,14 @@ describe("formatQuantityWithUnit", () => {
     );
   });
 
+  it("should auto-resolve unit-first order from string units", () => {
+    const fixed: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 1 },
+    };
+    expect(formatQuantityWithUnit(fixed, "大さじ")).toBe("大さじ1");
+  });
+
   it("should ignore unit order when unit is missing", () => {
     const fixed: FixedValue = {
       type: "fixed",

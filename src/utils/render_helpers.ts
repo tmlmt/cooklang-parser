@@ -14,6 +14,7 @@ import type {
 } from "../types";
 import { Recipe } from "../classes/recipe";
 import { Section } from "../classes/section";
+import { resolveUnit } from "../units/definitions";
 
 // ============================================================================
 // Quantity Formatting Helpers
@@ -196,7 +197,9 @@ export function formatQuantityWithUnit(
   if (!unitStr) return qty;
   const order =
     unitOrder ??
-    (typeof unit !== "string" ? unit?.unitOrder : undefined) ??
+    (typeof unit === "string"
+      ? resolveUnit(unit).unitOrder
+      : unit?.unitOrder) ??
     "quantity-first";
   if (order === "unit-first") {
     return `${unitStr}${qty}`;
