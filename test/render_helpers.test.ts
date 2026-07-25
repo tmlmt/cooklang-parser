@@ -268,6 +268,26 @@ describe("formatQuantityWithUnit", () => {
     };
     expect(formatQuantityWithUnit(fixed, undefined, "unit-first")).toBe("3");
   });
+
+  it("should use unit-first when Unit object carries unitOrder", () => {
+    const fixed: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 2 },
+    };
+    const unit: Unit = { name: "大さじ", unitOrder: "unit-first" };
+    expect(formatQuantityWithUnit(fixed, unit)).toBe("大さじ2");
+  });
+
+  it("should let explicit override take precedence over unit.unitOrder", () => {
+    const fixed: FixedValue = {
+      type: "fixed",
+      value: { type: "decimal", decimal: 2 },
+    };
+    const unit: Unit = { name: "大さじ", unitOrder: "unit-first" };
+    expect(formatQuantityWithUnit(fixed, unit, "quantity-first")).toBe(
+      "2 大さじ",
+    );
+  });
 });
 
 // ============================================================================
@@ -296,6 +316,14 @@ describe("formatExtendedQuantity", () => {
       unit: { name: "大さじ" },
     };
     expect(formatExtendedQuantity(item, "unit-first")).toBe("大さじ1");
+  });
+
+  it("should use unit-first automatically when unit carries unitOrder", () => {
+    const item: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "大さじ", unitOrder: "unit-first" },
+    };
+    expect(formatExtendedQuantity(item)).toBe("大さじ1");
   });
 });
 
@@ -377,6 +405,22 @@ describe("formatItemQuantity", () => {
     expect(formatItemQuantity(itemQty, " | ", "unit-first")).toBe(
       "大さじ1 | 小さじ3",
     );
+  });
+
+  it("should auto-detect unit-first per unit when units carry unitOrder", () => {
+    const itemQty: MaybeScalableQuantity = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "大さじ", unitOrder: "unit-first" },
+      equivalents: [
+        {
+          quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },
+          unit: { name: "ml" },
+        },
+      ],
+      scalable: true,
+    };
+    // Primary uses unit-first from unit.unitOrder; equivalent has no unitOrder so quantity-first
+    expect(formatItemQuantity(itemQty)).toBe("大さじ1 | 100 ml");
   });
 });
 

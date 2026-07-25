@@ -181,13 +181,14 @@ describe("normalizeAllUnits", () => {
                 name: "tbsp",
                 type: "volume",
                 system: "ambiguous",
-                aliases: ["tablespoon", "tablespoons"],
+                aliases: ["tablespoon", "tablespoons", "大さじ", "おおさじ"],
                 toBase: 15,
                 toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
                 fractions: {
                   enabled: true,
                 },
                 maxValue: 4,
+                unitFirstAliases: ["大さじ", "おおさじ"],
               },
             },
             {

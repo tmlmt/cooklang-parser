@@ -188,13 +188,17 @@ export function formatUnit(unit: string | Unit | undefined): string {
 export function formatQuantityWithUnit(
   quantity: FixedValue | Range | undefined,
   unit: string | Unit | undefined,
-  unitOrder: "quantity-first" | "unit-first" = "quantity-first",
+  unitOrder?: "quantity-first" | "unit-first",
 ): string {
   if (!quantity) return "";
   const qty = formatQuantity(quantity);
   const unitStr = formatUnit(unit);
   if (!unitStr) return qty;
-  if (unitOrder === "unit-first") {
+  const order =
+    unitOrder ??
+    (typeof unit !== "string" ? unit?.unitOrder : undefined) ??
+    "quantity-first";
+  if (order === "unit-first") {
     return `${unitStr}${qty}`;
   }
   return `${qty} ${unitStr}`;
@@ -209,7 +213,7 @@ export function formatQuantityWithUnit(
  */
 export function formatExtendedQuantity(
   item: QuantityWithExtendedUnit,
-  unitOrder: "quantity-first" | "unit-first" = "quantity-first",
+  unitOrder?: "quantity-first" | "unit-first",
 ): string {
   return formatQuantityWithUnit(item.quantity, item.unit, unitOrder);
 }
@@ -232,7 +236,7 @@ export function formatExtendedQuantity(
 export function formatItemQuantity(
   itemQuantity: MaybeScalableQuantity,
   separator: string = " | ",
-  unitOrder: "quantity-first" | "unit-first" = "quantity-first",
+  unitOrder?: "quantity-first" | "unit-first",
 ): string {
   const parts: string[] = [];
 

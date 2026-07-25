@@ -15,6 +15,8 @@ describe("normalizeUnit", () => {
     expect(normalizeUnit("kilogram")?.name).toBe("kg");
     expect(normalizeUnit("L")?.name).toBe("l");
     expect(normalizeUnit("pounds")?.name).toBe("lb");
+    expect(normalizeUnit("大さじ")?.name).toBe("tbsp");
+    expect(normalizeUnit("小さじ")?.name).toBe("tsp");
   });
 
   it("should return undefined for unknown units", () => {
@@ -36,6 +38,23 @@ describe("resolveUnit", () => {
 
   it("should return type 'other' for unknown units", () => {
     expect(resolveUnit("glug").type).toBe("other");
+  });
+
+  it("should set unitOrder to 'unit-first' for JP tablespoon aliases", () => {
+    expect(resolveUnit("大さじ").unitOrder).toBe("unit-first");
+    expect(resolveUnit("おおさじ").unitOrder).toBe("unit-first");
+  });
+
+  it("should set unitOrder to 'unit-first' for JP teaspoon aliases", () => {
+    expect(resolveUnit("小さじ").unitOrder).toBe("unit-first");
+    expect(resolveUnit("こさじ").unitOrder).toBe("unit-first");
+  });
+
+  it("should not set unitOrder for western tablespoon/teaspoon aliases", () => {
+    expect(resolveUnit("tbsp").unitOrder).toBeUndefined();
+    expect(resolveUnit("tablespoon").unitOrder).toBeUndefined();
+    expect(resolveUnit("tsp").unitOrder).toBeUndefined();
+    expect(resolveUnit("teaspoon").unitOrder).toBeUndefined();
   });
 });
 

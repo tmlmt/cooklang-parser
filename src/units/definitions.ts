@@ -87,21 +87,23 @@ export const units: UnitDefinition[] = [
     name: "tsp",
     type: "volume",
     system: "ambiguous",
-    aliases: ["teaspoon", "teaspoons"],
+    aliases: ["teaspoon", "teaspoons", "小さじ", "こさじ"],
     toBase: 5, // default: metric
     toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919, JP: 5 },
     maxValue: 5, // 3 tsp = 1 tbsp (but allow a bit more)
     fractions: { enabled: true, denominators: [2, 3, 4, 8] },
+    unitFirstAliases: ["小さじ", "こさじ"],
   },
   {
     name: "tbsp",
     type: "volume",
     system: "ambiguous",
-    aliases: ["tablespoon", "tablespoons"],
+    aliases: ["tablespoon", "tablespoons", "大さじ", "おおさじ"],
     toBase: 15, // default: metric
     toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
     maxValue: 4, // ~16 tbsp = 1 cup
     fractions: { enabled: true },
+    unitFirstAliases: ["大さじ", "おおさじ"],
   },
 
   // Volume (Ambiguous: US/UK only)
@@ -187,8 +189,16 @@ export function resolveUnit(
   integerProtected: boolean = false,
 ): UnitDefinitionLike {
   const normalizedUnit = normalizeUnit(name);
+  const nameLower = name.toLowerCase().trim();
+  const isUnitFirst = normalizedUnit?.unitFirstAliases?.some(
+    (alias) => alias.toLowerCase() === nameLower,
+  );
   const resolvedUnit: UnitDefinitionLike = normalizedUnit
-    ? { ...normalizedUnit, name }
+    ? {
+        ...normalizedUnit,
+        name,
+        ...(isUnitFirst ? { unitOrder: "unit-first" } : {}),
+      }
     : { name, type: "other", system: "none" };
   return integerProtected
     ? { ...resolvedUnit, integerProtected: true }

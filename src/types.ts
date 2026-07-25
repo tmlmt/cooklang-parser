@@ -536,8 +536,7 @@ export interface RawQuantityGroup {
   flags?: IngredientFlag[];
   /** The raw, unprocessed quantities for this ingredient across all its mentions. */
   quantities: (
-    | QuantityWithExtendedUnit
-    | FlatOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[];
 }
 
@@ -628,11 +627,7 @@ export interface ArbitraryScalableItem {
  * @category Types
  */
 export type StepItem =
-  | TextItem
-  | IngredientItem
-  | CookwareItem
-  | TimerItem
-  | ArbitraryScalableItem;
+  TextItem | IngredientItem | CookwareItem | TimerItem | ArbitraryScalableItem;
 
 /**
  * Represents a step in a recipe.
@@ -1013,6 +1008,10 @@ export interface Unit {
   /** This property is set to true when the unit is prefixed by an `=` sign in the cooklang file, e.g. `=g`
    * Indicates that quantities with this unit should be treated as integers only (no decimal/fractional values). */
   integerProtected?: boolean;
+  /** Controls whether the unit is rendered before or after the numeric quantity.
+   * Populated automatically by `resolveUnit` when the alias is listed in `unitFirstAliases`.
+   * Can also be set directly on a custom `Unit` object as an override. */
+  unitOrder?: "quantity-first" | "unit-first";
 }
 
 /**
@@ -1034,6 +1033,8 @@ export interface UnitDefinition extends Unit {
   maxValue?: number;
   /** Fraction display configuration */
   fractions?: UnitFractionConfig;
+  /** Aliases that should be formatted with the unit before the quantity (e.g. Japanese 大さじ1). */
+  unitFirstAliases?: string[];
 }
 
 /**
@@ -1055,7 +1056,13 @@ export interface UnitFractionConfig {
  */
 export type UnitDefinitionLike =
   | UnitDefinition
-  | { name: string; type: "other"; system: "none"; integerProtected?: boolean };
+  | {
+      name: string;
+      type: "other";
+      system: "none";
+      integerProtected?: boolean;
+      unitOrder?: "quantity-first" | "unit-first";
+    };
 
 /**
  * Core quantity container holding a fixed value or a range
@@ -1096,9 +1103,7 @@ export interface QuantityWithUnitDef extends QuantityBase {
  * @category Types
  */
 export type QuantityWithUnitLike =
-  | QuantityWithPlainUnit
-  | QuantityWithExtendedUnit
-  | QuantityWithUnitDef;
+  QuantityWithPlainUnit | QuantityWithExtendedUnit | QuantityWithUnitDef;
 
 /**
  * Maps equivalent unit name → (primary unit name → ratio).
@@ -1144,33 +1149,28 @@ export interface MaybeNestedAndGroup<T = QuantityWithUnitLike> {
  * @category Types
  */
 export type FlatGroup<T = QuantityWithUnitLike> =
-  | FlatAndGroup<T>
-  | FlatOrGroup<T>;
+  FlatAndGroup<T> | FlatOrGroup<T>;
 /**
  * Represents any group type that may include nested groups
  * @category Types
  */
 export type MaybeNestedGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedAndGroup<T>
-  | MaybeNestedOrGroup<T>;
+  MaybeNestedAndGroup<T> | MaybeNestedOrGroup<T>;
 /**
  * Represents any group type (flat or nested)
  * @category Types
  */
 export type Group<T = QuantityWithUnitLike> =
-  | MaybeNestedGroup<T>
-  | FlatGroup<T>;
+  MaybeNestedGroup<T> | FlatGroup<T>;
 /**
  * Represents any "or" group (flat or nested)
  * @category Types
  */
 export type OrGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedOrGroup<T>
-  | FlatOrGroup<T>;
+  MaybeNestedOrGroup<T> | FlatOrGroup<T>;
 /**
  * Represents any "and" group (flat or nested)
  * @category Types
  */
 export type AndGroup<T = QuantityWithUnitLike> =
-  | MaybeNestedAndGroup<T>
-  | FlatAndGroup<T>;
+  MaybeNestedAndGroup<T> | FlatAndGroup<T>;
