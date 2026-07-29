@@ -59,22 +59,20 @@ describe("findBestUnit", () => {
   });
 
   it("should prefer the smallest integer of all integers in any family over non-integers in input family (when input family unit has no fractions)", () => {
-    // 236.6 ml in US system: mL is metric (not US-compatible), so excluded from candidates.
-    // cup ≈ 1 (integer, any family) wins. This is the system-conversion case.
-    const mLDef = normalizeUnit("mL")!;
-    const result = findBestUnit(236.6, "volume", "US", [mLDef]);
-    expect(result.unit.name).toBe("cup");
+    // 5ml, input family = cl (no `fractions` defined).
+    // cl -> 0.5: non-integer, <1, and cl has no fractions, so it's excluded from range entirely.
+    // ml -> 5 and 小さじ -> 1 are both integers from other families; smallest (小さじ) wins.
+    const clDef = normalizeUnit("cl")!;
+    const result = findBestUnit(5, "volume", "JP", [clDef]);
+    expect(result.unit.name).toBe("小さじ");
     expect(result.value).toBeCloseTo(1);
-    const goDef = normalizeUnit("go")!;
-    const result2 = findBestUnit(15, "volume", "metric", [goDef]);
-    expect(result2.unit.name).toBe("大さじ");
-    expect(result2.value).toBeCloseTo(1);
-    const result3 = findBestUnit(14.787, "volume", "US", [goDef]);
-    expect(result3.unit.name).toBe("tbsp");
-    expect(result3.value).toBeCloseTo(1);
-    const result4 = findBestUnit(360, "volume", "JP", [goDef]);
-    expect(result4.unit.name).toBe("合");
-    expect(result4.value).toBe(2);
+
+    // Same mechanism for mass: 700g, input family = kg (no fractions).
+    // kg -> 0.7: non-integer, <1, no fractions => excluded. g -> 700: integer, in range, wins.
+    const kgDef = normalizeUnit("kg")!;
+    const result2 = findBestUnit(700, "mass", "metric", [kgDef]);
+    expect(result2.unit.name).toBe("g");
+    expect(result2.value).toBe(700);
   });
 
   it("should prefer the smallest integer when multiple candidates", () => {
