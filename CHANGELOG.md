@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0-alpha.44
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.43...v3.0.0-alpha.44)
+
+### 🩹 Fixes
+
+- **units:** Refactor JP units and add cups; preserve units when adding or preserve character family when adding two quantities of the same ([7d2abe6](https://github.com/tmlmt/cooklang-parser/commit/7d2abe6))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.43
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.42...v3.0.0-alpha.43)
