@@ -67,13 +67,13 @@ describe("findBestUnit", () => {
     expect(result.value).toBeCloseTo(1);
     const goDef = normalizeUnit("go")!;
     const result2 = findBestUnit(15, "volume", "metric", [goDef]);
-    expect(result2.unit.name).toBe("tbsp");
+    expect(result2.unit.name).toBe("大さじ");
     expect(result2.value).toBeCloseTo(1);
     const result3 = findBestUnit(14.787, "volume", "US", [goDef]);
     expect(result3.unit.name).toBe("tbsp");
     expect(result3.value).toBeCloseTo(1);
     const result4 = findBestUnit(360, "volume", "JP", [goDef]);
-    expect(result4.unit.name).toBe("go");
+    expect(result4.unit.name).toBe("合");
     expect(result4.value).toBe(2);
   });
 

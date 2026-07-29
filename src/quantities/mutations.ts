@@ -12,7 +12,12 @@ import type {
   MaybeNestedAndGroup,
   SpecificUnitSystem,
 } from "../types";
-import { normalizeUnit, resolveUnit, isNoUnit } from "../units/definitions";
+import {
+  normalizeUnit,
+  resolveUnit,
+  isNoUnit,
+  getCharacterFamily,
+} from "../units/definitions";
 import { getToBase, findBestUnit } from "../units/conversion";
 import { areUnitsConvertible } from "../units/compatibility";
 import {
@@ -203,9 +208,16 @@ export function addQuantities(
         (["metric", "JP"].includes(unit1Def.system)
           ? (unit1Def.system as "metric" | "JP")
           : "US");
-      return addAndFindBestUnit(v1, v2, unit1Def, unit1Def, effectiveSystem, [
+      return addAndFindBestUnit(
+        v1,
+        v2,
         unit1Def,
-      ]);
+        unit1Def,
+        effectiveSystem,
+        [unit1Def],
+        q1.unit.name,
+        q2.unit.name,
+      );
     }
     // Unknown unit type - just add values, keep unit
     return addQuantityValuesAndSetUnit(v1, v2, q1.unit);
@@ -255,10 +267,16 @@ export function addQuantities(
       }
     }
 
-    return addAndFindBestUnit(v1, v2, unit1Def, unit2Def, effectiveSystem, [
+    return addAndFindBestUnit(
+      v1,
+      v2,
       unit1Def,
       unit2Def,
-    ]);
+      effectiveSystem,
+      [unit1Def, unit2Def],
+      q1.unit!.name,
+      q2.unit!.name,
+    );
   }
 
   // Case 5: the two quantities have different units of unknown type
@@ -266,6 +284,41 @@ export function addQuantities(
     q1.unit?.name as string,
     q2.unit?.name as string,
   );
+}
+
+/**
+ * Determines which unit name string to display for a `findBestUnit` result,
+ * based on the original (non-normalized) input unit name(s):
+ *
+ * - If both inputs are the exact same string and the best unit didn't change
+ *   from the input unit, the original input string is preserved as-is (e.g.
+ *   "cL" + "cL" stays "cL" rather than becoming the canonical "cl").
+ * - Otherwise, if both inputs share the same character family (e.g. both
+ *   Latin script, or both Japanese script), the first alias of the best unit
+ *   (its `name` counts as alias 0) matching that family is used.
+ * - Otherwise (families differ, or none of the best unit's aliases match),
+ *   the best unit's canonical name is used.
+ */
+function resolveOutputUnitName(
+  bestUnit: UnitDefinition,
+  name1: string,
+  name2: string,
+): string {
+  if (name1 === name2 && normalizeUnit(name1)?.name === bestUnit.name) {
+    return name1;
+  }
+
+  if (getCharacterFamily(name1) === getCharacterFamily(name2)) {
+    const family = getCharacterFamily(name1);
+    const match = [bestUnit.name, ...bestUnit.aliases].find(
+      (alias) => getCharacterFamily(alias) === family,
+    );
+    if (match) {
+      return match;
+    }
+  }
+
+  return bestUnit.name;
 }
 
 /**
@@ -278,6 +331,8 @@ function addAndFindBestUnit(
   unit2Def: UnitDefinition,
   system: SpecificUnitSystem,
   inputUnits: UnitDefinition[],
+  name1: string,
+  name2: string,
 ): QuantityWithExtendedUnit {
   // Convert both values to base units and sum
   const toBase1 = getToBase(unit1Def, system);
@@ -307,6 +362,8 @@ function addAndFindBestUnit(
   // Format the value (uses fractions if unit supports them)
   const formattedValue = formatOutputValue(bestValue, bestUnit);
 
+  const outputUnitName = resolveOutputUnitName(bestUnit, name1, name2);
+
   // Handle ranges: scale the range to the best unit
   if (v1.type === "range" || v2.type === "range") {
     const r1 =
@@ -335,13 +392,13 @@ function addAndFindBestUnit(
         min: formatOutputValue(minValue, bestUnit),
         max: formatOutputValue(maxValue, bestUnit),
       },
-      unit: { name: bestUnit.name },
+      unit: { name: outputUnitName },
     };
   }
 
   return {
     quantity: { type: "fixed", value: formattedValue },
-    unit: { name: bestUnit.name },
+    unit: { name: outputUnitName },
   };
 }
 
@@ -368,9 +425,9 @@ export function convertQuantityToSystem(
   quantity: QuantityWithPlainUnit | QuantityWithExtendedUnit,
   system: SpecificUnitSystem,
 ): QuantityWithPlainUnit | QuantityWithExtendedUnit | undefined {
-  const unitDef = resolveUnit(
-    typeof quantity.unit === "string" ? quantity.unit : quantity.unit?.name,
-  );
+  const rawUnitName =
+    typeof quantity.unit === "string" ? quantity.unit : quantity.unit?.name;
+  const unitDef = resolveUnit(rawUnitName);
 
   // Cannot convert "other" type units or units without toBase
   if (unitDef.type === "other" || !("toBase" in unitDef)) {
@@ -394,6 +451,12 @@ export function convertQuantityToSystem(
   // Format the value (uses fractions if unit supports them)
   const formattedValue = formatOutputValue(bestValue, bestUnit);
 
+  const outputUnitName = resolveOutputUnitName(
+    bestUnit,
+    rawUnitName as string,
+    rawUnitName as string,
+  );
+
   // Handle ranges
   if (quantity.quantity.type === "range") {
     const bestToBase = getToBase(bestUnit, system);
@@ -409,13 +472,13 @@ export function convertQuantityToSystem(
         min: formatOutputValue(minValue, bestUnit),
         max: formatOutputValue(maxValue, bestUnit),
       },
-      unit: { name: bestUnit.name },
+      unit: { name: outputUnitName },
     };
   }
 
   return {
     quantity: { type: "fixed", value: formattedValue },
-    unit: { name: bestUnit.name },
+    unit: { name: outputUnitName },
   };
 }
 
@@ -706,13 +769,20 @@ export function applyBestUnit(
   const isSameUnit = bestUnit.name === originalCanonicalName;
 
   // Determine the output unit representation:
-  // - When upgrading/downgrading to a different unit, use the canonical best-unit name.
+  // - When upgrading/downgrading to a different unit, pick an alias of the best unit matching
+  //   the original unit's character family (e.g. a Japanese-script alias stays Japanese-script).
   // - When keeping the same unit, preserve the original alias (e.g. "cups" stays "cups").
   const outputUnit = isSameUnit
     ? q.unit
     : typeof q.unit === "string"
-      ? bestUnit.name
-      : { name: bestUnit.name };
+      ? resolveOutputUnitName(bestUnit, extended.unit.name, extended.unit.name)
+      : {
+          name: resolveOutputUnitName(
+            bestUnit,
+            extended.unit.name,
+            extended.unit.name,
+          ),
+        };
 
   // Format the value for the best unit (applies fraction representation when the unit supports
   // it, e.g. 0.5 cup → {type:"fraction", num:1, den:2}).

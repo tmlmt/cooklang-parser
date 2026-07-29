@@ -4,6 +4,7 @@ import {
   normalizeUnit,
   resolveUnit,
   isNoUnit,
+  getCharacterFamily,
   NO_UNIT,
 } from "../src/units/definitions";
 
@@ -15,8 +16,8 @@ describe("normalizeUnit", () => {
     expect(normalizeUnit("kilogram")?.name).toBe("kg");
     expect(normalizeUnit("L")?.name).toBe("l");
     expect(normalizeUnit("pounds")?.name).toBe("lb");
-    expect(normalizeUnit("大さじ")?.name).toBe("tbsp");
-    expect(normalizeUnit("小さじ")?.name).toBe("tsp");
+    expect(normalizeUnit("こさじ")?.name).toBe("小さじ");
+    expect(normalizeUnit("おおさじ")?.name).toBe("大さじ");
   });
 
   it("should return undefined for unknown units", () => {
@@ -55,6 +56,22 @@ describe("resolveUnit", () => {
     expect(resolveUnit("tablespoon").unitOrder).toBeUndefined();
     expect(resolveUnit("tsp").unitOrder).toBeUndefined();
     expect(resolveUnit("teaspoon").unitOrder).toBeUndefined();
+  });
+});
+
+describe("getCharacterFamily", () => {
+  it("should classify Latin/romanized unit names as latin", () => {
+    expect(getCharacterFamily("cL")).toBe("latin");
+    expect(getCharacterFamily("cup")).toBe("latin");
+    expect(getCharacterFamily("kosaji")).toBe("latin");
+    expect(getCharacterFamily("gou")).toBe("latin");
+  });
+
+  it("should classify Hiragana/Katakana/Kanji unit names as japanese", () => {
+    expect(getCharacterFamily("小さじ")).toBe("japanese");
+    expect(getCharacterFamily("こさじ")).toBe("japanese");
+    expect(getCharacterFamily("カップ")).toBe("japanese");
+    expect(getCharacterFamily("合")).toBe("japanese");
   });
 });
 

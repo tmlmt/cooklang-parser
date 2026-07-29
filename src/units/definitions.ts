@@ -74,11 +74,39 @@ export const units: UnitDefinition[] = [
 
   // Volume (JP)
   {
-    name: "go",
+    name: "小さじ",
     type: "volume",
     system: "JP",
-    aliases: ["gou", "goo", "合", "rice cup"],
+    aliases: ["こさじ", "kosaji"],
+    toBase: 5, // default: metric
+    maxValue: 5, // 3 tsp = 1 tbsp (but allow a bit more)
+    fractions: { enabled: true, denominators: [2, 3, 4, 8] },
+    unitFirstAliases: ["小さじ", "こさじ", "kosaji"],
+  },
+  {
+    name: "大さじ",
+    type: "volume",
+    system: "ambiguous",
+    aliases: ["おおさじ", "oosaji"],
+    toBase: 15, // default: metric
+    maxValue: 4, // ~16 tbsp = 1 cup
+    fractions: { enabled: true },
+    unitFirstAliases: ["大さじ", "おおさじ", "oosaji"],
+  },
+  {
+    name: "合",
+    type: "volume",
+    system: "JP",
+    aliases: ["gou", "goo", "go", "rice cup"],
     toBase: 180,
+    maxValue: 10,
+  },
+  {
+    name: "カップ",
+    type: "volume",
+    system: "JP",
+    aliases: ["kappu"],
+    toBase: 200,
     maxValue: 10,
   },
 
@@ -87,23 +115,21 @@ export const units: UnitDefinition[] = [
     name: "tsp",
     type: "volume",
     system: "ambiguous",
-    aliases: ["teaspoon", "teaspoons", "小さじ", "こさじ"],
+    aliases: ["teaspoon", "teaspoons"],
     toBase: 5, // default: metric
-    toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919, JP: 5 },
+    toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919 },
     maxValue: 5, // 3 tsp = 1 tbsp (but allow a bit more)
     fractions: { enabled: true, denominators: [2, 3, 4, 8] },
-    unitFirstAliases: ["小さじ", "こさじ"],
   },
   {
     name: "tbsp",
     type: "volume",
     system: "ambiguous",
-    aliases: ["tablespoon", "tablespoons", "大さじ", "おおさじ"],
+    aliases: ["tablespoon", "tablespoons"],
     toBase: 15, // default: metric
-    toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
+    toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
     maxValue: 4, // ~16 tbsp = 1 cup
     fractions: { enabled: true },
-    unitFirstAliases: ["大さじ", "おおさじ"],
   },
 
   // Volume (Ambiguous: US/UK only)
@@ -208,4 +234,16 @@ export function resolveUnit(
 export function isNoUnit(unit?: UnitDefinitionLike): boolean {
   if (!unit) return true;
   return resolveUnit(unit.name).name === NO_UNIT;
+}
+
+// Hiragana (぀-ゟ), Katakana (゠-ヿ), CJK Unified Ideographs (一-鿿)
+const JAPANESE_CHAR_RANGE = /[぀-ヿ一-鿿]/;
+
+/**
+ * Classifies a unit name string by character family (script), used to pick a
+ * matching alias when displaying converted quantities (e.g. keeping a
+ * Japanese-script alias for a Japanese-script input).
+ */
+export function getCharacterFamily(name: string): "japanese" | "latin" {
+  return JAPANESE_CHAR_RANGE.test(name) ? "japanese" : "latin";
 }

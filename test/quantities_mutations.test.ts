@@ -181,14 +181,13 @@ describe("normalizeAllUnits", () => {
                 name: "tbsp",
                 type: "volume",
                 system: "ambiguous",
-                aliases: ["tablespoon", "tablespoons", "大さじ", "おおさじ"],
+                aliases: ["tablespoon", "tablespoons"],
                 toBase: 15,
-                toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758, JP: 15 },
+                toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
                 fractions: {
                   enabled: true,
                 },
                 maxValue: 4,
-                unitFirstAliases: ["大さじ", "おおさじ"],
               },
             },
             {
@@ -826,6 +825,93 @@ describe("addQuantities", () => {
       unit: { name: "kg" },
     });
   });
+
+  it("should preserve the exact original unit string when both inputs match case-sensitively and the unit doesn't change", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+        unit: { name: "cL" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+        unit: { name: "cL" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "cL" });
+  });
+
+  it("should fall back to a family-matching alias when inputs only differ by case", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+        unit: { name: "cL" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 5 } },
+        unit: { name: "cl" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "cl" });
+  });
+
+  it("should pick the first same-family alias when inputs are different aliases of the same unit", () => {
+    // "小さじ" and "こさじ" are distinct Japanese-script aliases of the same unit
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: { name: "小さじ" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: { name: "こさじ" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "小さじ" });
+  });
+
+  it("should keep the romanized alias family when romanized aliases are used, even though the canonical name is Japanese-script", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: { name: "kosaji" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: { name: "Kosaji" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "kosaji" });
+  });
+
+  it("should fall back to the canonical unit name when inputs belong to different character families", () => {
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: { name: "kosaji" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        unit: { name: "小さじ" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "小さじ" });
+  });
+
+  it("should fall back to the canonical unit name when the best unit has no alias in the shared input family", () => {
+    // "小さじ" and "こさじ" are both Japanese-script, but the sum upgrades past
+    // the JP small-volume units to "l", which has no Japanese-script alias.
+    const result = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+        unit: { name: "小さじ" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 150 } },
+        unit: { name: "こさじ" },
+      },
+    );
+    expect(result.unit).toEqual({ name: "l" });
+  });
 });
 
 describe("getDefaultQuantityValue + addQuantities", () => {
@@ -880,6 +966,18 @@ describe("convertQuantityToSystem", () => {
     expect(result).toEqual({
       quantity: { type: "fixed", value: { type: "decimal", decimal: 237 } },
       unit: { name: "ml" },
+    });
+  });
+
+  it("should pick a same-family alias of the best unit when upgrading a romanized Japanese unit", () => {
+    const input: QuantityWithPlainUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 36 } },
+      unit: "kosaji",
+    };
+    const result = convertQuantityToSystem(input, "JP");
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "gou" },
     });
   });
 });
@@ -1427,6 +1525,32 @@ describe("applyBestUnit", () => {
     };
     const result = applyBestUnit(q, "metric");
     expect(result.unit?.name).toBe("l");
+  });
+
+  it("should pick a same-family alias of the best unit when upgrading a romanized Japanese unit", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 36 } },
+      unit: { name: "kosaji" },
+    };
+    const result = applyBestUnit(q);
+    // 36 kosaji (小さじ) = 180ml = 1 合, whose Japanese-script name is "合" but
+    // the input was romanized, so the romanized alias "gou" should be used instead.
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "gou" },
+    });
+  });
+
+  it("should keep the Japanese-script alias family when the input was Japanese-script", () => {
+    const q: QuantityWithExtendedUnit = {
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 36 } },
+      unit: { name: "小さじ" },
+    };
+    const result = applyBestUnit(q);
+    expect(result).toEqual({
+      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      unit: { name: "合" },
+    });
   });
 
   it("should handle ranges correctly", () => {
