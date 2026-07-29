@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.0.0-alpha.45
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.44...v3.0.0-alpha.45)
+
+### 🩹 Fixes
+
+- **units:** Correct JP unit system and fractions settings ([326d08c](https://github.com/tmlmt/cooklang-parser/commit/326d08c))
+
+### ✅ Tests
+
+- **findBestUnit:** Use actually relevant example to test preference for smallest integer over non-integers ([496a83d](https://github.com/tmlmt/cooklang-parser/commit/496a83d))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.44
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.43...v3.0.0-alpha.44)
