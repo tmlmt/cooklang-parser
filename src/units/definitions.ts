@@ -86,7 +86,7 @@ export const units: UnitDefinition[] = [
   {
     name: "大さじ",
     type: "volume",
-    system: "ambiguous",
+    system: "JP",
     aliases: ["おおさじ", "oosaji"],
     toBase: 15, // default: metric
     maxValue: 4, // ~16 tbsp = 1 cup
@@ -100,6 +100,7 @@ export const units: UnitDefinition[] = [
     aliases: ["gou", "goo", "go", "rice cup"],
     toBase: 180,
     maxValue: 10,
+    fractions: { enabled: true, denominators: [2] },
   },
   {
     name: "カップ",
@@ -108,6 +109,7 @@ export const units: UnitDefinition[] = [
     aliases: ["kappu"],
     toBase: 200,
     maxValue: 10,
+    fractions: { enabled: true, denominators: [2, 3, 4] },
   },
 
   // Volume (Ambiguous: metric/US/UK)

@@ -838,6 +838,19 @@ describe("addQuantities", () => {
       },
     );
     expect(result.unit).toEqual({ name: "cL" });
+
+    // Should also work with non-latin scripts
+    const result_jp = addQuantities(
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "大さじ" },
+      },
+      {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        unit: { name: "大さじ" },
+      },
+    );
+    expect(result_jp.unit).toEqual({ name: "大さじ" });
   });
 
   it("should fall back to a family-matching alias when inputs only differ by case", () => {
