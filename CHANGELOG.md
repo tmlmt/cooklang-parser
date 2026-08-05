@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.0.0-alpha.46
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.45...v3.0.0-alpha.46)
+
+### 🚀 Enhancements
+
+- **convertTo:** Also convert arbitrary scalables ([cba2bc3](https://github.com/tmlmt/cooklang-parser/commit/cba2bc3))
+
+### 🩹 Fixes
+
+- **types:** An arbitrary scalable quantity can also be a range ([1c7a35d](https://github.com/tmlmt/cooklang-parser/commit/1c7a35d))
+
+### 🏡 Chore
+
+- **test:** Replace deprecated toThrowError() by toThrow() ([a3f77cb](https://github.com/tmlmt/cooklang-parser/commit/a3f77cb))
+- Update lock file ([cfa7210](https://github.com/tmlmt/cooklang-parser/commit/cfa7210))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-alpha.45
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.44...v3.0.0-alpha.45)
