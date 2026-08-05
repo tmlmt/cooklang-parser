@@ -416,7 +416,7 @@ function addAndFindBestUnit(
 export function convertQuantityToSystem(
   quantity: QuantityWithPlainUnit,
   system: SpecificUnitSystem,
-): QuantityWithPlainUnit | undefined;
+): QuantityWithExtendedUnit | undefined;
 export function convertQuantityToSystem(
   quantity: QuantityWithExtendedUnit,
   system: SpecificUnitSystem,
@@ -424,7 +424,7 @@ export function convertQuantityToSystem(
 export function convertQuantityToSystem(
   quantity: QuantityWithPlainUnit | QuantityWithExtendedUnit,
   system: SpecificUnitSystem,
-): QuantityWithPlainUnit | QuantityWithExtendedUnit | undefined {
+): QuantityWithExtendedUnit | undefined {
   const rawUnitName =
     typeof quantity.unit === "string" ? quantity.unit : quantity.unit?.name;
   const unitDef = resolveUnit(rawUnitName);
@@ -484,8 +484,7 @@ export function convertQuantityToSystem(
 
 export function toPlainUnit(
   quantity:
-    | QuantityWithExtendedUnit
-    | MaybeNestedGroup<QuantityWithExtendedUnit>,
+    QuantityWithExtendedUnit | MaybeNestedGroup<QuantityWithExtendedUnit>,
 ): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {
   if (isQuantity(quantity))
     return quantity.unit

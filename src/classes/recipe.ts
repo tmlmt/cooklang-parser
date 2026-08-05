@@ -2198,6 +2198,17 @@ export class Recipe {
     // Re-aggregate ingredient quantities
     newRecipe._populateIngredientQuantities();
 
+    for (const arbitrary of newRecipe.arbitraries) {
+      const converted = convertQuantityToSystem(
+        { quantity: arbitrary.quantity, unit: arbitrary.unit },
+        system,
+      );
+      if (converted && converted.unit) {
+        arbitrary.quantity = converted.quantity as FixedNumericValue | Range;
+        arbitrary.unit = converted.unit.name;
+      }
+    }
+
     // Setting the unit system in 'keep' mode will convert all equivalents to that system
     // which will lead to duplicates
     if (method !== "keep") Recipe.unitSystems.set(newRecipe, system);

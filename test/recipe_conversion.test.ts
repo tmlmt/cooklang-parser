@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
 import type {
+  ArbitraryScalable,
   IngredientAlternative,
   IngredientQuantityAndGroup,
   MaybeScalableQuantity,
@@ -530,6 +531,33 @@ Add @|dairy|milk{1%cup} or @|dairy|cream{1%cup}
           expect(alt).toMatchObject(expectedItemQty);
         }
       }
+    });
+  });
+
+  describe("handles arbitrary scalable quantities", () => {
+    it("converts arbitrary scalable quantities", () => {
+      const recipe = new Recipe("Makes {{10%cup}} of sauce");
+      const converted = recipe.convertTo("metric", "keep");
+      expect(converted.arbitraries).toHaveLength(1);
+
+      const arbitrary = converted.arbitraries[0];
+      const expected: ArbitraryScalable = {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 2.37 } },
+        unit: "l",
+      };
+      expect(arbitrary).toMatchObject(expected);
+    });
+    it("leaves arbitrary scalable quantities unchanged if no conversion is possible", () => {
+      const recipe = new Recipe("Makes {{3%large}} of sauce");
+      const converted = recipe.convertTo("metric", "keep");
+      expect(converted.arbitraries).toHaveLength(1);
+
+      const arbitrary = converted.arbitraries[0];
+      const expected: ArbitraryScalable = {
+        quantity: { type: "fixed", value: { type: "decimal", decimal: 3 } },
+        unit: "large",
+      };
+      expect(arbitrary).toMatchObject(expected);
     });
   });
 });
