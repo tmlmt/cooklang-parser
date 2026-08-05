@@ -697,7 +697,7 @@ export function parseArbitraryQuantity(raw: string): ArbitraryScalable {
     );
   }
   const arbitrary: ArbitraryScalable = {
-    quantity: value as FixedNumericValue,
+    quantity: value as FixedNumericValue | Range,
   };
   if (unit) arbitrary.unit = unit;
   return arbitrary;

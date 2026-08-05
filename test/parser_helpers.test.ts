@@ -193,6 +193,16 @@ describe("parseArbitraryQuantity", () => {
       "Arbitrary quantities must have a numerical value",
     );
   });
+  it("should parse a range with unit", () => {
+    expect(parseArbitraryQuantity("1-2%kg")).toEqual({
+      quantity: {
+        type: "range",
+        min: { type: "decimal", decimal: 1 },
+        max: { type: "decimal", decimal: 2 },
+      },
+      unit: "kg",
+    });
+  });
 });
 
 describe("parseListMetaVar", () => {

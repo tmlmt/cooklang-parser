@@ -606,7 +606,7 @@ export interface ArbitraryScalable {
   /** The name of the arbitrary scalable quantity. */
   name?: string;
   /** The numerical value of the arbitrary scalable quantity. */
-  quantity: FixedNumericValue;
+  quantity: FixedNumericValue | Range;
   /** The unit of the arbitrary scalable quantity. */
   unit?: string;
 }

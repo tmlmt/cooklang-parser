@@ -1924,10 +1924,8 @@ export class Recipe {
 
     // Scale Arbitraries
     for (const arbitrary of newRecipe.arbitraries) {
-      arbitrary.quantity = multiplyQuantityValue(
-        arbitrary.quantity,
-        factor,
-      ) as FixedNumericValue;
+      arbitrary.quantity = multiplyQuantityValue(arbitrary.quantity, factor) as
+        FixedNumericValue | Range;
       const optimized = applyBestUnit(
         { quantity: arbitrary.quantity, unit: arbitrary.unit },
         unitSystem,
