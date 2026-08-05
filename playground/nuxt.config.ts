@@ -11,6 +11,13 @@ export default defineNuxtConfig({
     "@nuxtjs/device",
   ],
 
+  icon: {
+    serverBundle: "remote",
+    clientBundle: {
+      scan: true,
+    },
+  },
+
   css: ["~/assets/css/main.css"],
 
   vite: {
