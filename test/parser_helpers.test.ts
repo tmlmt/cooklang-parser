@@ -184,12 +184,12 @@ describe("parseArbitraryQuantity", () => {
     });
   });
   it("should throw on empty input", () => {
-    expect(() => parseArbitraryQuantity("")).toThrowError(
+    expect(() => parseArbitraryQuantity("")).toThrow(
       "Arbitrary quantities must have a numerical value",
     );
   });
   it("should throw on text-only value", () => {
-    expect(() => parseArbitraryQuantity("some%kg")).toThrowError(
+    expect(() => parseArbitraryQuantity("some%kg")).toThrow(
       "Arbitrary quantities must have a numerical value",
     );
   });
@@ -918,7 +918,7 @@ describe("findAndUpsertCookware", () => {
 
   it("should throw an error if a reference cookware does not exist", () => {
     const newCookware: Cookware = { name: "unreferenced-cookware", flags: [] };
-    expect(() => findAndUpsertCookware([], newCookware, true)).toThrowError(
+    expect(() => findAndUpsertCookware([], newCookware, true)).toThrow(
       "Referenced cookware \"unreferenced-cookware\" not found. A referenced cookware must be declared before being referenced with '&'.",
     );
   });
@@ -1056,7 +1056,7 @@ describe("findAndUpsertIngredient", () => {
     };
     expect(() =>
       findAndUpsertIngredient(ingredients, newIngredient, true),
-    ).toThrowError(
+    ).toThrow(
       "Referenced ingredient \"unreferenced-ingredient\" not found. A referenced ingredient must be declared before being referenced with '&'.",
     );
   });

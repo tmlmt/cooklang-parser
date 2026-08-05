@@ -17,9 +17,7 @@ import Big from "big.js";
 
 describe("simplifyFraction", () => {
   it("should throw an error when the denominator is zero", () => {
-    expect(() => simplifyFraction(1, 0)).toThrowError(
-      "Denominator cannot be zero.",
-    );
+    expect(() => simplifyFraction(1, 0)).toThrow("Denominator cannot be zero.");
   });
 
   it("should simplify a fraction correctly", () => {

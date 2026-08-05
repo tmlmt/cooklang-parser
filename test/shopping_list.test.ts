@@ -726,7 +726,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
     it("should throw an error when adding a recipe with inline alternatives without choices", () => {
       const shoppingList = new ShoppingList();
       // recipeAlt has inline alternatives (ingredient-item-0)
-      expect(() => shoppingList.addRecipe(recipeAlt)).toThrowError(
+      expect(() => shoppingList.addRecipe(recipeAlt)).toThrow(
         /Recipe has unresolved alternatives.*ingredientItems.*ingredient-item-0/,
       );
     });
@@ -736,7 +736,7 @@ Add @potato{1%=large|1.5%cup} and @&potato{1%=small|0.5%cup}
       const recipeWithGroups = new Recipe(`
 Mix @|milk|milk{200%ml} or @|milk|almond milk{100%ml}
 `);
-      expect(() => shoppingList.addRecipe(recipeWithGroups)).toThrowError(
+      expect(() => shoppingList.addRecipe(recipeWithGroups)).toThrow(
         /Recipe has unresolved alternatives.*ingredientGroups.*milk/,
       );
     });
@@ -843,7 +843,7 @@ sugar
       const shoppingList = new ShoppingList();
       const config = 2;
       // @ts-expect-error testing a deliberate type error
-      expect(() => shoppingList.setCategoryConfig(config)).toThrowError();
+      expect(() => shoppingList.setCategoryConfig(config)).toThrow();
     });
   });
 

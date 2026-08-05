@@ -28,7 +28,7 @@ describe("getUnitRatio", () => {
         },
         qWithUnitDef(1, "cup"),
       ),
-    ).toThrowError();
+    ).toThrow();
   });
 });
 

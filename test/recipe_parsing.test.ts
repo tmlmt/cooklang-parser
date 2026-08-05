@@ -72,7 +72,7 @@ describe("parse function", () => {
 
     it("throw an error if quantity has invalid format", () => {
       const recipe = "Add @flour{%two}";
-      expect(() => new Recipe(recipe)).toThrowError(InvalidQuantityFormat);
+      expect(() => new Recipe(recipe)).toThrow(InvalidQuantityFormat);
     });
 
     it("extracts plain unquantified single-word ingredient correctly", () => {
@@ -687,7 +687,7 @@ describe("parse function", () => {
 
     it("should throw an error if referenced ingredient does not have the same flags", () => {
       const recipe = `Add @flour{100%g} and more @&-flour{100%g}.`;
-      expect(() => new Recipe(recipe)).toThrowError(
+      expect(() => new Recipe(recipe)).toThrow(
         ReferencedItemCannotBeRedefinedError,
       );
     });
@@ -784,7 +784,7 @@ describe("parse function", () => {
 
     it("should throw an error if referenced cookware does not have the same flags", () => {
       const recipe = `Potentially use an #oven once, and potentially the same #&?oven again`;
-      expect(() => new Recipe(recipe)).toThrowError(
+      expect(() => new Recipe(recipe)).toThrow(
         ReferencedItemCannotBeRedefinedError,
       );
     });
@@ -2475,7 +2475,7 @@ Add @water{1%tbsp} and some more @&water{100%mL}
 
     it("throws an error if arbitrary scalable quantity has no numeric value", () => {
       const recipe = "{{calory-factor}}";
-      expect(() => new Recipe(recipe)).toThrowError(InvalidQuantityFormat);
+      expect(() => new Recipe(recipe)).toThrow(InvalidQuantityFormat);
     });
   });
 
