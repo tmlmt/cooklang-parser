@@ -9,6 +9,7 @@ import type {
   Range,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
+  IngredientAlternativesOnlyGroup,
   AlternativeIngredientRef,
 } from "../types";
 
@@ -36,7 +37,10 @@ export function isOrGroup(x: QuantityWithUnitLike | Group): x is OrGroup {
  * ```
  */
 export function isAndGroup(
-  x: IngredientQuantityGroup | IngredientQuantityAndGroup,
+  x:
+    | IngredientQuantityGroup
+    | IngredientQuantityAndGroup
+    | IngredientAlternativesOnlyGroup,
 ): x is IngredientQuantityAndGroup;
 export function isAndGroup(x: QuantityWithUnitLike | Group): x is AndGroup;
 export function isAndGroup(
@@ -44,7 +48,8 @@ export function isAndGroup(
     | QuantityWithUnitLike
     | Group
     | IngredientQuantityGroup
-    | IngredientQuantityAndGroup,
+    | IngredientQuantityAndGroup
+    | IngredientAlternativesOnlyGroup,
 ): boolean {
   return "and" in x;
 }
@@ -74,9 +79,29 @@ export function isQuantity(
  * ```
  */
 export function isSimpleGroup(
-  entry: IngredientQuantityGroup | IngredientQuantityAndGroup,
+  entry:
+    | IngredientQuantityGroup
+    | IngredientQuantityAndGroup
+    | IngredientAlternativesOnlyGroup,
 ): entry is IngredientQuantityGroup {
   return "quantity" in entry;
+}
+
+/**
+ * Type guard to check if an ingredient quantity entry only carries alternatives
+ * (the ingredient has no quantity of its own).
+ *
+ * @param entry - The quantity entry to check
+ * @returns true if the entry has neither `quantity` nor `and`
+ * @category Helpers
+ */
+export function isAlternativesOnlyGroup(
+  entry:
+    | IngredientQuantityGroup
+    | IngredientQuantityAndGroup
+    | IngredientAlternativesOnlyGroup,
+): entry is IngredientAlternativesOnlyGroup {
+  return !("quantity" in entry) && !("and" in entry);
 }
 
 function isNumericValueIntegerLike(v: DecimalValue | FractionValue): boolean {
@@ -117,8 +142,15 @@ export function isValueIntegerLike(q: FixedValue | Range): boolean {
  * ```
  */
 export function hasAlternatives(
-  entry: IngredientQuantityGroup | IngredientQuantityAndGroup,
-): entry is (IngredientQuantityGroup | IngredientQuantityAndGroup) & {
+  entry:
+    | IngredientQuantityGroup
+    | IngredientQuantityAndGroup
+    | IngredientAlternativesOnlyGroup,
+): entry is (
+  | IngredientQuantityGroup
+  | IngredientQuantityAndGroup
+  | IngredientAlternativesOnlyGroup
+) & {
   alternatives: AlternativeIngredientRef[][];
 } {
   return (

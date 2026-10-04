@@ -19,6 +19,7 @@ import type {
   QuantityWithPlainUnit,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
+  IngredientAlternativesOnlyGroup,
   ArbitraryScalable,
   FixedNumericValue,
   FixedValue,
@@ -965,19 +966,6 @@ export class Recipe {
             referencedIndices.add(alt.index);
           }
 
-          if (!alternative.quantity) continue;
-
-          // Build quantity entry with equivalents
-          const baseQty: QuantityWithExtendedUnit = {
-            quantity: alternative.quantity,
-            ...(alternative.unit && {
-              unit: alternative.unit,
-            }),
-          };
-          const quantityEntry = alternative.equivalents?.length
-            ? { or: [baseQty, ...alternative.equivalents] }
-            : baseQty;
-
           // Build alternative refs (only when no explicit choice)
           // Each inner array is one choice option (subgroup); items within
           // the same inner array are combined with "+" (AND).
@@ -1044,6 +1032,9 @@ export class Recipe {
               });
           }
 
+          // Quantity-less ingredients without alternatives have nothing to record
+          if (!alternative.quantity && !alternativeRefs) continue;
+
           // Get or create accumulator for this ingredient/signature
           // Use unit type+system for signature only when there are alternatives,
           // so compatible units (g/kg) group together but incompatible (cup/g) stay separate
@@ -1074,7 +1065,19 @@ export class Recipe {
           }
           const group = groupsForIng.get(signature)!;
 
-          group.quantities.push(quantityEntry);
+          if (alternative.quantity) {
+            const baseQty: QuantityWithExtendedUnit = {
+              quantity: alternative.quantity,
+              ...(alternative.unit && {
+                unit: alternative.unit,
+              }),
+            };
+            group.quantities.push(
+              alternative.equivalents?.length
+                ? { or: [baseQty, ...alternative.equivalents] }
+                : baseQty,
+            );
+          }
 
           // Record subgroup structure (only on first encounter for this signature)
           if (
@@ -1286,15 +1289,17 @@ export class Recipe {
         const groupsForIng = ingredientGroups.get(index);
         if (groupsForIng) {
           const quantityGroups: (
-            IngredientQuantityGroup | IngredientQuantityAndGroup
+            | IngredientQuantityGroup
+            | IngredientQuantityAndGroup
+            | IngredientAlternativesOnlyGroup
           )[] = [];
 
           for (const [, group] of groupsForIng) {
-            const summed = addEquivalentsAndSimplify(
-              group.quantities,
-              this.unitSystem,
-            );
-            const flattened = flattenPlainUnitGroup(summed);
+            const summed =
+              group.quantities.length > 0
+                ? addEquivalentsAndSimplify(group.quantities, this.unitSystem)
+                : undefined;
+            const flattened = summed ? flattenPlainUnitGroup(summed) : [];
 
             // Build alternatives from accumulated quantities, preserving subgroup structure
             let alternatives: AlternativeIngredientRef[][] | undefined;
@@ -1315,6 +1320,10 @@ export class Recipe {
                   };
                 }),
               );
+            }
+
+            if (!summed && alternatives) {
+              quantityGroups.push({ alternatives });
             }
 
             for (const gq of flattened) {

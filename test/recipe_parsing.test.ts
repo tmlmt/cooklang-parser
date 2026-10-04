@@ -1065,6 +1065,7 @@ Another step.
         name: "salt",
         flags: ["hidden"],
         alternatives: new Set([1]),
+        quantities: [{ alternatives: [[{ index: 1 }]] }],
         usedAsPrimary: true,
       });
       expect(result.ingredients[1]).toEqual({
@@ -1807,6 +1808,7 @@ Another step.
       const saltIngredient: Ingredient = {
         name: "salt",
         alternatives: new Set([1]),
+        quantities: [{ alternatives: [[{ index: 1 }]] }],
         usedAsPrimary: true,
       };
       expect(result.ingredients[0]).toEqual(saltIngredient);

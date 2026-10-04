@@ -15,6 +15,7 @@ import {
   isOrGroup,
   isQuantity,
   isSimpleGroup,
+  isAlternativesOnlyGroup,
   hasAlternatives,
   isValueIntegerLike,
 } from "../src/utils/type_guards";
@@ -134,7 +135,21 @@ describe("Type Guards", () => {
     });
   });
 
+  describe("isAlternativesOnlyGroup", () => {
+    it("should only match entries without quantity and and", () => {
+      expect(isAlternativesOnlyGroup({ alternatives: [[{ index: 1 }]] })).toBe(
+        true,
+      );
+      expect(isAlternativesOnlyGroup({ and: [qPlain(1, "cup")] })).toBe(false);
+      expect(isAlternativesOnlyGroup(qPlain(1, "cup"))).toBe(false);
+    });
+  });
+
   describe("hasAlternatives", () => {
+    it("should return true for alternatives-only groups", () => {
+      expect(hasAlternatives({ alternatives: [[{ index: 1 }]] })).toBe(true);
+    });
+
     it("should return true for entries with alternatives", () => {
       const entryWithAlternatives: IngredientQuantityGroup = {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 100 } },

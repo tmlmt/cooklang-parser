@@ -43,6 +43,7 @@ import {
 import {
   isAndGroup,
   isSimpleGroup,
+  isAlternativesOnlyGroup,
   hasAlternatives,
 } from "./utils/type_guards";
 import { convertQuantityToSystem } from "./quantities/mutations";
@@ -70,6 +71,7 @@ export {
   formatItemQuantity,
   isAndGroup,
   isSimpleGroup,
+  isAlternativesOnlyGroup,
   hasAlternatives,
   convertQuantityToSystem,
   parseFixedValue,
@@ -160,6 +162,7 @@ import type {
   MaybeNestedOrGroup,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
+  IngredientAlternativesOnlyGroup,
   AlternativeIngredientRef,
   RecipeChoices,
   RecipeAlternatives,
@@ -250,6 +253,7 @@ export {
   MaybeNestedOrGroup,
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
+  IngredientAlternativesOnlyGroup,
   AlternativeIngredientRef,
   RecipeChoices,
   RecipeAlternatives,

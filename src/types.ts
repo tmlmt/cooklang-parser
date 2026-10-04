@@ -321,6 +321,18 @@ export interface IngredientQuantityAndGroup extends FlatAndGroup<QuantityWithPla
 }
 
 /**
+ * Represents a quantity group for an ingredient that has no quantity of its own
+ * (e.g. `@butter{}|@olive oil{2%tbsp}`) but has alternatives.
+ * @category Types
+ */
+export interface IngredientAlternativesOnlyGroup {
+  /**
+   * References to alternative ingredients, structured as in {@link IngredientQuantityGroup.alternatives}.
+   */
+  alternatives: AlternativeIngredientRef[][];
+}
+
+/**
  * Represents an ingredient in a recipe.
  * @category Types
  */
@@ -330,12 +342,17 @@ export interface Ingredient {
   /**
    * Represents the quantities list for an ingredient as groups.
    * Each group contains summed quantities that share the same alternative signature.
-   * Groups can be either simple (single unit) or AND groups (incompatible primary units with summed equivalents).
+   * Groups can be either simple (single unit), AND groups (incompatible primary units with summed equivalents),
+   * or alternatives-only groups (no quantity of its own, only alternatives).
    * Only populated for primary ingredients (not alternative-only).
    * Quantities without alternatives are merged opportunistically when units are compatible.
    * Quantities with alternatives are only merged if the alternatives are exactly the same.
    */
-  quantities?: (IngredientQuantityGroup | IngredientQuantityAndGroup)[];
+  quantities?: (
+    | IngredientQuantityGroup
+    | IngredientQuantityAndGroup
+    | IngredientAlternativesOnlyGroup
+  )[];
   /** The preparation of the ingredient. */
   preparation?: string;
   /** The list of indexes of the ingredients mentioned in the preparation as alternatives to this ingredient */
@@ -744,7 +761,9 @@ export type AddedRecipeOptions = {
  * Represents an ingredient that has been added to a shopping list
  * @category Types
  */
-export type AddedIngredient = Pick<Ingredient, "name" | "quantities">;
+export type AddedIngredient = Pick<Ingredient, "name"> & {
+  quantities?: (IngredientQuantityGroup | IngredientQuantityAndGroup)[];
+};
 
 /**
  * Represents a recipe reference parsed from a `.shopping-list` file.
