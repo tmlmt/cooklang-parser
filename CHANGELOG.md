@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Enhancements
+
+- Add structured, nostics-backed recipe parse diagnostics with stable codes,
+  fixes, documentation URLs, original-source spans, and plain code-frame
+  formatting.
+- Add `Recipe.parseOrThrow()` and `CooklangParseError` for consumers that
+  prefer exception-based parse handling.
+
+### Breaking Changes
+
+- `Recipe.parse()` now returns a `ParseResult` and collects known recoverable
+  recipe syntax errors instead of failing on the first one. Existing callers
+  that require throwing should use `Recipe.parseOrThrow()`.
+- Reusing a `Recipe` instance now replaces all state from its previous parse.
+
+### Documentation
+
+- Add a diagnostics guide covering codes, recovery, source coordinates, and
+  migration from fail-fast parsing.
+
 ## v3.0.0-alpha.48
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.47...v3.0.0-alpha.48)

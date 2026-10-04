@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildLineOffsets,
   makeSpan,
+  makeSpanFromOffset,
   spanToLocString,
 } from "../src/utils/spans";
 import type { SourceSpan } from "../src/types";
@@ -55,6 +56,18 @@ describe("makeSpan", () => {
     const offsets = buildLineOffsets("hello");
     const span = makeSpan(offsets, 99, 0, 3);
     expect(span.start.offset).toBe(0);
+  });
+});
+
+describe("makeSpanFromOffset", () => {
+  it("maps an absolute offset after a CRLF to line and column", () => {
+    const source = "first\r\nsecond";
+    const offset = source.indexOf("cond");
+
+    expect(makeSpanFromOffset(buildLineOffsets(source), offset, 4)).toEqual({
+      start: { offset, line: 2, column: 3 },
+      end: { offset: offset + 4, line: 2, column: 7 },
+    });
   });
 });
 

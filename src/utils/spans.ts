@@ -48,6 +48,26 @@ export function makeSpan(
 }
 
 /**
+ * Creates a span from a 0-based absolute source offset.
+ */
+export function makeSpanFromOffset(
+  lineOffsets: number[],
+  offset: number,
+  length: number,
+): SourceSpan {
+  let low = 0;
+  let high = lineOffsets.length - 1;
+
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (lineOffsets[middle]! <= offset) low = middle;
+    else high = middle - 1;
+  }
+
+  return makeSpan(lineOffsets, low, offset - lineOffsets[low]!, length);
+}
+
+/**
  * Formats a span's start position as `"line:column"` (both 1-based).
  */
 export function spanToLocString(span: SourceSpan): string {

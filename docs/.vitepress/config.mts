@@ -37,6 +37,7 @@ export default defineConfig({
           { text: "Quick start", link: "/api/#quick-start" },
           { text: "Cooklang specs", link: "/guide-cooklang-specs" },
           { text: "Extensions", link: "/guide-extensions" }, 
+          { text: "Parse diagnostics", link: "/guide-diagnostics" },
           { text: "Unit conversion", link: "/guide-unit-conversion" }, 
           { text: "Rendering recipes", link: "/guide-rendering" },
           { text: "Product catalog syntax", link: "/guide-product-catalog" },
@@ -53,7 +54,6 @@ export default defineConfig({
                 text: "Units definition", link: "/reference-units" 
               }
             ],
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           }, ...typedocSidebar],
         collapsed: true
       },

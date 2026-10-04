@@ -95,10 +95,20 @@ import {
   referencedItemRedefinedDiagnostic,
   noTabIndentDiagnostic,
   badIndentationDiagnostic,
-  metadataParseErrorDiagnostic,
 } from "../diagnostics";
-import { buildLineOffsets, makeSpan } from "../utils/spans";
-import type { CooklangParseDiagnostic, ParseResult } from "../types";
+import { buildLineOffsets, makeSpan, makeSpanFromOffset } from "../utils/spans";
+import type {
+  CooklangParseDiagnostic,
+  ParseResult,
+  SourceSpan,
+} from "../types";
+
+interface NoteSourceSegment {
+  start: number;
+  end: number;
+  lineIdx: number;
+  column: number;
+}
 
 /**
  * Recipe parser.
@@ -194,10 +204,10 @@ export class Recipe {
    */
   private static unitSystems = new WeakMap<Recipe, SpecificUnitSystem>();
 
-  /** Line offsets of the cleaned source — rebuilt on each parse() call. */
+  /** Line offsets of the original source — rebuilt on each parse() call. */
   private _lineOffsets: number[] = [];
-  /** The cleaned body source for the current parse — rebuilt on each parse() call. */
-  private _cleanedSource: string = "";
+  /** The original source for the current parse — rebuilt on each parse() call. */
+  private _source: string = "";
 
   /**
    * External storage for item count (not a property on instances).
@@ -326,7 +336,7 @@ export class Recipe {
     const recipe = new Recipe(content);
     const errors = recipe.diagnostics.filter((d) => d.severity === "error");
     if (errors.length > 0) {
-      throw new CooklangParseError(errors, recipe._cleanedSource);
+      throw new CooklangParseError(recipe.diagnostics, recipe._source);
     }
     return recipe;
   }
@@ -360,9 +370,13 @@ export class Recipe {
   /**
    * Parses text for arbitrary scalables and returns NoteItem array.
    * @param text - The text to parse for arbitrary scalables.
+   * @param sourceSegments - Mapping from joined note text to original source positions.
    * @returns Array of NoteItem (text and arbitrary scalable items).
    */
-  private _parseNoteText(text: string): NoteItem[] {
+  private _parseNoteText(
+    text: string,
+    sourceSegments: NoteSourceSegment[],
+  ): NoteItem[] {
     const noteItems: NoteItem[] = [];
     let cursor = 0;
     const globalRegex = new RegExp(arbitraryScalableRegex.source, "g");
@@ -374,7 +388,21 @@ export class Recipe {
         noteItems.push(...parseMarkdownSegments(text.slice(cursor, idx)));
       }
 
-      this._parseArbitraryScalable(match.groups, noteItems);
+      try {
+        this._parseArbitraryScalable(match.groups, noteItems);
+      } catch (error) {
+        const segment = sourceSegments.find(
+          ({ start, end }) => idx >= start && idx < end,
+        );
+        /* v8 ignore else -- @preserve: arbitrary tokens cannot span joined note segments */
+        if (!segment) throw error;
+        this._collectParseError(
+          error,
+          segment.lineIdx,
+          segment.column + idx - segment.start,
+          match[0].length,
+        );
+      }
       cursor = idx + match[0].length;
     }
 
@@ -383,6 +411,27 @@ export class Recipe {
     }
 
     return noteItems;
+  }
+
+  private _metadataErrorSpan(
+    content: string,
+    error: NoTabAsIndentError | BadIndentationError,
+  ): SourceSpan | undefined {
+    if (
+      error.sourceLine === undefined ||
+      error.column === undefined ||
+      error.length === undefined
+    ) {
+      return undefined;
+    }
+    const metadataStart = content.match(metadataRegex)?.index ?? 0;
+    const lineOffset = content.indexOf(error.sourceLine, metadataStart);
+    if (lineOffset === -1) return undefined;
+    return makeSpanFromOffset(
+      this._lineOffsets,
+      lineOffset + error.column,
+      error.length,
+    );
   }
 
   private _parseQuantityRecursive(
@@ -1522,23 +1571,38 @@ export class Recipe {
    *
    * @param content - The recipe content to parse.
    * @returns A {@link ParseResult} containing the recipe, diagnostics, and
-   *   the cleaned source text for code-frame formatting.
+   *   the original source text for code-frame formatting.
    */
   parse(content: string): ParseResult {
-    // Reset diagnostic state
+    this.metadata = {};
+    this.choices = {
+      ingredientItems: new Map(),
+      ingredientGroups: new Map(),
+      variants: [],
+    };
+    this.ingredients = [];
+    this.sections = [];
+    this.cookware = [];
+    this.timers = [];
+    this.arbitraries = [];
     this.diagnostics = [];
+    this.servings = undefined;
+    Recipe.unitSystems.delete(this);
+    Recipe.itemCounts.set(this, 0);
+    Recipe.subgroupIndices.set(this, new Map());
 
-    // Build cleaned source + line-offset map (for span computation)
-    this._cleanedSource = normalizeInputString(
-      content
-        .replace(metadataRegex, "")
-        .replace(commentRegex, "")
-        .replace(blockCommentRegex, ""),
-    ).trim();
-    this._lineOffsets = buildLineOffsets(this._cleanedSource);
+    this._source = content;
+    this._lineOffsets = buildLineOffsets(content);
+
+    const maskSource = (match: string): string =>
+      match.replace(/[^\r\n]/g, "\0");
+    const parseSource = normalizeInputString(content)
+      .replace(metadataRegex, maskSource)
+      .replace(commentRegex, maskSource)
+      .replace(blockCommentRegex, maskSource);
 
     // Split into lines for the parse loop
-    const cleanContent = this._cleanedSource.split(/\r\n?|\n/);
+    const cleanContent = parseSource.split(/\r\n?|\n/);
 
     // Metadata (errors collected, not thrown)
     try {
@@ -1549,16 +1613,14 @@ export class Recipe {
       if (unitSystem) Recipe.unitSystems.set(this, unitSystem);
     } catch (e) {
       if (e instanceof NoTabAsIndentError) {
-        this.diagnostics.push(noTabIndentDiagnostic());
-      } else if (e instanceof BadIndentationError) {
-        this.diagnostics.push(badIndentationDiagnostic());
-      } /* v8 ignore else -- @preserve: defensive catch-all for unexpected metadata errors */ else if (
-        e instanceof Error
-      ) {
         this.diagnostics.push(
-          metadataParseErrorDiagnostic({ detail: e.message }),
+          noTabIndentDiagnostic(this._metadataErrorSpan(content, e)),
         );
-      }
+      } else if (e instanceof BadIndentationError) {
+        this.diagnostics.push(
+          badIndentationDiagnostic(this._metadataErrorSpan(content, e)),
+        );
+      } else throw e;
     }
 
     // Initializing utility variables and property bearers
@@ -1566,14 +1628,52 @@ export class Recipe {
     let section: Section = new Section();
     const items: Step["items"] = [];
     let noteText = "";
+    const noteSourceSegments: NoteSourceSegment[] = [];
+    const appendNoteText = (
+      text: string,
+      lineIdx: number,
+      column: number,
+    ): void => {
+      if (noteText.length > 0) noteText += " ";
+      const start = noteText.length;
+      noteText += text;
+      noteSourceSegments.push({
+        start,
+        end: noteText.length,
+        lineIdx,
+        column,
+      });
+    };
+    const clearNoteText = (): void => {
+      noteText = "";
+      noteSourceSegments.length = 0;
+    };
     let inNote = false;
     let stepVariants: string[] | undefined;
     let stepOptional: boolean | undefined;
     const discoveredVariants = new Set<string>();
+    let parsingStarted = false;
 
     // We parse content line by line
-    let lineIdx = 0;
-    for (const line of cleanContent) {
+    for (let lineIdx = 0; lineIdx < cleanContent.length; lineIdx++) {
+      const rawLine = cleanContent[lineIdx]!;
+      const sourceColumns: number[] = [];
+      let line = "";
+      for (let column = 0; column < rawLine.length; column++) {
+        if (rawLine[column] !== "\0") {
+          sourceColumns.push(column);
+          line += rawLine[column];
+        }
+      }
+
+      let lineStart = 0;
+      if (!parsingStarted && line.trim().length > 0) {
+        lineStart = line.length - line.trimStart().length;
+        line = line.slice(lineStart);
+        parsingStarted = true;
+      }
+      const sourceColumnAt = (visibleColumn: number): number =>
+        sourceColumns[lineStart + visibleColumn] ?? rawLine.length;
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
         flushPendingItems(section, items, stepVariants, stepOptional);
@@ -1582,10 +1682,10 @@ export class Recipe {
         stepOptional = undefined;
         flushPendingNote(
           section,
-          noteText ? this._parseNoteText(noteText) : [],
+          noteText ? this._parseNoteText(noteText, noteSourceSegments) : [],
           pendingVariants,
         );
-        noteText = "";
+        clearNoteText();
         blankLineBefore = true;
         inNote = false;
         continue;
@@ -1599,10 +1699,10 @@ export class Recipe {
         stepOptional = undefined;
         flushPendingNote(
           section,
-          noteText ? this._parseNoteText(noteText) : [],
+          noteText ? this._parseNoteText(noteText, noteSourceSegments) : [],
           pendingVariantsForNote,
         );
-        noteText = "";
+        clearNoteText();
 
         // Strip = signs and extract section name
         let sectionName = line.replace(/^=+|=+$/g, "").trim();
@@ -1642,7 +1742,14 @@ export class Recipe {
         flushPendingItems(section, items, stepVariants, stepOptional);
         // stepVariants (set by a standalone tag line) carry over to the note
         stepOptional = undefined;
-        noteText = line.substring(1).trim();
+        const noteContent = line.substring(1);
+        const leadingWhitespace =
+          noteContent.length - noteContent.trimStart().length;
+        appendNoteText(
+          noteContent.trim(),
+          lineIdx,
+          sourceColumnAt(1 + leadingWhitespace),
+        );
         inNote = true;
         blankLineBefore = false;
         continue;
@@ -1651,9 +1758,21 @@ export class Recipe {
       // Continue note
       if (inNote) {
         if (line.startsWith(">")) {
-          noteText += " " + line.substring(1).trim();
+          const noteContent = line.substring(1);
+          const leadingWhitespace =
+            noteContent.length - noteContent.trimStart().length;
+          appendNoteText(
+            noteContent.trim(),
+            lineIdx,
+            sourceColumnAt(1 + leadingWhitespace),
+          );
         } else {
-          noteText += " " + line.trim();
+          const leadingWhitespace = line.length - line.trimStart().length;
+          appendNoteText(
+            line.trim(),
+            lineIdx,
+            sourceColumnAt(leadingWhitespace),
+          );
         }
         blankLineBefore = false;
         continue;
@@ -1661,6 +1780,7 @@ export class Recipe {
 
       // Check for variant tag on the first line of a new step
       let currentLine = line;
+      let currentLineOffset = 0;
       if (items.length === 0) {
         const varMatch = currentLine.match(variantTagRegex);
         if (varMatch?.groups) {
@@ -1679,12 +1799,23 @@ export class Recipe {
             stepOptional = true;
           }
           currentLine = currentLine.slice(varMatch[0].length);
+          currentLineOffset = varMatch[0].length;
           // If the trimmed remainder starts with ">", this is an inline variant note
           if (currentLine.trimStart().startsWith(">")) {
             // noteText is always empty here: reaching this block requires inNote=false,
             // which implies noteText was already cleared. Pass [] directly.
             flushPendingNote(section, []);
-            noteText = currentLine.trimStart().substring(1).trim();
+            const trimmedLine = currentLine.trimStart();
+            const markerColumn =
+              currentLineOffset + currentLine.length - trimmedLine.length;
+            const noteContent = trimmedLine.substring(1);
+            const leadingWhitespace =
+              noteContent.length - noteContent.trimStart().length;
+            appendNoteText(
+              noteContent.trim(),
+              lineIdx,
+              sourceColumnAt(markerColumn + 1 + leadingWhitespace),
+            );
             inNote = true;
             blankLineBefore = false;
             continue;
@@ -1705,6 +1836,10 @@ export class Recipe {
       );
       for (const match of currentLine.matchAll(tokensRegex)) {
         const idx = match.index;
+        const visibleColumn = currentLineOffset + idx;
+        const sourceColumn = sourceColumnAt(visibleColumn);
+        const sourceLength =
+          sourceColumnAt(visibleColumn + match[0].length) - sourceColumn;
         /* v8 ignore else -- @preserve */
         if (idx > cursor) {
           items.push(...parseMarkdownSegments(currentLine.slice(cursor, idx)));
@@ -1718,7 +1853,7 @@ export class Recipe {
             match[0],
             items,
             lineIdx,
-            idx,
+            sourceColumn,
             linkedVariants,
           );
         }
@@ -1728,7 +1863,7 @@ export class Recipe {
             match[0],
             items,
             lineIdx,
-            idx,
+            sourceColumn,
             linkedVariants,
           );
         }
@@ -1775,7 +1910,7 @@ export class Recipe {
             }
             items.push(newItem);
           } catch (e) {
-            this._collectParseError(e, lineIdx, idx, match[0].length);
+            this._collectParseError(e, lineIdx, sourceColumn, sourceLength);
           }
         }
         // Arbitrary scalable quantities
@@ -1783,7 +1918,7 @@ export class Recipe {
           try {
             this._parseArbitraryScalable(groups, items);
           } catch (e) {
-            this._collectParseError(e, lineIdx, idx, match[0].length);
+            this._collectParseError(e, lineIdx, sourceColumn, sourceLength);
           }
         }
         // Then it's necessarily a timer which was matched
@@ -1794,8 +1929,8 @@ export class Recipe {
             const span = makeSpan(
               this._lineOffsets,
               lineIdx,
-              idx,
-              match[0].length,
+              sourceColumn,
+              sourceLength,
             );
             this.diagnostics.push(timerMissingUnitDiagnostic(span));
           } else {
@@ -1821,7 +1956,6 @@ export class Recipe {
       }
 
       blankLineBefore = false;
-      lineIdx++;
     }
 
     // End of content reached: pushing all temporarily saved elements
@@ -1829,7 +1963,7 @@ export class Recipe {
     const pendingVariantsAtEnd = inNote ? stepVariants : undefined;
     flushPendingNote(
       section,
-      noteText ? this._parseNoteText(noteText) : [],
+      noteText ? this._parseNoteText(noteText, noteSourceSegments) : [],
       pendingVariantsAtEnd,
     );
     if (!section.isBlank()) {
@@ -1849,7 +1983,7 @@ export class Recipe {
     return {
       recipe: this,
       diagnostics: this.diagnostics,
-      source: this._cleanedSource,
+      source: this._source,
     };
   }
 
@@ -1865,9 +1999,9 @@ export class Recipe {
   ): void {
     const span = makeSpan(this._lineOffsets, lineIdx, column, length);
     if (e instanceof InvalidQuantityFormat) {
-      const valueMatch = e.message.match(/found in: (.+?)(?:\s*\(|$)/);
-      const value = valueMatch?.[1]?.trim() ?? "";
-      this.diagnostics.push(invalidQuantityDiagnostic({ value }, span));
+      this.diagnostics.push(
+        invalidQuantityDiagnostic({ value: e.value }, span),
+      );
     } else if (e instanceof ReferencedIngredientNotFoundError) {
       this.diagnostics.push(
         referencedIngredientNotFoundDiagnostic(
@@ -1890,13 +2024,7 @@ export class Recipe {
           span,
         ),
       );
-    } /* v8 ignore else -- @preserve: defensive catch-all; all known parse errors are typed above */ else if (
-      e instanceof Error
-    ) {
-      this.diagnostics.push(
-        metadataParseErrorDiagnostic({ detail: e.message }),
-      );
-    }
+    } else throw e;
   }
 
   /**
@@ -2458,7 +2586,7 @@ export class Recipe {
     newRecipe.arbitraries = deepClone(this.arbitraries);
     newRecipe.servings = this.servings;
     newRecipe.diagnostics = [...this.diagnostics];
-    newRecipe._cleanedSource = this._cleanedSource;
+    newRecipe._source = this._source;
     newRecipe._lineOffsets = [...this._lineOffsets];
     return newRecipe;
   }

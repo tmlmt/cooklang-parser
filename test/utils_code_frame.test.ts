@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { Recipe } from "../src/classes/recipe";
 import { formatDiagnostic, formatDiagnostics } from "../src/utils/code_frame";
 import type { CooklangParseDiagnostic } from "../src/types";
 
@@ -79,6 +80,16 @@ describe("formatDiagnostic", () => {
     const output = formatDiagnostic(diagLine10, longSource);
     expect(output).toContain("10 │");
     expect(output).toMatchSnapshot();
+  });
+
+  it("formats parser diagnostics against the original recipe source", () => {
+    const source = "---\r\ntitle: Test\r\n---\r\n\r\nAdd @flour{%bad}";
+    const result = new Recipe().parse(source);
+    const output = formatDiagnostic(result.diagnostics[0]!, result.source);
+
+    expect(output).toContain("recipe:5:5");
+    expect(output).toContain("5 │ Add @flour{%bad}");
+    expect(output).toContain("│     ^^^^^^^^^^^^");
   });
 });
 

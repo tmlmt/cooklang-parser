@@ -56,6 +56,33 @@ console.log(recipe.cookware); // [{ name: "pan", ...}]
 console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined}]
 ```
 
+### Parse diagnostics
+
+Known recipe syntax problems are collected so callers can inspect a partial
+parse and report several problems at once:
+
+```typescript
+import { Recipe, formatDiagnostics } from "@tmlmt/cooklang-parser";
+
+const result = new Recipe().parse("Add @flour{%two} and cook for ~{5}");
+
+if (result.diagnostics.length > 0) {
+  console.error(formatDiagnostics(result.diagnostics, result.source));
+}
+```
+
+`result.source` is the original input. Diagnostic spans use 1-based lines and
+columns with 0-based UTF-16 offsets into that string. The current diagnostic
+catalog emits errors; the severity type also reserves warnings for future
+non-fatal checks.
+
+Use `Recipe.parseOrThrow(source)` when exception-based control flow is
+preferred. It throws one `CooklangParseError` containing all collected
+diagnostics when at least one error is present.
+
+See the [diagnostics guide](https://cooklang-parser.tmlmt.com/guide-diagnostics)
+for recovery behavior, codes, and migration details.
+
 - Browse the [API Reference](https://cooklang-parser.tmlmt.com/api/classes/Recipe) to discover all functionalities
 
 ## Future plans

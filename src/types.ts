@@ -1203,7 +1203,7 @@ export type AndGroup<T = QuantityWithUnitLike> =
  * @category Types
  */
 export interface SourcePosition {
-  /** 0-based byte offset from the start of the source string. */
+  /** 0-based UTF-16 code-unit offset from the start of the source string. */
   offset: number;
   /** 1-based line number. */
   line: number;
@@ -1235,7 +1235,7 @@ export interface CooklangParseDiagnostic {
   docs?: string;
   /** Severity level. */
   severity: "error" | "warning";
-  /** Location of the problem in the cleaned recipe source. */
+  /** Location of the problem in the original recipe source. */
   span?: SourceSpan;
 }
 
@@ -1252,8 +1252,7 @@ export interface ParseResult {
    */
   diagnostics: CooklangParseDiagnostic[];
   /**
-   * The cleaned recipe body text (metadata and comments stripped, trimmed)
-   * that was fed to the parser. Span positions refer to this string.
+   * The original recipe source. Span positions refer to this string.
    * Pass to {@link formatDiagnostic} to render code-frame output.
    */
   source: string;

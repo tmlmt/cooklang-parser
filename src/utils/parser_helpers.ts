@@ -845,7 +845,9 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
   // Determine base indentation from first line (spaces only)
   const baseIndentMatch = lines[0]!.match(/^(\s*)/);
   if (baseIndentMatch?.[0]?.includes("\t")) {
-    throw new NoTabAsIndentError();
+    const sourceLine = lines[0]!;
+    const column = sourceLine.indexOf("\t");
+    throw new NoTabAsIndentError(sourceLine, column, 1);
   }
   // We know that the regex will return a number of spaces (0+)
   const baseIndent = baseIndentMatch?.[1]?.length as number;
@@ -863,7 +865,7 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
     // Check for tabs in indentation - not allowed
     const leadingWhitespace = line.match(/^(\s*)/)?.[1];
     if (leadingWhitespace && leadingWhitespace.includes("\t")) {
-      throw new NoTabAsIndentError();
+      throw new NoTabAsIndentError(line, leadingWhitespace.indexOf("\t"), 1);
     }
 
     const currentIndent = leadingWhitespace!.length;
@@ -875,7 +877,7 @@ export function parseNestedBlock(content: string): MetadataObject | undefined {
 
     // More indentation than base = belongs to a child (skip, handled recursively)
     if (currentIndent !== baseIndent) {
-      throw new BadIndentationError();
+      throw new BadIndentationError(line, 0, currentIndent);
     }
 
     // Parse key: value from this line

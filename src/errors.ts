@@ -18,7 +18,7 @@ export class CooklangParseError extends Error {
   /** All diagnostics collected during the failed parse. */
   readonly diagnostics: CooklangParseDiagnostic[];
   /**
-   * The cleaned recipe body text used for parsing.
+   * The original recipe source used for parsing.
    * Pass to {@link formatDiagnostic} for code-frame output.
    */
   readonly source: string;
@@ -29,7 +29,7 @@ export class CooklangParseError extends Error {
       `Recipe parsing failed with ${errorCount} error${errorCount !== 1 ? "s" : ""}.`,
     );
     this.name = "CooklangParseError";
-    this.diagnostics = diagnostics;
+    this.diagnostics = [...diagnostics];
     this.source = source;
   }
 }
@@ -198,11 +198,14 @@ export class IncompatibleUnitsError extends Error {
  * @category Errors
  */
 export class InvalidQuantityFormat extends Error {
+  readonly value: string;
+
   constructor(value: string, extra?: string) {
     super(
       `Invalid quantity format found in: ${value}${extra ? ` (${extra})` : ""}`,
     );
     this.name = "InvalidQuantityFormat";
+    this.value = value;
   }
 }
 
@@ -211,11 +214,18 @@ export class InvalidQuantityFormat extends Error {
  * @category Errors
  */
 export class NoTabAsIndentError extends Error {
-  constructor() {
+  readonly sourceLine?: string;
+  readonly column?: number;
+  readonly length?: number;
+
+  constructor(sourceLine?: string, column?: number, length?: number) {
     super(
       `Tabs are not allowed for indentation in metadata blocks. Please use spaces only.`,
     );
     this.name = "NoTabAsIndentError";
+    this.sourceLine = sourceLine;
+    this.column = column;
+    this.length = length;
   }
 }
 
@@ -224,9 +234,16 @@ export class NoTabAsIndentError extends Error {
  * @category Errors
  */
 export class BadIndentationError extends Error {
-  constructor() {
+  readonly sourceLine?: string;
+  readonly column?: number;
+  readonly length?: number;
+
+  constructor(sourceLine?: string, column?: number, length?: number) {
     super(`Bad indentation of a nested block. Please use spaces only.`);
     this.name = "BadIndentationError";
+    this.sourceLine = sourceLine;
+    this.column = column;
+    this.length = length;
   }
 }
 

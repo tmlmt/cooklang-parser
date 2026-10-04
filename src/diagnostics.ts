@@ -19,8 +19,7 @@ const _catalog = defineDiagnostics({
   docsBase: (code) => `https://cooklang-parser.tmlmt.com/e/${code}`,
   codes: {
     "invalid-quantity": {
-      why: (p: { value: string }) =>
-        `Invalid quantity format: "${p.value}"`,
+      why: (p: { value: string }) => `Invalid quantity format: "${p.value}"`,
       fix: `Use a number (3), range (1-2), or fraction (1/2).`,
     },
     "timer-missing-unit": {
@@ -50,10 +49,6 @@ const _catalog = defineDiagnostics({
       why: `Inconsistent indentation in a metadata block.`,
       fix: `Use consistent space indentation (no mixing of levels).`,
     },
-    "metadata-parse-error": {
-      why: (p: { detail: string }) => p.detail,
-      fix: `Check the metadata section of your recipe.`,
-    },
   },
 });
 
@@ -70,7 +65,6 @@ type CatalogParams = {
   "referenced-item-redefined": { itemType: string; name: string; flag: string };
   "no-tab-indent": Record<never, never>;
   "bad-indentation": Record<never, never>;
-  "metadata-parse-error": { detail: string };
 };
 
 function make<K extends CatalogKey>(
@@ -166,15 +160,4 @@ export function badIndentationDiagnostic(
   span?: SourceSpan,
 ): CooklangParseDiagnostic {
   return make("bad-indentation", {}, "error", span);
-}
-
-/**
- * Creates a `metadata-parse-error` diagnostic.
- * Emitted for other metadata errors (e.g. invalid date values).
- */
-export function metadataParseErrorDiagnostic(
-  params: { detail: string },
-  span?: SourceSpan,
-): CooklangParseDiagnostic {
-  return make("metadata-parse-error", params, "error", span);
 }

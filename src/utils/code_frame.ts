@@ -17,7 +17,7 @@ import type { CooklangParseDiagnostic } from "../types";
  * ```
  *
  * @param diagnostic - The diagnostic to render.
- * @param source - The cleaned body text returned in {@link ParseResult.source}
+ * @param source - The original text returned in {@link ParseResult.source}
  *   or stored on {@link CooklangParseError.source}. Span positions refer to
  *   this string.
  * @param label - Optional label shown in the location marker (default `"recipe"`).
@@ -70,7 +70,7 @@ export function formatDiagnostic(
  *
  * @category Diagnostics
  * @param diagnostics - The diagnostics to render.
- * @param source - The cleaned body text returned in {@link ParseResult.source}
+ * @param source - The original text returned in {@link ParseResult.source}
  *   or stored on {@link CooklangParseError.source}. Span positions refer to
  *   this string.
  * @param label - Optional label shown in the location marker (default `"recipe"`).

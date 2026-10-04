@@ -1,13 +1,18 @@
 # Design plan — parse-time error diagnostics
 
-> Status: proposal (implementation deferred).
+> Status: implemented for `Recipe` parse-time diagnostics.
 > Confirmed decisions: (1) **collect-all** diagnostics model (breaking change),
 > (2) scope limited to **parse-time errors**, (3) library: **`nostics`**,
 > (4) **severity split** (`error | warning`) from the start,
 > (5) `parseOrThrow` throws a single **`CooklangParseError`** carrying
 > `.diagnostics[]`, (6) docs URLs **stubbed** at `/e/<code>` for now,
 > (7) column accuracy via a **precomputed line-offset map**,
-> (8) **all three** anonymous-error buckets addressed.
+> (8) original recipe source retained for editor-compatible spans.
+
+Implementation scope is intentionally limited to `Recipe` parsing. Pantry
+TOML/date failures, shopping-list usage errors, arithmetic errors, and other
+non-recipe APIs continue to use typed exceptions and may adopt diagnostics in
+separate changes.
 
 ## 1. Problem
 
@@ -91,13 +96,12 @@ export interface SourceSpan {
 
 A tiny helper turns `(lineIndex, columnIndex, length)` — which the parse loop
 already has — into a `SourceSpan`, plus an `offset` computed from precomputed
-line-start offsets of the original (pre-cleaned) content.
+line-start offsets of the original content. Offsets are JavaScript UTF-16 code
+unit indices; lines and columns are 1-based.
 
-> Note: `parse()` currently strips metadata/comments _before_ splitting into
-> lines. To keep columns accurate we track spans against the **original**
-> `content`; the cleaning step must preserve offsets (replace with equal-length
-> blanks) or we compute a line-offset map up front. This is the main
-> implementation subtlety.
+The parser uses a masked view for metadata and comments plus a per-line column
+map. This preserves historical parsed text while mapping diagnostics back to
+the **original** `content`.
 
 ### 3.2 Diagnostics catalog (`src/diagnostics.ts`)
 
