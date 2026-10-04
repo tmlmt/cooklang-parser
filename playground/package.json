@@ -2,7 +2,7 @@
   "name": "cooklang-playground",
   "description": "Playground for the @tmlmt/cooklang-parser library",
   "author": "Thomas Lamant <tom@tmlmt.com>",
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@12.9.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,22 +16,22 @@
   },
   "dependencies": {
     "@nuxt/image": "2.1.0",
-    "@nuxt/ui": "4.10.0",
+    "@nuxt/ui": "4.11.3",
     "@nuxtjs/device": "4.0.0",
     "big.js": "7.0.1",
     "cooklang-parser": "link:..",
-    "nuxt": "4.5.1",
-    "smol-toml": "1.7.1",
+    "nuxt": "4.5.2",
+    "smol-toml": "1.9.0",
     "tailwindcss": "4.3.3",
-    "vue": "3.5.40",
+    "vue": "3.5.43",
     "yalps": "0.6.4"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.121",
-    "@nuxt/eslint": "1.16.0",
-    "@nuxt/test-utils": "4.1.0",
-    "eslint": "10.8.0",
-    "prettier": "3.9.6",
+    "@iconify-json/lucide": "1.2.139",
+    "@nuxt/eslint": "1.17.0",
+    "@nuxt/test-utils": "4.3.3",
+    "eslint": "10.12.0",
+    "prettier": "3.9.9",
     "prettier-plugin-tailwindcss": "0.8.1",
     "typescript": "6.0.3"
   }
