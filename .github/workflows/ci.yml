@@ -102,7 +102,7 @@ jobs:
         run: cp -r combined/v2/* combined/
       - name: Deploy docs to production server
         uses: easingthemes/ssh-deploy@v6
-        env:
+        with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
@@ -137,7 +137,7 @@ jobs:
         run: pnpm generate
       - name: Deploy playground to production server
         uses: easingthemes/ssh-deploy@v6
-        env:
+        with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
