@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.0.0-alpha.47
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.46...v3.0.0-alpha.47)
+
+### 🩹 Fixes
+
+- **recipe:** Preserve alternatives to ingredients with no quantity ([2efcad5](https://github.com/tmlmt/cooklang-parser/commit/2efcad5))
+
+### 📦 Build
+
+- Upgrade to pnpm 12 and bump all deps ([869d563](https://github.com/tmlmt/cooklang-parser/commit/869d563))
+
+### 🤖 CI
+
+- **ssh-deploy:** Declare input using `with` instead of `env` ([5a122c1](https://github.com/tmlmt/cooklang-parser/commit/5a122c1))
+
+### ❤️ Contributors
+
+- Thomas Lamant <tom@tmlmt.com>
+
 ## v3.0.0-alpha.46
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.45...v3.0.0-alpha.46)
