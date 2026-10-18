@@ -181,7 +181,14 @@ describe("normalizeAllUnits", () => {
                 name: "tbsp",
                 type: "volume",
                 system: "ambiguous",
-                aliases: ["tablespoon", "tablespoons"],
+                aliases: [
+                  "tablespoon",
+                  "tablespoons",
+                  "càs",
+                  "cas",
+                  "c. à s.",
+                  "cuillère à soupe",
+                ],
                 toBase: 15,
                 toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
                 fractions: {

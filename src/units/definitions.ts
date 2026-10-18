@@ -117,7 +117,14 @@ export const units: UnitDefinition[] = [
     name: "tsp",
     type: "volume",
     system: "ambiguous",
-    aliases: ["teaspoon", "teaspoons"],
+    aliases: [
+      "teaspoon",
+      "teaspoons",
+      "càc",
+      "cac",
+      "c. à c.",
+      "cuillère à café",
+    ],
     toBase: 5, // default: metric
     toBaseBySystem: { metric: 5, US: 4.929, UK: 5.919 },
     maxValue: 5, // 3 tsp = 1 tbsp (but allow a bit more)
@@ -127,7 +134,14 @@ export const units: UnitDefinition[] = [
     name: "tbsp",
     type: "volume",
     system: "ambiguous",
-    aliases: ["tablespoon", "tablespoons"],
+    aliases: [
+      "tablespoon",
+      "tablespoons",
+      "càs",
+      "cas",
+      "c. à s.",
+      "cuillère à soupe",
+    ],
     toBase: 15, // default: metric
     toBaseBySystem: { metric: 15, US: 14.787, UK: 17.758 },
     maxValue: 4, // ~16 tbsp = 1 cup
