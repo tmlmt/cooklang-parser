@@ -9,6 +9,7 @@ import {
 } from "../utils/parser_helpers";
 import { getNumericValue } from "../quantities/numeric";
 import { normalizeUnit } from "../units/definitions";
+import { normalizeKey } from "../utils/normalization";
 import { getToBase } from "../units/conversion";
 
 /**
@@ -165,11 +166,11 @@ export class Pantry {
    * @returns The matching pantry item, or undefined if not found.
    */
   findItem(name: string): PantryItem | undefined {
-    const lowerName = name.toLowerCase();
+    const lowerName = normalizeKey(name);
 
     // Exact match (case-insensitive)
     const exact = this.items.find(
-      (item) => item.name.toLowerCase() === lowerName,
+      (item) => normalizeKey(item.name) === lowerName,
     );
     if (exact) return exact;
 
@@ -180,20 +181,20 @@ export class Pantry {
         for (const catIngredient of category.ingredients) {
           if (
             catIngredient.aliases.some(
-              (alias) => alias.toLowerCase() === lowerName,
+              (alias) => normalizeKey(alias) === lowerName,
             )
           ) {
             // Found the category ingredient — now look for any of its aliases in the pantry
-            const canonicalName = catIngredient.name.toLowerCase();
+            const canonicalName = normalizeKey(catIngredient.name);
             const byCanonical = this.items.find(
-              (item) => item.name.toLowerCase() === canonicalName,
+              (item) => normalizeKey(item.name) === canonicalName,
             );
             if (byCanonical) return byCanonical;
 
             // Also try all other aliases
             for (const alias of catIngredient.aliases) {
               const byAlias = this.items.find(
-                (item) => item.name.toLowerCase() === alias.toLowerCase(),
+                (item) => normalizeKey(item.name) === normalizeKey(alias),
               );
               if (byAlias) return byAlias;
             }

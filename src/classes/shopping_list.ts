@@ -41,7 +41,7 @@ import {
 import { parseQuantityWithUnit } from "../utils/parser_helpers";
 import { formatQuantity } from "../utils/render_helpers";
 import { NoTabAsIndentError, UnknownRecipePathError } from "../errors";
-import { normalizeInputString } from "../utils/normalization";
+import { normalizeInputString, normalizeKey } from "../utils/normalization";
 
 /**
  * Shopping List generator.
@@ -143,10 +143,12 @@ export class ShoppingList {
       (QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>)[]
     >();
     // Track first-appearance order of ingredient names
-    const nameOrder: string[] = [];
+    // Keyed by normalized name; value is the first-seen display name
+    const displayNames = new Map<string, string>();
     const trackName = (name: string) => {
-      if (!nameOrder.includes(name)) {
-        nameOrder.push(name);
+      const key = normalizeKey(name);
+      if (!displayNames.has(key)) {
+        displayNames.set(key, name);
       }
     };
 
@@ -171,9 +173,9 @@ export class ShoppingList {
         trackName(group.name);
 
         if (group.quantities.length > 0) {
-          const existing = rawQuantitiesMap.get(group.name) ?? [];
+          const existing = rawQuantitiesMap.get(normalizeKey(group.name)) ?? [];
           existing.push(...group.quantities);
-          rawQuantitiesMap.set(group.name, existing);
+          rawQuantitiesMap.set(normalizeKey(group.name), existing);
         }
       }
     }
@@ -182,22 +184,22 @@ export class ShoppingList {
     for (const item of this.manualItems) {
       trackName(item.name);
       if (item.quantities) {
-        const existing = rawQuantitiesMap.get(item.name) ?? [];
+        const existing = rawQuantitiesMap.get(normalizeKey(item.name)) ?? [];
         // manual items always have single quantities
         for (const q of item.quantities as QuantityWithPlainUnit[]) {
           existing.push(toExtendedUnit(q));
         }
         // v8 ignore else -- @preserve
         if (existing.length > 0) {
-          rawQuantitiesMap.set(item.name, existing);
+          rawQuantitiesMap.set(normalizeKey(item.name), existing);
         }
       }
     }
 
     // Process each ingredient: addEquivalentsAndSimplify → flattenPlainUnitGroup
     this.equivalenceRatios.clear();
-    for (const name of nameOrder) {
-      const rawQuantities = rawQuantitiesMap.get(name);
+    for (const [key, name] of displayNames) {
+      const rawQuantities = rawQuantitiesMap.get(key);
 
       if (!rawQuantities || rawQuantities.length === 0) {
         this.ingredients.push({ name });
@@ -227,7 +229,7 @@ export class ShoppingList {
           getEquivalentUnitsLists(...numericEntries),
         );
         if (Object.keys(ratioMap).length > 0) {
-          this.equivalenceRatios.set(name, ratioMap);
+          this.equivalenceRatios.set(key, ratioMap);
         }
       }
 
@@ -292,11 +294,11 @@ export class ShoppingList {
         if (pantryItem) {
           if (!pantryItem.quantity) {
             // Unlimited pantry entry (salt = {}) → remove bare ingredient
-            pantryRemovedNames.add(ingredient.name);
+            pantryRemovedNames.add(normalizeKey(ingredient.name));
           } else {
             const pantryValue = getAverageValue(pantryItem.quantity);
             if (typeof pantryValue === "number" && pantryValue > 0) {
-              pantryRemovedNames.add(ingredient.name);
+              pantryRemovedNames.add(normalizeKey(ingredient.name));
             }
           }
         }
@@ -306,7 +308,7 @@ export class ShoppingList {
       if (!pantryItem) continue;
       // Unlimited pantry entry (salt = {}) → remove quantified ingredient too
       if (!pantryItem.quantity) {
-        pantryRemovedNames.add(ingredient.name);
+        pantryRemovedNames.add(normalizeKey(ingredient.name));
         continue;
       }
 
@@ -331,7 +333,9 @@ export class ShoppingList {
           const pantryHasUnit =
             pantryExtended.unit !== undefined &&
             pantryExtended.unit.name !== "";
-          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          const ratioMap = this.equivalenceRatios.get(
+            normalizeKey(ingredient.name),
+          );
           const unitMismatch =
             leafHasUnit !== pantryHasUnit && ratioMap !== undefined;
 
@@ -391,8 +395,8 @@ export class ShoppingList {
             }
           } else if (
             (leafDef && pantryDef && areUnitsConvertible(leafDef, pantryDef)) ||
-            (leaf.unit ?? "").toLowerCase() ===
-              (pantryExtended.unit?.name ?? "").toLowerCase()
+            normalizeKey(leaf.unit ?? "") ===
+              normalizeKey(pantryExtended.unit?.name ?? "")
           ) {
             // Direct subtraction — units are known and convertible
             const remaining = subtractQuantities(
@@ -483,7 +487,9 @@ export class ShoppingList {
           entry.and.length = 0;
           entry.and.push(...nonZero);
           // Recompute equivalents from updated primaries using stored ratios
-          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          const ratioMap = this.equivalenceRatios.get(
+            normalizeKey(ingredient.name),
+          );
           // v8 ignore else --@preserve: defensive type guard
           if (entry.equivalents && ratioMap) {
             const equivUnits = entry.equivalents.map((e) => e.unit!); // equivalents always have units
@@ -505,7 +511,9 @@ export class ShoppingList {
           }
         } else if ("equivalents" in entry && entry.equivalents) {
           // Recompute equivalents for plain entries with equivalents
-          const ratioMap = this.equivalenceRatios.get(ingredient.name);
+          const ratioMap = this.equivalenceRatios.get(
+            normalizeKey(ingredient.name),
+          );
           // v8 ignore else --@preserve: defensive type guard
           if (ratioMap) {
             const equivUnits = entry.equivalents.map(
@@ -551,7 +559,7 @@ export class ShoppingList {
     // — those must stay unless the pantry covers them (pantryRemovedNames).
     this.ingredients = this.ingredients.filter(
       (ingr) =>
-        !pantryRemovedNames.has(ingr.name) &&
+        !pantryRemovedNames.has(normalizeKey(ingr.name)) &&
         (!("quantities" in ingr) || ingr.quantities !== undefined),
     );
 
@@ -761,8 +769,8 @@ export class ShoppingList {
         for (const categoryIngredient of category.ingredients) {
           if (
             categoryIngredient.aliases
-              .map((a) => a.toLowerCase())
-              .includes(ingredient.name.toLowerCase())
+              .map((a) => normalizeKey(a))
+              .includes(normalizeKey(ingredient.name))
           ) {
             categories[category.name]!.push(ingredient);
             found = true;
@@ -910,9 +918,9 @@ export class ShoppingList {
       if (line === "" || line.startsWith("--")) continue;
       // v8 ignore else -- @preserve: invalid lines are ignored
       if (line.startsWith("+ ")) {
-        this.checkedItems.add(line.slice(2).toLowerCase());
+        this.checkedItems.add(normalizeKey(line.slice(2)));
       } else if (line.startsWith("- ")) {
-        this.checkedItems.delete(line.slice(2).toLowerCase());
+        this.checkedItems.delete(normalizeKey(line.slice(2)));
       }
     }
   }
@@ -992,7 +1000,7 @@ export class ShoppingList {
    * @param ingredientName - The ingredient name.
    */
   check(ingredientName: string): void {
-    this.checkedItems.add(ingredientName.toLowerCase());
+    this.checkedItems.add(normalizeKey(ingredientName));
   }
 
   /**
@@ -1000,7 +1008,7 @@ export class ShoppingList {
    * @param ingredientName - The ingredient name.
    */
   uncheck(ingredientName: string): void {
-    this.checkedItems.delete(ingredientName.toLowerCase());
+    this.checkedItems.delete(normalizeKey(ingredientName));
   }
 
   /**
@@ -1009,7 +1017,7 @@ export class ShoppingList {
    * @returns True if the ingredient is checked.
    */
   isChecked(ingredientName: string): boolean {
-    return this.checkedItems.has(ingredientName.toLowerCase());
+    return this.checkedItems.has(normalizeKey(ingredientName));
   }
 
   /**
@@ -1042,9 +1050,9 @@ export class ShoppingList {
       if (line === "" || line.startsWith("--")) continue;
       // v8 ignore else -- @preserve: invalid lines are ignored
       if (line.startsWith("+ ")) {
-        checked.add(line.slice(2).toLowerCase());
+        checked.add(normalizeKey(line.slice(2)));
       } else if (line.startsWith("- ")) {
-        checked.delete(line.slice(2).toLowerCase());
+        checked.delete(normalizeKey(line.slice(2)));
       }
     }
     const sorted = [...checked].sort();

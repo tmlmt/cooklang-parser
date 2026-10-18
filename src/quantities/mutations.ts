@@ -1,3 +1,4 @@
+import { normalizeKey } from "../utils/normalization";
 import type {
   FixedValue,
   Range,
@@ -198,7 +199,7 @@ export function addQuantities(
   if (
     q1.unit &&
     q2.unit &&
-    q1.unit.name.toLowerCase() === q2.unit.name.toLowerCase()
+    normalizeKey(q1.unit.name) === normalizeKey(q2.unit.name)
   ) {
     // Same unit - check if we should upgrade to a larger unit (e.g., 1200g → 1.2kg)
     if (unit1Def) {

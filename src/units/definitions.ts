@@ -1,4 +1,5 @@
 import type { UnitDefinition, UnitDefinitionLike } from "../types";
+import { normalizeKey } from "../utils/normalization";
 
 // Base units: mass -> gram (g), volume -> milliliter (ml)
 export const units: UnitDefinition[] = [
@@ -214,14 +215,14 @@ export const units: UnitDefinition[] = [
 
 const unitMap = new Map<string, UnitDefinition>();
 for (const unit of units) {
-  unitMap.set(unit.name.toLowerCase(), unit);
+  unitMap.set(normalizeKey(unit.name), unit);
   for (const alias of unit.aliases) {
-    unitMap.set(alias.toLowerCase(), unit);
+    unitMap.set(normalizeKey(alias), unit);
   }
 }
 
 export function normalizeUnit(unit: string = ""): UnitDefinition | undefined {
-  return unitMap.get(unit.toLowerCase().trim());
+  return unitMap.get(normalizeKey(unit));
 }
 
 export const NO_UNIT = "__no-unit__";
@@ -231,9 +232,9 @@ export function resolveUnit(
   integerProtected: boolean = false,
 ): UnitDefinitionLike {
   const normalizedUnit = normalizeUnit(name);
-  const nameLower = name.toLowerCase().trim();
+  const nameLower = normalizeKey(name);
   const isUnitFirst = normalizedUnit?.unitFirstAliases?.some(
-    (alias) => alias.toLowerCase() === nameLower,
+    (alias) => normalizeKey(alias) === nameLower,
   );
   const resolvedUnit: UnitDefinitionLike = normalizedUnit
     ? {

@@ -505,3 +505,46 @@ Cook @carrots{1%=large|1.5%cup} and @&carrots{1%=small|0.5%cup}
     ]);
   });
 });
+
+describe("product matching normalization", () => {
+  it("matches products by ingredient name and aliases ignoring accents and case", () => {
+    const catalog = new ProductCatalog();
+    catalog.products = [
+      {
+        id: "creme",
+        productName: "Crème",
+        ingredientName: "Crème fraîche",
+        price: 2,
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 200 } },
+            unit: "g",
+          },
+        ],
+      },
+      {
+        id: "oil",
+        productName: "Huile",
+        ingredientName: "olive oil",
+        ingredientAliases: ["Huile d’olive"],
+        price: 5,
+        sizes: [
+          {
+            size: { type: "fixed", value: { type: "decimal", decimal: 500 } },
+            unit: "ml",
+          },
+        ],
+      },
+    ];
+    const list = new ShoppingList();
+    list.addRecipe(new Recipe("@creme fraiche{100%g} @huile d'olive{100%ml}"));
+    const cart = new ShoppingCart();
+    cart.setShoppingList(list);
+    cart.setProductCatalog(catalog);
+    cart.buildCart();
+    expect(cart.match.map((m) => m.ingredient.name).sort()).toEqual([
+      "creme fraiche",
+      "huile d'olive",
+    ]);
+  });
+});

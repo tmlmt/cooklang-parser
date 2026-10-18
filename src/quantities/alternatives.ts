@@ -40,8 +40,7 @@ import { deepClone } from "../utils/general";
 
 export function getEquivalentUnitsLists(
   ...quantities: (
-    | QuantityWithExtendedUnit
-    | FlatOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[]
 ): QuantityWithUnitDef[][] {
   const quantitiesCopy = deepClone(quantities);
@@ -149,8 +148,7 @@ export function sortUnitList(list: QuantityWithUnitDef[]) {
 export function reduceOrsToFirstEquivalent(
   unitList: QuantityWithUnitDef[][],
   quantities: (
-    | QuantityWithExtendedUnit
-    | FlatOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[],
 ): QuantityWithExtendedUnit[] {
   function reduceToQuantity(firstQuantity: QuantityWithExtendedUnit) {
@@ -252,8 +250,7 @@ export function reduceOrsToFirstEquivalent(
 
 export function addQuantitiesOrGroups(
   quantities: (
-    | QuantityWithExtendedUnit
-    | FlatOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[],
   system?: SpecificUnitSystem,
 ): {
@@ -311,8 +308,7 @@ export function regroupQuantitiesAndExpandEquivalents(
 ): (QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>)[] {
   const sumQuantities = isAndGroup(sum) ? sum.and : [sum];
   const result: (
-    | QuantityWithExtendedUnit
-    | MaybeNestedOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | MaybeNestedOrGroup<QuantityWithExtendedUnit>
   )[] = [];
   const processedQuantities = new Set<QuantityWithUnitDef>();
 
@@ -375,8 +371,7 @@ export function regroupQuantitiesAndExpandEquivalents(
 
     if (main.length + equivalents.length > 1) {
       const resultMain:
-        | QuantityWithExtendedUnit
-        | FlatAndGroup<QuantityWithExtendedUnit> =
+        QuantityWithExtendedUnit | FlatAndGroup<QuantityWithExtendedUnit> =
         main.length > 1
           ? {
               and: main.map(deNormalizeQuantity),
@@ -402,8 +397,7 @@ export function regroupQuantitiesAndExpandEquivalents(
 
 export function addEquivalentsAndSimplify(
   quantities: (
-    | QuantityWithExtendedUnit
-    | FlatOrGroup<QuantityWithExtendedUnit>
+    QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[],
   system?: SpecificUnitSystem,
 ): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {

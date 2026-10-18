@@ -1,3 +1,4 @@
+import { normalizeKey } from "../utils/normalization";
 import type {
   ProductOption,
   ProductSelection,
@@ -198,8 +199,11 @@ export class ShoppingCart {
     // this function is only called in buildCart() which starts by checking that a product catalog is present
     return this.productCatalog!.products.filter(
       (product) =>
-        product.ingredientName === ingredient.name ||
-        product.ingredientAliases?.includes(ingredient.name),
+        normalizeKey(product.ingredientName) ===
+          normalizeKey(ingredient.name) ||
+        product.ingredientAliases?.some(
+          (alias) => normalizeKey(alias) === normalizeKey(ingredient.name),
+        ),
     );
   }
 
@@ -224,8 +228,7 @@ export class ShoppingCart {
     // Reconstruct a single quantityTotal for normalizeAllUnits
     // by combining all quantity entries into one structure, preserving equivalents
     const allPlainEntries: (
-      | QuantityWithPlainUnit
-      | MaybeNestedGroup<QuantityWithPlainUnit>
+      QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>
     )[] = [];
     for (const q of ingredient.quantities) {
       if ("and" in q) {
@@ -241,8 +244,7 @@ export class ShoppingCart {
     }
 
     let quantityTotal:
-      | QuantityWithPlainUnit
-      | MaybeNestedGroup<QuantityWithPlainUnit>;
+      QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit>;
     if (allPlainEntries.length === 1) {
       quantityTotal = allPlainEntries[0]!;
     } else {
@@ -272,8 +274,7 @@ export class ShoppingCart {
 
     function getOptimumMatchForQuantityParts(
       normalizedQuantities:
-        | QuantityWithUnitDef
-        | MaybeNestedGroup<QuantityWithUnitDef>,
+        QuantityWithUnitDef | MaybeNestedGroup<QuantityWithUnitDef>,
       normalizedOptions: ProductOptionNormalized[],
       selection: ProductSelection[] = [],
     ): ProductSelection[] {

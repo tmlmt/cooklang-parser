@@ -1743,3 +1743,22 @@ Sugar
     });
   });
 });
+
+describe("name and unit normalization", () => {
+  it("subtracts pantry items despite accent and apostrophe differences", () => {
+    const sl = new ShoppingList();
+    sl.pantry = new Pantry(
+      `[pantry]\n"huile d'olive" = { quantity = "100%cas" }`,
+    );
+    sl.addRecipe(new Recipe("@Huile d’olive{2%càs}"));
+    expect(sl.ingredients).toEqual([]);
+  });
+
+  it("merges ingredients across recipes regardless of accents and case", () => {
+    const sl = new ShoppingList();
+    sl.addRecipe(new Recipe("@crème fraîche{1%càs}"));
+    sl.addRecipe(new Recipe("@Creme fraiche{2%cas}"));
+    expect(sl.ingredients).toHaveLength(1);
+    expect(sl.ingredients[0]!.name).toBe("crème fraîche");
+  });
+});

@@ -41,7 +41,7 @@ import {
   ReferencedItemCannotBeRedefinedError,
 } from "../errors";
 import { parseTimeToMinutes } from "./time";
-import { normalizeInputString } from "./normalization";
+import { normalizeInputString, normalizeKey } from "./normalization";
 
 /**
  * Pushes a pending note to the section content if it has items.
@@ -110,7 +110,7 @@ export function findAndUpsertIngredient(
 
   if (isReference) {
     const indexFind = ingredients.findIndex(
-      (i) => i.name.toLowerCase() === name.toLowerCase(),
+      (i) => normalizeKey(i.name) === normalizeKey(name),
     );
 
     if (indexFind === -1) {
@@ -167,7 +167,7 @@ export function findAndUpsertCookware(
 
   if (isReference) {
     const index = cookware.findIndex(
-      (i) => i.name.toLowerCase() === name.toLowerCase(),
+      (i) => normalizeKey(i.name) === normalizeKey(name),
     );
 
     if (index === -1) {
