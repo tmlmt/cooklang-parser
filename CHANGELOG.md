@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.0.0-alpha.48
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.47...v3.0.0-alpha.48)
+
+### ⚠️ Breaking Changes
+
+- Checked items (`.shopping-checked` content) are now stored in normalized form
+
+### 🚀 Enhancements
+
+- **definitions:** Add French translations of teaspoon and tablespoon ([b7a8bb6](https://github.com/tmlmt/cooklang-parser/commit/b7a8bb6))
+
+### 🩹 Fixes
+
+- ⚠️ Normalize keys when looking up, comparing and storing ingredient or unit names ([77bf0a9](https://github.com/tmlmt/cooklang-parser/commit/77bf0a9))
+
+### 🏡 Chore
+
+- Bump pnpm, playground node engine reqs, and all bumpable deps ([fad2e28](https://github.com/tmlmt/cooklang-parser/commit/fad2e28))
+
+### ❤️ Contributors
+
+- Thomas Lamant <tom@tmlmt.com>
+
 ## v3.0.0-alpha.47
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.46...v3.0.0-alpha.47)
@@ -108,11 +132,11 @@
 
 ### 📦 Build
 
-- **deps:** ⚠️  Upgrade dev tools and require node 22 ([#110](https://github.com/tmlmt/cooklang-parser/pull/110))
+- **deps:** ⚠️ Upgrade dev tools and require node 22 ([#110](https://github.com/tmlmt/cooklang-parser/pull/110))
 
 #### ⚠️ Breaking Changes
 
-- **deps:** ⚠️  Upgrade dev tools and require node 22 ([#110](https://github.com/tmlmt/cooklang-parser/pull/110))
+- **deps:** ⚠️ Upgrade dev tools and require node 22 ([#110](https://github.com/tmlmt/cooklang-parser/pull/110))
 
 ### ❤️ Contributors
 
