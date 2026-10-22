@@ -161,7 +161,7 @@ export class DivisionByZeroError extends SingleDiagnosticError {
   readonly fraction: string;
 
   constructor(fraction: string) {
-    super(createDiagnostic("COOKLANG_E9403", {}));
+    super(createDiagnostic("COOKLANG_E9402", {}));
     this.name = "DivisionByZeroError";
     this.fraction = fraction;
   }
@@ -213,7 +213,7 @@ export class BadIndentationError extends SingleDiagnosticError {
  */
 export class CannotAddTextValueError extends SingleDiagnosticError {
   constructor() {
-    super(createDiagnostic("COOKLANG_E9401", {}));
+    super(createDiagnostic("COOKLANG_W0401", {}));
     this.name = "CannotAddTextValueError";
   }
 }
@@ -239,7 +239,7 @@ export class IncompatibleUnitsError extends SingleDiagnosticError {
  */
 export class RatioNotComputableError extends SingleDiagnosticError {
   constructor() {
-    super(createDiagnostic("COOKLANG_E9402", {}));
+    super(createDiagnostic("COOKLANG_E9401", {}));
     this.name = "RatioNotComputableError";
   }
 }

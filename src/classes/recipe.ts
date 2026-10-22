@@ -436,13 +436,15 @@ export class Recipe {
     try {
       return parseQuantityValue(quantity);
     } catch (error) {
+      // v8 ignore else -- @preserve: DivisionByZeroError is the only possible error
       if (error instanceof DivisionByZeroError) {
         throw this._toParseStoppedError(
           error,
           makeSpan(this._lineOffsets, lineIdx, column, length),
         );
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
@@ -878,7 +880,7 @@ export class Recipe {
    *
    * @internal
    */
-  private _populateIngredientQuantities(): void {
+  private _populateIngredientQuantities(collectDiagnostics = false): void {
     // Reset quantities and usedAsPrimary flag
     for (const ing of this.ingredients) {
       delete ing.quantities;
@@ -886,7 +888,13 @@ export class Recipe {
     }
 
     // Get ingredients with quantities using default (no explicit choice = primary with alternatives)
-    const ingredientsWithQuantities = this.getIngredientQuantities();
+    const { ingredients: ingredientsWithQuantities, textMixCount } =
+      this._computeIngredientQuantities({});
+    if (collectDiagnostics) {
+      for (let i = 0; i < textMixCount; i++) {
+        this.diagnostics.push(createDiagnostic("COOKLANG_W0401", {}));
+      }
+    }
 
     // Track which indices have been matched (for handling duplicate names)
     const matchedIndices = new Set<number>();
@@ -1414,6 +1422,19 @@ export class Recipe {
   getIngredientQuantities(
     options?: GetIngredientQuantitiesOptions,
   ): Ingredient[] {
+    return this._computeIngredientQuantities(options).ingredients;
+  }
+
+  private _computeIngredientQuantities(
+    options?: GetIngredientQuantitiesOptions,
+  ): {
+    ingredients: Ingredient[];
+    textMixCount: number;
+  } {
+    let textMixCount = 0;
+    const onTextQuantityMix = () => {
+      textMixCount++;
+    };
     const {
       ingredientGroups,
       selectedIndices,
@@ -1456,7 +1477,11 @@ export class Recipe {
           for (const [, group] of groupsForIng) {
             const summed =
               group.quantities.length > 0
-                ? addEquivalentsAndSimplify(group.quantities, this.unitSystem)
+                ? addEquivalentsAndSimplify(
+                    group.quantities,
+                    this.unitSystem,
+                    onTextQuantityMix,
+                  )
                 : undefined;
             const flattened = summed ? flattenPlainUnitGroup(summed) : [];
 
@@ -1470,7 +1495,11 @@ export class Recipe {
                     index: altIdx,
                     ...(altQtys.length > 0 && {
                       quantities: flattenPlainUnitGroup(
-                        addEquivalentsAndSimplify(altQtys, this.unitSystem),
+                        addEquivalentsAndSimplify(
+                          altQtys,
+                          this.unitSystem,
+                          onTextQuantityMix,
+                        ),
                       ).flatMap(
                         /* v8 ignore next -- item.and branch requires complex nested AND-with-equivalents structure */
                         (item) => ("quantity" in item ? [item] : item.and),
@@ -1513,7 +1542,7 @@ export class Recipe {
       result.push(ing);
     }
 
-    return result;
+    return { ingredients: result, textMixCount };
   }
 
   /**
@@ -2043,7 +2072,7 @@ export class Recipe {
       this.choices.variants = [...allVariants];
     }
 
-    this._populateIngredientQuantities();
+    this._populateIngredientQuantities(true);
 
     // Diagnostics are reported in source order (sort is stable)
     this.diagnostics.sort(

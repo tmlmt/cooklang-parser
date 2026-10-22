@@ -90,6 +90,82 @@ describe("Recipe.parse() diagnostics", () => {
     expect(result.diagnostics).toHaveLength(0);
   });
 
+  it("keeps two text quantities separate without a warning", () => {
+    const result = parseCollect(
+      new Recipe(),
+      "Add @salt{a pinch}.\nAdd @&salt{to taste}.",
+    );
+
+    expect(result.diagnostics).toHaveLength(0);
+    const quantities = result.output.ingredients[0]?.quantities ?? [];
+    expect(quantities).toHaveLength(2);
+    expect(quantities[0]).toMatchObject({
+      quantity: {
+        type: "fixed",
+        value: { type: "text", text: "a pinch" },
+      },
+    });
+    expect(quantities[1]).toMatchObject({
+      quantity: {
+        type: "fixed",
+        value: { type: "text", text: "to taste" },
+      },
+    });
+  });
+
+  it("keeps mixed numeric and text quantities separate and collects a warning", () => {
+    const result = parseCollect(
+      new Recipe(),
+      "Add @salt{a pinch}.\nAdd @&salt{2}.",
+    );
+
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_W0401",
+      severity: "warning",
+    });
+    const quantities = result.output.ingredients[0]?.quantities ?? [];
+    expect(quantities).toHaveLength(2);
+    expect(quantities[0]).toMatchObject({
+      quantity: {
+        type: "fixed",
+        value: { type: "text", text: "a pinch" },
+      },
+    });
+    expect(quantities[1]).toMatchObject({
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 2 },
+      },
+    });
+
+    const result2 = parseCollect(
+      new Recipe(),
+      "Add @salt{2%g}.\nAdd @&salt{a pinch}.",
+    );
+
+    expect(result2.diagnostics).toHaveLength(1);
+    expect(result2.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_W0401",
+      severity: "warning",
+    });
+    const quantities2 = result2.output.ingredients[0]?.quantities ?? [];
+    expect(quantities2).toHaveLength(2);
+    expect(quantities2[0]).toMatchObject({
+      quantity: {
+        type: "fixed",
+        value: { type: "decimal", decimal: 2 },
+      },
+      unit: "g",
+    });
+    expect(quantities2[1]).toMatchObject({
+      quantity: {
+        type: "fixed",
+        value: { type: "text", text: "a pinch" },
+      },
+    });
+  });
+
   it("maps spans to the original source across metadata and skipped lines", () => {
     const content = [
       "---",

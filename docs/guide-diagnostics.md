@@ -73,9 +73,9 @@ Parse-time diagnostics, reported by `Recipe.parse()`:
 | [`COOKLANG_E0301`](/e/cooklang_e0301) | error | Metadata indentation contains a tab. |
 | [`COOKLANG_E0302`](/e/cooklang_e0302) | error | Metadata indentation levels are inconsistent. |
 | [`COOKLANG_W0301`](/e/cooklang_w0301) | warning | `servings` or `serves` is not a number. |
-| [`COOKLANG_E9401`](/e/cooklang_e9401) | error (fatal) | A text quantity (e.g. "a pinch") could not be merged with another occurrence of the same ingredient. |
-| [`COOKLANG_E9402`](/e/cooklang_e9402) | error (fatal) | A text equivalent could not be merged with another occurrence of the same ingredient. |
-| [`COOKLANG_E9403`](/e/cooklang_e9403) | error (fatal) | A fraction has a zero denominator; parsing stops immediately. |
+| [`COOKLANG_E9401`](/e/cooklang_e9401) | error (fatal) | A text equivalent could not be merged with another occurrence of the same ingredient. |
+| [`COOKLANG_E9402`](/e/cooklang_e9402) | error (fatal) | A fraction has a zero denominator; parsing stops immediately. |
+| [`COOKLANG_W0401`](/e/cooklang_w0401) | warning | A text quantity could not be added to a numeric quantity and was kept separate. |
 
 Warnings never make `parse()` throw. Non-fatal errors (`E0…`) are collected
 alongside everything else so that the whole recipe gets reported in one
