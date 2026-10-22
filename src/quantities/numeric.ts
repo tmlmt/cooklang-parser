@@ -6,7 +6,7 @@ import type {
   Range,
   UnitDefinition,
 } from "../types";
-import { InternalError } from "../errors";
+import { DivisionByZeroError } from "../errors";
 
 /** Default allowed denominators for fraction approximation */
 export const DEFAULT_DENOMINATORS = [2, 3, 4];
@@ -24,7 +24,7 @@ export function simplifyFraction(
   den: number,
 ): DecimalValue | FractionValue {
   if (den === 0) {
-    throw new InternalError("Denominator cannot be zero.");
+    throw new DivisionByZeroError(`${num}/${den}`);
   }
 
   const commonDivisor = gcd(Math.abs(num), Math.abs(den));

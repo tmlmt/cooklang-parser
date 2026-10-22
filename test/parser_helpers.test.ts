@@ -39,6 +39,7 @@ import {
   ReferencedItemCannotBeRedefinedError,
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
+  DivisionByZeroError,
 } from "../src/errors";
 
 describe("parseSimpleMetaVar", () => {
@@ -1105,6 +1106,10 @@ describe("parseFixedValue", () => {
       num: 1,
       den: 2,
     });
+  });
+
+  it("throws a division-by-zero error for a zero-denominator fraction", () => {
+    expect(() => parseFixedValue("1/0")).toThrow(DivisionByZeroError);
   });
 
   it("parses decimal values as such", () => {

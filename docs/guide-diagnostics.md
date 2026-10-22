@@ -1,13 +1,17 @@
 # Parse diagnostics
 
 `Recipe.parse()` (and the `Recipe` constructor) collects known recipe problems
-as diagnostics. Warnings are available on `recipe.diagnostics`. If at least one
-diagnostic has error severity, a single `DiagnosticError` is thrown once the
-whole source has been processed; the recipe instance keeps the partial result.
+as diagnostics. Warnings are available on `recipe.diagnostics`. Ordinarily, if
+at least one diagnostic has error severity, a single `DiagnosticError` is
+thrown once the whole source has been processed; the recipe instance keeps the
+partial result. A zero-denominator fraction instead stops parsing immediately
+and throws `ParseStoppedError`, a `DiagnosticError` subclass that identifies
+the premature stop.
 
 ```typescript
 import {
   DiagnosticError,
+  ParseStoppedError,
   Recipe,
   formatDiagnostics,
 } from "@tmlmt/cooklang-parser";
@@ -17,6 +21,9 @@ try {
   recipe.parse(source);
 } catch (error) {
   if (error instanceof DiagnosticError) {
+    if (error instanceof ParseStoppedError) {
+      console.error("Parsing stopped early");
+    }
     console.error(formatDiagnostics(error.diagnostics, error.source));
   } else {
     throw error;
@@ -68,6 +75,7 @@ Parse-time diagnostics, reported by `Recipe.parse()`:
 | [`COOKLANG_W0301`](/e/cooklang_w0301) | warning | `servings` or `serves` is not a number. |
 | [`COOKLANG_E9401`](/e/cooklang_e9401) | error (fatal) | A text quantity (e.g. "a pinch") could not be merged with another occurrence of the same ingredient. |
 | [`COOKLANG_E9402`](/e/cooklang_e9402) | error (fatal) | A text equivalent could not be merged with another occurrence of the same ingredient. |
+| [`COOKLANG_E9403`](/e/cooklang_e9403) | error (fatal) | A fraction has a zero denominator; parsing stops immediately. |
 
 Warnings never make `parse()` throw. Non-fatal errors (`E0…`) are collected
 alongside everything else so that the whole recipe gets reported in one
@@ -102,7 +110,7 @@ array.
 
 ## Internal errors (`I…`)
 
-Codes starting with `I` (e.g. `COOKLANG_I0001`, `COOKLANG_I0401`) indicate a
+Codes starting with `I` (e.g. `COOKLANG_I0401`) indicate a
 bug in the library itself, not a problem with your input. They behave like
 fatal errors (always thrown immediately) but should never actually be
 reachable through normal, documented usage of the public API. If you see
@@ -112,9 +120,11 @@ with a minimal reproduction.
 ## Recovery
 
 Known token-level errors are collected and the parser continues with later
-tokens and lines. Invalid tokens may be omitted from the partial recipe. Unknown
-exceptions and internal invariant failures are not converted into diagnostics;
-they still throw because they indicate unsupported input or a library defect.
+tokens and lines. Invalid tokens may be omitted from the partial recipe. A
+zero-denominator fraction is an exception: `ParseStoppedError` signals that no
+later tokens or lines were parsed. Unknown exceptions and internal invariant
+failures are not converted into diagnostics; they still throw because they
+indicate unsupported input or a library defect.
 
 ## Migrating from earlier v3 alphas
 

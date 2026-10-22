@@ -97,6 +97,10 @@ export const diagnosticCatalog = defineDiagnostics({
       why: `One of both values is not a number, so a ratio cannot be computed`,
       fix: `Use numeric quantities.`,
     },
+    COOKLANG_E9403: {
+      why: `A fraction cannot have a zero denominator.`,
+      fix: `Use a nonzero denominator, e.g. 1/2.`,
+    },
     // -- Domain 5: shopping list ----------------------------------------------
     COOKLANG_E9501: {
       why: (p: { detail: string }) => p.detail,
@@ -163,11 +167,6 @@ export const diagnosticCatalog = defineDiagnostics({
     COOKLANG_E0702: {
       why: (p: { name: string }) => `Duplicate category found: ${p.name}`,
       fix: `Declare each category only once.`,
-    },
-    // -- Domain 0: generic/internal -------------------------------------------
-    COOKLANG_I0001: {
-      why: (p: { detail: string }) => p.detail,
-      fix: `This is a bug in the library. Please report it with a reproduction.`,
     },
   },
 });

@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 export interface DiagnosticPage {
   code: string;
-  level: "error" | "warning";
+  level: "error (fatal)" |"error" | "warning";
   title: string;
   /** Markdown body, without frontmatter */
   body: string;
