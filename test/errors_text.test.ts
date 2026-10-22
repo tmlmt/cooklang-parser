@@ -10,8 +10,10 @@ describe("errors", () => {
         "hidden",
       );
       expect(error.message).toBe(
-        'The referenced ingredient "flour" cannot be redefined as hidden.\nYou can either remove the reference to create a new ingredient defined as hidden or add the hidden flag to the original definition of the ingredient',
+        'Referenced ingredient "flour" cannot be redefined as "hidden".',
       );
+      expect(error.code).toBe("COOKLANG_E0203");
+      expect(error.diagnostic.fix).toBeDefined();
     });
   });
 });

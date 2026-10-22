@@ -22,6 +22,7 @@ This library provides a set of tools to work with recipes written in the Cooklan
 - **Shopping Lists:** Generate shopping lists from one or more recipes.
 - **Category Configuration:** Categorize shopping list ingredients based on a custom category configuration.
 - **Typescript:** Written in Typescript, providing type safety for all the data structures.
+- **Diagnostics:** Errors and warnings are collected during parsing and other operations, in a consistant and documented manner.
 
 ## Quick start
 
@@ -55,33 +56,6 @@ console.log(recipe.ingredients); // [{ name: "eggs", ...}, ...]
 console.log(recipe.cookware); // [{ name: "pan", ...}]
 console.log(recipe.timers); // [{ duration: 15, unit: "minutes", name: undefined}]
 ```
-
-### Parse diagnostics
-
-Known recipe syntax problems are collected so callers can inspect a partial
-parse and report several problems at once:
-
-```typescript
-import { Recipe, formatDiagnostics } from "@tmlmt/cooklang-parser";
-
-const result = new Recipe().parse("Add @flour{%two} and cook for ~{5}");
-
-if (result.diagnostics.length > 0) {
-  console.error(formatDiagnostics(result.diagnostics, result.source));
-}
-```
-
-`result.source` is the original input. Diagnostic spans use 1-based lines and
-columns with 0-based UTF-16 offsets into that string. The current diagnostic
-catalog emits errors; the severity type also reserves warnings for future
-non-fatal checks.
-
-Use `Recipe.parseOrThrow(source)` when exception-based control flow is
-preferred. It throws one `CooklangParseError` containing all collected
-diagnostics when at least one error is present.
-
-See the [diagnostics guide](https://cooklang-parser.tmlmt.com/guide-diagnostics)
-for recovery behavior, codes, and migration details.
 
 - Browse the [API Reference](https://cooklang-parser.tmlmt.com/api/classes/Recipe) to discover all functionalities
 

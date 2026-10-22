@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { CategoryConfig } from "../src/classes/category_config";
-import {
-  DuplicateCategoryError,
-  DuplicateIngredientAliasError,
-  IngredientWithoutCategoryError,
-} from "../src/errors";
+import { DiagnosticError } from "../src/errors";
 
 describe("parse_category_config", () => {
   it("parses a simple config", () => {
@@ -18,7 +14,7 @@ describe("parse_category_config", () => {
             butter
         `;
     const result = new CategoryConfig(config);
-    expect(result).toEqual({
+    expect({ categories: result.categories }).toEqual({
       categories: [
         {
           name: "produce",
@@ -45,7 +41,7 @@ describe("parse_category_config", () => {
             beans
         `;
     const result = new CategoryConfig(config);
-    expect(result).toEqual({
+    expect({ categories: result.categories }).toEqual({
       categories: [
         {
           name: "canned goods",
@@ -61,7 +57,7 @@ describe("parse_category_config", () => {
   it("handles an empty config", () => {
     const config = "";
     const result = new CategoryConfig(config);
-    expect(result).toEqual({ categories: [] });
+    expect({ categories: result.categories }).toEqual({ categories: [] });
   });
 
   it("handles a config with extra whitespace and empty lines", () => {
@@ -77,7 +73,7 @@ describe("parse_category_config", () => {
 
         `;
     const result = new CategoryConfig(config);
-    expect(result).toEqual({
+    expect({ categories: result.categories }).toEqual({
       categories: [
         {
           name: "produce",
@@ -98,7 +94,7 @@ describe("parse_category_config", () => {
             milk
         `;
     const result = new CategoryConfig(config);
-    expect(result).toEqual({
+    expect({ categories: result.categories }).toEqual({
       categories: [
         {
           name: "produce",
@@ -112,39 +108,48 @@ describe("parse_category_config", () => {
     });
   });
 
-  it("throws a DuplicateCategoryError for duplicate categories", () => {
+  it("throws when duplicate categories are found", () => {
     const config = `
             [produce]
             [produce]
         `;
-    expect(() => new CategoryConfig(config)).toThrow(DuplicateCategoryError);
+    expect(() => new CategoryConfig(config)).toThrow(DiagnosticError);
   });
 
-  it("throws a DuplicateIngredientAliasError for duplicate ingredients", () => {
+  it("warns (without throwing) when duplicate ingredients are found", () => {
     const config = `
             [produce]
             potatoes
             [dairy]
             potatoes
         `;
-    expect(() => new CategoryConfig(config)).toThrow(DuplicateIngredientAliasError);
+    const result = new CategoryConfig(config);
+    expect(result.diagnostics).toMatchObject([
+      { code: "COOKLANG_W0702", severity: "warning" },
+    ]);
   });
 
-  it("throws a DuplicateIngredientAliasError for duplicate aliases", () => {
+  it("warns (without throwing) when duplicate aliases are found", () => {
     const config = `
             [produce]
             potato|spud
             [dairy]
             spud
         `;
-    expect(() => new CategoryConfig(config)).toThrow(DuplicateIngredientAliasError);
+    const result = new CategoryConfig(config);
+    expect(result.diagnostics).toMatchObject([
+      { code: "COOKLANG_W0702", severity: "warning" },
+    ]);
   });
 
-  it("throws an IngredientWithoutCategoryError for ingredients without a category", () => {
+  it("warns (without throwing) when ingredients appear without a category", () => {
     const config = `
             potatoes
             [produce]
         `;
-    expect(() => new CategoryConfig(config)).toThrow(IngredientWithoutCategoryError);
+    const result = new CategoryConfig(config);
+    expect(result.diagnostics).toMatchObject([
+      { code: "COOKLANG_W0701", severity: "warning" },
+    ]);
   });
 });

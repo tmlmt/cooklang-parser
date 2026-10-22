@@ -1,3 +1,4 @@
+import type { diagnosticCatalog } from "./diagnostics";
 import type { Recipe } from "./classes/recipe";
 import { Section } from "./classes/section";
 
@@ -506,7 +507,7 @@ export interface RecipeChoices {
 }
 
 /**
- * Options for the {@link Recipe.getIngredientQuantities | getIngredientQuantities()} method.
+ * Options for the {@link Recipe["getIngredientQuantities"] | getIngredientQuantities()} method.
  * @category Types
  */
 export interface GetIngredientQuantitiesOptions {
@@ -1202,7 +1203,7 @@ export type AndGroup<T = QuantityWithUnitLike> =
  * A position within a source string.
  * @category Types
  */
-export interface SourcePosition {
+export interface DiagnosticSourcePosition {
   /** 0-based UTF-16 code-unit offset from the start of the source string. */
   offset: number;
   /** 1-based line number. */
@@ -1215,45 +1216,38 @@ export interface SourcePosition {
  * A half-open range `[start, end)` within a source string.
  * @category Types
  */
-export interface SourceSpan {
-  start: SourcePosition;
-  end: SourcePosition;
+export interface DiagnosticSourceSpan {
+  start: DiagnosticSourcePosition;
+  end: DiagnosticSourcePosition;
 }
+
+/**
+ * Severity of a diagnostic.
+ * @category Types
+ */
+export type DiagnosticSeverity = "error" | "warning";
+
+/**
+ * Stable identifier of a diagnostic, in the form `COOKLANG_<E|W|I><4 digits>`.
+ * @category Types
+ */
+export type DiagnosticCode = keyof typeof diagnosticCatalog;
 
 /**
  * A single diagnostic emitted during recipe parsing.
  * @category Types
  */
-export interface CooklangParseDiagnostic {
-  /** Stable code identifying the problem (e.g. `"invalid-quantity"`). */
-  code: string;
+export interface Diagnostic {
+  /** Stable code identifying the problem (e.g. `"COOKLANG_E0101"`). */
+  code: DiagnosticCode;
   /** Human-readable description of what went wrong. */
   message: string;
   /** Actionable instructions on how to fix the problem, if available. */
   fix?: string;
   /** Link to extended documentation, if available. */
   docs?: string;
-  /** Severity level. */
-  severity: "error" | "warning";
+  /** Severity level (`W` codes are `"warning"`; `E` and `I` codes are `"error"`). */
+  severity: DiagnosticSeverity;
   /** Location of the problem in the original recipe source. */
-  span?: SourceSpan;
-}
-
-/**
- * The result of a successful (or partial) recipe parse.
- * @category Types
- */
-export interface ParseResult {
-  /** The parsed recipe. */
-  recipe: Recipe;
-  /**
-   * Diagnostics collected during parsing.
-   * An empty array means the parse was clean.
-   */
-  diagnostics: CooklangParseDiagnostic[];
-  /**
-   * The original recipe source. Span positions refer to this string.
-   * Pass to {@link formatDiagnostic} to render code-frame output.
-   */
-  source: string;
+  span?: DiagnosticSourceSpan;
 }

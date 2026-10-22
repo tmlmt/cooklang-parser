@@ -26,6 +26,7 @@ export default defineConfig(
             "docs/.vitepress/config.mts",
             "docs/.vitepress/*/*.ts",
             "docs/.vitepress/*.ts",
+            "docs/e/*.ts",
           ],
         },
         tsconfigRootDir: import.meta.dirname,

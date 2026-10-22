@@ -41,6 +41,7 @@ import {
   ReferencedItemCannotBeRedefinedError,
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
+  InvalidDateError,
 } from "../errors";
 import { parseTimeToMinutes } from "./time";
 import { normalizeInputString, normalizeKey } from "./normalization";
@@ -382,7 +383,9 @@ export function parseDateFromFormat(input: string, format: string): Date {
   // Extract delimiter from format (first non-letter character)
   const delimiterMatch = format.match(/[^A-Za-z]/);
   if (!delimiterMatch) {
-    throw new Error(`Invalid date format: ${format}. No delimiter found.`);
+    throw new InvalidDateError(
+      `Invalid date format: ${format}. No delimiter found.`,
+    );
   }
   const delimiter = delimiterMatch[0];
 
@@ -390,7 +393,7 @@ export function parseDateFromFormat(input: string, format: string): Date {
   const inputParts = input.trim().split(delimiter);
 
   if (formatParts.length !== 3 || inputParts.length !== 3) {
-    throw new Error(
+    throw new InvalidDateError(
       `Invalid date input "${input}" for format "${format}". Expected 3 parts.`,
     );
   }
@@ -403,7 +406,7 @@ export function parseDateFromFormat(input: string, format: string): Date {
     const token = formatParts[i]!.toUpperCase();
     const value = parseInt(inputParts[i]!, 10);
     if (isNaN(value)) {
-      throw new Error(
+      throw new InvalidDateError(
         `Invalid date input "${input}": non-numeric part "${inputParts[i]}".`,
       );
     }
@@ -411,7 +414,7 @@ export function parseDateFromFormat(input: string, format: string): Date {
     else if (token === "MM") month = value;
     else if (token === "YYYY") year = value;
     else
-      throw new Error(
+      throw new InvalidDateError(
         `Unknown token "${formatParts[i]}" in format "${format}"`,
       );
   }
@@ -422,7 +425,9 @@ export function parseDateFromFormat(input: string, format: string): Date {
     date.getMonth() !== month - 1 ||
     date.getDate() !== day
   ) {
-    throw new Error(`Invalid date: "${input}" does not form a valid date.`);
+    throw new InvalidDateError(
+      `Invalid date: "${input}" does not form a valid date.`,
+    );
   }
   return date;
 }
@@ -466,19 +471,23 @@ export function parseFuzzyDate(input: string): Date {
   // Detect delimiter
   const delimiterMatch = trimmed.match(/[./-]/);
   if (!delimiterMatch) {
-    throw new Error(`Cannot parse date "${input}": no delimiter found.`);
+    throw new InvalidDateError(
+      `Cannot parse date "${input}": no delimiter found.`,
+    );
   }
   const delimiter = delimiterMatch[0];
   const parts = trimmed.split(delimiter);
   if (parts.length !== 3) {
-    throw new Error(
+    throw new InvalidDateError(
       `Cannot parse date "${input}": expected 3 parts, got ${parts.length}.`,
     );
   }
 
   const nums = parts.map((p) => parseInt(p, 10));
   if (nums.some((n) => isNaN(n))) {
-    throw new Error(`Cannot parse date "${input}": non-numeric parts found.`);
+    throw new InvalidDateError(
+      `Cannot parse date "${input}": non-numeric parts found.`,
+    );
   }
 
   let day: number, month: number, year: number;
@@ -496,7 +505,9 @@ export function parseFuzzyDate(input: string): Date {
   // All short numbers — assume DD.MM.YY with 2-digit year
   else {
     if (nums[2]! >= 100)
-      throw new Error(`Invalid date: "${input}" does not form a valid date.`);
+      throw new InvalidDateError(
+        `Invalid date: "${input}" does not form a valid date.`,
+      );
     [day, month] = disambiguateDayMonth(nums[0]!, nums[1]!, 0);
     year = 2000 + nums[2]!;
   }
@@ -507,7 +518,9 @@ export function parseFuzzyDate(input: string): Date {
     date.getMonth() !== month - 1 ||
     date.getDate() !== day
   ) {
-    throw new Error(`Invalid date: "${input}" does not form a valid date.`);
+    throw new InvalidDateError(
+      `Invalid date: "${input}" does not form a valid date.`,
+    );
   }
   return date;
 }
@@ -1275,7 +1288,11 @@ export function extractMetadata(content: string): MetadataExtract {
     }
   }
 
-  return { metadata, servings, unitSystem };
+  return {
+    metadata,
+    servings,
+    unitSystem,
+  };
 }
 
 export function unionOfSets<T>(s1: Set<T>, s2: Set<T>): Set<T> {

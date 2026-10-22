@@ -1,7 +1,7 @@
-import type { SourceSpan } from "../types";
+import type { DiagnosticSourceSpan } from "../types";
 
 /**
- * Builds an array of byte offsets at which each line starts in the source.
+ * Builds an array of UTF-16 code-unit offsets at which each line starts in the source.
  * `lineOffsets[0]` is always `0`; `lineOffsets[n]` is the offset of line `n+1`.
  * Handles `\n`, `\r\n`, and bare `\r` line endings.
  */
@@ -21,7 +21,7 @@ export function buildLineOffsets(source: string): number[] {
 }
 
 /**
- * Creates a {@link SourceSpan} from a (0-based) line index, (0-based) column,
+ * Creates a {@link DiagnosticSourceSpan} from a (0-based) line index, (0-based) column,
  * and token length, using a precomputed line-offset map.
  *
  * @param lineOffsets - Output of {@link buildLineOffsets}.
@@ -34,7 +34,7 @@ export function makeSpan(
   lineIdx: number,
   column: number,
   length: number,
-): SourceSpan {
+): DiagnosticSourceSpan {
   const lineStart = lineOffsets[lineIdx] ?? 0;
   const startOffset = lineStart + column;
   return {
@@ -54,7 +54,7 @@ export function makeSpanFromOffset(
   lineOffsets: number[],
   offset: number,
   length: number,
-): SourceSpan {
+): DiagnosticSourceSpan {
   let low = 0;
   let high = lineOffsets.length - 1;
 
@@ -70,6 +70,6 @@ export function makeSpanFromOffset(
 /**
  * Formats a span's start position as `"line:column"` (both 1-based).
  */
-export function spanToLocString(span: SourceSpan): string {
+export function spanToLocString(span: DiagnosticSourceSpan): string {
   return `${span.start.line}:${span.start.column}`;
 }

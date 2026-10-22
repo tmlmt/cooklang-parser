@@ -4,8 +4,8 @@ import {
   makeSpan,
   makeSpanFromOffset,
   spanToLocString,
-} from "../src/utils/spans";
-import type { SourceSpan } from "../src/types";
+} from "../src/utils/diagnostics_spans";
+import type { DiagnosticSourceSpan } from "../src/types";
 
 describe("buildLineOffsets", () => {
   it("returns [0] for empty string", () => {
@@ -37,7 +37,7 @@ describe("makeSpan", () => {
   it("creates span for first line", () => {
     const offsets = buildLineOffsets("Add @flour{1%g}");
     const span = makeSpan(offsets, 0, 4, 12);
-    expect(span).toEqual<SourceSpan>({
+    expect(span).toEqual<DiagnosticSourceSpan>({
       start: { offset: 4, line: 1, column: 5 },
       end: { offset: 16, line: 1, column: 17 },
     });
@@ -46,7 +46,7 @@ describe("makeSpan", () => {
   it("creates span for second line", () => {
     const offsets = buildLineOffsets("first line\nsecond line");
     const span = makeSpan(offsets, 1, 0, 6);
-    expect(span).toEqual<SourceSpan>({
+    expect(span).toEqual<DiagnosticSourceSpan>({
       start: { offset: 11, line: 2, column: 1 },
       end: { offset: 17, line: 2, column: 7 },
     });

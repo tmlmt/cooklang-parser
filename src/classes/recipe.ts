@@ -33,6 +33,8 @@ import type {
   Unit,
   MaybeScalableQuantity,
   Yield,
+  Diagnostic,
+  DiagnosticSourceSpan,
 } from "../types";
 import { Section } from "./section";
 import {
@@ -85,23 +87,14 @@ import {
   ReferencedItemCannotBeRedefinedError,
   NoTabAsIndentError,
   BadIndentationError,
-  CooklangParseError,
+  DiagnosticError,
 } from "../errors";
+import { createDiagnostic } from "../diagnostics";
 import {
-  invalidQuantityDiagnostic,
-  timerMissingUnitDiagnostic,
-  referencedIngredientNotFoundDiagnostic,
-  referencedCookwareNotFoundDiagnostic,
-  referencedItemRedefinedDiagnostic,
-  noTabIndentDiagnostic,
-  badIndentationDiagnostic,
-} from "../diagnostics";
-import { buildLineOffsets, makeSpan, makeSpanFromOffset } from "../utils/spans";
-import type {
-  CooklangParseDiagnostic,
-  ParseResult,
-  SourceSpan,
-} from "../types";
+  buildLineOffsets,
+  makeSpan,
+  makeSpanFromOffset,
+} from "../utils/diagnostics_spans";
 
 interface NoteSourceSegment {
   start: number;
@@ -176,9 +169,8 @@ export class Recipe {
   arbitraries: ArbitraryScalable[] = [];
   /**
    * Diagnostics collected during the last call to {@link Recipe.parse}.
-   * An empty array means the parse was clean.
    */
-  diagnostics: CooklangParseDiagnostic[] = [];
+  diagnostics: Diagnostic[] = [];
   /**
    * The parsed recipe servings. Used for scaling. Parsed from one of
    * {@link Metadata.servings}, {@link Metadata.yield} or {@link Metadata.serves}
@@ -323,25 +315,6 @@ export class Recipe {
   }
 
   /**
-   * Parses `content` and throws a {@link CooklangParseError} if any
-   * error-severity diagnostics were collected.
-   *
-   * Warnings alone do **not** cause a throw.
-   *
-   * @param content - The recipe content to parse.
-   * @returns The fully parsed Recipe.
-   * @throws {@link CooklangParseError} if error-severity diagnostics exist.
-   */
-  static parseOrThrow(content: string): Recipe {
-    const recipe = new Recipe(content);
-    const errors = recipe.diagnostics.filter((d) => d.severity === "error");
-    if (errors.length > 0) {
-      throw new CooklangParseError(recipe.diagnostics, recipe._source);
-    }
-    return recipe;
-  }
-
-  /**
    * Parses a matched arbitrary scalable quantity and adds it to the given array.
    * @private
    * @param regexMatchGroups - The regex match groups from arbitrary scalable regex.
@@ -394,7 +367,7 @@ export class Recipe {
         const segment = sourceSegments.find(
           ({ start, end }) => idx >= start && idx < end,
         );
-        /* v8 ignore else -- @preserve: arbitrary tokens cannot span joined note segments */
+        /* v8 ignore if -- @preserve: arbitrary tokens cannot span joined note segments */
         if (!segment) throw error;
         this._collectParseError(
           error,
@@ -413,10 +386,17 @@ export class Recipe {
     return noteItems;
   }
 
+  private _metadataKeySpan(content: string, key: string): DiagnosticSourceSpan {
+    // The key was extracted from this content: there is necessarily a match
+    const match = new RegExp(`^[ \\t]*${key}[ \\t]*:.*$`, "im").exec(content)!;
+    return makeSpanFromOffset(this._lineOffsets, match.index, match[0].length);
+  }
+
   private _metadataErrorSpan(
     content: string,
     error: NoTabAsIndentError | BadIndentationError,
-  ): SourceSpan | undefined {
+  ): DiagnosticSourceSpan | undefined {
+    /* v8 ignore if -- @preserve pure type guard,non-reachable */
     if (
       error.sourceLine === undefined ||
       error.column === undefined ||
@@ -424,8 +404,10 @@ export class Recipe {
     ) {
       return undefined;
     }
+    /* v8 ignore next -- @preserve: metadata block always matches when a metadata error is thrown */
     const metadataStart = content.match(metadataRegex)?.index ?? 0;
     const lineOffset = content.indexOf(error.sourceLine, metadataStart);
+    /* v8 ignore if -- @preserve: the error source line always comes from the content */
     if (lineOffset === -1) return undefined;
     return makeSpanFromOffset(
       this._lineOffsets,
@@ -467,7 +449,6 @@ export class Recipe {
           matchStart,
           matchLength,
         );
-        return [];
       }
       quantityMatch = quantityMatch.groups.alternative
         ? quantityMatch.groups.alternative.match(quantityAlternativeRegex)
@@ -856,6 +837,10 @@ export class Recipe {
    * For grouped alternatives (e.g. `\@|group|a`, `\@|group|b`), the first item in the group is primary.
    *
    * Quantities are grouped by their alternative signature and summed using addEquivalentsAndSimplify.
+   * This is used by parse(), scaleBy/To() and convertTo(). It does not catch errors from quantity
+   * aggregation (e.g. mixing a text quantity with a numeric one for the same ingredient without
+   * alternatives); those propagate to the caller.
+   *
    * @internal
    */
   private _populateIngredientQuantities(): void {
@@ -1564,36 +1549,17 @@ export class Recipe {
   /**
    * Parses a recipe from a string.
    *
-   * Diagnostics are collected rather than thrown; check
-   * {@link Recipe.diagnostics} or inspect the returned {@link ParseResult}.
-   * Use {@link Recipe.parseOrThrow} if you prefer throwing on error-severity
-   * problems.
+   * Known problems are collected in {@link Recipe.diagnostics}.
    *
    * @param content - The recipe content to parse.
-   * @returns A {@link ParseResult} containing the recipe, diagnostics, and
-   *   the original source text for code-frame formatting.
+   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
    */
-  parse(content: string): ParseResult {
-    this.metadata = {};
-    this.choices = {
-      ingredientItems: new Map(),
-      ingredientGroups: new Map(),
-      variants: [],
-    };
-    this.ingredients = [];
-    this.sections = [];
-    this.cookware = [];
-    this.timers = [];
-    this.arbitraries = [];
-    this.diagnostics = [];
-    this.servings = undefined;
-    Recipe.unitSystems.delete(this);
-    Recipe.itemCounts.set(this, 0);
-    Recipe.subgroupIndices.set(this, new Map());
-
+  parse(content: string): void {
+    this.reset();
     this._source = content;
     this._lineOffsets = buildLineOffsets(content);
 
+    // Normalize and keep parseSource aligned with the original input to build accurate diagnostics spans.
     const maskSource = (match: string): string =>
       match.replace(/[^\r\n]/g, "\0");
     const parseSource = normalizeInputString(content)
@@ -1601,24 +1567,57 @@ export class Recipe {
       .replace(commentRegex, maskSource)
       .replace(blockCommentRegex, maskSource);
 
+    // Remaining "[-" are comments that were never closed
+    const unterminated = parseSource.indexOf("[-");
+    if (unterminated !== -1) {
+      this.diagnostics.push(
+        createDiagnostic(
+          "COOKLANG_W0101",
+          {},
+          makeSpanFromOffset(this._lineOffsets, unterminated, 2),
+        ),
+      );
+    }
+
     // Split into lines for the parse loop
     const cleanContent = parseSource.split(/\r\n?|\n/);
 
-    // Metadata (errors collected, not thrown)
+    // Metadata
     try {
       const { metadata, servings, unitSystem }: MetadataExtract =
         extractMetadata(content);
       this.metadata = metadata;
       this.servings = servings;
+      // "servings" takes priority over "serves"
+      const servingsKey = "servings" in metadata ? "servings" : "serves";
+      const servingsValue = metadata[servingsKey];
+      if (typeof servingsValue === "string") {
+        this.diagnostics.push(
+          createDiagnostic(
+            "COOKLANG_W0301",
+            { key: servingsKey, value: servingsValue },
+            this._metadataKeySpan(content, servingsKey),
+          ),
+        );
+      }
       if (unitSystem) Recipe.unitSystems.set(this, unitSystem);
     } catch (e) {
+      // v8 ignore else -- @preserve: only indentation errors are thrown by the metadata parser
       if (e instanceof NoTabAsIndentError) {
         this.diagnostics.push(
-          noTabIndentDiagnostic(this._metadataErrorSpan(content, e)),
+          createDiagnostic(
+            "COOKLANG_E0301",
+            {},
+            this._metadataErrorSpan(content, e),
+          ),
         );
       } else if (e instanceof BadIndentationError) {
         this.diagnostics.push(
-          badIndentationDiagnostic(this._metadataErrorSpan(content, e)),
+          createDiagnostic(
+            "COOKLANG_E0302",
+            {},
+            this._metadataErrorSpan(content, e),
+          ),
         );
       } else throw e;
     }
@@ -1627,6 +1626,8 @@ export class Recipe {
     let blankLineBefore = true;
     let section: Section = new Section();
     const items: Step["items"] = [];
+
+    // Build note text but keep its source segments for building accurate diagnostics spans.
     let noteText = "";
     const noteSourceSegments: NoteSourceSegment[] = [];
     const appendNoteText = (
@@ -1649,6 +1650,7 @@ export class Recipe {
       noteSourceSegments.length = 0;
     };
     let inNote = false;
+
     let stepVariants: string[] | undefined;
     let stepOptional: boolean | undefined;
     const discoveredVariants = new Set<string>();
@@ -1657,6 +1659,9 @@ export class Recipe {
     // We parse content line by line
     for (let lineIdx = 0; lineIdx < cleanContent.length; lineIdx++) {
       const rawLine = cleanContent[lineIdx]!;
+
+      // Normalize the line by removing null characters and keep track of the
+      // original source columns for accurate diagnostics spans.
       const sourceColumns: number[] = [];
       let line = "";
       for (let column = 0; column < rawLine.length; column++) {
@@ -1666,14 +1671,17 @@ export class Recipe {
         }
       }
 
+      // Determine the starting index of the visible line after trimming leading whitespace.
       let lineStart = 0;
       if (!parsingStarted && line.trim().length > 0) {
         lineStart = line.length - line.trimStart().length;
         line = line.slice(lineStart);
         parsingStarted = true;
       }
+
       const sourceColumnAt = (visibleColumn: number): number =>
         sourceColumns[lineStart + visibleColumn] ?? rawLine.length;
+
       // A blank line triggers flushing pending stuff
       if (line.trim().length === 0) {
         flushPendingItems(section, items, stepVariants, stepOptional);
@@ -1932,7 +1940,7 @@ export class Recipe {
               sourceColumn,
               sourceLength,
             );
-            this.diagnostics.push(timerMissingUnitDiagnostic(span));
+            this.diagnostics.push(createDiagnostic("COOKLANG_E0102", {}, span));
           } else {
             const name = groups.timerName || undefined;
             const duration = parseQuantityValue(durationStr);
@@ -1980,11 +1988,15 @@ export class Recipe {
 
     this._populateIngredientQuantities();
 
-    return {
-      recipe: this,
-      diagnostics: this.diagnostics,
-      source: this._source,
-    };
+    // Diagnostics are reported in source order (sort is stable)
+    this.diagnostics.sort(
+      /* v8 ignore next -- @preserve: recipe diagnostics always carry a span */
+      (a, b) => (a.span?.start.offset ?? 0) - (b.span?.start.offset ?? 0),
+    );
+
+    if (this.diagnostics.some((d) => d.severity === "error")) {
+      throw new DiagnosticError(this.diagnostics, this._source);
+    }
   }
 
   /**
@@ -1998,24 +2010,23 @@ export class Recipe {
     length: number,
   ): void {
     const span = makeSpan(this._lineOffsets, lineIdx, column, length);
+    // v8 ignore else -- @preserve: parse helpers only throw the error types handled above
     if (e instanceof InvalidQuantityFormat) {
       this.diagnostics.push(
-        invalidQuantityDiagnostic({ value: e.value }, span),
+        createDiagnostic("COOKLANG_E0101", { value: e.value }, span),
       );
     } else if (e instanceof ReferencedIngredientNotFoundError) {
       this.diagnostics.push(
-        referencedIngredientNotFoundDiagnostic(
-          { name: e.ingredientName },
-          span,
-        ),
+        createDiagnostic("COOKLANG_E0201", { name: e.ingredientName }, span),
       );
     } else if (e instanceof ReferencedCookwareNotFoundError) {
       this.diagnostics.push(
-        referencedCookwareNotFoundDiagnostic({ name: e.cookwareName }, span),
+        createDiagnostic("COOKLANG_E0202", { name: e.cookwareName }, span),
       );
     } else if (e instanceof ReferencedItemCannotBeRedefinedError) {
       this.diagnostics.push(
-        referencedItemRedefinedDiagnostic(
+        createDiagnostic(
+          "COOKLANG_E0203",
           {
             itemType: e.itemType,
             name: e.itemName,
@@ -2559,6 +2570,31 @@ export class Recipe {
       return this.servings;
     }
     return undefined;
+  }
+
+  /**
+   * Resets the recipe to its initial state, clearing all properties and internal data.
+   */
+  reset(): void {
+    this.metadata = {};
+    this.choices = {
+      ingredientItems: new Map(),
+      ingredientGroups: new Map(),
+      variants: [],
+    };
+    this.ingredients = [];
+    this.sections = [];
+    this.cookware = [];
+    this.timers = [];
+    this.arbitraries = [];
+    this.diagnostics = [];
+    this.servings = undefined;
+    Recipe.unitSystems.delete(this);
+    Recipe.itemCounts.set(this, 0);
+    Recipe.subgroupIndices.set(this, new Map());
+
+    this._source = "";
+    this._lineOffsets = [];
   }
 
   /**

@@ -45,6 +45,8 @@ import {
   UnknownRecipePathError,
   IndexOutOfBoundsError,
   UnresolvedAlternativesError,
+  InvalidCategoryConfigError,
+  InvalidPantryError,
 } from "../errors";
 import { normalizeInputString, normalizeKey } from "../utils/normalization";
 
@@ -715,9 +717,7 @@ export class ShoppingList {
     } else if (pantry instanceof Pantry) {
       this.pantry = pantry;
     } else {
-      throw new Error(
-        "Invalid pantry: expected a Pantry instance or TOML string",
-      );
+      throw new InvalidPantryError();
     }
     if (this.categoryConfig) {
       this.pantry.setCategoryConfig(this.categoryConfig);
@@ -746,7 +746,7 @@ export class ShoppingList {
     if (typeof config === "string")
       this.categoryConfig = new CategoryConfig(config);
     else if (config instanceof CategoryConfig) this.categoryConfig = config;
-    else throw new Error("Invalid category configuration");
+    else throw new InvalidCategoryConfigError();
     if (this.pantry) {
       this.pantry.setCategoryConfig(this.categoryConfig);
     }

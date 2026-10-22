@@ -4,23 +4,23 @@
 
 ### Enhancements
 
-- Add structured, nostics-backed recipe parse diagnostics with stable codes,
-  fixes, documentation URLs, original-source spans, and plain code-frame
-  formatting.
-- Add `Recipe.parseOrThrow()` and `CooklangParseError` for consumers that
-  prefer exception-based parse handling.
+- Add structured, nostics-backed recipe parse diagnostics with stable `COOKLANG_<E|W|I><4 digits>` codes, fixes, documentation URLs, original-source spans, and plain code-frame formatting.
+- Add `DiagnosticError`, thrown by `parse()` and the constructors of `Recipe`, `CategoryConfig`, `Pantry` and `ProductCatalog` when error-severity diagnostics were collected. It carries all diagnostics and the source; warnings and partial results are also available on the instance's `diagnostics` property.
+- Add warnings for non-numeric `servings`/`serves` metadata (`COOKLANG_W0301`) and unterminated block comments (`COOKLANG_W0101`).
+- Improve `formatDiagnostic()` to correctly render multi-line spans and tab-indented source lines.
+- All errors thrown by the library now extend `SingleDiagnosticError` and expose a `diagnostic` (code, fix, docs link). Anonymous `Error`s were replaced by typed errors (`InvalidDateError`, `InvalidPantryError`, `InvalidCategoryConfigError`, `RatioNotComputableError`, `InvalidPantryTomlError`, `InvalidProductCatalogTomlError`).
 
 ### Breaking Changes
 
-- `Recipe.parse()` now returns a `ParseResult` and collects known recoverable
-  recipe syntax errors instead of failing on the first one. Existing callers
-  that require throwing should use `Recipe.parseOrThrow()`.
+- `Recipe.parse()`, `CategoryConfig.parse()`, `Pantry.parse()` and `ProductCatalog.parse()` now collect all known errors before throwing a single `DiagnosticError` (instead of the first typed error), so `catch (e instanceof DuplicateCategoryError)`-style handling must read `e.diagnostics` instead.
 - Reusing a `Recipe` instance now replaces all state from its previous parse.
+- Diagnostic codes are `COOKLANG_E0101`-style identifiers instead of kebab-case names, and their documentation lives under `/v3/e/<code>`.
+- `NoProductMatchError.code` is now `NoProductMatchError.reason`: `code` holds the diagnostic code. Error messages now come from the diagnostics catalog.
+- Malformed TOML in `Pantry` and `ProductCatalog` now throws `InvalidPantryTomlError` / `InvalidProductCatalogTomlError` instead of the raw TOML error.
 
 ### Documentation
 
-- Add a diagnostics guide covering codes, recovery, source coordinates, and
-  migration from fail-fast parsing.
+- Add a diagnostics guide covering codes, recovery, source coordinates.
 
 ## v3.0.0-alpha.48
 

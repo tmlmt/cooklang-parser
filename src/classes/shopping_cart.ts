@@ -180,7 +180,7 @@ export class ShoppingCart {
       } catch (error) {
         /* v8 ignore else -- @preserve */
         if (error instanceof NoProductMatchError) {
-          this.misMatch.push({ ingredient, reason: error.code });
+          this.misMatch.push({ ingredient, reason: error.reason });
         }
       }
     }

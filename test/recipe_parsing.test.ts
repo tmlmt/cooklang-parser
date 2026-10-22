@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
+import { parseCollect } from "./mocks/parse_collect";
 import {
   simpleRecipe,
   recipeToScaleWithAlternatives,
@@ -66,12 +67,12 @@ describe("parse function", () => {
       ]);
     });
 
-    it("collects invalid-quantity diagnostic for bad quantity format", () => {
+    it("collects COOKLANG_E0101 diagnostic for bad quantity format", () => {
       const recipe = "Add @flour{%two}";
-      const result = new Recipe(recipe);
+      const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
-        code: "invalid-quantity",
+        code: "COOKLANG_E0101",
         severity: "error",
       });
     });
@@ -681,21 +682,36 @@ describe("parse function", () => {
 
     it("collects diagnostic when referenced ingredient does not exist", () => {
       const recipe = `Add @&flour{100%g}.`;
-      const result = new Recipe(recipe);
+      const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
-        code: "referenced-ingredient-not-found",
+        code: "COOKLANG_E0201",
         severity: "error",
       });
     });
 
     it("collects diagnostic when referenced ingredient is redefined with different flags", () => {
       const recipe = `Add @flour{100%g} and more @&-flour{100%g}.`;
-      const result = new Recipe(recipe);
+      const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
-        code: "referenced-item-redefined",
+        code: "COOKLANG_E0203",
         severity: "error",
+      });
+    });
+
+    it("collects diagnostics for invalid references to grouped ingredients", () => {
+      const missing = parseCollect(new Recipe(), "Add @|fat|&butter{}.").output;
+      expect(missing.diagnostics).toHaveLength(1);
+      expect(missing.diagnostics[0]).toMatchObject({ code: "COOKLANG_E0201" });
+
+      const redefined = parseCollect(
+        new Recipe(),
+        "Add @|fat|butter{} and @|fat|&-butter{}.",
+      ).output;
+      expect(redefined.diagnostics).toHaveLength(1);
+      expect(redefined.diagnostics[0]).toMatchObject({
+        code: "COOKLANG_E0203",
       });
     });
 
@@ -791,10 +807,10 @@ describe("parse function", () => {
 
     it("collects diagnostic when referenced cookware is redefined with different flags", () => {
       const recipe = `Potentially use an #oven once, and potentially the same #&?oven again`;
-      const result = new Recipe(recipe);
+      const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
-        code: "referenced-item-redefined",
+        code: "COOKLANG_E0203",
         severity: "error",
       });
     });
@@ -811,10 +827,10 @@ describe("parse function", () => {
 
   it("collects diagnostic for missing timer unit", () => {
     const badInput = "Cook for ~{15}";
-    const result = new Recipe(badInput);
+    const result = parseCollect(new Recipe(), badInput).output;
     expect(result.diagnostics).toHaveLength(1);
     expect(result.diagnostics[0]).toMatchObject({
-      code: "timer-missing-unit",
+      code: "COOKLANG_E0102",
       severity: "error",
     });
   });
@@ -2009,6 +2025,31 @@ Another step.
       });
     });
 
+    it("skips invalid quantity alternatives and parses the next alternative", () => {
+      const source = "Add @flour{1%g|%bad|3%kg}";
+      const result = parseCollect(new Recipe(), source);
+
+      expect(result.output.ingredients[0]?.quantities).toMatchObject([
+        {
+          quantity: {
+            type: "fixed",
+            value: { type: "decimal", decimal: 1 },
+          },
+          unit: "g",
+          equivalents: [
+            {
+              quantity: {
+                type: "fixed",
+                value: { type: "decimal", decimal: 3 },
+              },
+              unit: "kg",
+            },
+          ],
+        },
+      ]);
+      expect(result.diagnostics).toMatchObject([{ code: "COOKLANG_E0101" }]);
+    });
+
     it("parses inline alternatives with alternative units correctly", () => {
       const recipe = "Use @flour{1%=bag|0.22%lb}|wheat flour{1%=bag|0.25%lb}";
       const result = new Recipe(recipe);
@@ -2492,10 +2533,10 @@ Add @water{1%tbsp} and some more @&water{100%mL}
 
     it("collects diagnostic if arbitrary scalable quantity has no numeric value", () => {
       const recipe = "{{calory-factor}}";
-      const result = new Recipe(recipe);
+      const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
-        code: "invalid-quantity",
+        code: "COOKLANG_E0101",
         severity: "error",
       });
     });

@@ -1,82 +1,75 @@
 import { describe, it, expect } from "vitest";
-import {
-  invalidQuantityDiagnostic,
-  timerMissingUnitDiagnostic,
-  referencedIngredientNotFoundDiagnostic,
-  referencedCookwareNotFoundDiagnostic,
-  referencedItemRedefinedDiagnostic,
-  noTabIndentDiagnostic,
-  badIndentationDiagnostic,
-} from "../src/diagnostics";
-import { Recipe, CooklangParseError } from "../src/index";
-import type { CooklangParseDiagnostic } from "../src/types";
+import { createDiagnostic } from "../src/diagnostics";
+import { Recipe, DiagnosticError } from "../src/index";
+import { parseCollect } from "./mocks/parse_collect";
+import type { Diagnostic } from "../src/types";
 
-describe("diagnostic factory functions", () => {
-  it("invalidQuantityDiagnostic returns correct shape", () => {
-    const d = invalidQuantityDiagnostic({ value: "%two" });
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "invalid-quantity",
+describe("createDiagnostic", () => {
+  it("invalidQuantity returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0101", { value: "%two" });
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0101",
       severity: "error",
     });
     expect(d.message).toContain("%two");
     expect(d.fix).toBeDefined();
-    expect(d.docs).toContain("invalid-quantity");
+    expect(d.docs).toContain("cooklang_e0101");
     expect(d.span).toBeUndefined();
   });
 
-  it("timerMissingUnitDiagnostic returns correct shape", () => {
-    const d = timerMissingUnitDiagnostic();
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "timer-missing-unit",
+  it("timerMissingUnit returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0102", {});
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0102",
       severity: "error",
     });
     expect(d.fix).toBeDefined();
   });
 
-  it("referencedIngredientNotFoundDiagnostic returns correct shape", () => {
-    const d = referencedIngredientNotFoundDiagnostic({ name: "flour" });
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "referenced-ingredient-not-found",
+  it("referencedIngredientNotFound returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0201", { name: "flour" });
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0201",
       severity: "error",
     });
     expect(d.message).toContain("flour");
   });
 
-  it("referencedCookwareNotFoundDiagnostic returns correct shape", () => {
-    const d = referencedCookwareNotFoundDiagnostic({ name: "pan" });
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "referenced-cookware-not-found",
+  it("referencedCookwareNotFound returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0202", { name: "pan" });
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0202",
       severity: "error",
     });
     expect(d.message).toContain("pan");
   });
 
-  it("referencedItemRedefinedDiagnostic returns correct shape", () => {
-    const d = referencedItemRedefinedDiagnostic({
+  it("referencedItemRedefined returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0203", {
       itemType: "ingredient",
       name: "sugar",
       flag: "hidden",
     });
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "referenced-item-redefined",
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0203",
       severity: "error",
     });
     expect(d.message).toContain("sugar");
     expect(d.message).toContain("hidden");
   });
 
-  it("noTabIndentDiagnostic returns correct shape", () => {
-    const d = noTabIndentDiagnostic();
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "no-tab-indent",
+  it("noTabIndent returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0301", {});
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0301",
       severity: "error",
     });
   });
 
-  it("badIndentationDiagnostic returns correct shape", () => {
-    const d = badIndentationDiagnostic();
-    expect(d).toMatchObject<Partial<CooklangParseDiagnostic>>({
-      code: "bad-indentation",
+  it("badIndentation returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0302", {});
+    expect(d).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0302",
       severity: "error",
     });
   });
@@ -86,17 +79,15 @@ describe("diagnostic factory functions", () => {
       start: { offset: 4, line: 1, column: 5 },
       end: { offset: 16, line: 1, column: 17 },
     };
-    const d = invalidQuantityDiagnostic({ value: "%two" }, span);
+    const d = createDiagnostic("COOKLANG_E0101", { value: "%two" }, span);
     expect(d.span).toEqual(span);
   });
 });
 
 describe("Recipe.parse() diagnostics", () => {
-  it("returns ParseResult with source and empty diagnostics for clean recipe", () => {
-    const result = new Recipe().parse("Add @flour{100%g}");
+  it("has empty diagnostics for clean recipe", () => {
+    const result = parseCollect(new Recipe(), "Add @flour{100%g}");
     expect(result.diagnostics).toHaveLength(0);
-    expect(result.source).toBe("Add @flour{100%g}");
-    expect(result.recipe).toBeInstanceOf(Recipe);
   });
 
   it("maps spans to the original source across metadata and skipped lines", () => {
@@ -108,7 +99,7 @@ describe("Recipe.parse() diagnostics", () => {
       "== Mixing ==",
       "[vegan] Add @flour{%two}",
     ].join("\n");
-    const result = new Recipe().parse(content);
+    const result = parseCollect(new Recipe(), content);
     const diagnostic = result.diagnostics[0]!;
     const token = "@flour{%two}";
     const startOffset = content.indexOf(token);
@@ -136,26 +127,24 @@ describe("Recipe.parse() diagnostics", () => {
     expect(recipe.sections).toHaveLength(1);
   });
 
-  it("collects referenced-cookware-not-found diagnostic", () => {
-    const recipe = new Recipe("Use #&nonexistent-pan{}");
-    expect(recipe.diagnostics).toHaveLength(1);
-    expect(recipe.diagnostics[0]).toMatchObject<
-      Partial<CooklangParseDiagnostic>
-    >({
-      code: "referenced-cookware-not-found",
+  it("collects COOKLANG_E0202 diagnostic", () => {
+    const result = parseCollect(new Recipe(), "Use #&nonexistent-pan{}");
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
+      code: "COOKLANG_E0202",
       severity: "error",
     });
-    expect(recipe.diagnostics[0]!.message).toContain("nonexistent-pan");
+    expect(result.diagnostics[0]!.message).toContain("nonexistent-pan");
   });
 
-  it("collects no-tab-indent diagnostic for tab in metadata", () => {
+  it("collects COOKLANG_E0301 diagnostic for tab in metadata", () => {
     // A leading space followed by a tab is captured by nestedMetaVarRegex
     // and triggers NoTabAsIndentError in parseNestedBlock
     const content = "---\nsource:\n \t name: NYT\n---\nAdd @flour{100%g}";
-    const recipe = new Recipe(content);
+    const result = parseCollect(new Recipe(), content);
     const offset = content.indexOf("\t");
-    expect(recipe.diagnostics[0]).toMatchObject({
-      code: "no-tab-indent",
+    expect(result.diagnostics[0]).toMatchObject({
+      code: "COOKLANG_E0301",
       span: {
         start: { offset, line: 3, column: 2 },
         end: { offset: offset + 1, line: 3, column: 3 },
@@ -163,14 +152,14 @@ describe("Recipe.parse() diagnostics", () => {
     });
   });
 
-  it("collects bad-indentation diagnostic for inconsistent metadata indentation", () => {
+  it("collects COOKLANG_E0302 diagnostic for inconsistent metadata indentation", () => {
     // Two keys at different indentation levels at the same nesting depth
     const content =
       "---\nsource:\n  name: NYT\n    url: http://x\n---\nAdd @flour";
-    const recipe = new Recipe(content);
+    const result = parseCollect(new Recipe(), content);
     const offset = content.indexOf("    url:");
-    expect(recipe.diagnostics[0]).toMatchObject({
-      code: "bad-indentation",
+    expect(result.diagnostics[0]).toMatchObject({
+      code: "COOKLANG_E0302",
       span: {
         start: { offset, line: 4, column: 1 },
         end: { offset: offset + 4, line: 4, column: 5 },
@@ -178,9 +167,9 @@ describe("Recipe.parse() diagnostics", () => {
     });
   });
 
-  it("attaches accurate span to invalid-quantity diagnostic", () => {
-    const recipe = new Recipe("Add @flour{%two}");
-    const diag = recipe.diagnostics[0]!;
+  it("attaches accurate span to COOKLANG_E0101 diagnostic", () => {
+    const result = parseCollect(new Recipe(), "Add @flour{%two}");
+    const diag = result.diagnostics[0]!;
     expect(diag.span).toBeDefined();
     expect(diag.span!.start.line).toBe(1);
     expect(diag.span!.start.column).toBeGreaterThan(1);
@@ -188,8 +177,8 @@ describe("Recipe.parse() diagnostics", () => {
 
   it("collects multiple diagnostics for multiple errors", () => {
     const content = "Add @&flour and use #&pan and cook for ~{5}";
-    const recipe = new Recipe(content);
-    expect(recipe.diagnostics.length).toBeGreaterThan(1);
+    const result = parseCollect(new Recipe(), content);
+    expect(result.diagnostics.length).toBeGreaterThan(1);
   });
 
   it("collects invalid quantities in multiline notes and continues parsing", () => {
@@ -201,11 +190,12 @@ describe("Recipe.parse() diagnostics", () => {
     ].join("\n");
     const token = "{{bad%g}}";
     const startOffset = content.indexOf(token);
-    const recipe = new Recipe(content);
+    const recipe = new Recipe();
+    const result = parseCollect(recipe, content);
 
-    expect(recipe.diagnostics).toHaveLength(1);
-    expect(recipe.diagnostics[0]).toMatchObject<CooklangParseDiagnostic>({
-      code: "invalid-quantity",
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject<Diagnostic>({
+      code: "COOKLANG_E0101",
       message: expect.stringContaining("bad%g") as string,
       fix: expect.any(String) as string,
       docs: expect.any(String) as string,
@@ -219,64 +209,65 @@ describe("Recipe.parse() diagnostics", () => {
         },
       },
     });
-    expect(recipe.ingredients).toMatchObject([{ name: "flour" }]);
+    expect(result.output.ingredients).toMatchObject([{ name: "flour" }]);
   });
 
-  it("parse() return value equals recipe.diagnostics", () => {
+  it("keeps diagnostics on the instance after a throwing parse", () => {
     const recipe = new Recipe();
-    const result = recipe.parse("Add @&flour{100%g}");
-    expect(result.diagnostics).toBe(recipe.diagnostics);
+    const result = parseCollect(recipe, "Add @&flour{100%g}");
+    expect(result.diagnostics).toHaveLength(1);
+    expect(recipe.diagnostics).toBe(result.diagnostics);
   });
 });
 
-describe("Recipe.parseOrThrow()", () => {
-  it("throws CooklangParseError when there are error-severity diagnostics", () => {
-    expect(() => Recipe.parseOrThrow("Add @flour{%two}")).toThrow(
-      CooklangParseError,
+describe("Recipe.parse() throwing", () => {
+  it("throws DiagnosticError when there are error-severity diagnostics", () => {
+    expect(() => new Recipe().parse("Add @flour{%two}")).toThrow(
+      DiagnosticError,
     );
   });
 
-  it("CooklangParseError carries diagnostics and source", () => {
-    let thrown: CooklangParseError | undefined;
+  it("DiagnosticError carries diagnostics and source", () => {
+    let thrown: DiagnosticError | undefined;
     try {
-      Recipe.parseOrThrow("Add @flour{%two}");
+      new Recipe().parse("Add @flour{%two}");
     } catch (e) {
-      if (e instanceof CooklangParseError) thrown = e;
+      if (e instanceof DiagnosticError) thrown = e;
     }
     expect(thrown).toBeDefined();
     expect(thrown!.diagnostics).toHaveLength(1);
-    expect(thrown!.diagnostics[0]!.code).toBe("invalid-quantity");
+    expect(thrown!.diagnostics[0]!.code).toBe("COOKLANG_E0101");
     expect(thrown!.source).toBe("Add @flour{%two}");
   });
 
   it("does not throw for a clean recipe", () => {
-    expect(() => Recipe.parseOrThrow("Add @flour{100%g}")).not.toThrow();
+    expect(() => new Recipe().parse("Add @flour{100%g}")).not.toThrow();
   });
 
   it("error message summarizes error count", () => {
-    let thrown: CooklangParseError | undefined;
+    let thrown: DiagnosticError | undefined;
     try {
-      Recipe.parseOrThrow("@&a and @&b");
+      new Recipe().parse("@&a and @&b");
     } catch (e) {
-      if (e instanceof CooklangParseError) thrown = e;
+      if (e instanceof DiagnosticError) thrown = e;
     }
     expect(thrown!.message).toContain("2 errors");
   });
 
-  it("CooklangParseError snapshots all diagnostics but counts only errors", () => {
-    const diagnostics: CooklangParseDiagnostic[] = [
+  it("DiagnosticError snapshots all diagnostics but counts only errors", () => {
+    const diagnostics: Diagnostic[] = [
       {
-        code: "warning-code",
+        code: "COOKLANG_W0101",
         message: "Warning",
         severity: "warning",
       },
       {
-        code: "error-code",
+        code: "COOKLANG_E0101",
         message: "Error",
         severity: "error",
       },
     ];
-    const error = new CooklangParseError(diagnostics, "source");
+    const error = new DiagnosticError(diagnostics, "source");
 
     diagnostics.length = 0;
 

@@ -169,10 +169,11 @@ import type {
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
   ShoppingListRecipeRef,
-  SourcePosition,
-  SourceSpan,
-  CooklangParseDiagnostic,
-  ParseResult,
+  DiagnosticSourcePosition,
+  DiagnosticSourceSpan,
+  Diagnostic,
+  DiagnosticCode,
+  DiagnosticSeverity,
 } from "./types";
 
 export {
@@ -264,63 +265,27 @@ export {
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
   ShoppingListRecipeRef,
-  SourcePosition,
-  SourceSpan,
-  CooklangParseDiagnostic,
-  ParseResult,
+  DiagnosticSourcePosition,
+  DiagnosticSourceSpan,
+  Diagnostic,
+  DiagnosticCode,
+  DiagnosticSeverity,
 };
 
 // Errors
 
-import {
-  CooklangParseError,
-  InternalError,
-  ReferencedIngredientNotFoundError,
-  ReferencedCookwareNotFoundError,
-  ReferencedItemCannotBeRedefinedError,
-  NoProductCatalogForCartError,
-  NoShoppingListForCartError,
-  UnknownRecipePathError,
-  DuplicateCategoryError,
-  IngredientWithoutCategoryError,
-  DuplicateIngredientAliasError,
-  IndexOutOfBoundsError,
-  UnresolvedAlternativesError,
-  InvalidProductCatalogFormat,
-  CannotAddTextValueError,
-  IncompatibleUnitsError,
-  InvalidQuantityFormat,
-  NoTabAsIndentError,
-  BadIndentationError,
-} from "./errors";
-
-export {
-  CooklangParseError,
-  InternalError,
-  ReferencedIngredientNotFoundError,
-  ReferencedCookwareNotFoundError,
-  ReferencedItemCannotBeRedefinedError,
-  NoProductCatalogForCartError,
-  NoShoppingListForCartError,
-  UnknownRecipePathError,
-  DuplicateCategoryError,
-  IngredientWithoutCategoryError,
-  DuplicateIngredientAliasError,
-  IndexOutOfBoundsError,
-  UnresolvedAlternativesError,
-  InvalidProductCatalogFormat,
-  CannotAddTextValueError,
-  IncompatibleUnitsError,
-  InvalidQuantityFormat,
-  NoTabAsIndentError,
-  BadIndentationError,
-};
+export * from "./errors";
 
 // Diagnostics formatters
 
 import {
   formatDiagnostic,
   formatDiagnostics,
-} from "./utils/code_frame";
+  formatCodeFrame,
+} from "./utils/diagnostics_format";
 
-export { formatDiagnostic, formatDiagnostics };
+export { formatDiagnostic, formatDiagnostics, formatCodeFrame };
+
+import { diagnosticCatalog, severityOfCode } from "./diagnostics";
+
+export { diagnosticCatalog, severityOfCode };
