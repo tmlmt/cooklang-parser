@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Pantry } from "../src/classes/pantry";
 import { CategoryConfig } from "../src/classes/category_config";
-import { DiagnosticError } from "../src/errors";
 import type { PantryItem, FixedValue } from "../src/types";
 
 const simplePantryToml = `
@@ -177,37 +176,28 @@ describe("Pantry", () => {
       expect(pantry.items[0]!.expire).toEqual(new Date(2025, 5, 15));
     });
 
-    it("should throw on invalid date input with explicit format", () => {
-      expect(
-        () =>
-          new Pantry(`[fridge]\nmilk = { expire = "2025-13-01" }`, {
-            dateFormat: "YYYY-MM-DD",
-          }),
-      ).toThrow(DiagnosticError);
-      try {
-        new Pantry(`[fridge]\nmilk = { expire = "2025-13-01" }`, {
-          dateFormat: "YYYY-MM-DD",
-        });
-      } catch (error) {
-        expect(error).toBeInstanceOf(DiagnosticError);
-        expect((error as DiagnosticError).diagnostics[0]!.message).toContain(
-          "Invalid date",
-        );
-      }
+    it("should report invalid date input with explicit format", () => {
+      const pantry = new Pantry(undefined, { dateFormat: "YYYY-MM-DD" });
+      expect(() =>
+        pantry.parse(`[fridge]\nmilk = { expire = "2025-13-01" }`),
+      ).not.toThrow();
+      expect(pantry.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+        "COOKLANG_E0701",
+      ]);
+      expect(pantry.diagnostics[0]!.message).toContain("Invalid date");
+      expect(pantry.items).toEqual([]);
     });
 
-    it("should throw on non-numeric date parts", () => {
-      expect(
-        () => new Pantry(`[fridge]\nmilk = { expire = "abc.06.2025" }`),
-      ).toThrow(DiagnosticError);
-      try {
-        new Pantry(`[fridge]\nmilk = { expire = "abc.06.2025" }`);
-      } catch (error) {
-        expect(error).toBeInstanceOf(DiagnosticError);
-        expect((error as DiagnosticError).diagnostics[0]!.message).toContain(
-          "non-numeric",
-        );
-      }
+    it("should report non-numeric date parts", () => {
+      const pantry = new Pantry();
+      expect(() =>
+        pantry.parse(`[fridge]\nmilk = { expire = "abc.06.2025" }`),
+      ).not.toThrow();
+      expect(pantry.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+        "COOKLANG_E0701",
+      ]);
+      expect(pantry.diagnostics[0]!.message).toContain("non-numeric");
+      expect(pantry.items).toEqual([]);
     });
   });
 

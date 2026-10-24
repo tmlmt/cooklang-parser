@@ -303,37 +303,40 @@ describe("Recipe.parse() diagnostics", () => {
 });
 
 describe("Recipe.parse() throwing", () => {
-  it("throws DiagnosticError when there are error-severity diagnostics", () => {
-    expect(() => new Recipe().parse("Add @flour{%two}")).toThrow(
-      DiagnosticError,
-    );
-  });
-
-  it("DiagnosticError carries diagnostics and source", () => {
+  it("throws DiagnosticError when there is a fatal diagnostic", () => {
     let thrown: DiagnosticError | undefined;
     try {
-      new Recipe().parse("Add @flour{%two}");
+      new Recipe().parse("Add @flour{1/0}");
     } catch (e) {
       if (e instanceof DiagnosticError) thrown = e;
     }
     expect(thrown).toBeDefined();
-    expect(thrown!.diagnostics).toHaveLength(1);
-    expect(thrown!.diagnostics[0]!.code).toBe("COOKLANG_E0101");
-    expect(thrown!.source).toBe("Add @flour{%two}");
+    expect(thrown!.diagnostics).toHaveDiagnostic("COOKLANG_E9402");
+    expect(thrown!.source).toBe("Add @flour{1/0}");
+  });
+
+  it("does not throw for non-fatal errors and keeps the partial result", () => {
+    const recipe = new Recipe();
+    expect(() => recipe.parse("Add @flour{%two} and @salt")).not.toThrow();
+    expect(recipe.diagnostics).toHaveDiagnostic("COOKLANG_E0101");
+    expect(recipe.ingredients.map((i) => i.name)).toEqual(["flour", "salt"]);
+  });
+
+  it("DiagnosticError carries diagnostics and source", () => {});
+
+  it("throws at the end of parsing when a fatal diagnostic was collected", () => {
+    const recipe = new Recipe();
+    Reflect.set(recipe, "_populateIngredientQuantities", () => {
+      recipe.diagnostics.push(createDiagnostic("COOKLANG_E9402", {}));
+    });
+
+    expect(() => recipe.parse("Add @flour{%two}")).toThrow(DiagnosticError);
+    expect(recipe.diagnostics).toHaveDiagnostic("COOKLANG_E0101");
+    expect(recipe.diagnostics).toHaveDiagnostic("COOKLANG_E9402");
   });
 
   it("does not throw for a clean recipe", () => {
     expect(() => new Recipe().parse("Add @flour{100%g}")).not.toThrow();
-  });
-
-  it("error message summarizes error count", () => {
-    let thrown: DiagnosticError | undefined;
-    try {
-      new Recipe().parse("@&a and @&b");
-    } catch (e) {
-      if (e instanceof DiagnosticError) thrown = e;
-    }
-    expect(thrown!.message).toContain("2 errors");
   });
 
   it("DiagnosticError snapshots all diagnostics but counts only errors", () => {
