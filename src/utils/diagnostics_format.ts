@@ -1,4 +1,6 @@
 import type { Diagnostic, DiagnosticSourceSpan } from "../types";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { DiagnosticError } from "../errors";
 
 function expandTabs(line: string, tabWidth = 4): string {
   let out = "";

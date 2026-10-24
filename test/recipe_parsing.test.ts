@@ -11,7 +11,6 @@ import {
 } from "./fixtures/recipes";
 import type {
   Cookware,
-  Diagnostic,
   Ingredient,
   IngredientItem,
   Note,
@@ -73,9 +72,8 @@ describe("parse function", () => {
       const recipe = "Add @flour{%two}";
       const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E0101",
-        severity: "error",
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0101", {
+        match: { severity: "error" },
       });
     });
 
@@ -122,9 +120,10 @@ describe("parse function", () => {
       const recipe = new Recipe();
 
       expect(() => recipe.parse(source)).toThrow(ParseStoppedError);
-      expect(recipe.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E9402",
-        severity: "error",
+      expect(recipe.diagnostics).toHaveDiagnostic("COOKLANG_E9402", {
+        match: {
+          severity: "error",
+        },
       });
     });
 
@@ -134,9 +133,10 @@ describe("parse function", () => {
       expect(() =>
         recipe.parse("---\nyield: １／０%kg\n---\nAdd @flour{1%kg}"),
       ).toThrow(ParseStoppedError);
-      expect(recipe.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
-        code: "COOKLANG_E9402",
-        severity: "error",
+      expect(recipe.diagnostics).toHaveDiagnostic("COOKLANG_E9402", {
+        match: {
+          severity: "error",
+        },
       });
       expect(recipe.diagnostics[0]!.span).toBeUndefined();
     });
@@ -748,35 +748,34 @@ describe("parse function", () => {
     it("collects diagnostic when referenced ingredient does not exist", () => {
       const recipe = `Add @&flour{100%g}.`;
       const result = parseCollect(new Recipe(), recipe).output;
-      expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E0201",
-        severity: "error",
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0201", {
+        times: 1,
+        match: { severity: "error" },
       });
     });
 
     it("collects diagnostic when referenced ingredient is redefined with different flags", () => {
       const recipe = `Add @flour{100%g} and more @&-flour{100%g}.`;
       const result = parseCollect(new Recipe(), recipe).output;
-      expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E0203",
-        severity: "error",
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0203", {
+        times: 1,
+        match: { severity: "error" },
       });
     });
 
     it("collects diagnostics for invalid references to grouped ingredients", () => {
       const missing = parseCollect(new Recipe(), "Add @|fat|&butter{}.").output;
-      expect(missing.diagnostics).toHaveLength(1);
-      expect(missing.diagnostics[0]).toMatchObject({ code: "COOKLANG_E0201" });
+      expect(missing.diagnostics).toHaveDiagnostic("COOKLANG_E0201", {
+        times: 1,
+      });
 
       const redefined = parseCollect(
         new Recipe(),
         "Add @|fat|butter{} and @|fat|&-butter{}.",
       ).output;
       expect(redefined.diagnostics).toHaveLength(1);
-      expect(redefined.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E0203",
+      expect(redefined.diagnostics).toHaveDiagnostic("COOKLANG_E0203", {
+        times: 1,
       });
     });
 
@@ -873,10 +872,11 @@ describe("parse function", () => {
     it("collects diagnostic when referenced cookware is redefined with different flags", () => {
       const recipe = `Potentially use an #oven once, and potentially the same #&?oven again`;
       const result = parseCollect(new Recipe(), recipe).output;
-      expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E0203",
-        severity: "error",
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0203", {
+        times: 1,
+        match: {
+          severity: "error",
+        },
       });
     });
   });
@@ -893,10 +893,11 @@ describe("parse function", () => {
   it("collects diagnostic for missing timer unit", () => {
     const badInput = "Cook for ~{15}";
     const result = parseCollect(new Recipe(), badInput).output;
-    expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject({
-      code: "COOKLANG_E0102",
-      severity: "error",
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0102", {
+      times: 1,
+      match: {
+        severity: "error",
+      },
     });
   });
 
@@ -2599,10 +2600,10 @@ Add @water{1%tbsp} and some more @&water{100%mL}
     it("collects diagnostic if arbitrary scalable quantity has no numeric value", () => {
       const recipe = "{{calory-factor}}";
       const result = parseCollect(new Recipe(), recipe).output;
-      expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E0101",
-        severity: "error",
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0101", {
+        match: {
+          severity: "error",
+        },
       });
     });
   });

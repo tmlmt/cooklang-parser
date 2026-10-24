@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    setupFiles: ["./test/setup/diagnostic_matcher.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
