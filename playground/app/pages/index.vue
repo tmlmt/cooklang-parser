@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import type { TabsItem } from "@nuxt/ui";
-import type { RecipeChoices, SpecificUnitSystem } from "cooklang-parser";
-import { Recipe } from "cooklang-parser";
+import { DiagnosticError, ParseStoppedError, Recipe } from "cooklang-parser";
+import type {
+  RecipeChoices,
+  SpecificUnitSystem,
+  Diagnostic,
+} from "cooklang-parser";
 import pkg from "~~/../package.json";
 
 const version = pkg.version;
@@ -12,6 +16,7 @@ const mobileItems = ref<TabsItem[]>([
   { label: "Editor", slot: "editor" },
   { label: "Render", slot: "render" },
   { label: "Choices", slot: "choices" },
+  { label: "Diagnostics", slot: "diagnostics" },
   { label: "Raw", slot: "raw" },
 ]);
 
@@ -22,6 +27,7 @@ const desktopItemsLeft = ref<TabsItem[]>([
 ]);
 const desktopItemsRight = ref<TabsItem[]>([
   { label: "Render", slot: "render" },
+  { label: "Diagnostics", slot: "diagnostics" },
   { label: "Raw", slot: "raw" },
 ]);
 
@@ -70,8 +76,44 @@ Bake for ~{55-60%min} until golden.
 > This recipe was written using [cooklang](https://cooklang.org) syntax and additional extensions.
 `);
 
+const diagnostics = ref<Diagnostic[]>([]);
+const parseStopped = ref(false);
+const hasErrors = ref(false);
+const hasWarnings = ref(false);
+const activeDesktopRightTab = ref("render");
+const parsedRecipe = ref<Recipe | undefined>();
+
 // Step 1: Parse the raw recipe text
-const parsedRecipe = computed(() => new Recipe(rawRecipe.value));
+watch(
+  rawRecipe,
+  () => {
+    try {
+      diagnostics.value = [];
+      parseStopped.value = false;
+      hasErrors.value = false;
+      hasWarnings.value = false;
+      const recipe = new Recipe(rawRecipe.value);
+      if (recipe.diagnostics.some((d) => d.severity === "error")) {
+        hasErrors.value = true;
+      }
+      if (recipe.diagnostics.length) {
+        hasWarnings.value = true;
+      }
+      diagnostics.value = recipe.diagnostics;
+      parsedRecipe.value = recipe;
+    } catch (error) {
+      if (error instanceof DiagnosticError) {
+        hasErrors.value = true;
+        diagnostics.value = error.diagnostics;
+      }
+      if (error instanceof ParseStoppedError) {
+        parseStopped.value = true;
+        parsedRecipe.value = undefined;
+      }
+    }
+  },
+  { immediate: true },
+);
 
 // Servings state for scaling
 const servings = ref<number>(1);
@@ -91,11 +133,19 @@ const convertedRecipe = computed(() => {
   if (unitSystem.value === null) {
     return parsedRecipe.value;
   }
-  return parsedRecipe.value.convertTo(unitSystem.value, conversionMethod.value);
+  if (parsedRecipe.value)
+    return parsedRecipe.value.convertTo(
+      unitSystem.value,
+      conversionMethod.value,
+    );
+  return null;
 });
 
 // Step 3: Apply scaling (if different from base servings)
 const scaledRecipe = computed(() => {
+  if (!convertedRecipe.value) {
+    return null;
+  }
   const baseServings = convertedRecipe.value.servings;
   if (baseServings && servings.value !== baseServings) {
     return convertedRecipe.value.scaleTo(servings.value);
@@ -105,7 +155,7 @@ const scaledRecipe = computed(() => {
 
 // Initialize and reset servings when recipe servings change
 watch(
-  () => parsedRecipe.value.servings,
+  () => (parsedRecipe.value ? parsedRecipe.value.servings : undefined),
   (newServings) => {
     if (newServings !== undefined) {
       servings.value = newServings;
@@ -179,7 +229,14 @@ watch(
           </template>
 
           <template #choices>
+            <UAlert
+              v-if="rawRecipe.trim().length === 0"
+              color="neutral"
+              variant="subtle"
+              description="No recipe parsed yet."
+            />
             <RecipeChoices
+              v-else-if="parsedRecipe"
               v-model:servings="servings"
               v-model:choices="choices"
               v-model:unit-system="unitSystem"
@@ -192,22 +249,114 @@ watch(
       <!-- Desktop: 2 tabs on the right half -->
       <div class="hidden md:block">
         <UTabs
+          v-model="activeDesktopRightTab"
+          value-key="slot"
           :items="desktopItemsRight"
           :ui="{
             label: 'dark:text-gray-300 dark:hover:text-white',
-            content: 'h-[calc(100vh-9.5rem)] overflow-auto',
+            content: 'h-[calc(100vh-9.5rem)]',
           }"
         >
           <template #render>
-            <div class="w-full text-sm">
-              <RecipeRender :recipe="scaledRecipe" :choices="choices" />
-            </div>
+            <UAlert
+              v-if="rawRecipe.trim().length === 0"
+              color="neutral"
+              variant="subtle"
+              description="No recipe parsed yet."
+            />
+            <UCard
+              v-else
+              class="h-full w-full text-sm"
+              :ui="{
+                root: 'flex h-full flex-col',
+                body: 'flex-1 overflow-auto',
+                footer: 'shrink-0',
+              }"
+            >
+              <UAlert
+                v-if="parseStopped"
+                color="error"
+                variant="subtle"
+                title="Invalid recipe"
+                description="A fatal error was encountered while parsing the recipe."
+              />
+              <RecipeRender
+                v-else-if="scaledRecipe"
+                :recipe="scaledRecipe"
+                :choices="choices"
+              />
+              <template #footer>
+                <div v-if="parseStopped" class="text-red-700 dark:text-red-400">
+                  ✕ Fatal error
+                </div>
+                <div
+                  v-else-if="hasErrors"
+                  class="text-red-700 dark:text-red-400"
+                >
+                  ✕ Errors:
+                  <UButton
+                    variant="link"
+                    color="error"
+                    class="pl-0 text-red-700 dark:text-red-400"
+                    @click="activeDesktopRightTab = 'diagnostics'"
+                    >click to see them</UButton
+                  >
+                </div>
+                <div
+                  v-else-if="hasWarnings"
+                  class="text-orange-400 dark:text-orange-300"
+                >
+                  ⚠ Warnings:
+                  <UButton
+                    variant="link"
+                    color="warning"
+                    class="pl-0 text-orange-400 dark:text-orange-300"
+                    @click="activeDesktopRightTab = 'diagnostics'"
+                    >click to see them</UButton
+                  >
+                </div>
+                <div v-else class="text-green-600">✓ No issues</div>
+              </template>
+            </UCard>
+          </template>
+
+          <template #diagnostics>
+            <UCard
+              class="h-full w-full"
+              :ui="{
+                root: 'flex h-full flex-col',
+                body: 'flex-1 overflow-auto',
+              }"
+            >
+              <div v-if="diagnostics.length">
+                <DiagnosticCard
+                  v-for="(diagnostic, index) in diagnostics.sort((a, b) =>
+                    a.severity.localeCompare(b.severity),
+                  )"
+                  :key="index"
+                  :diagnostic="diagnostic"
+                  :raw-recipe="rawRecipe"
+                />
+              </div>
+              <UAlert
+                v-else
+                color="success"
+                variant="subtle"
+                description="Recipe parsed without any issue"
+              />
+            </UCard>
           </template>
 
           <template #raw>
-            <div class="w-full">
+            <UCard
+              class="h-full w-full"
+              :ui="{
+                root: 'flex h-full flex-col',
+                body: 'flex-1 overflow-auto',
+              }"
+            >
               <pre class="text-xs">{{ scaledRecipe }}</pre>
-            </div>
+            </UCard>
           </template>
         </UTabs>
       </div>
@@ -229,6 +378,10 @@ watch(
             />
           </template>
 
+          <template #diagnostics>
+            <div class="w-full" />
+          </template>
+
           <template #raw>
             <div class="w-full">
               <pre class="text-xs">{{ scaledRecipe }}</pre>
@@ -237,17 +390,33 @@ watch(
 
           <template #choices>
             <RecipeChoices
+              v-if="parsedRecipe"
               v-model:servings="servings"
               v-model:choices="choices"
               v-model:unit-system="unitSystem"
               v-model:conversion-method="conversionMethod"
               :recipe="parsedRecipe"
             />
+            <UAlert v-else color="neutral" variant="subtle">
+              No recipe parsed yet.
+            </UAlert>
           </template>
 
           <template #render>
             <div class="w-full text-sm">
-              <RecipeRender :recipe="scaledRecipe" :choices="choices" />
+              <RecipeRender
+                v-if="scaledRecipe"
+                :recipe="scaledRecipe"
+                :choices="choices"
+              />
+              <UAlert
+                v-else
+                color="neutral"
+                variant="subtle"
+                title="Invalid recipe"
+              >
+                No recipe parsed yet.
+              </UAlert>
             </div>
           </template>
         </UTabs>
