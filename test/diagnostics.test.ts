@@ -399,4 +399,30 @@ describe("Recipe.parse() throwing", () => {
       times: 1,
     });
   });
+
+  it("collects COOKLANG_E9401 with the source during final quantity aggregation", () => {
+    const source = "Add @flour{1%cup|a bit}\nAdd @&flour{2%cup|a lot}";
+    const recipe = new Recipe();
+    let thrown: unknown;
+
+    try {
+      recipe.parse(source);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(DiagnosticError);
+    expect(thrown).toMatchObject({
+      source,
+      diagnostics: [
+        {
+          code: "COOKLANG_E9401",
+          severity: "error",
+        },
+      ],
+    });
+    expect(recipe.diagnostics).toEqual((thrown as DiagnosticError).diagnostics);
+    expect(recipe.ingredients).toHaveLength(1);
+    expect(recipe.sections).toHaveLength(1);
+  });
 });

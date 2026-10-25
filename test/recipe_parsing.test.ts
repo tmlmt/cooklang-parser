@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
-import { ParseStoppedError } from "../src/errors";
+import { DiagnosticError, ParseStoppedError } from "../src/errors";
 import { parseCollect } from "./mocks/parse_collect";
 import {
   simpleRecipe,
@@ -75,6 +75,16 @@ describe("parse function", () => {
       expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0101", {
         match: { severity: "error" },
       });
+    });
+
+    it("rethrows unexpected errors during final quantity aggregation", () => {
+      const recipe = new Recipe();
+      const unexpected = new Error("Unexpected aggregation failure");
+      Reflect.set(recipe, "_populateIngredientQuantities", () => {
+        throw unexpected;
+      });
+
+      expect(() => recipe.parse("@flour")).toThrow(unexpected);
     });
 
     it("stops immediately with COOKLANG_E1003 for a zero-denominator fraction", () => {
