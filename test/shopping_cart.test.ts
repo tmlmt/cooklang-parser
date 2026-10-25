@@ -106,6 +106,7 @@ describe("initialisation", () => {
       catalog: productCatalog,
       list: shoppingList,
     });
+
     expect(shoppingCart.productCatalog).toBe(productCatalog);
     expect(shoppingCart.shoppingList).toBe(shoppingList);
   });
@@ -124,6 +125,23 @@ describe("initialisation", () => {
     expect(() => shoppingCart.buildCart()).toThrow(
       NoProductCatalogForCartError,
     );
+  });
+});
+
+describe("unexpected matching errors", () => {
+  it("rethrows errors other than NoProductMatchError", () => {
+    const shoppingList = new ShoppingList();
+    shoppingList.addRecipe(new Recipe("@flour{1%g}"));
+    const shoppingCart = new ShoppingCart({
+      catalog: productCatalog,
+      list: shoppingList,
+    });
+    const unexpected = new Error("Unexpected matching failure");
+    Reflect.set(shoppingCart, "getOptimumMatch", () => {
+      throw unexpected;
+    });
+
+    expect(() => shoppingCart.buildCart()).toThrow(unexpected);
   });
 });
 

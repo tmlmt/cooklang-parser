@@ -262,10 +262,11 @@ export function findAndUpsertCookware(
             quantity,
           );
         } catch (e) {
-          /* v8 ignore else -- expliciting error type -- @preserve */
           if (e instanceof CannotAddTextValueError) {
             diagnostics.push(createDiagnostic("COOKLANG_W0401", {}, span));
             return cookware.push(newCookware) - 1;
+          } else {
+            throw e;
           }
         }
       }
