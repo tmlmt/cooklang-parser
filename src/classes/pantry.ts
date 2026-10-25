@@ -100,14 +100,14 @@ export class Pantry {
    *
    * @param tomlContent - The TOML string to parse.
    * @returns The parsed pantry items.
-   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
+   * @throws {@link DiagnosticError} if a fatal (`COOKLANG_E9…`) diagnostic exists.
    */
   parse(tomlContent: string): PantryItem[] {
     this.source = tomlContent;
     this.diagnostics = this._parseAndCollect(tomlContent).map(
       (e) => e.diagnostic,
     );
-    if (this.diagnostics.some((d) => d.severity === "error")) {
+    if (this.diagnostics.some((d) => d.code.startsWith("COOKLANG_E9"))) {
       throw new DiagnosticError(this.diagnostics, tomlContent);
     }
     return this.items;

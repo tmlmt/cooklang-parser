@@ -79,13 +79,13 @@ export class ProductCatalog {
    *
    * @param tomlContent - The TOML string to parse.
    * @returns The parsed products.
-   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
+   * @throws {@link DiagnosticError} if a fatal (`COOKLANG_E9…`) diagnostic exists.
    */
   public parse(tomlContent: string): ProductOption[] {
     const error = this.validate(tomlContent);
     this.source = tomlContent;
     this.diagnostics = error ? [error.diagnostic] : [];
-    if (this.diagnostics.some((d) => d.severity === "error")) {
+    if (this.diagnostics.some((d) => d.code.startsWith("COOKLANG_E9"))) {
       throw new DiagnosticError(this.diagnostics, tomlContent);
     }
     return this.products;

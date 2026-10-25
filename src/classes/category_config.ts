@@ -68,12 +68,12 @@ export class CategoryConfig {
    * All problems are collected in {@link CategoryConfig.diagnostics}.
    *
    * @param config - The category configuration to parse.
-   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
+   * @throws {@link DiagnosticError} if a fatal (`COOKLANG_E9…`) diagnostic exists.
    */
   parse(config: string): void {
     this.source = config;
     this.diagnostics = this._parseAndCollect(config).map((e) => e.diagnostic);
-    if (this.diagnostics.some((d) => d.severity === "error")) {
+    if (this.diagnostics.some((d) => d.code.startsWith("COOKLANG_E9"))) {
       throw new DiagnosticError(this.diagnostics, config);
     }
   }

@@ -1616,7 +1616,7 @@ export class Recipe {
    * Known problems are collected in {@link Recipe.diagnostics}.
    *
    * @param content - The recipe content to parse.
-   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
+   * @throws {@link DiagnosticError} if a fatal (`COOKLANG_E9…`) diagnostic exists.
    * @throws {@link ParseStoppedError} if parsing must stop immediately.
    */
   parse(content: string): void {
@@ -2080,7 +2080,7 @@ export class Recipe {
       (a, b) => (a.span?.start.offset ?? 0) - (b.span?.start.offset ?? 0),
     );
 
-    if (this.diagnostics.some((d) => d.severity === "error")) {
+    if (this.diagnostics.some((d) => d.code.startsWith("COOKLANG_E9"))) {
       throw new DiagnosticError(this.diagnostics, this._source);
     }
   }

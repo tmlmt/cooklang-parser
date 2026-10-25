@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { CategoryConfig } from "../src/classes/category_config";
-import { DiagnosticError } from "../src/errors";
 
 describe("parse_category_config", () => {
   it("parses a simple config", () => {
@@ -106,14 +105,6 @@ describe("parse_category_config", () => {
         },
       ],
     });
-  });
-
-  it("throws when duplicate categories are found", () => {
-    const config = `
-            [produce]
-            [produce]
-        `;
-    expect(() => new CategoryConfig(config)).toThrow(DiagnosticError);
   });
 
   it("warns (without throwing) when duplicate ingredients are found", () => {

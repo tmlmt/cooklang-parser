@@ -1,12 +1,12 @@
 # Parse diagnostics
 
 `Recipe.parse()` (and the `Recipe` constructor) collects known recipe problems
-as diagnostics. Warnings are available on `recipe.diagnostics`. Ordinarily, if
-at least one diagnostic has error severity, a single `DiagnosticError` is
-thrown once the whole source has been processed; the recipe instance keeps the
-partial result. A zero-denominator fraction instead stops parsing immediately
-and throws `ParseStoppedError`, a `DiagnosticError` subclass that identifies
-the premature stop.
+as diagnostics. All of them, including non-fatal errors, are available on
+`recipe.diagnostics`, and the recipe instance holds the partial result. Only
+fatal errors (`COOKLANG_E9…`) make `parse()` throw a `DiagnosticError`. A
+zero-denominator fraction stops parsing immediately and throws
+`ParseStoppedError`, a `DiagnosticError` subclass that identifies the
+premature stop.
 
 ```typescript
 import {
@@ -19,6 +19,8 @@ import {
 const recipe = new Recipe();
 try {
   recipe.parse(source);
+  // Reaching this point means no fatal error occurred. Non-fatal errors and
+  // warnings may still be present in recipe.diagnostics.
 } catch (error) {
   if (error instanceof DiagnosticError) {
     if (error instanceof ParseStoppedError) {
@@ -30,7 +32,7 @@ try {
   }
 }
 
-// Non-fatal diagnostics (warnings) are always available
+// Non-fatal errors and warnings are always available
 console.log(recipe.diagnostics);
 ```
 
@@ -40,17 +42,17 @@ columns are 1-based. Offsets are 0-based UTF-16 code-unit indices into
 `DiagnosticError.source`, which is exactly the input passed to `parse()`.
 
 `CategoryConfig`, `Pantry` and `ProductCatalog` behave identically: `parse()`
-and the constructors throw `DiagnosticError`, and expose `diagnostics` and
-`source` on the instance.
+and the constructors throw `DiagnosticError` only for fatal errors, and expose
+all diagnostics and the `source` on the instance.
 
 ## Diagnostic codes
 
 Codes follow the pattern `COOKLANG_<L><T><D><NN>`: `L` is the letter (`E` for
 error, `W` for warning, `I` for internal/library bug); `T` is a tier digit
-used only for `E` codes (`0` = non-fatal — caught and collected alongside
-other diagnostics while parsing continues, so you get a complete picture of
-every problem found; `9` = fatal — the result cannot be considered usable
-once this is found). `T` is always `0` for `W` and `I` codes: warnings never
+used only for `E` codes (`0` = recoverable — collected alongside other
+diagnostics while parsing continues, and the call returns the partial result
+instead of throwing; `9` = fatal — it is not safe to continue, so the call
+throws `DiagnosticError`). `T` is always `0` for `W` and `I` codes: warnings never
 make the call fail, and internal errors always behave like fatal ones but
 indicate a library bug rather than a problem with your input. `D` is the
 domain digit (`0` generic/internal, `1` syntax, `2` references, `3` metadata,
@@ -77,9 +79,10 @@ Parse-time diagnostics, reported by `Recipe.parse()`:
 | [`COOKLANG_E9402`](/e/cooklang_e9402) | error (fatal) | A fraction has a zero denominator; parsing stops immediately. |
 | [`COOKLANG_W0401`](/e/cooklang_w0401) | warning | A text quantity could not be added to a numeric quantity and was kept separate. |
 
-Warnings never make `parse()` throw. Non-fatal errors (`E0…`) are collected
-alongside everything else so that the whole recipe gets reported in one
-pass; fatal errors (`E9…`) abort the call immediately once encountered. The
+Warnings and non-fatal errors (`E0…`) never make `parse()` throw: they are
+collected so that the whole recipe gets reported in one pass, and you can
+display them next to the partially parsed result. Fatal errors (`E9…`) make
+the call throw. The
 catalog and the severity of a code are available programmatically through
 `diagnosticCatalog` and `severityOfCode()`.
 

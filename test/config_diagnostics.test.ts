@@ -5,6 +5,7 @@ import {
   ProductCatalog,
   DiagnosticError,
 } from "../src/index";
+import { createDiagnostic } from "../src/diagnostics";
 import { parseCollect } from "./mocks/parse_collect";
 
 describe("CategoryConfig.parse()", () => {
@@ -32,13 +33,31 @@ describe("CategoryConfig.parse()", () => {
     expect(r.output.categories.map((c) => c.name)).toEqual(["A", "B"]);
   });
 
-  it("constructor throws like parse() for fatal diagnostics", () => {
-    expect(() => new CategoryConfig("[A]\n[A]")).toThrow(DiagnosticError);
+  it("constructor does not throw for non-fatal errors", () => {
+    const config = "[A]\n[A]";
+    let categoryConfig: CategoryConfig | undefined;
+    expect(() => (categoryConfig = new CategoryConfig(config))).not.toThrow();
+    expect(categoryConfig!.source).toBe(config);
+    expect(categoryConfig!.diagnostics).toHaveDiagnostic("COOKLANG_E0702");
   });
 
   it("constructor does not throw for warning-only diagnostics", () => {
     expect(() => new CategoryConfig("a")).not.toThrow();
     expect(() => new CategoryConfig("[A]\nx\ny|x")).not.toThrow();
+  });
+
+  it("throws if a fatal diagnostic is collected", () => {
+    const config = new CategoryConfig();
+    Reflect.set(config, "_parseAndCollect", () => [
+      {
+        diagnostic: createDiagnostic("COOKLANG_E9701", {
+          detail: "synthetic fatal diagnostic",
+        }),
+      },
+    ]);
+
+    expect(() => config.parse("input")).toThrow(DiagnosticError);
+    expect(config.diagnostics).toHaveDiagnostic("COOKLANG_E9701");
   });
 });
 
@@ -56,13 +75,18 @@ describe("Pantry.parse()", () => {
   });
 
   it("omits items with invalid dates and keeps the others", () => {
-    const toml = `[fridge]\nmilk = { quantity = "1%l", expire = "not-a-date" }\neggs = "6"`;
-    const r = parseCollect(
-      new Pantry(undefined, { dateFormat: "DD.MM.YYYY" }),
-      toml,
-    );
-    expect(r.diagnostics.map((d) => d.code)).toEqual(["COOKLANG_E0701"]);
-    expect(r.output.items.map((i) => i.name)).toEqual(["eggs"]);
+    const toml =
+      `[fridge]\nmilk = { quantity = "1%l", expire = "not-a-date" }\n` +
+      `cream = { bought = "also-not-a-date" }\neggs = "6"`;
+    const pantry = new Pantry(undefined, { dateFormat: "DD.MM.YYYY" });
+
+    expect(() => pantry.parse(toml)).not.toThrow();
+    expect(pantry.source).toBe(toml);
+    expect(pantry.diagnostics.map((d) => d.code)).toEqual([
+      "COOKLANG_E0701",
+      "COOKLANG_E0701",
+    ]);
+    expect(pantry.items.map((i) => i.name)).toEqual(["eggs"]);
   });
 
   it("constructor throws like parse()", () => {
