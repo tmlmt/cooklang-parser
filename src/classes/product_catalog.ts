@@ -4,13 +4,20 @@ import type {
   ProductOption,
   ProductOptionToml,
   ProductSize,
+  Diagnostic,
 } from "../types";
 import type { TomlTable } from "smol-toml";
 import {
   parseQuantityValue,
   stringifyQuantityValue,
 } from "../utils/parser_helpers";
-import { InvalidProductCatalogFormat } from "../errors";
+import { buildLineOffsets, makeSpan } from "../utils/diagnostics_spans";
+import {
+  DiagnosticError,
+  type SingleDiagnosticError,
+  InvalidProductCatalogFormat,
+  InvalidProductCatalogTomlError,
+} from "../errors";
 
 /**
  * Product Catalog Manager: used in conjunction with {@link ShoppingCart}
@@ -55,25 +62,65 @@ import { InvalidProductCatalogFormat } from "../errors";
 export class ProductCatalog {
   public products: ProductOption[] = [];
 
+  /** Diagnostics collected by the last {@link ProductCatalog.parse | parse()}. */
+  public diagnostics: Diagnostic[] = [];
+
+  /** Source text of the last parse; diagnostic spans refer to it. */
+  public source = "";
+
   constructor(tomlContent?: string) {
     if (tomlContent) this.parse(tomlContent);
   }
 
   /**
    * Parses a TOML string into a list of product options.
+   *
+   * All problems are collected in {@link ProductCatalog.diagnostics}.
+   *
    * @param tomlContent - The TOML string to parse.
-   * @returns A parsed list of `ProductOption`.
+   * @returns The parsed products.
+   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
    */
   public parse(tomlContent: string): ProductOption[] {
-    const catalogRaw = TOML.parse(tomlContent);
+    const error = this.validate(tomlContent);
+    this.source = tomlContent;
+    this.diagnostics = error ? [error.diagnostic] : [];
+    if (this.diagnostics.some((d) => d.severity === "error")) {
+      throw new DiagnosticError(this.diagnostics, tomlContent);
+    }
+    return this.products;
+  }
+
+  private validate(tomlContent: string): SingleDiagnosticError | undefined {
+    let catalogRaw: TomlTable;
+    try {
+      catalogRaw = TOML.parse(tomlContent);
+    } catch (e) {
+      const error = new InvalidProductCatalogTomlError((e as Error).message);
+      const { line, column } = e as { line: number; column: number };
+      error.diagnostic.span = makeSpan(
+        buildLineOffsets(tomlContent),
+        line - 1,
+        column - 1,
+        1,
+      );
+
+      this.products = [];
+      return error;
+    }
 
     // Reset internal state
     this.products = [];
 
     if (!this.isValidTomlContent(catalogRaw)) {
-      throw new InvalidProductCatalogFormat();
+      return new InvalidProductCatalogFormat();
     }
 
+    this.build(catalogRaw);
+    return undefined;
+  }
+
+  private build(catalogRaw: TomlTable): void {
     for (const [ingredientName, ingredientData] of Object.entries(catalogRaw)) {
       const ingredientTable = ingredientData as TomlTable;
       const aliases = ingredientTable.aliases as string[] | undefined;
@@ -116,8 +163,6 @@ export class ProductCatalog {
         this.products.push(productOption);
       }
     }
-
-    return this.products;
   }
 
   /**

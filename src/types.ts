@@ -1,3 +1,4 @@
+import type { diagnosticCatalog } from "./diagnostics";
 import type { Recipe } from "./classes/recipe";
 import { Section } from "./classes/section";
 
@@ -506,7 +507,7 @@ export interface RecipeChoices {
 }
 
 /**
- * Options for the {@link Recipe.getIngredientQuantities | getIngredientQuantities()} method.
+ * Options for the {@link Recipe["getIngredientQuantities"] | getIngredientQuantities()} method.
  * @category Types
  */
 export interface GetIngredientQuantitiesOptions {
@@ -1193,3 +1194,60 @@ export type OrGroup<T = QuantityWithUnitLike> =
  */
 export type AndGroup<T = QuantityWithUnitLike> =
   MaybeNestedAndGroup<T> | FlatAndGroup<T>;
+
+// ---------------------------------------------------------------------------
+// Diagnostics
+// ---------------------------------------------------------------------------
+
+/**
+ * A position within a source string.
+ * @category Types
+ */
+export interface DiagnosticSourcePosition {
+  /** 0-based UTF-16 code-unit offset from the start of the source string. */
+  offset: number;
+  /** 1-based line number. */
+  line: number;
+  /** 1-based column number. */
+  column: number;
+}
+
+/**
+ * A half-open range `[start, end)` within a source string.
+ * @category Types
+ */
+export interface DiagnosticSourceSpan {
+  start: DiagnosticSourcePosition;
+  end: DiagnosticSourcePosition;
+}
+
+/**
+ * Severity of a diagnostic.
+ * @category Types
+ */
+export type DiagnosticSeverity = "error" | "warning";
+
+/**
+ * Stable identifier of a diagnostic, in the form `COOKLANG_<E|W|I><4 digits>`.
+ * @category Types
+ */
+export type DiagnosticCode = keyof typeof diagnosticCatalog;
+
+/**
+ * A single diagnostic emitted during recipe parsing.
+ * @category Types
+ */
+export interface Diagnostic {
+  /** Stable code identifying the problem (e.g. `"COOKLANG_E0101"`). */
+  code: DiagnosticCode;
+  /** Human-readable description of what went wrong. */
+  message: string;
+  /** Actionable instructions on how to fix the problem, if available. */
+  fix?: string;
+  /** Link to extended documentation, if available. */
+  docs?: string;
+  /** Severity level (`W` codes are `"warning"`; `E` and `I` codes are `"error"`). */
+  severity: DiagnosticSeverity;
+  /** Location of the problem in the original recipe source. */
+  span?: DiagnosticSourceSpan;
+}

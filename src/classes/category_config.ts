@@ -1,4 +1,12 @@
-import type { Category, CategoryIngredient } from "../types";
+import type { Category, CategoryIngredient, Diagnostic } from "../types";
+import { buildLineOffsets, makeSpan } from "../utils/diagnostics_spans";
+import {
+  DiagnosticError,
+  DuplicateCategoryError,
+  IngredientWithoutCategoryError,
+  DuplicateIngredientAliasError,
+  type SingleDiagnosticError,
+} from "../errors";
 
 /**
  * Parser for category configurations specified à-la-cooklang.
@@ -37,6 +45,12 @@ export class CategoryConfig {
    */
   categories: Category[] = [];
 
+  /** Diagnostics collected by the last {@link CategoryConfig.parse | parse()}. */
+  diagnostics: Diagnostic[] = [];
+
+  /** Source text of the last parse; diagnostic spans refer to it. */
+  source = "";
+
   /**
    * Creates a new CategoryConfig instance.
    * @param config - The category configuration to parse.
@@ -50,14 +64,45 @@ export class CategoryConfig {
   /**
    * Parses a category configuration from a string into property
    *   {@link CategoryConfig.categories | categories}
+   *
+   * All problems are collected in {@link CategoryConfig.diagnostics}.
+   *
    * @param config - The category configuration to parse.
+   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
    */
-  parse(config: string) {
+  parse(config: string): void {
+    this.source = config;
+    this.diagnostics = this._parseAndCollect(config).map((e) => e.diagnostic);
+    if (this.diagnostics.some((d) => d.severity === "error")) {
+      throw new DiagnosticError(this.diagnostics, config);
+    }
+  }
+
+  private _parseAndCollect(config: string): SingleDiagnosticError[] {
+    const errors: SingleDiagnosticError[] = [];
+    this.categories = [];
+    const lineOffsets = buildLineOffsets(config);
     let currentCategory: Category | null = null;
     const categoryNames = new Set<string>();
     const ingredientNames = new Set<string>();
 
-    for (const line of config.split("\n")) {
+    const report = (
+      error: SingleDiagnosticError,
+      line: string,
+      lineIdx: number,
+    ) => {
+      const column = line.length - line.trimStart().length;
+      error.diagnostic.span = makeSpan(
+        lineOffsets,
+        lineIdx,
+        column,
+        line.trim().length,
+      );
+      errors.push(error);
+    };
+
+    const lines = config.split(/\r\n|\r|\n/);
+    for (const [lineIdx, line] of lines.entries()) {
       const trimmedLine = line.trim();
 
       if (trimmedLine.length === 0) {
@@ -70,7 +115,10 @@ export class CategoryConfig {
           .trim();
 
         if (categoryNames.has(categoryName)) {
-          throw new Error(`Duplicate category found: ${categoryName}`);
+          report(new DuplicateCategoryError(categoryName), line, lineIdx);
+          // Detached category so that its ingredients don't cascade into errors
+          currentCategory = { name: categoryName, ingredients: [] };
+          continue;
         }
         categoryNames.add(categoryName);
 
@@ -78,18 +126,24 @@ export class CategoryConfig {
         this.categories.push(currentCategory);
       } else {
         if (currentCategory === null) {
-          throw new Error(
-            `Ingredient found without a category: ${trimmedLine}`,
+          report(
+            new IngredientWithoutCategoryError(trimmedLine),
+            line,
+            lineIdx,
           );
+          continue;
         }
 
         const aliases = trimmedLine.split("|").map((s) => s.trim());
-        for (const alias of aliases) {
-          if (ingredientNames.has(alias)) {
-            throw new Error(`Duplicate ingredient/alias found: ${alias}`);
-          }
-          ingredientNames.add(alias);
+        const duplicate = aliases.find(
+          (alias, i) =>
+            ingredientNames.has(alias) || aliases.indexOf(alias) < i,
+        );
+        if (duplicate !== undefined) {
+          report(new DuplicateIngredientAliasError(duplicate), line, lineIdx);
+          continue;
         }
+        for (const alias of aliases) ingredientNames.add(alias);
 
         const ingredient: CategoryIngredient = {
           name: aliases[0]!, // We know this exists because trimmedLine is not empty
@@ -98,5 +152,6 @@ export class CategoryConfig {
         currentCategory.ingredients.push(ingredient);
       }
     }
+    return errors;
   }
 }

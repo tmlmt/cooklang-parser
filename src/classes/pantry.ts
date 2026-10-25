@@ -1,6 +1,17 @@
+import {
+  SingleDiagnosticError,
+  DiagnosticError,
+  InvalidPantryTomlError,
+} from "../errors";
+import { buildLineOffsets, makeSpan } from "../utils/diagnostics_spans";
 import TOML from "smol-toml";
 import type { TomlTable } from "smol-toml";
-import type { PantryItem, PantryItemToml, PantryOptions } from "../types";
+import type {
+  PantryItem,
+  PantryItemToml,
+  PantryOptions,
+  Diagnostic,
+} from "../types";
 import type { CategoryConfig } from "./category_config";
 import {
   parseQuantityWithUnit,
@@ -54,6 +65,12 @@ export class Pantry {
    */
   items: PantryItem[] = [];
 
+  /** Diagnostics collected by the last {@link Pantry.parse | parse()}. */
+  diagnostics: Diagnostic[] = [];
+
+  /** Source text of the last parse; diagnostic spans refer to it. */
+  source = "";
+
   /**
    * Options for date parsing and other configuration.
    */
@@ -78,35 +95,67 @@ export class Pantry {
 
   /**
    * Parses a TOML string into pantry items.
+   *
+   * All problems are collected in {@link Pantry.diagnostics}.
+   *
    * @param tomlContent - The TOML string to parse.
-   * @returns The parsed list of pantry items.
+   * @returns The parsed pantry items.
+   * @throws {@link DiagnosticError} if error-severity diagnostics exist.
    */
   parse(tomlContent: string): PantryItem[] {
-    const raw = TOML.parse(tomlContent);
+    this.source = tomlContent;
+    this.diagnostics = this._parseAndCollect(tomlContent).map(
+      (e) => e.diagnostic,
+    );
+    if (this.diagnostics.some((d) => d.severity === "error")) {
+      throw new DiagnosticError(this.diagnostics, tomlContent);
+    }
+    return this.items;
+  }
+
+  private _parseAndCollect(tomlContent: string): SingleDiagnosticError[] {
+    let raw: TomlTable;
+    try {
+      raw = TOML.parse(tomlContent);
+    } catch (e) {
+      const error = new InvalidPantryTomlError((e as Error).message);
+      const { line, column } = e as { line: number; column: number };
+      error.diagnostic.span = makeSpan(
+        buildLineOffsets(tomlContent),
+        line - 1,
+        column - 1,
+        1,
+      );
+      return [error];
+    }
 
     // Reset internal state
     this.items = [];
+    const errors: SingleDiagnosticError[] = [];
 
     for (const [location, locationData] of Object.entries(raw)) {
       const locationTable = locationData as TomlTable;
 
       for (const [itemName, itemData] of Object.entries(locationTable)) {
-        const item = this.parseItem(
-          itemName,
-          location,
-          itemData as PantryItemToml,
-        );
-        this.items.push(item);
+        try {
+          this.items.push(
+            this._parseItem(itemName, location, itemData as PantryItemToml),
+          );
+        } catch (e) {
+          /* v8 ignore if -- @preserve: _parseItem only throws SingleDiagnosticError, rethrow is a safeguard */
+          if (!(e instanceof SingleDiagnosticError)) throw e;
+          errors.push(e);
+        }
       }
     }
 
-    return this.items;
+    return errors;
   }
 
   /**
    * Parses a single pantry item from its TOML representation.
    */
-  private parseItem(
+  private _parseItem(
     name: string,
     location: string,
     data: PantryItemToml,
@@ -131,10 +180,10 @@ export class Pantry {
         if (parsed.unit) item.lowUnit = parsed.unit;
       }
       if (data.bought) {
-        item.bought = this.parseDate(data.bought);
+        item.bought = this._parseDate(data.bought);
       }
       if (data.expire) {
-        item.expire = this.parseDate(data.expire);
+        item.expire = this._parseDate(data.expire);
       }
     }
 
@@ -144,7 +193,7 @@ export class Pantry {
   /**
    * Parses a date string using the configured format or fuzzy detection.
    */
-  private parseDate(input: string): Date {
+  private _parseDate(input: string): Date {
     if (this.options.dateFormat) {
       return parseDateFromFormat(input, this.options.dateFormat);
     }

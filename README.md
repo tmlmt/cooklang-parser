@@ -22,6 +22,7 @@ This library provides a set of tools to work with recipes written in the Cooklan
 - **Shopping Lists:** Generate shopping lists from one or more recipes.
 - **Category Configuration:** Categorize shopping list ingredients based on a custom category configuration.
 - **Typescript:** Written in Typescript, providing type safety for all the data structures.
+- **Diagnostics:** Errors and warnings are collected during parsing and other operations, in a consistant and documented manner.
 
 ## Quick start
 

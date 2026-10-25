@@ -40,7 +40,14 @@ import {
 } from "../regex";
 import { parseQuantityWithUnit } from "../utils/parser_helpers";
 import { formatQuantity } from "../utils/render_helpers";
-import { NoTabAsIndentError, UnknownRecipePathError } from "../errors";
+import {
+  NoTabAsIndentError,
+  UnknownRecipePathError,
+  IndexOutOfBoundsError,
+  UnresolvedAlternativesError,
+  InvalidCategoryConfigError,
+  InvalidPantryError,
+} from "../errors";
 import { normalizeInputString, normalizeKey } from "../utils/normalization";
 
 /**
@@ -580,7 +587,7 @@ export class ShoppingList {
       options.choices,
     );
     if (errorMessage) {
-      throw new Error(errorMessage);
+      throw new UnresolvedAlternativesError(errorMessage);
     }
 
     if (!options.scaling) {
@@ -666,7 +673,7 @@ export class ShoppingList {
    */
   removeRecipe(index: number) {
     if (index < 0 || index >= this.recipes.length) {
-      throw new Error("Index out of bounds");
+      throw new IndexOutOfBoundsError();
     }
     this.recipes.splice(index, 1);
     this.calculateIngredients();
@@ -691,7 +698,7 @@ export class ShoppingList {
    */
   removeManualItem(index: number): void {
     if (index < 0 || index >= this.manualItems.length) {
-      throw new Error("Index out of bounds");
+      throw new IndexOutOfBoundsError();
     }
     this.manualItems.splice(index, 1);
     this.calculateIngredients();
@@ -710,9 +717,7 @@ export class ShoppingList {
     } else if (pantry instanceof Pantry) {
       this.pantry = pantry;
     } else {
-      throw new Error(
-        "Invalid pantry: expected a Pantry instance or TOML string",
-      );
+      throw new InvalidPantryError();
     }
     if (this.categoryConfig) {
       this.pantry.setCategoryConfig(this.categoryConfig);
@@ -741,7 +746,7 @@ export class ShoppingList {
     if (typeof config === "string")
       this.categoryConfig = new CategoryConfig(config);
     else if (config instanceof CategoryConfig) this.categoryConfig = config;
-    else throw new Error("Invalid category configuration");
+    else throw new InvalidCategoryConfigError();
     if (this.pantry) {
       this.pantry.setCategoryConfig(this.categoryConfig);
     }

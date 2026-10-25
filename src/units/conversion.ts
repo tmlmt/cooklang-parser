@@ -1,3 +1,4 @@
+import { RatioNotComputableError } from "../errors";
 import Big from "big.js";
 import type { QuantityWithUnitDef } from "../types";
 import {
@@ -164,9 +165,7 @@ export function getUnitRatio(q1: QuantityWithUnitDef, q2: QuantityWithUnitDef) {
       : 1;
 
   if (typeof q1Value !== "number" || typeof q2Value !== "number") {
-    throw Error(
-      "One of both values is not a number, so a ratio cannot be computed",
-    );
+    throw new RatioNotComputableError();
   }
   return Big(q1Value).times(factor).div(q2Value);
 }

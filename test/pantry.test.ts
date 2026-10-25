@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Pantry } from "../src/classes/pantry";
 import { CategoryConfig } from "../src/classes/category_config";
+import { DiagnosticError } from "../src/errors";
 import type { PantryItem, FixedValue } from "../src/types";
 
 const simplePantryToml = `
@@ -98,6 +99,26 @@ describe("Pantry", () => {
       expect(eggs.unit).toBeUndefined();
     });
 
+    it("should parse ingredient names with spaces using quoted TOML keys", () => {
+      const pantry = new Pantry(
+        `[pantry]\n"ground beef" = { quantity = "500%g" }`,
+      );
+      expect(pantry.items).toHaveLength(1);
+      expect(pantry.items[0]).toMatchObject<Partial<PantryItem>>({
+        name: "ground beef",
+        location: "pantry",
+      });
+    });
+
+    it("should find items with spaces by name", () => {
+      const pantry = new Pantry(
+        `[pantry]\n"ground beef" = { quantity = "500%g" }`,
+      );
+      const item = pantry.findItem("ground beef");
+      expect(item).toBeDefined();
+      expect(item).toMatchObject<Partial<PantryItem>>({ name: "ground beef" });
+    });
+
     it("should parse via constructor", () => {
       const pantry = new Pantry(simplePantryToml);
       expect(pantry.items.length).toBeGreaterThan(0);
@@ -162,13 +183,31 @@ describe("Pantry", () => {
           new Pantry(`[fridge]\nmilk = { expire = "2025-13-01" }`, {
             dateFormat: "YYYY-MM-DD",
           }),
-      ).toThrow(/Invalid date/);
+      ).toThrow(DiagnosticError);
+      try {
+        new Pantry(`[fridge]\nmilk = { expire = "2025-13-01" }`, {
+          dateFormat: "YYYY-MM-DD",
+        });
+      } catch (error) {
+        expect(error).toBeInstanceOf(DiagnosticError);
+        expect((error as DiagnosticError).diagnostics[0]!.message).toContain(
+          "Invalid date",
+        );
+      }
     });
 
     it("should throw on non-numeric date parts", () => {
       expect(
         () => new Pantry(`[fridge]\nmilk = { expire = "abc.06.2025" }`),
-      ).toThrow(/non-numeric/);
+      ).toThrow(DiagnosticError);
+      try {
+        new Pantry(`[fridge]\nmilk = { expire = "abc.06.2025" }`);
+      } catch (error) {
+        expect(error).toBeInstanceOf(DiagnosticError);
+        expect((error as DiagnosticError).diagnostics[0]!.message).toContain(
+          "non-numeric",
+        );
+      }
     });
   });
 

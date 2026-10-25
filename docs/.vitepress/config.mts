@@ -2,6 +2,7 @@ import { defineConfig } from "vitepress";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- avoiding error when developing the docs locally
 // @ts-ignore: linting before typedoc is generated will throw an error here
 import typedocSidebar from "../api/typedoc-sidebar.json";
+import { readDiagnosticPages } from "./diagnostics-docs";
 import { fullVersion, majorVersion, majorNumber } from "./version";
 
 // https://vitepress.dev/reference/site-config
@@ -9,6 +10,8 @@ export default defineConfig({
   title: "@tmlmt/cooklang-parser",
   description: "Documentation for the npm package @tmlmt/cooklang-parser",
   base: `/${majorVersion}/`,
+  // Raw sources of the /e/<code> pages, rendered through docs/e/[code].md
+  srcExclude: ["e/codes/**"],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -37,6 +40,7 @@ export default defineConfig({
           { text: "Quick start", link: "/api/#quick-start" },
           { text: "Cooklang specs", link: "/guide-cooklang-specs" },
           { text: "Extensions", link: "/guide-extensions" }, 
+          { text: "Parse diagnostics", link: "/guide-diagnostics" },
           { text: "Unit conversion", link: "/guide-unit-conversion" }, 
           { text: "Rendering recipes", link: "/guide-rendering" },
           { text: "Product catalog syntax", link: "/guide-product-catalog" },
@@ -56,6 +60,15 @@ export default defineConfig({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           }, ...typedocSidebar],
         collapsed: true
+      },
+      {
+        text: "Diagnostic codes",
+        link: "/e/",
+        items: readDiagnosticPages().map(({ code }) => ({
+          text: code,
+          link: `/e/${code.toLowerCase()}`,
+        })),
+        collapsed: true,
       },
       {
         text: "Examples",

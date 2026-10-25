@@ -169,6 +169,11 @@ import type {
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
   ShoppingListRecipeRef,
+  DiagnosticSourcePosition,
+  DiagnosticSourceSpan,
+  Diagnostic,
+  DiagnosticCode,
+  DiagnosticSeverity,
 } from "./types";
 
 export {
@@ -260,18 +265,27 @@ export {
   GetIngredientQuantitiesOptions,
   RawQuantityGroup,
   ShoppingListRecipeRef,
+  DiagnosticSourcePosition,
+  DiagnosticSourceSpan,
+  Diagnostic,
+  DiagnosticCode,
+  DiagnosticSeverity,
 };
 
 // Errors
 
-import {
-  NoProductCatalogForCartError,
-  NoShoppingListForCartError,
-  UnknownRecipePathError,
-} from "./errors";
+export * from "./errors";
 
-export {
-  NoProductCatalogForCartError,
-  NoShoppingListForCartError,
-  UnknownRecipePathError,
-};
+// Diagnostics formatters
+
+import {
+  formatDiagnostic,
+  formatDiagnostics,
+  formatCodeFrame,
+} from "./utils/diagnostics_format";
+
+export { formatDiagnostic, formatDiagnostics, formatCodeFrame };
+
+import { diagnosticCatalog, severityOfCode } from "./diagnostics";
+
+export { diagnosticCatalog, severityOfCode };

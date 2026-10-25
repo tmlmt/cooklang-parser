@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ProductCatalog } from "../src/classes/product_catalog";
-import { InvalidProductCatalogFormat } from "../src/errors";
+import { DiagnosticError } from "../src/errors";
 import { ProductOption } from "../src";
 
 describe("ProductCatalog", () => {
@@ -212,9 +212,7 @@ aliases = "not an array"`,
     ])(
       "should throw an error for an invalid product catalog",
       (tomlContent) => {
-        expect(() => new ProductCatalog(tomlContent)).toThrow(
-          InvalidProductCatalogFormat,
-        );
+        expect(() => new ProductCatalog(tomlContent)).toThrow(DiagnosticError);
       },
     );
   });
