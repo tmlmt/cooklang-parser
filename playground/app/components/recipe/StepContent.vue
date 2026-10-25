@@ -41,6 +41,14 @@ function isGroupedItemSelected(item: IngredientItem): boolean {
 }
 
 /**
+ * Preparation lives on the referenced ingredient (distinct preparations
+ * yield distinct ingredient entries), so it is resolved per alternative.
+ */
+function getPreparation(alt: IngredientAlternative): string | undefined {
+  return props.recipe.ingredients[alt.index]?.preparation;
+}
+
+/**
  * Convert equivalents to a QuantityWithPlainUnit array.
  */
 function toPlainEquivalents(
@@ -118,7 +126,15 @@ function getVisibleAlternatives(
               />
               {{ " " }}
             </template>
-            {{ item.alternatives[0]?.displayName }}
+            {{ item.alternatives[0]?.displayName
+            }}<span
+              v-if="
+                item.alternatives[0] && getPreparation(item.alternatives[0])
+              "
+              class="font-normal text-gray-500 dark:text-gray-300"
+            >
+              ({{ getPreparation(item.alternatives[0]) }})</span
+            >
           </span>
         </template>
         <!-- Inline alternatives: show selected or all -->
@@ -153,6 +169,12 @@ function getVisibleAlternatives(
                     visIdx === 0,
                 }"
                 >{{ visibleAlt.alt.displayName }}</span
+              >
+              <span
+                v-if="getPreparation(visibleAlt.alt)"
+                class="font-normal text-gray-500 dark:text-gray-300"
+              >
+                ({{ getPreparation(visibleAlt.alt) }})</span
               >
               <template v-if="visibleAlt.alt.note && !hasInlineChoice(item)">
                 <span
