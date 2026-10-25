@@ -35,6 +35,7 @@ import { addQuantityValues } from "../quantities/mutations";
 import { getNumericValue } from "../quantities/numeric";
 import {
   CannotAddTextValueError,
+  DivisionByZeroError,
   InvalidQuantityFormat,
   NoTabAsIndentError,
   BadIndentationError,
@@ -264,6 +265,10 @@ export const parseFixedValue = (
 
     const num = Number(parts[0]);
     const den = Number(parts[1]);
+
+    if (den === 0) {
+      throw new DivisionByZeroError(s);
+    }
 
     return { type: "fraction", num, den };
   }

@@ -41,6 +41,27 @@ export class DiagnosticError extends Error {
 }
 
 /**
+ * Thrown when parsing must stop immediately after encountering a diagnostic.
+ * @category Errors
+ */
+export class ParseStoppedError extends DiagnosticError {
+  /** The diagnostic that caused parsing to stop. */
+  readonly diagnostic: Diagnostic;
+  /** Indicates that the parser stopped before processing the full source. */
+  readonly stoppedEarly = true;
+
+  constructor(
+    diagnostic: Diagnostic,
+    source: string,
+    diagnostics: Diagnostic[] = [diagnostic],
+  ) {
+    super(diagnostics, source, diagnostic.message);
+    this.name = "ParseStoppedError";
+    this.diagnostic = diagnostic;
+  }
+}
+
+/**
  * Base class of errors that describe exactly one problem.
  * @category Errors
  */
@@ -55,18 +76,6 @@ export class SingleDiagnosticError extends DiagnosticError {
     this.name = "SingleDiagnosticError";
     this.diagnostic = diagnostic;
     this.code = diagnostic.code;
-  }
-}
-
-/**
- * Thrown when an internal invariant is violated — this indicates a bug in
- * the library, not a problem with user input.
- * @category Errors
- */
-export class InternalError extends SingleDiagnosticError {
-  constructor(message: string) {
-    super(createDiagnostic("COOKLANG_I0001", { detail: message }));
-    this.name = "InternalError";
   }
 }
 
@@ -141,6 +150,20 @@ export class InvalidQuantityFormat extends SingleDiagnosticError {
     super(createDiagnostic("COOKLANG_E0101", { value, extra }));
     this.name = "InvalidQuantityFormat";
     this.value = value;
+  }
+}
+
+/**
+ * Thrown when a fraction has a zero denominator.
+ * @category Errors
+ */
+export class DivisionByZeroError extends SingleDiagnosticError {
+  readonly fraction: string;
+
+  constructor(fraction: string) {
+    super(createDiagnostic("COOKLANG_E9403", {}));
+    this.name = "DivisionByZeroError";
+    this.fraction = fraction;
   }
 }
 

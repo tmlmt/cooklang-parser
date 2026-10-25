@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
+import { ParseStoppedError } from "../src/errors";
 import { parseCollect } from "./mocks/parse_collect";
 import {
   simpleRecipe,
@@ -73,6 +74,55 @@ describe("parse function", () => {
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
         code: "COOKLANG_E0101",
+        severity: "error",
+      });
+    });
+
+    it("stops immediately with COOKLANG_E1003 for a zero-denominator fraction", () => {
+      const source = "Add @flour{1/0}\nAdd @sugar{2}";
+      const recipe = new Recipe();
+      let thrown: unknown;
+
+      try {
+        recipe.parse(source);
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(ParseStoppedError);
+      expect(thrown).toMatchObject({
+        stoppedEarly: true,
+        source,
+        diagnostics: [
+          {
+            code: "COOKLANG_E9403",
+            severity: "error",
+            span: {
+              start: { offset: source.indexOf("@flour{1/0}") },
+              end: { offset: source.indexOf("@flour{1/0}") + 11 },
+            },
+          },
+        ],
+      });
+      expect(recipe.diagnostics).toEqual(
+        (thrown as ParseStoppedError).diagnostics,
+      );
+      expect(recipe.ingredients.map((ingredient) => ingredient.name)).toEqual([
+        "flour",
+      ]);
+    });
+
+    it.each([
+      "Use #pan{1/0}",
+      "Cook for ~{1/0%minutes}",
+      "Scale {{1/0}}",
+      "---\nyield: 1/0%kg\n---\nAdd @flour{1%kg}",
+    ])("stops immediately for zero-denominator quantity in %s", (source) => {
+      const recipe = new Recipe();
+
+      expect(() => recipe.parse(source)).toThrow(ParseStoppedError);
+      expect(recipe.diagnostics[0]).toMatchObject({
+        code: "COOKLANG_E9403",
         severity: "error",
       });
     });

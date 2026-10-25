@@ -82,12 +82,14 @@ import Big from "big.js";
 import { deepClone } from "../utils/general";
 import {
   InvalidQuantityFormat,
+  DivisionByZeroError,
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
   ReferencedItemCannotBeRedefinedError,
   NoTabAsIndentError,
   BadIndentationError,
   DiagnosticError,
+  ParseStoppedError,
 } from "../errors";
 import { createDiagnostic } from "../diagnostics";
 import {
@@ -416,6 +418,34 @@ export class Recipe {
     );
   }
 
+  private _toParseStoppedError(
+    error: DivisionByZeroError,
+    span?: DiagnosticSourceSpan,
+  ): ParseStoppedError {
+    const diagnostic = { ...error.diagnostic, span };
+    this.diagnostics.push(diagnostic);
+    return new ParseStoppedError(diagnostic, this._source, this.diagnostics);
+  }
+
+  private _parseQuantityValueOrStop(
+    quantity: string,
+    lineIdx: number,
+    column: number,
+    length: number,
+  ): FixedValue | Range {
+    try {
+      return parseQuantityValue(quantity);
+    } catch (error) {
+      if (error instanceof DivisionByZeroError) {
+        throw this._toParseStoppedError(
+          error,
+          makeSpan(this._lineOffsets, lineIdx, column, length),
+        );
+      }
+      throw error;
+    }
+  }
+
   private _parseQuantityRecursive(
     quantityRaw: string,
     lineIdx: number,
@@ -426,7 +456,12 @@ export class Recipe {
     const quantities: QuantityWithExtendedUnit[] = [];
     while (quantityMatch?.groups) {
       const value = quantityMatch.groups.quantity
-        ? parseQuantityValue(quantityMatch.groups.quantity)
+        ? this._parseQuantityValueOrStop(
+            quantityMatch.groups.quantity,
+            lineIdx,
+            matchStart,
+            matchLength,
+          )
         : undefined;
       const unit = quantityMatch.groups.unit;
       if (value) {
@@ -1553,6 +1588,7 @@ export class Recipe {
    *
    * @param content - The recipe content to parse.
    * @throws {@link DiagnosticError} if error-severity diagnostics exist.
+   * @throws {@link ParseStoppedError} if parsing must stop immediately.
    */
   parse(content: string): void {
     this.reset();
@@ -1603,7 +1639,18 @@ export class Recipe {
       if (unitSystem) Recipe.unitSystems.set(this, unitSystem);
     } catch (e) {
       // v8 ignore else -- @preserve: only indentation errors are thrown by the metadata parser
-      if (e instanceof NoTabAsIndentError) {
+      if (e instanceof DivisionByZeroError) {
+        const fractionOffset = content.indexOf(e.fraction);
+        const span =
+          fractionOffset === -1
+            ? undefined
+            : makeSpanFromOffset(
+                this._lineOffsets,
+                fractionOffset,
+                e.fraction.length,
+              );
+        throw this._toParseStoppedError(e, span);
+      } else if (e instanceof NoTabAsIndentError) {
         this.diagnostics.push(
           createDiagnostic(
             "COOKLANG_E0301",
@@ -1889,7 +1936,12 @@ export class Recipe {
             flags.push("hidden");
           }
           const quantity = quantityRaw
-            ? parseQuantityValue(quantityRaw)
+            ? this._parseQuantityValueOrStop(
+                quantityRaw,
+                lineIdx,
+                sourceColumn,
+                sourceLength,
+              )
             : undefined;
           const newCookware: Cookware = {
             name,
@@ -1943,7 +1995,12 @@ export class Recipe {
             this.diagnostics.push(createDiagnostic("COOKLANG_E0102", {}, span));
           } else {
             const name = groups.timerName || undefined;
-            const duration = parseQuantityValue(durationStr);
+            const duration = this._parseQuantityValueOrStop(
+              durationStr,
+              lineIdx,
+              sourceColumn,
+              sourceLength,
+            );
             const timerObj: Timer = {
               name,
               duration,
@@ -2011,7 +2068,9 @@ export class Recipe {
   ): void {
     const span = makeSpan(this._lineOffsets, lineIdx, column, length);
     // v8 ignore else -- @preserve: parse helpers only throw the error types handled above
-    if (e instanceof InvalidQuantityFormat) {
+    if (e instanceof DivisionByZeroError) {
+      throw this._toParseStoppedError(e, span);
+    } else if (e instanceof InvalidQuantityFormat) {
       this.diagnostics.push(
         createDiagnostic("COOKLANG_E0101", { value: e.value }, span),
       );

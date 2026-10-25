@@ -8,7 +8,6 @@ import {
   ShoppingList,
   SingleDiagnosticError,
   DiagnosticError,
-  InternalError,
   diagnosticCatalog,
   severityOfCode,
 } from "../src/index";
@@ -26,7 +25,7 @@ describe("diagnostic catalog", () => {
   it("derives the severity from the code letter", () => {
     expect(severityOfCode("COOKLANG_E0101")).toBe("error");
     expect(severityOfCode("COOKLANG_W0101")).toBe("warning");
-    expect(severityOfCode("COOKLANG_I0001")).toBe("error");
+    expect(severityOfCode("COOKLANG_I0401")).toBe("error");
   });
 
   it("has a documentation page for every code", () => {
@@ -71,7 +70,6 @@ describe("source code", () => {
 describe("typed errors", () => {
   it("all extend SingleDiagnosticError with a code and diagnostic", () => {
     const instances = [
-      new errors.InternalError("x"),
       new errors.RatioNotComputableError(),
       new errors.InvalidPantryError(),
       new errors.InvalidCategoryConfigError(),
@@ -87,7 +85,6 @@ describe("typed errors", () => {
       expect(e.code).toBe(e.diagnostic.code);
       expect(e.diagnostic.fix).toBeDefined();
     }
-    expect(new InternalError("boom").message).toBe("boom");
     expect(new errors.NoProductMatchError("flour", "noQuantity").reason).toBe(
       "noQuantity",
     );
