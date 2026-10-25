@@ -178,9 +178,10 @@ export class ShoppingCart {
         this.cart.push(...optimumMatch);
         this.match.push({ ingredient, selection: optimumMatch });
       } catch (error) {
-        /* v8 ignore else -- @preserve */
         if (error instanceof NoProductMatchError) {
           this.misMatch.push({ ingredient, reason: error.reason });
+        } else {
+          throw error;
         }
       }
     }

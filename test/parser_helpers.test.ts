@@ -922,6 +922,29 @@ describe("findAndUpsertCookware", () => {
     expect(diagnostics).toHaveDiagnostic("COOKLANG_W0401");
   });
 
+  it("should rethrow errors other than CannotAddTextValueError", () => {
+    const cookware: Cookware[] = [
+      {
+        name: "oven",
+        quantity: {
+          type: "fixed",
+          value: { type: "fraction", num: 1, den: 0 },
+        },
+      },
+    ];
+    const newCookware: Cookware = {
+      name: "oven",
+      quantity: {
+        type: "fixed",
+        value: { type: "fraction", num: 1, den: 1 },
+      },
+    };
+
+    expect(() => findAndUpsertCookware(cookware, newCookware, true)).toThrow(
+      DivisionByZeroError,
+    );
+  });
+
   it("should throw a ReferencedCookwareNotFoundError if a reference cookware does not exist", () => {
     const newCookware: Cookware = { name: "unreferenced-cookware", flags: [] };
     expect(() => findAndUpsertCookware([], newCookware, true, [])).toThrow(
