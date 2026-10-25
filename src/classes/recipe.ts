@@ -577,6 +577,14 @@ export class Recipe {
           this.ingredients,
           newIngredient,
           reference,
+          this.diagnostics,
+          makeSpan(
+            this._lineOffsets,
+            lineIdx,
+            matchStart,
+            ingredientMatchString.length,
+          ),
+          linkedVariants,
         );
       } catch (e) {
         this._collectParseError(
@@ -748,6 +756,14 @@ export class Recipe {
         this.ingredients,
         newIngredient,
         reference,
+        this.diagnostics,
+        makeSpan(
+          this._lineOffsets,
+          lineIdx,
+          matchStart,
+          ingredientMatchString.length,
+        ),
+        linkedVariants,
       );
     } catch (e) {
       this._collectParseError(
@@ -1988,6 +2004,13 @@ export class Recipe {
               this.cookware,
               newCookware,
               reference,
+              this.diagnostics,
+              makeSpan(
+                this._lineOffsets,
+                lineIdx,
+                sourceColumn,
+                sourceLength,
+              ),
             );
             // Adding the item itself in the preparation
             const newItem: CookwareItem = {

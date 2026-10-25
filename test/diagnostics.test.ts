@@ -359,4 +359,44 @@ describe("Recipe.parse() throwing", () => {
     expect(error.message).toContain("1 error");
     expect(error.diagnostics).toHaveLength(2);
   });
+
+  it("warns when an unreferenced ingredient repeats with the same flags and preparation", () => {
+    const source = "Add @?salt{1%tsp}(ground), then add @?salt{2%tsp}(ground).";
+    const result = parseCollect(new Recipe(), source);
+
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0201", {
+      times: 1,
+      match: {
+        severity: "warning",
+        span: {
+          start: {
+            offset: source.lastIndexOf("@?salt"),
+            line: 1,
+          },
+        },
+      },
+    });
+    expect(result.output.ingredients).toHaveLength(2);
+  });
+
+  it("does not warn when preparation or flags differ, or when the ingredient is referenced", () => {
+    const result = parseCollect(
+      new Recipe(),
+      "Add @?salt{1%tsp}(ground), @salt{1%tsp}(ground), " +
+        "@?salt{1%tsp}(crushed), then @&?salt{1%tsp}(ground).",
+    );
+
+    expect(result.diagnostics).not.toHaveDiagnostic("COOKLANG_W0201");
+  });
+
+  it("warns for duplicate ingredients added through group-key syntax", () => {
+    const result = parseCollect(
+      new Recipe(),
+      "Add @|spices|salt{1%tsp}(ground) and @|spices|salt{2%tsp}(ground).",
+    );
+
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0201", {
+      times: 1,
+    });
+  });
 });
