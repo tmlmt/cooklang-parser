@@ -18,7 +18,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/image": "2.1.0",
+    "@nuxt/image": "2.2.0",
     "@nuxt/ui": "4.12.0",
     "@nuxtjs/device": "4.0.0",
     "big.js": "7.0.1",
@@ -30,7 +30,7 @@
     "yalps": "0.6.4"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "1.2.145",
+    "@iconify-json/lucide": "1.2.147",
     "@nuxt/eslint": "1.17.0",
     "@nuxt/test-utils": "4.3.4",
     "eslint": "10.13.0",
