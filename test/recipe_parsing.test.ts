@@ -11,6 +11,7 @@ import {
 } from "./fixtures/recipes";
 import type {
   Cookware,
+  Diagnostic,
   Ingredient,
   IngredientItem,
   Note,
@@ -95,7 +96,7 @@ describe("parse function", () => {
         source,
         diagnostics: [
           {
-            code: "COOKLANG_E9403",
+            code: "COOKLANG_E9402",
             severity: "error",
             span: {
               start: { offset: source.indexOf("@flour{1/0}") },
@@ -122,9 +123,22 @@ describe("parse function", () => {
 
       expect(() => recipe.parse(source)).toThrow(ParseStoppedError);
       expect(recipe.diagnostics[0]).toMatchObject({
-        code: "COOKLANG_E9403",
+        code: "COOKLANG_E9402",
         severity: "error",
       });
+    });
+
+    it("stops without a span when the zero-denominator fraction is full-width in metadata", () => {
+      const recipe = new Recipe();
+
+      expect(() =>
+        recipe.parse("---\nyield: １／０%kg\n---\nAdd @flour{1%kg}"),
+      ).toThrow(ParseStoppedError);
+      expect(recipe.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
+        code: "COOKLANG_E9402",
+        severity: "error",
+      });
+      expect(recipe.diagnostics[0]!.span).toBeUndefined();
     });
 
     it("extracts plain unquantified single-word ingredient correctly", () => {
@@ -467,6 +481,7 @@ describe("parse function", () => {
         Then add some more @&flour{50%g}.
       `;
       const result = new Recipe(recipe);
+      expect(result.diagnostics).toHaveLength(0);
       expect(result.ingredients).toHaveLength(1);
       // Quantities are merged opportunistically when units are compatible
       expect(result.ingredients[0]).toEqual({

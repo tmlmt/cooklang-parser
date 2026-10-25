@@ -89,15 +89,15 @@ export const diagnosticCatalog = defineDiagnostics({
         `Cannot add quantities with incompatible or unknown units: ${p.unit1} and ${p.unit2}`,
       fix: `This should not be reachable from normal library usage. Please report it with a reproduction.`,
     },
-    COOKLANG_E9401: {
-      why: `Cannot add a quantity with a text value.`,
+    COOKLANG_W0401: {
+      why: `Text-valued quantities could not be combined and were kept separate.`,
       fix: `Use numeric quantities if they need to be added together.`,
     },
-    COOKLANG_E9402: {
+    COOKLANG_E9401: {
       why: `One of both values is not a number, so a ratio cannot be computed`,
       fix: `Use numeric quantities.`,
     },
-    COOKLANG_E9403: {
+    COOKLANG_E9402: {
       why: `A fraction cannot have a zero denominator.`,
       fix: `Use a nonzero denominator, e.g. 1/2.`,
     },

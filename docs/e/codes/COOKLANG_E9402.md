@@ -1,17 +1,31 @@
 ---
 code: COOKLANG_E9402
 level: error(fatal)
-title: Ratio cannot be computed
+title: Division by zero
 ---
 
 ## What this error means
 
-The ratio between two quantities cannot be computed because one of them is not numeric. This aborts the whole `parse()`/`scaleBy()`/`convertTo()` call; it is not collected alongside other diagnostics.
+A fraction in the recipe has a zero denominator, so its value is undefined.
+The parser stops immediately rather than continuing with a partial parse.
 
 ## Common causes
 
-- Merging equivalents where one of the equivalent quantities is text-only, e.g. `@flour{1%cup|a bit}` then `@&flour{2%cup|a lot}`
+- Writing a fraction such as `{1/0}`
 
 ## How to fix it
 
-Use numeric quantities for every equivalent that needs to be merged with another occurrence of the same ingredient.
+```text
+-- Wrong
+Add @flour{1/0}
+-- Correct
+Add @flour{1/2}
+```
+
+Use a nonzero denominator.
+
+## Example output
+
+```
+error[COOKLANG_E1003]: A fraction cannot have a zero denominator.
+```

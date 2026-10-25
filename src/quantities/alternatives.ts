@@ -253,6 +253,7 @@ export function addQuantitiesOrGroups(
     QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[],
   system?: SpecificUnitSystem,
+  onTextQuantityMix?: () => void,
 ): {
   sum: QuantityWithUnitDef | FlatAndGroup<QuantityWithUnitDef>;
   unitsLists: QuantityWithUnitDef[][];
@@ -283,7 +284,30 @@ export function addQuantitiesOrGroups(
   // Step 3: calculate the sum
   const sum: QuantityWithUnitDef[] = [];
   for (const nextQ of reducedQuantities) {
-    const existingQ = findCompatibleQuantityWithinList(sum, nextQ);
+    const nextIsText =
+      nextQ.quantity.type === "fixed" && nextQ.quantity.value.type === "text";
+    // Any numeric/text mix is reported, whatever the units
+    if (
+      sum.some(
+        (q) =>
+          (q.quantity.type === "fixed" && q.quantity.value.type === "text") !==
+          nextIsText,
+      )
+    ) {
+      onTextQuantityMix?.();
+    }
+
+    // Text quantities are never merged, so only numeric entries are candidates
+    const existingQ = nextIsText
+      ? undefined
+      : findCompatibleQuantityWithinList(
+          sum.filter(
+            (q) =>
+              !(q.quantity.type === "fixed" && q.quantity.value.type === "text"),
+          ),
+          nextQ,
+        );
+
     if (existingQ === undefined) {
       sum.push({
         ...nextQ,
@@ -400,12 +424,17 @@ export function addEquivalentsAndSimplify(
     QuantityWithExtendedUnit | FlatOrGroup<QuantityWithExtendedUnit>
   )[],
   system?: SpecificUnitSystem,
+  onTextQuantityMix?: () => void,
 ): QuantityWithPlainUnit | MaybeNestedGroup<QuantityWithPlainUnit> {
   if (quantities.length === 1) {
     return toPlainUnit(quantities[0]!);
   }
   // Step 1+2+3: find equivalents, reduce groups and add quantities
-  const { sum, unitsLists } = addQuantitiesOrGroups(quantities, system);
+  const { sum, unitsLists } = addQuantitiesOrGroups(
+    quantities,
+    system,
+    onTextQuantityMix,
+  );
   // Step 4: regroup and expand equivalents per group
   const regrouped = regroupQuantitiesAndExpandEquivalents(
     sum,
