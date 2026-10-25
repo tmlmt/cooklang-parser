@@ -47,11 +47,12 @@ describe("Pantry.parse()", () => {
     const r = parseCollect(new Pantry(), "[freezer]\nflour = ");
     expect(r.output.items).toEqual([]);
     expect(r.diagnostics).toHaveLength(1);
-    expect(r.diagnostics[0]).toMatchObject({
-      code: "COOKLANG_E9701",
-      severity: "error",
+    expect(r.diagnostics).toHaveDiagnostic("COOKLANG_E9701", {
+      match: {
+        severity: "error",
+        span: { start: { line: 2 } },
+      },
     });
-    expect(r.diagnostics[0]!.span?.start.line).toBe(2);
   });
 
   it("omits items with invalid dates and keeps the others", () => {
@@ -73,8 +74,11 @@ describe("ProductCatalog.parse()", () => {
   it("reports TOML syntax errors with a span", () => {
     const r = parseCollect(new ProductCatalog(), "[flour\n");
     expect(r.output.products).toEqual([]);
-    expect(r.diagnostics[0]).toMatchObject({ code: "COOKLANG_E9601" });
-    expect(r.diagnostics[0]!.span).toBeDefined();
+    expect(r.diagnostics).toHaveDiagnostic("COOKLANG_E9601", {
+      match: {
+        span: {},
+      },
+    });
   });
 
   it("reports invalid catalog format", () => {

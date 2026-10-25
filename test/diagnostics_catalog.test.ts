@@ -111,10 +111,13 @@ describe("warnings", () => {
     const source = "---\nservings: many\n---\nAdd @flour{1}";
     const result = parseCollect(new Recipe(), source);
     expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject({
-      code: "COOKLANG_W0301",
-      severity: "warning",
-      span: { start: { line: 2, column: 1 } },
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0301", {
+      times: 1,
+      match: {
+        span: {
+          start: { line: 2, column: 1 },
+        },
+      },
     });
     expect(() => new Recipe().parse(source)).not.toThrow();
   });
@@ -124,17 +127,22 @@ describe("warnings", () => {
       new Recipe(),
       "---\nserves: few\nservings: many\n---\nAdd @flour{1}",
     );
-    expect(both.diagnostics).toHaveLength(1);
-    expect(both.diagnostics[0]).toMatchObject({
-      code: "COOKLANG_W0301",
-      span: { start: { line: 3, column: 1 } },
+    expect(both.diagnostics).toHaveDiagnostic("COOKLANG_W0301", {
+      times: 1,
+      match: {
+        span: {
+          start: { offset: 16, line: 3 },
+        },
+      },
     });
 
     const serveOnly = parseCollect(
       new Recipe(),
       "---\nserves: few\n---\nAdd @flour{1}",
     );
-    expect(serveOnly.diagnostics).toMatchObject([{ code: "COOKLANG_W0301" }]);
+    expect(serveOnly.diagnostics).toHaveDiagnostic("COOKLANG_W0301", {
+      times: 1,
+    });
 
     const numericWins = parseCollect(
       new Recipe(),
@@ -145,13 +153,14 @@ describe("warnings", () => {
 
   it("warns on unterminated block comments", () => {
     const result = parseCollect(new Recipe(), "Mix [- oops\nstill going");
-    expect(result.diagnostics).toMatchObject([
-      {
-        code: "COOKLANG_W0101",
-        severity: "warning",
-        span: { start: { line: 1, column: 5 } },
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0101", {
+      times: 1,
+      match: {
+        span: {
+          start: { line: 1, column: 5 },
+        },
       },
-    ]);
+    });
   });
 
   it("does not warn on closed block comments", () => {

@@ -507,7 +507,7 @@ export interface RecipeChoices {
 }
 
 /**
- * Options for the {@link Recipe["getIngredientQuantities"] | getIngredientQuantities()} method.
+ * Options for the {@link Recipe.getIngredientQuantities | getIngredientQuantities()} method.
  * @category Types
  */
 export interface GetIngredientQuantitiesOptions {

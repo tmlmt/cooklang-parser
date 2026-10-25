@@ -120,9 +120,10 @@ describe("Recipe.parse() diagnostics", () => {
     );
 
     expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
-      code: "COOKLANG_W0401",
-      severity: "warning",
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
+      match: {
+        severity: "warning",
+      },
     });
     const quantities = result.output.ingredients[0]?.quantities ?? [];
     expect(quantities).toHaveLength(2);
@@ -145,9 +146,10 @@ describe("Recipe.parse() diagnostics", () => {
     );
 
     expect(result2.diagnostics).toHaveLength(1);
-    expect(result2.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
-      code: "COOKLANG_W0401",
-      severity: "warning",
+    expect(result2.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
+      match: {
+        severity: "warning",
+      },
     });
     const quantities2 = result2.output.ingredients[0]?.quantities ?? [];
     expect(quantities2).toHaveLength(2);
@@ -206,9 +208,10 @@ describe("Recipe.parse() diagnostics", () => {
   it("collects COOKLANG_E0202 diagnostic", () => {
     const result = parseCollect(new Recipe(), "Use #&nonexistent-pan{}");
     expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject<Partial<Diagnostic>>({
-      code: "COOKLANG_E0202",
-      severity: "error",
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0202", {
+      match: {
+        severity: "error",
+      },
     });
     expect(result.diagnostics[0]!.message).toContain("nonexistent-pan");
   });
@@ -219,11 +222,12 @@ describe("Recipe.parse() diagnostics", () => {
     const content = "---\nsource:\n \t name: NYT\n---\nAdd @flour{100%g}";
     const result = parseCollect(new Recipe(), content);
     const offset = content.indexOf("\t");
-    expect(result.diagnostics[0]).toMatchObject({
-      code: "COOKLANG_E0301",
-      span: {
-        start: { offset, line: 3, column: 2 },
-        end: { offset: offset + 1, line: 3, column: 3 },
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0301", {
+      match: {
+        span: {
+          start: { offset, line: 3, column: 2 },
+          end: { offset: offset + 1, line: 3, column: 3 },
+        },
       },
     });
   });
@@ -234,11 +238,12 @@ describe("Recipe.parse() diagnostics", () => {
       "---\nsource:\n  name: NYT\n    url: http://x\n---\nAdd @flour";
     const result = parseCollect(new Recipe(), content);
     const offset = content.indexOf("    url:");
-    expect(result.diagnostics[0]).toMatchObject({
-      code: "COOKLANG_E0302",
-      span: {
-        start: { offset, line: 4, column: 1 },
-        end: { offset: offset + 4, line: 4, column: 5 },
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0302", {
+      match: {
+        span: {
+          start: { offset, line: 4, column: 1 },
+          end: { offset: offset + 4, line: 4, column: 5 },
+        },
       },
     });
   });
@@ -270,18 +275,19 @@ describe("Recipe.parse() diagnostics", () => {
     const result = parseCollect(recipe, content);
 
     expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject<Diagnostic>({
-      code: "COOKLANG_E0101",
-      message: expect.stringContaining("bad%g") as string,
-      fix: expect.any(String) as string,
-      docs: expect.any(String) as string,
-      severity: "error",
-      span: {
-        start: { offset: startOffset, line: 2, column: 9 },
-        end: {
-          offset: startOffset + token.length,
-          line: 2,
-          column: 9 + token.length,
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0101", {
+      match: {
+        message: expect.stringContaining("bad%g") as string,
+        fix: expect.any(String) as string,
+        docs: expect.any(String) as string,
+        severity: "error",
+        span: {
+          start: { offset: startOffset, line: 2, column: 9 },
+          end: {
+            offset: startOffset + token.length,
+            line: 2,
+            column: 9 + token.length,
+          },
         },
       },
     });
