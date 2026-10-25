@@ -15,7 +15,7 @@
     },
     {
       "matchPackageNames": ["@types/node"],
-      "allowedVersions": "<=22"
+      "allowedVersions": "<=24"
     },
     {
       "matchPackageNames": ["@vitest/**", "vitest"],
