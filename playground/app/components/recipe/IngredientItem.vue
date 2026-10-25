@@ -8,8 +8,7 @@ import type {
 import { isAndGroup, isSimpleGroup, hasAlternatives } from "cooklang-parser";
 
 type IngredientQuantityEntry =
-  | IngredientQuantityGroup
-  | IngredientQuantityAndGroup;
+  IngredientQuantityGroup | IngredientQuantityAndGroup;
 
 const props = defineProps<{
   ingredient: Ingredient;
@@ -105,8 +104,7 @@ const displayMode = computed<DisplayMode>(() => {
       <span
         v-if="ingredient.preparation"
         class="text-gray-500 dark:text-gray-300"
-      >
-        , {{ ingredient.preparation }}
+        >, {{ ingredient.preparation }}
       </span>
     </template>
 
@@ -130,8 +128,7 @@ const displayMode = computed<DisplayMode>(() => {
       <span
         v-if="ingredient.preparation"
         class="text-gray-500 dark:text-gray-300"
-      >
-        , {{ ingredient.preparation }}
+        >, {{ ingredient.preparation }}
       </span>
     </template>
 
@@ -179,8 +176,7 @@ const displayMode = computed<DisplayMode>(() => {
       <span
         v-if="ingredient.preparation"
         class="text-gray-500 dark:text-gray-300"
-      >
-        , {{ ingredient.preparation }}
+        >, {{ ingredient.preparation }}
       </span>
       <span class="text-gray-500 dark:text-gray-300">
         {{ " " }}(or
@@ -244,8 +240,7 @@ const displayMode = computed<DisplayMode>(() => {
       <span
         v-if="ingredient.preparation"
         class="text-gray-500 dark:text-gray-300"
-      >
-        , {{ ingredient.preparation }}
+        >, {{ ingredient.preparation }}
       </span>
     </template>
 
@@ -292,8 +287,7 @@ const displayMode = computed<DisplayMode>(() => {
           <span
             v-if="ingredient.preparation"
             class="text-gray-500 dark:text-gray-300"
-          >
-            , {{ ingredient.preparation }}
+            >, {{ ingredient.preparation }}
           </span>
 
           <!-- Show alternatives if present -->
@@ -336,8 +330,7 @@ const displayMode = computed<DisplayMode>(() => {
       <span
         v-if="ingredient.preparation"
         class="text-gray-500 dark:text-gray-300"
-      >
-        , {{ ingredient.preparation }}
+        >, {{ ingredient.preparation }}
       </span>
     </template>
   </li>
