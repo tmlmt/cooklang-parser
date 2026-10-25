@@ -54,7 +54,10 @@ diagnostics while parsing continues, and the call returns the partial result
 instead of throwing; `9` = fatal — it is not safe to continue, so the call
 throws `DiagnosticError`). `T` is always `0` for `W` and `I` codes: warnings never
 make the call fail, and internal errors always behave like fatal ones but
-indicate a library bug rather than a problem with your input. `D` is the
+indicate a library bug rather than a problem with your input. The tier
+describes whether the call succeeds, not necessarily when parsing stops: the
+parser stops immediately when it cannot safely continue, and may otherwise
+finish collecting diagnostics before throwing. `D` is the
 domain digit (`0` generic/internal, `1` syntax, `2` references, `3` metadata,
 `4` quantities and units, `5` shopping list, `6` cart and product catalog,
 `7` pantry and category configuration) and `NN` a 2-digit sequence number.
@@ -72,6 +75,7 @@ Parse-time diagnostics, reported by `Recipe.parse()`:
 | [`COOKLANG_E0201`](/e/cooklang_e0201) | error | An ingredient reference has no earlier definition. |
 | [`COOKLANG_E0202`](/e/cooklang_e0202) | error | A cookware reference has no earlier definition. |
 | [`COOKLANG_E0203`](/e/cooklang_e0203) | error | A reference attempts to change a flag from its definition. |
+| [`COOKLANG_W0201`](/e/cooklang_w0201) | warning | An unreferenced ingredient duplicates an earlier ingredient with the same flags and preparation. |
 | [`COOKLANG_E0301`](/e/cooklang_e0301) | error | Metadata indentation contains a tab. |
 | [`COOKLANG_E0302`](/e/cooklang_e0302) | error | Metadata indentation levels are inconsistent. |
 | [`COOKLANG_W0301`](/e/cooklang_w0301) | warning | `servings` or `serves` is not a number. |

@@ -850,6 +850,25 @@ describe("parse function", () => {
       });
     });
 
+    it("collects a warning when text and numeric cookware quantities stay separate", () => {
+      const source = "Use #bowl{one}, then #&bowl{2}";
+      const result = parseCollect(new Recipe(), source);
+
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
+        times: 1,
+        match: {
+          severity: "warning",
+          span: {
+            start: {
+              offset: source.indexOf("#&bowl"),
+              line: 1,
+            },
+          },
+        },
+      });
+      expect(result.output.cookware).toHaveLength(2);
+    });
+
     it("should correctly handle modifiers for cookware", () => {
       const recipe = `
         Use an #oven or a #?pan to cook. Clean the #&oven after use. Don't bother using a #-stove

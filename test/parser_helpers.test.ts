@@ -8,6 +8,7 @@ import type {
   NoteItem,
   TextItem,
   Yield,
+  Diagnostic,
 } from "../src/types";
 import {
   flushPendingNote,
@@ -864,7 +865,7 @@ describe("findAndUpsertCookware", () => {
   it("should correctly add a non-referenced cookware", () => {
     const cookware: Cookware[] = [{ name: "oven", flags: [] }];
     const newCookware: Cookware = { name: "pan", flags: [] };
-    expect(findAndUpsertCookware(cookware, newCookware, false)).toBe(1);
+    expect(findAndUpsertCookware(cookware, newCookware, false, [])).toBe(1);
     expect(cookware.length).toEqual(2);
   });
 
@@ -875,7 +876,7 @@ describe("findAndUpsertCookware", () => {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
       flags: [],
     };
-    expect(findAndUpsertCookware(cookware, newCookware, true)).toBe(0);
+    expect(findAndUpsertCookware(cookware, newCookware, true, [])).toBe(0);
     expect(cookware.length).toBe(1);
     expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
@@ -896,7 +897,7 @@ describe("findAndUpsertCookware", () => {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
       flags: [],
     };
-    findAndUpsertCookware(cookware, newCookware, true);
+    findAndUpsertCookware(cookware, newCookware, true, []);
     expect(cookware[0]!.quantity).toEqual({
       type: "fixed",
       value: { type: "decimal", decimal: 3 },
@@ -915,13 +916,15 @@ describe("findAndUpsertCookware", () => {
       name: "oven",
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     };
-    findAndUpsertCookware(cookware, newCookware, true);
+    const diagnostics: Diagnostic[] = [];
+    findAndUpsertCookware(cookware, newCookware, true, diagnostics);
     expect(cookware.length).toEqual(2);
+    expect(diagnostics).toHaveDiagnostic("COOKLANG_W0401");
   });
 
   it("should throw a ReferencedCookwareNotFoundError if a reference cookware does not exist", () => {
     const newCookware: Cookware = { name: "unreferenced-cookware", flags: [] };
-    expect(() => findAndUpsertCookware([], newCookware, true)).toThrow(
+    expect(() => findAndUpsertCookware([], newCookware, true, [])).toThrow(
       ReferencedCookwareNotFoundError,
     );
   });
@@ -939,19 +942,20 @@ describe("findAndUpsertCookware", () => {
       quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
     };
 
-    expect(() => findAndUpsertCookware(cookware, newCookware, true)).toThrow(
-      ReferencedItemCannotBeRedefinedError,
-    );
+    expect(() =>
+      findAndUpsertCookware(cookware, newCookware, true, []),
+    ).toThrow(ReferencedItemCannotBeRedefinedError);
     newCookware.flags = ["optional"];
-    expect(() => findAndUpsertCookware(cookware, newCookware, true)).toThrow(
-      ReferencedItemCannotBeRedefinedError,
-    );
+    expect(() =>
+      findAndUpsertCookware(cookware, newCookware, true, []),
+    ).toThrow(ReferencedItemCannotBeRedefinedError);
   });
 });
 
 describe("findAndUpsertIngredient", () => {
   it("should correctly add a non-referenced ingredient", () => {
     const ingredients: Ingredient[] = [];
+    const diagnostics: Diagnostic[] = [];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantities: [
@@ -960,9 +964,9 @@ describe("findAndUpsertIngredient", () => {
         },
       ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, false)).toEqual(
-      0,
-    );
+    expect(
+      findAndUpsertIngredient(ingredients, newIngredient, false, diagnostics),
+    ).toEqual(0);
     expect(ingredients).toEqual([newIngredient]);
   });
 
@@ -980,6 +984,7 @@ describe("findAndUpsertIngredient", () => {
         ],
       },
     ];
+    const diagnostics: Diagnostic[] = [];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantities: [
@@ -988,9 +993,9 @@ describe("findAndUpsertIngredient", () => {
         },
       ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual(
-      0,
-    );
+    expect(
+      findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
+    ).toEqual(0);
     expect(ingredients[0]!.quantities).toEqual([
       {
         quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
@@ -1000,7 +1005,12 @@ describe("findAndUpsertIngredient", () => {
     const ingredients_noqtt: Ingredient[] = [{ name: "salt" }];
     const newIngredient_noqtt: Ingredient = { name: "salt" };
     expect(
-      findAndUpsertIngredient(ingredients_noqtt, newIngredient_noqtt, true),
+      findAndUpsertIngredient(
+        ingredients_noqtt,
+        newIngredient_noqtt,
+        true,
+        diagnostics,
+      ),
     ).toEqual(0);
     expect(ingredients_noqtt[0]!.quantities).toBe(undefined);
   });
@@ -1016,6 +1026,7 @@ describe("findAndUpsertIngredient", () => {
         ],
       },
     ];
+    const diagnostics: Diagnostic[] = [];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantities: [
@@ -1024,9 +1035,9 @@ describe("findAndUpsertIngredient", () => {
         },
       ],
     };
-    expect(findAndUpsertIngredient(ingredients, newIngredient, true)).toEqual(
-      0,
-    );
+    expect(
+      findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
+    ).toEqual(0);
     expect(ingredients).toHaveLength(1);
   });
 
@@ -1044,6 +1055,7 @@ describe("findAndUpsertIngredient", () => {
         ],
       },
     ];
+    const diagnostics: Diagnostic[] = [];
     const newIngredient: Ingredient = {
       name: "unreferenced-ingredient",
       quantities: [
@@ -1058,7 +1070,7 @@ describe("findAndUpsertIngredient", () => {
       flags: [],
     };
     expect(() =>
-      findAndUpsertIngredient(ingredients, newIngredient, true),
+      findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
     ).toThrow(ReferencedIngredientNotFoundError);
   });
 
@@ -1077,6 +1089,7 @@ describe("findAndUpsertIngredient", () => {
         flags: ["hidden"],
       },
     ];
+    const diagnostics: Diagnostic[] = [];
     const newIngredient: Ingredient = {
       name: "eggs",
       quantities: [
@@ -1086,11 +1099,11 @@ describe("findAndUpsertIngredient", () => {
       ],
     };
     expect(() =>
-      findAndUpsertIngredient(ingredients, newIngredient, true),
+      findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
     ).toThrow(ReferencedItemCannotBeRedefinedError);
     newIngredient.flags = ["optional"];
     expect(() =>
-      findAndUpsertIngredient(ingredients, newIngredient, true),
+      findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
     ).toThrow(ReferencedItemCannotBeRedefinedError);
   });
 });

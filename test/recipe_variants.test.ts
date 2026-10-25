@@ -1091,3 +1091,22 @@ Mix flour.
     });
   });
 });
+
+describe("duplicate ingredient detection across variants", () => {
+  it("does not warn when the same ingredient is declared in disjoint variants", () => {
+    const recipe = new Recipe(
+      "[vegan] Add @oil{1%tbsp}.\n\n[keto] Add @oil{1%tbsp}.",
+    );
+    expect(recipe.diagnostics).not.toHaveDiagnostic("COOKLANG_W0201");
+    expect(recipe.ingredients).toHaveLength(2);
+  });
+
+  it("still warns when variants overlap or are untagged", () => {
+    const recipe = new Recipe(
+      "[vegan] Add @oil{1%tbsp}.\n\n[vegan,keto] Add @oil{1%tbsp}.",
+    );
+    expect(recipe.diagnostics).toHaveDiagnostic("COOKLANG_W0201", {
+      times: 1,
+    });
+  });
+});

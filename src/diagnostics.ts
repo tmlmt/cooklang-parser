@@ -70,6 +70,11 @@ export const diagnosticCatalog = defineDiagnostics({
       fix: `Remove the reference ('&') to create a new entry, or add the flag to the original definition.`,
     },
     // -- Domain 3: metadata --------------------------------------------------
+    COOKLANG_W0201: {
+      why: (p: { name: string }) =>
+        `Ingredient "${p.name}" with the same flags and preparation is already present, but without the reference symbol "&" a new ingredient entry was added.`,
+      fix: `Add "&" before the ingredient name to reference the existing entry, or keep the new entry if it is intentional.`,
+    },
     COOKLANG_E0301: {
       why: `Tabs are not allowed for indentation in metadata blocks.`,
       fix: `Replace tab characters with spaces.`,

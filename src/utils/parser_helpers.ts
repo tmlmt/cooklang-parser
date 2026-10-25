@@ -17,6 +17,8 @@ import type {
   ArbitraryScalable,
   FixedNumericValue,
   Yield,
+  Diagnostic,
+  DiagnosticSourceSpan,
 } from "../types";
 import {
   metadataRegex,
@@ -46,6 +48,7 @@ import {
 } from "../errors";
 import { parseTimeToMinutes } from "./time";
 import { normalizeInputString, normalizeKey } from "./normalization";
+import { createDiagnostic } from "../diagnostics";
 
 /**
  * Pushes a pending note to the section content if it has items.
@@ -96,12 +99,18 @@ export function flushPendingItems(
   return false;
 }
 
+/** Variants under which each ingredient was declared (absent = all variants). */
+const declaredVariants = new WeakMap<Ingredient, string[]>();
+
 /**
  * Finds an ingredient in the list (case-insensitively) and updates it, or adds it if not present.
  * This function mutates the `ingredients` array.
  * @param ingredients - The list of ingredients.
  * @param newIngredient - The ingredient to find or add.
  * @param isReference - Whether this is a reference ingredient (`&` modifier).
+ * @param diagnostics - The diagnostics list to push warnings onto.
+ * @param span - The source span of the new ingredient, used for diagnostics.
+ * @param linkedVariants - Variants the new ingredient is declared under; declarations in disjoint variants are not duplicates.
  * @returns The index of the ingredient in the list.
  * @returns An object containing the index of the ingredient and its quantity part in the list.
  */
@@ -109,6 +118,9 @@ export function findAndUpsertIngredient(
   ingredients: Ingredient[],
   newIngredient: Ingredient,
   isReference: boolean,
+  diagnostics: Diagnostic[],
+  span?: DiagnosticSourceSpan,
+  linkedVariants?: string[],
 ): number {
   const { name } = newIngredient;
 
@@ -156,14 +168,47 @@ export function findAndUpsertIngredient(
     return indexFind;
   }
 
+  // Checking for an existing ingredient with the same flags and preparation
+  const indexFind = ingredients.findIndex((existing) => {
+    const existingFlags = existing.flags ?? [];
+    const ingredientFlags = newIngredient.flags ?? [];
+
+    // Declarations restricted to disjoint variants are not duplicates
+    const existingVariants = declaredVariants.get(existing);
+    if (
+      existingVariants &&
+      linkedVariants &&
+      !existingVariants.some((v) => linkedVariants.includes(v))
+    ) {
+      return false;
+    }
+
+    return (
+      normalizeKey(existing.name) === normalizeKey(newIngredient.name) &&
+      existing.preparation === newIngredient.preparation &&
+      existingFlags.length === ingredientFlags.length &&
+      ingredientFlags.every((flag) => existingFlags.includes(flag))
+    );
+  });
+
+  if (indexFind !== -1) {
+    diagnostics.push(
+      createDiagnostic("COOKLANG_W0201", { name: newIngredient.name }, span),
+    );
+  }
+
   // Not a reference, so add as a new ingredient.
-  return ingredients.push(newIngredient) - 1;
+  const newIndex = ingredients.push(newIngredient) - 1;
+  if (linkedVariants) declaredVariants.set(newIngredient, linkedVariants);
+  return newIndex;
 }
 
 export function findAndUpsertCookware(
   cookware: Cookware[],
   newCookware: Cookware,
   isReference: boolean,
+  diagnostics: Diagnostic[],
+  span?: DiagnosticSourceSpan,
 ): number {
   const { name, quantity } = newCookware;
 
@@ -219,6 +264,7 @@ export function findAndUpsertCookware(
         } catch (e) {
           /* v8 ignore else -- expliciting error type -- @preserve */
           if (e instanceof CannotAddTextValueError) {
+            diagnostics.push(createDiagnostic("COOKLANG_W0401", {}, span));
             return cookware.push(newCookware) - 1;
           }
         }
