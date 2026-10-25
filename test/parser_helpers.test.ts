@@ -940,9 +940,9 @@ describe("findAndUpsertCookware", () => {
       },
     };
 
-    expect(() => findAndUpsertCookware(cookware, newCookware, true)).toThrow(
-      DivisionByZeroError,
-    );
+    expect(() =>
+      findAndUpsertCookware(cookware, newCookware, true, []),
+    ).toThrow(DivisionByZeroError);
   });
 
   it("should throw a ReferencedCookwareNotFoundError if a reference cookware does not exist", () => {

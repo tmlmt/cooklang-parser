@@ -88,6 +88,7 @@ import {
   ReferencedItemCannotBeRedefinedError,
   NoTabAsIndentError,
   BadIndentationError,
+  RatioNotComputableError,
   DiagnosticError,
   ParseStoppedError,
 } from "../errors";
@@ -2095,7 +2096,12 @@ export class Recipe {
       this.choices.variants = [...allVariants];
     }
 
-    this._populateIngredientQuantities(true);
+    try {
+      this._populateIngredientQuantities(true);
+    } catch (error) {
+      if (!(error instanceof RatioNotComputableError)) throw error;
+      this.diagnostics.push(error.diagnostic);
+    }
 
     // Diagnostics are reported in source order (sort is stable)
     this.diagnostics.sort(
