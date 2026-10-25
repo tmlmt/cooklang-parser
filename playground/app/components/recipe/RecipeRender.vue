@@ -159,8 +159,8 @@ const sectionsWithStepNumbers = computed(() => {
           active: stepIsActive,
           optional: item.optional,
         };
-      }
-      if (item.type === "note") {
+      } else {
+        // Note
         const noteIsActive =
           sectionIsActive && isNoteActive(item, activeVariant);
         return {
@@ -168,12 +168,6 @@ const sectionsWithStepNumbers = computed(() => {
           active: noteIsActive,
         };
       }
-      return {
-        ...item,
-        stepNumber: null,
-        active: sectionIsActive,
-        optional: false,
-      };
     });
     return {
       name: section.name,
