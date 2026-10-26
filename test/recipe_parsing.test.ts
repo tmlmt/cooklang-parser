@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Recipe } from "../src/classes/recipe";
-import { DiagnosticError, ParseStoppedError } from "../src/errors";
+import { ParseStoppedError } from "../src/errors";
 import { parseCollect } from "./mocks/parse_collect";
 import {
   simpleRecipe,
