@@ -1,4 +1,4 @@
-import TOML from "smol-toml";
+import * as TOML from "smol-toml";
 import type {
   FixedNumericValue,
   ProductOption,

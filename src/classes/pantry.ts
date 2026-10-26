@@ -4,7 +4,7 @@ import {
   InvalidPantryTomlError,
 } from "../errors";
 import { buildLineOffsets, makeSpan } from "../utils/diagnostics_spans";
-import TOML from "smol-toml";
+import * as TOML from "smol-toml";
 import type { TomlTable } from "smol-toml";
 import type {
   PantryItem,
