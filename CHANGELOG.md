@@ -1,26 +1,54 @@
 # Changelog
 
-## Unreleased
+## v3.0.0-beta.0
 
-### Enhancements
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.48...v3.0.0-beta.0)
 
-- Add structured, nostics-backed recipe parse diagnostics with stable `COOKLANG_<E|W|I><4 digits>` codes, fixes, documentation URLs, original-source spans, and plain code-frame formatting.
-- Add `DiagnosticError`, thrown by `parse()` and the constructors of `Recipe`, `CategoryConfig`, `Pantry` and `ProductCatalog` when error-severity diagnostics were collected. It carries all diagnostics and the source; warnings and partial results are also available on the instance's `diagnostics` property.
-- Add warnings for non-numeric `servings`/`serves` metadata (`COOKLANG_W0301`) and unterminated block comments (`COOKLANG_W0101`).
-- Improve `formatDiagnostic()` to correctly render multi-line spans and tab-indented source lines.
-- All errors thrown by the library now extend `SingleDiagnosticError` and expose a `diagnostic` (code, fix, docs link). Anonymous `Error`s were replaced by typed errors (`InvalidDateError`, `InvalidPantryError`, `InvalidCategoryConfigError`, `RatioNotComputableError`, `InvalidPantryTomlError`, `InvalidProductCatalogTomlError`).
+### ⚠️ Breaking changes
 
-### Breaking Changes
+- This release introducing a better handling of potential errors by
+  having a more consistant collection of diagnostics during parsing and changes the way the `parse()` functions behave. `Recipe`, `CategoryConfig`, `Pantry`, and `ProductCatalog` now collect diagnostics and can return despite recoverable errors. Fatal diagnostics i.e. diagnostics triggers by
+  errors which are recoverable but can not be fully tested now throw `DiagnosticError`; recipe parsing can also stop early with `ParseStoppedError`. Code that relied on catching a specific parse-time error should instead inspect error.diagnostics or the instance’s diagnostics.
+- Reusing a `Recipe` instance now replaces its previous parsed state. Each `parse()` call resets the recipe instead of retaining or accumulating prior state.
+- `NoProductMatchError.code` was renamed to reason. code now contains the diagnostic identifier, so callers checking the previous reason value must use reason instead.
+- Malformed `Pantry` or `ProductCatalog` TOML now throws a library-specific error (InvalidPantryTomlError or InvalidProductCatalogTomlError) instead of the TOML parser’s raw error. Update catches that depend on the old error type.
+- Mixed text and numeric quantities no longer throw in the affected aggregation path; they produce a warning instead. Callers that depended on the exception to detect or reject this input need to check diagnostics.
 
-- `Recipe.parse()`, `CategoryConfig.parse()`, `Pantry.parse()` and `ProductCatalog.parse()` now collect all known errors before throwing a single `DiagnosticError` (instead of the first typed error), so `catch (e instanceof DuplicateCategoryError)`-style handling must read `e.diagnostics` instead.
-- Reusing a `Recipe` instance now replaces all state from its previous parse.
-- Diagnostic codes are `COOKLANG_E0101`-style identifiers instead of kebab-case names, and their documentation lives under `/v3/e/<code>`.
-- `NoProductMatchError.code` is now `NoProductMatchError.reason`: `code` holds the diagnostic code. Error messages now come from the diagnostics catalog.
-- Malformed TOML in `Pantry` and `ProductCatalog` now throws `InvalidPantryTomlError` / `InvalidProductCatalogTomlError` instead of the raw TOML error.
+### 🚀 Enhancements
 
-### Documentation
+- Add diagnostics ([#109](https://github.com/tmlmt/cooklang-parser/pull/109))
+- **parse:** ⚠️ Throw only on fatal errors ([#116](https://github.com/tmlmt/cooklang-parser/pull/116))
+- **diagnostics:** Emit warning when same ingredient as existing one with same flags and preparation is added again ([#119](https://github.com/tmlmt/cooklang-parser/pull/119))
+- **playground:** Improve layout and show diagnostics ([#122](https://github.com/tmlmt/cooklang-parser/pull/122))
 
-- Add a diagnostics guide covering codes, recovery, source coordinates.
+### 🩹 Fixes
+
+- Report division by zero as error ([#112](https://github.com/tmlmt/cooklang-parser/pull/112))
+- Report warning instead of throwing when encountering a mix of text and numeric quantities ([#113](https://github.com/tmlmt/cooklang-parser/pull/113))
+- **recipe:** Collect RatioNotComputableError(E9401 during final quantity aggregation ([#121](https://github.com/tmlmt/cooklang-parser/pull/121))
+- **playground:** Remove space between ingredient name and comma before preparation ([#123](https://github.com/tmlmt/cooklang-parser/pull/123))
+- **playground:** Display ingredient preparations within steps ([#124](https://github.com/tmlmt/cooklang-parser/pull/124))
+
+### 🏡 Chore
+
+- Bump @types/node to v24 and bump pnpm to v12.15.0 ([#114](https://github.com/tmlmt/cooklang-parser/pull/114))
+- **playground:** Remove unreachable branch ([#118](https://github.com/tmlmt/cooklang-parser/pull/118))
+- Rethrow non-explicitly-listed errors to avoid future regressions ([#120](https://github.com/tmlmt/cooklang-parser/pull/120))
+- **smol-toml:** Do not use deprecated import method ([7657441](https://github.com/tmlmt/cooklang-parser/commit/7657441))
+- **test:** Remove unused import ([5d1c8d3](https://github.com/tmlmt/cooklang-parser/commit/5d1c8d3))
+- Fix linting ([930b6f8](https://github.com/tmlmt/cooklang-parser/commit/930b6f8))
+
+### ✅ Tests
+
+- **diagnostics:** Add customer matcher for cleaner checks and error display ([#115](https://github.com/tmlmt/cooklang-parser/pull/115))
+
+#### ⚠️ Breaking Changes
+
+- **parse:** ⚠️ Throw only on fatal errors ([#116](https://github.com/tmlmt/cooklang-parser/pull/116))
+
+### ❤️ Contributors
+
+- Thomas Lamant <tom@tmlmt.com>
 
 ## v3.0.0-alpha.48
 
