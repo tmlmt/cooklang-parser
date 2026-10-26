@@ -21,14 +21,7 @@ export default defineConfig(
         ...globals.node,
       },
       parserOptions: {
-        projectService: {
-          allowDefaultProject: [
-            "docs/.vitepress/config.mts",
-            "docs/.vitepress/*/*.ts",
-            "docs/.vitepress/*.ts",
-            "docs/e/*.ts",
-          ],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

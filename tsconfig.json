@@ -20,6 +20,15 @@
     /* Library code */
     "lib": ["es2022"]
   },
-  "include": ["src", "test", "tsdown.config.ts", "vitest.config.ts"],
+  "include": [
+    "src",
+    "test",
+    "docs/.vitepress/*.ts",
+    "docs/.vitepress/*.mts",
+    "docs/.vitepress/theme/*.ts",
+    "docs/e/*.ts",
+    "tsdown.config.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
