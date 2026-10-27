@@ -4,11 +4,14 @@ import type {
   IngredientQuantityGroup,
   IngredientQuantityAndGroup,
   AlternativeIngredientRef,
+  IngredientAlternativesOnlyGroup,
 } from "cooklang-parser";
 import { isAndGroup, isSimpleGroup, hasAlternatives } from "cooklang-parser";
 
 type IngredientQuantityEntry =
-  IngredientQuantityGroup | IngredientQuantityAndGroup;
+  | IngredientQuantityGroup
+  | IngredientQuantityAndGroup
+  | IngredientAlternativesOnlyGroup;
 
 const props = defineProps<{
   ingredient: Ingredient;
