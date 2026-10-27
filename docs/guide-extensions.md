@@ -53,14 +53,6 @@ Use case: `Add a bit of @-salt`
 
 Also works with Cookware.
 
-### `?`: optional ingredient
-
-Use case: `You can also add @?parmesan{some}`
-
-`"optional"` will be added to the ingredient's [`flags`](/api/interfaces/Ingredient.html#flags) property. This can be used later on in your renderer to indicate however you want that the ingredient is optional.
-
-Also works with Cookware.
-
 ## Range values
    
 Usage: `@salt{1-2%pinches}`
