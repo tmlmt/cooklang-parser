@@ -13,7 +13,7 @@ hero:
       text: Guide
       link: /guide-cooklang-specs
     - theme: alt
-      text: API Reference
+      text: API
       link: /api
     - theme: alt
       text: Examples
