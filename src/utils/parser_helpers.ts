@@ -125,9 +125,21 @@ export function findAndUpsertIngredient(
   const { name } = newIngredient;
 
   if (isReference) {
-    const indexFind = ingredients.findIndex(
-      (i) => normalizeKey(i.name) === normalizeKey(name),
-    );
+    const matchingName = (ingredient: Ingredient) =>
+      normalizeKey(ingredient.name) === normalizeKey(name);
+    let indexFind = -1;
+    // Try to find an ingredient matching both name and preparation
+    if (newIngredient.preparation !== undefined) {
+      indexFind = ingredients.findIndex(
+        (ingredient) =>
+          matchingName(ingredient) &&
+          ingredient.preparation === newIngredient.preparation,
+      );
+    }
+    // Then try to find an ingredient matching only the name
+    if (indexFind === -1) {
+      indexFind = ingredients.findIndex(matchingName);
+    }
 
     if (indexFind === -1) {
       throw new ReferencedIngredientNotFoundError(name);

@@ -689,6 +689,25 @@ describe("parse function", () => {
       ]);
     });
 
+    it("should reference an ingredient with matching preparation before other same-name ingredients", () => {
+      const result =
+        new Recipe(`Add both @parmesan{100%g}(non-grated) and @parmesan{100%g}(grated)
+          and later again @&parmesan{100%g}(grated).`);
+
+      expect(result.ingredients).toMatchObject([
+        {
+          name: "parmesan",
+          preparation: "non-grated",
+          quantities: [{ quantity: { value: { decimal: 100 } }, unit: "g" }],
+        },
+        {
+          name: "parmesan",
+          preparation: "grated",
+          quantities: [{ quantity: { value: { decimal: 200 } }, unit: "g" }],
+        },
+      ]);
+    });
+
     it("should combine explicitly referenced ingredients case-insensitively", () => {
       const recipe = `
         Add @Sugar{100%g}.
