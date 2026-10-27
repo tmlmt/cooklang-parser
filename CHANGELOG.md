@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.0.0-beta.1
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-beta.0...v3.0.0-beta.1)
+
+### 🩹 Fixes
+
+- **reference:** Match ingredient matching both name and preparation first ([5a0d0ba](https://github.com/tmlmt/cooklang-parser/commit/5a0d0ba))
+- **playground:** Indicate optional cookware as such ([92bfb89](https://github.com/tmlmt/cooklang-parser/commit/92bfb89))
+- **playground:** Put cookware name in bold instead of quantity to align with ingredient rendering ([76ef34b](https://github.com/tmlmt/cooklang-parser/commit/76ef34b))
+- **playground:** Consistently display only ingredient name in bold ([0abd752](https://github.com/tmlmt/cooklang-parser/commit/0abd752))
+
+### 📖 Documentation
+
+- **guide-extensions:** Remove optional ingredients now part of original spec ([924d34d](https://github.com/tmlmt/cooklang-parser/commit/924d34d))
+- **actions:** Rename "API Reference" to "API" to be consistent with upper/burger menu ([e4d3136](https://github.com/tmlmt/cooklang-parser/commit/e4d3136))
+
+### 🏡 Chore
+
+- **playground:** Fix typing error ([aacafe5](https://github.com/tmlmt/cooklang-parser/commit/aacafe5))
+
+### ❤️ Contributors
+
+- Thomas Lamant <tom@tmlmt.com>
+
 ## v3.0.0-beta.0
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-alpha.48...v3.0.0-beta.0)
