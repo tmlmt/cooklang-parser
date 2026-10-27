@@ -11,6 +11,7 @@ import {
   type Yield,
   type Recipe,
   type RecipeChoices,
+  type Cookware,
 } from "cooklang-parser";
 
 type MetadataEntry =
@@ -134,8 +135,8 @@ const filteredIngredients = computed(() => {
 /**
  * Check if an ingredient is optional
  */
-function isOptional(ingredient: Ingredient) {
-  return ingredient.flags?.includes("optional");
+function isOptional(item: Ingredient | Cookware) {
+  return item.flags?.includes("optional");
 }
 
 const hasIngredients = computed(() => filteredIngredients.value.length > 0);
@@ -247,6 +248,7 @@ const sectionsWithStepNumbers = computed(() => {
           v-for="(cw, idx) in filteredCookware"
           :key="idx"
           :cookware="cw"
+          :is-optional="isOptional(cw)"
         />
       </ul>
     </section>
