@@ -45,6 +45,7 @@ import {
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
   InvalidDateError,
+  ReferencedIngredientPropsDoNotMatchError,
 } from "../errors";
 import { parseTimeToMinutes } from "./time";
 import { normalizeInputString, normalizeKey } from "./normalization";
@@ -122,71 +123,26 @@ export function findAndUpsertIngredient(
   span?: DiagnosticSourceSpan,
   linkedVariants?: string[],
 ): number {
-  const { name } = newIngredient;
+  const { name, flags, preparation } = newIngredient;
 
-  if (isReference) {
-    const matchingName = (ingredient: Ingredient) =>
-      normalizeKey(ingredient.name) === normalizeKey(name);
-    let indexFind = -1;
-    // Try to find an ingredient matching both name and preparation
-    if (newIngredient.preparation !== undefined) {
-      indexFind = ingredients.findIndex(
-        (ingredient) =>
-          matchingName(ingredient) &&
-          ingredient.preparation === newIngredient.preparation,
+  const matchingName = (ingredient: Ingredient) =>
+    normalizeKey(ingredient.name) === normalizeKey(name);
+  const matchingPrep = (ingredient: Ingredient) =>
+    ingredient.preparation === preparation;
+  const matchingFlags = (ingredient: Ingredient) => {
+    if (ingredient.flags === undefined) {
+      return flags === undefined;
+    } else {
+      if (flags === undefined) return false;
+      return (
+        flags.length === ingredient.flags!.length &&
+        flags.every((f) => ingredient.flags!.includes(f))
       );
     }
-    // Then try to find an ingredient matching only the name
-    if (indexFind === -1) {
-      indexFind = ingredients.findIndex(matchingName);
-    }
-
-    if (indexFind === -1) {
-      throw new ReferencedIngredientNotFoundError(name);
-    }
-
-    // Ingredient already exists
-    const existingIngredient = ingredients[indexFind]!;
-
-    // Checking whether any provided flags are the same as the original ingredient
-    // TODO: backport fix (check on array length) to v2
-    if (!newIngredient.flags) {
-      if (
-        Array.isArray(existingIngredient.flags) &&
-        existingIngredient.flags.length > 0
-      ) {
-        throw new ReferencedItemCannotBeRedefinedError(
-          "ingredient",
-          existingIngredient.name,
-          existingIngredient.flags[0]!,
-        );
-      }
-    } else {
-      for (const flag of newIngredient.flags) {
-        /* v8 ignore else -- @preserve */
-        if (
-          existingIngredient.flags === undefined ||
-          !existingIngredient.flags.includes(flag)
-        ) {
-          throw new ReferencedItemCannotBeRedefinedError(
-            "ingredient",
-            existingIngredient.name,
-            flag,
-          );
-        }
-      }
-    }
-
-    return indexFind;
-  }
-
-  // Checking for an existing ingredient with the same flags and preparation
-  const indexFind = ingredients.findIndex((existing) => {
-    const existingFlags = existing.flags ?? [];
-    const ingredientFlags = newIngredient.flags ?? [];
-
+  };
+  const matchingVariant = (ingredient: Ingredient) => {
     // Declarations restricted to disjoint variants are not duplicates
-    const existingVariants = declaredVariants.get(existing);
+    const existingVariants = declaredVariants.get(ingredient);
     if (
       existingVariants &&
       linkedVariants &&
@@ -194,20 +150,46 @@ export function findAndUpsertIngredient(
     ) {
       return false;
     }
+    return true;
+  };
 
-    return (
-      normalizeKey(existing.name) === normalizeKey(newIngredient.name) &&
-      existing.preparation === newIngredient.preparation &&
-      existingFlags.length === ingredientFlags.length &&
-      ingredientFlags.every((flag) => existingFlags.includes(flag))
+  if (isReference) {
+    // Try to match at least the name first for ingredients declared for the same recipe variant
+    const variantSpecificSameNameIngredients = ingredients.filter(
+      (ingredient) => matchingVariant(ingredient) && matchingName(ingredient),
     );
-  });
+    if (variantSpecificSameNameIngredients.length === 0) {
+      throw new ReferencedIngredientNotFoundError(name);
+    }
+    // A reference needs to match both flags and preparation of an existing ingredient
+    // used for the recipe variant it is declared under
+    const indexFind = ingredients.findIndex(
+      (ingredient) =>
+        matchingVariant(ingredient) &&
+        matchingName(ingredient) &&
+        matchingFlags(ingredient) &&
+        matchingPrep(ingredient),
+    );
+    if (indexFind === -1) {
+      throw new ReferencedIngredientPropsDoNotMatchError(name);
+    }
 
-  if (indexFind !== -1) {
+    return indexFind;
+  }
+
+  // Issue a warning if an ingredient with the same name, flags, and preparation already exists
+  const indexFind = ingredients.findIndex(
+    (ingredient) =>
+      matchingVariant(ingredient) &&
+      matchingName(ingredient) &&
+      matchingFlags(ingredient) &&
+      matchingPrep(ingredient),
+  );
+
+  if (indexFind !== -1)
     diagnostics.push(
       createDiagnostic("COOKLANG_W0201", { name: newIngredient.name }, span),
     );
-  }
 
   // Not a reference, so add as a new ingredient.
   const newIndex = ingredients.push(newIngredient) - 1;
