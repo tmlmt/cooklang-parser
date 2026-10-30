@@ -118,6 +118,7 @@ describe("Recipe.parse() diagnostics", () => {
     expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
       match: {
         severity: "warning",
+        span: { start: { line: 2, column: 5 } },
       },
     });
     const quantities = result.output.ingredients[0]?.quantities ?? [];
@@ -144,6 +145,7 @@ describe("Recipe.parse() diagnostics", () => {
     expect(result2.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
       match: {
         severity: "warning",
+        span: { start: { line: 2, column: 5 } },
       },
     });
     const quantities2 = result2.output.ingredients[0]?.quantities ?? [];
@@ -159,6 +161,21 @@ describe("Recipe.parse() diagnostics", () => {
       quantity: {
         type: "fixed",
         value: { type: "text", text: "a pinch" },
+      },
+    });
+  });
+
+  it("collects a warning for mixed quantities in grouped alternatives", () => {
+    const result = parseCollect(
+      new Recipe(),
+      "Add @|g/1|flour{1%g} or @|g/2|salt{a pinch}\n" +
+        "Add @|g/1|&flour{2%g} or @|g/2|&salt{2}",
+    );
+
+    expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
+      match: {
+        severity: "warning",
+        span: { start: { line: 2 } },
       },
     });
   });
