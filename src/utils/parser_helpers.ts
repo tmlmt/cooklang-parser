@@ -33,15 +33,13 @@ import {
 } from "../regex";
 import { Section as SectionObject } from "../classes/section";
 import type { Ingredient, Step, Cookware } from "../types";
-import { addQuantityValues } from "../quantities/mutations";
 import { getNumericValue } from "../quantities/numeric";
 import {
-  CannotAddTextValueError,
   DivisionByZeroError,
   InvalidQuantityFormat,
   NoTabAsIndentError,
   BadIndentationError,
-  ReferencedItemCannotBeRedefinedError,
+  ReferencedCookwarePropsDoNotMatchError,
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
   InvalidDateError,
@@ -100,8 +98,28 @@ export function flushPendingItems(
   return false;
 }
 
-/** Variants under which each ingredient was declared (absent = all variants). */
-const declaredVariants = new WeakMap<Ingredient, string[]>();
+/** Variants under which each ingredient or cookware was declared (absent = all variants). */
+const declaredVariants = new WeakMap<Ingredient | Cookware, string[]>();
+
+const sameFlags = (
+  existing: readonly string[] = [],
+  incoming: readonly string[] = [],
+) =>
+  incoming.length === existing.length &&
+  incoming.every((f) => existing.includes(f));
+
+// Declarations restricted to disjoint variants are not duplicates
+const sharesVariant = (
+  existing: Ingredient | Cookware,
+  linkedVariants?: string[],
+) => {
+  const existingVariants = declaredVariants.get(existing);
+  return !(
+    existingVariants &&
+    linkedVariants &&
+    !existingVariants.some((v) => linkedVariants.includes(v))
+  );
+};
 
 /**
  * Finds an ingredient in the list (case-insensitively) and updates it, or adds it if not present.
@@ -113,7 +131,6 @@ const declaredVariants = new WeakMap<Ingredient, string[]>();
  * @param span - The source span of the new ingredient, used for diagnostics.
  * @param linkedVariants - Variants the new ingredient is declared under; declarations in disjoint variants are not duplicates.
  * @returns The index of the ingredient in the list.
- * @returns An object containing the index of the ingredient and its quantity part in the list.
  */
 export function findAndUpsertIngredient(
   ingredients: Ingredient[],
@@ -129,29 +146,10 @@ export function findAndUpsertIngredient(
     normalizeKey(ingredient.name) === normalizeKey(name);
   const matchingPrep = (ingredient: Ingredient) =>
     ingredient.preparation === preparation;
-  const matchingFlags = (ingredient: Ingredient) => {
-    if (ingredient.flags === undefined) {
-      return flags === undefined;
-    } else {
-      if (flags === undefined) return false;
-      return (
-        flags.length === ingredient.flags!.length &&
-        flags.every((f) => ingredient.flags!.includes(f))
-      );
-    }
-  };
-  const matchingVariant = (ingredient: Ingredient) => {
-    // Declarations restricted to disjoint variants are not duplicates
-    const existingVariants = declaredVariants.get(ingredient);
-    if (
-      existingVariants &&
-      linkedVariants &&
-      !existingVariants.some((v) => linkedVariants.includes(v))
-    ) {
-      return false;
-    }
-    return true;
-  };
+  const matchingFlags = (ingredient: Ingredient) =>
+    sameFlags(ingredient.flags, flags);
+  const matchingVariant = (ingredient: Ingredient) =>
+    sharesVariant(ingredient, linkedVariants);
 
   if (isReference) {
     // Try to match at least the name first for ingredients declared for the same recipe variant
@@ -197,78 +195,54 @@ export function findAndUpsertIngredient(
   return newIndex;
 }
 
+/**
+ * Finds a cookware in the list (case-insensitively) or adds it if not present.
+ * This function mutates the `cookware` array. Quantities are not merged here:
+ * they are summed per variant by {@link Recipe.getCookwareQuantities}.
+ * @param cookware - The list of cookware.
+ * @param newCookware - The cookware to find or add.
+ * @param isReference - Whether this is a reference cookware (`&` modifier).
+ * @param diagnostics - The diagnostics list to push warnings onto.
+ * @param span - The source span of the new cookware, used for diagnostics.
+ * @param linkedVariants - Variants the new cookware is declared under; declarations in disjoint variants are not duplicates.
+ * @returns The index of the cookware in the list.
+ */
 export function findAndUpsertCookware(
   cookware: Cookware[],
   newCookware: Cookware,
   isReference: boolean,
   diagnostics: Diagnostic[],
   span?: DiagnosticSourceSpan,
+  linkedVariants?: string[],
 ): number {
-  const { name, quantity } = newCookware;
+  const { name, flags } = newCookware;
+
+  const matchingName = (c: Cookware) =>
+    normalizeKey(c.name) === normalizeKey(name);
+  const matchingFlags = (c: Cookware) => sameFlags(c.flags, flags);
+  const matchingVariant = (c: Cookware) => sharesVariant(c, linkedVariants);
+
+  const indexFind = cookware.findIndex(
+    (c) => matchingVariant(c) && matchingName(c) && matchingFlags(c),
+  );
 
   if (isReference) {
-    const index = cookware.findIndex(
-      (i) => normalizeKey(i.name) === normalizeKey(name),
-    );
-
-    if (index === -1) {
+    if (!cookware.some((c) => matchingVariant(c) && matchingName(c))) {
       throw new ReferencedCookwareNotFoundError(name);
     }
-
-    const existingCookware = cookware[index]!;
-
-    // Checking whether any provided flags are the same as the original cookware
-    // TODO: backport fix (if/else) + check on array length to v2
-    if (!newCookware.flags) {
-      if (
-        Array.isArray(existingCookware.flags) &&
-        existingCookware.flags.length > 0
-      ) {
-        throw new ReferencedItemCannotBeRedefinedError(
-          "cookware",
-          existingCookware.name,
-          existingCookware.flags[0]!,
-        );
-      }
-    } else {
-      for (const flag of newCookware.flags) {
-        /* v8 ignore else -- @preserve */
-        if (
-          existingCookware.flags === undefined ||
-          !existingCookware.flags.includes(flag)
-        ) {
-          throw new ReferencedItemCannotBeRedefinedError(
-            "cookware",
-            existingCookware.name,
-            flag,
-          );
-        }
-      }
+    if (indexFind === -1) {
+      throw new ReferencedCookwarePropsDoNotMatchError(name);
     }
-
-    if (quantity !== undefined) {
-      if (!existingCookware.quantity) {
-        existingCookware.quantity = quantity;
-      } else {
-        try {
-          existingCookware.quantity = addQuantityValues(
-            existingCookware.quantity,
-            quantity,
-          );
-        } catch (e) {
-          if (e instanceof CannotAddTextValueError) {
-            diagnostics.push(createDiagnostic("COOKLANG_W0401", {}, span));
-            return cookware.push(newCookware) - 1;
-          } else {
-            throw e;
-          }
-        }
-      }
-    }
-    return index;
+    return indexFind;
   }
 
-  return cookware.push(newCookware) - 1;
+  if (indexFind !== -1) {
+    diagnostics.push(createDiagnostic("COOKLANG_W0202", { name }, span));
+  }
+
+  const newIndex = cookware.push(newCookware) - 1;
+  if (linkedVariants) declaredVariants.set(newCookware, linkedVariants);
+  return newIndex;
 }
 
 /**

@@ -12,8 +12,9 @@ const optionalPrefix = computed(() => (props.isOptional ? "(optional) " : ""));
 <template>
   <li class="cookware-item">
     {{ optionalPrefix }}
-    <span v-if="cookware.quantity">
-      <RecipeSingleQuantity :quantity="cookware.quantity" />
+    <span v-for="(quantity, i) in cookware.quantities" :key="i">
+      <template v-if="i > 0">{{ " + " }}</template>
+      <RecipeSingleQuantity :quantity="quantity" />
     </span>
     {{ " " }}
     <span class="cookware-name font-bold">{{ cookware.name }}</span>

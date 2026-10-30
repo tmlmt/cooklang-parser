@@ -65,9 +65,9 @@ export const diagnosticCatalog = defineDiagnostics({
       fix: `Define the cookware earlier in the recipe, or drop the '&' to create a new entry.`,
     },
     COOKLANG_E0203: {
-      why: (p: { itemType: string; name: string; flag: string }) =>
-        `Referenced ${p.itemType} "${p.name}" cannot be redefined as "${p.flag}".`,
-      fix: `Remove the reference ('&') to create a new entry, or add the flag to the original definition.`,
+      why: (p: { name: string }) =>
+        `Referenced cookware "${p.name}" does not match the flags of the initial cookware declaration.`,
+      fix: `Verify that the flags match, or drop the '&' to create a new entry with different flags.`,
     },
     COOKLANG_E0204: {
       why: (p: { name: string }) =>
@@ -79,6 +79,11 @@ export const diagnosticCatalog = defineDiagnostics({
       why: (p: { name: string }) =>
         `Ingredient "${p.name}" with the same flags and preparation is already present, but without the reference symbol "&" a new ingredient entry was added.`,
       fix: `Add "&" before the ingredient name to reference the existing entry, or keep the new entry if it is intentional.`,
+    },
+    COOKLANG_W0202: {
+      why: (p: { name: string }) =>
+        `Cookware "${p.name}" with the same flags is already present, but without the reference symbol "&" a new cookware entry was added.`,
+      fix: `Add "&" before the cookware name to reference the existing entry, or keep the new entry if it is intentional.`,
     },
     COOKLANG_E0301: {
       why: `Tabs are not allowed for indentation in metadata blocks.`,

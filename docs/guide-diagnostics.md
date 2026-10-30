@@ -74,8 +74,10 @@ Parse-time diagnostics, reported by `Recipe.parse()`:
 | [`COOKLANG_W0101`](/e/cooklang_w0101) | warning | A block comment is never closed. |
 | [`COOKLANG_E0201`](/e/cooklang_e0201) | error | An ingredient reference has no earlier definition. |
 | [`COOKLANG_E0202`](/e/cooklang_e0202) | error | A cookware reference has no earlier definition. |
-| [`COOKLANG_E0203`](/e/cooklang_e0203) | error | A reference attempts to change a flag from its definition. |
+| [`COOKLANG_E0203`](/e/cooklang_e0203) | error | A cookware reference does not match the flags of an earlier definition. |
+| [`COOKLANG_E0204`](/e/cooklang_e0204) | error | An ingredient reference does not match the flags and preparation of an earlier definition. |
 | [`COOKLANG_W0201`](/e/cooklang_w0201) | warning | An unreferenced ingredient duplicates an earlier ingredient with the same flags and preparation. |
+| [`COOKLANG_W0202`](/e/cooklang_w0202) | warning | An unreferenced cookware duplicates an earlier cookware with the same flags. |
 | [`COOKLANG_E0301`](/e/cooklang_e0301) | error | Metadata indentation contains a tab. |
 | [`COOKLANG_E0302`](/e/cooklang_e0302) | error | Metadata indentation levels are inconsistent. |
 | [`COOKLANG_W0301`](/e/cooklang_w0301) | warning | `servings` or `serves` is not a number. |
