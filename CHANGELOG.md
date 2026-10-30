@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.0.0-beta.2
+
+[compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-beta.1...v3.0.0-beta.2)
+
+### 🚀 Enhancements
+
+- **diagnostics:** Add source spans to W0401 warnings ([#128](https://github.com/tmlmt/cooklang-parser/pull/128))
+
+### 🩹 Fixes
+
+- Ingredient referencing ([#126](https://github.com/tmlmt/cooklang-parser/pull/126))
+- ⚠️  Apply the same logic for cookware quantities as for ingredients ([#127](https://github.com/tmlmt/cooklang-parser/pull/127))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Apply the same logic for cookware quantities as for ingredients ([#127](https://github.com/tmlmt/cooklang-parser/pull/127))
+
+### ❤️ Contributors
+
+- Thomas Lamant ([@tmlmt](https://github.com/tmlmt))
+
 ## v3.0.0-beta.1
 
 [compare changes](https://github.com/tmlmt/cooklang-parser/compare/v3.0.0-beta.0...v3.0.0-beta.1)
