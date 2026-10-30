@@ -44,18 +44,13 @@ describe("createDiagnostic", () => {
     expect(d.message).toContain("pan");
   });
 
-  it("referencedItemRedefined returns correct shape", () => {
-    const d = createDiagnostic("COOKLANG_E0203", {
-      itemType: "ingredient",
-      name: "sugar",
-      flag: "hidden",
-    });
+  it("referencedCookwarePropsDoNotMatch returns correct shape", () => {
+    const d = createDiagnostic("COOKLANG_E0203", { name: "sugar" });
     expect(d).toMatchObject<Partial<Diagnostic>>({
       code: "COOKLANG_E0203",
       severity: "error",
     });
     expect(d.message).toContain("sugar");
-    expect(d.message).toContain("hidden");
   });
 
   it("noTabIndent returns correct shape", () => {

@@ -619,74 +619,14 @@ describe("parse function", () => {
       });
     });
 
-    it("should ignore preparation given for ingredient items referencing another one", () => {
-      const result = new Recipe(`Mix @eggs{1}(boiled) and @&eggs{1}(poached)`);
-      expect(result.ingredients).toEqual([
-        {
-          name: "eggs",
-          preparation: "boiled",
-          quantities: [
-            {
-              quantity: {
-                type: "fixed",
-                value: {
-                  type: "decimal",
-                  decimal: 2,
-                },
-              },
-              unit: undefined,
-            },
-          ],
-          usedAsPrimary: true,
-        },
-      ]);
-      expect(result.sections[0]?.content).toEqual([
-        {
-          type: "step",
-          items: [
-            {
-              type: "text",
-              value: "Mix ",
-            },
-            {
-              type: "ingredient",
-              id: "ingredient-item-0",
-              alternatives: [
-                {
-                  displayName: "eggs",
-                  index: 0,
-
-                  scalable: true,
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 1 },
-                  },
-                },
-              ],
-            },
-            {
-              type: "text",
-              value: " and ",
-            },
-            {
-              type: "ingredient",
-              id: "ingredient-item-1",
-              alternatives: [
-                {
-                  displayName: "eggs",
-                  index: 0,
-
-                  scalable: true,
-                  quantity: {
-                    type: "fixed",
-                    value: { type: "decimal", decimal: 1 },
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      ]);
+    it("collects a diagnostic when a referenced ingredient has a different preparation", () => {
+      const result = parseCollect(
+        new Recipe(),
+        `Mix @eggs{1}(boiled) and @&eggs{1}(poached)`,
+      ).output;
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0204", {
+        times: 1,
+      });
     });
 
     it("should reference an ingredient with matching preparation before other same-name ingredients", () => {
@@ -786,7 +726,7 @@ describe("parse function", () => {
     it("collects diagnostic when referenced ingredient is redefined with different flags", () => {
       const recipe = `Add @flour{100%g} and more @&-flour{100%g}.`;
       const result = parseCollect(new Recipe(), recipe).output;
-      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0203", {
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0204", {
         times: 1,
         match: { severity: "error" },
       });
@@ -803,7 +743,7 @@ describe("parse function", () => {
         "Add @|fat|butter{} and @|fat|&-butter{}.",
       ).output;
       expect(redefined.diagnostics).toHaveLength(1);
-      expect(redefined.diagnostics).toHaveDiagnostic("COOKLANG_E0203", {
+      expect(redefined.diagnostics).toHaveDiagnostic("COOKLANG_E0204", {
         times: 1,
       });
     });
@@ -844,7 +784,7 @@ describe("parse function", () => {
       expect(result.cookware.length).toBe(2);
       expect(result.cookware[0]).toEqual({
         name: "bowl",
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+        quantities: [{ type: "fixed", value: { type: "decimal", decimal: 1 } }],
       });
       expect(result.cookware[1]).toEqual({
         name: "pan",
@@ -867,35 +807,69 @@ describe("parse function", () => {
       ]);
     });
 
-    it("should correctly track and sum quantities of referenced cookware", () => {
+    it("sums quantities of referenced cookware per variant", () => {
       const recipe = `
-        Use #bowl{1} and again #&bowl{2}
-      `;
+#pan{1} #&pan{2}
+
+[vegan] #&pan{2}
+`;
       const result = new Recipe(recipe);
       expect(result.cookware).toHaveLength(1);
-      expect(result.cookware[0]!.quantity).toEqual({
+      const total = (n: number) => ({
         type: "fixed",
-        value: { type: "decimal", decimal: 3 },
+        value: { type: "decimal", decimal: n },
+      });
+      expect(result.cookware[0]!.quantities).toEqual([total(3)]);
+      expect(result.getCookwareQuantities()[0]!.quantities).toEqual([total(3)]);
+      expect(
+        result.getCookwareQuantities({ choices: { variant: "vegan" } })[0]!
+          .quantities,
+      ).toEqual([total(5)]);
+    });
+
+    it("keeps text and numeric cookware quantities separate in a variant", () => {
+      const result = parseCollect(
+        new Recipe(),
+        "Use #bowl{one}, then #&bowl{2}",
+      );
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
+        times: 1,
+        match: { severity: "warning" },
+      });
+      const separate = {
+        name: "bowl",
+        quantities: [
+          { type: "fixed", value: { type: "text", text: "one" } },
+          { type: "fixed", value: { type: "decimal", decimal: 2 } },
+        ],
+      };
+      expect(result.output.cookware).toEqual([separate]);
+      expect(result.output.getCookwareQuantities()).toEqual([separate]);
+    });
+
+    it("omits hidden cookware and keeps flags in getCookwareQuantities", () => {
+      const result = new Recipe("Use #-stove{2}, #?pan and #pot");
+      expect(result.getCookwareQuantities()).toEqual([
+        { name: "pan", flags: ["optional"] },
+        { name: "pot" },
+      ]);
+    });
+
+    it("collects a warning for duplicate cookware without reference", () => {
+      const result = parseCollect(new Recipe(), "Use #?pan then #?pan").output;
+      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0202", {
+        times: 1,
       });
     });
 
-    it("collects a warning when text and numeric cookware quantities stay separate", () => {
-      const source = "Use #bowl{one}, then #&bowl{2}";
-      const result = parseCollect(new Recipe(), source);
+    it("does not warn about the same cookware in disjoint variants", () => {
+      const recipe = `
+[vegan] Use #pan
 
-      expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
-        times: 1,
-        match: {
-          severity: "warning",
-          span: {
-            start: {
-              offset: source.indexOf("#&bowl"),
-              line: 1,
-            },
-          },
-        },
-      });
-      expect(result.output.cookware).toHaveLength(2);
+[meat] Use #pan #&pan
+`;
+      const result = parseCollect(new Recipe(), recipe).output;
+      expect(result.diagnostics).toHaveLength(0);
     });
 
     it("should correctly handle modifiers for cookware", () => {
@@ -917,7 +891,7 @@ describe("parse function", () => {
       });
     });
 
-    it("collects diagnostic when referenced cookware is redefined with different flags", () => {
+    it("collects diagnostic when referenced cookware has different flags", () => {
       const recipe = `Potentially use an #oven once, and potentially the same #&?oven again`;
       const result = parseCollect(new Recipe(), recipe).output;
       expect(result.diagnostics).toHaveDiagnostic("COOKLANG_E0203", {
@@ -964,7 +938,7 @@ describe("parse function", () => {
     });
     expect(result.cookware[0]).toMatchObject<Cookware>({
       name: "鍋",
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
+      quantities: [{ type: "fixed", value: { type: "decimal", decimal: 1 } }],
     });
     expect(result.timers[0]).toEqual({
       name: "煮る",

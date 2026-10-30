@@ -1,16 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { ReferencedItemCannotBeRedefinedError } from "../src/errors";
+import { ReferencedCookwarePropsDoNotMatchError } from "../src/errors";
 
 describe("errors", () => {
-  describe("ReferencedItemCannotBeRedefinedError", () => {
+  describe("ReferencedCookwarePropsDoNotMatchError", () => {
     it("should contains expected text", () => {
-      const error = new ReferencedItemCannotBeRedefinedError(
-        "ingredient",
-        "flour",
-        "hidden",
-      );
+      const error = new ReferencedCookwarePropsDoNotMatchError("pan");
       expect(error.message).toBe(
-        'Referenced ingredient "flour" cannot be redefined as "hidden".',
+        'Referenced cookware "pan" does not match the flags of the initial cookware declaration.',
       );
       expect(error.code).toBe("COOKLANG_E0203");
       expect(error.diagnostic.fix).toBeDefined();

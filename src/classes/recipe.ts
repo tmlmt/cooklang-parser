@@ -75,6 +75,7 @@ import {
   flattenPlainUnitGroup,
   convertQuantityToSystem,
   applyBestUnit,
+  addQuantityValues,
 } from "../quantities/mutations";
 import { resolveUnit, normalizeUnit } from "../units/definitions";
 import { isUnitCompatibleWithSystem } from "../units/compatibility";
@@ -85,13 +86,14 @@ import {
   DivisionByZeroError,
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
-  ReferencedItemCannotBeRedefinedError,
+  ReferencedCookwarePropsDoNotMatchError,
   NoTabAsIndentError,
   BadIndentationError,
   RatioNotComputableError,
   DiagnosticError,
   ParseStoppedError,
   ReferencedIngredientPropsDoNotMatchError,
+  CannotAddTextValueError,
 } from "../errors";
 import { createDiagnostic } from "../diagnostics";
 import {
@@ -934,16 +936,27 @@ export class Recipe {
     }
   }
 
-  // Type for accumulated quantities (used internally by collectQuantityGroups)
-  // Defined as a static type alias for the private method's return type
-  /** @internal */
-  private collectQuantityGroups(options?: GetIngredientQuantitiesOptions) {
+  /**
+   * Lists the steps that are active for the variant given in `options.choices`,
+   * optionally restricted to a section and/or step, together with whether
+   * they are optional (variant-optional step or section).
+   * Shared by the ingredient and cookware quantity computations.
+   * @internal
+   */
+  private _getActiveSteps(
+    options?: GetIngredientQuantitiesOptions,
+  ): { step: Step; isOptional: boolean }[] {
     const { section, step, variant: indexingVariant, choices } = options || {};
 
     // Active variant (undefined or "*" = default)
     const activeVariant = choices?.variant;
     const isDefaultVariant =
       activeVariant === undefined || activeVariant === "*";
+    const isActive = (variants?: string[]) =>
+      !variants ||
+      (isDefaultVariant
+        ? variants.includes("*")
+        : variants.includes(activeVariant));
 
     // Determine sections to process
     const sectionsToProcess: Section[] =
@@ -958,6 +971,58 @@ export class Recipe {
               : [];
           })()
         : this.sections;
+
+    const result: { step: Step; isOptional: boolean }[] = [];
+    for (const currentSection of sectionsToProcess) {
+      if (!isActive(currentSection.variants)) continue;
+
+      const allSteps = currentSection.content.filter(
+        (item): item is Step => item.type === "step",
+      );
+
+      // When a variant is given for step-index interpretation, limit indexing
+      // to the steps active in that variant — matching how step numbers are
+      // assigned during rendering (inactive steps are skipped/unnumbered).
+      const stepsForIndexing =
+        indexingVariant !== undefined
+          ? allSteps.filter((s) =>
+              this.isStepActiveForVariant(s, indexingVariant),
+            )
+          : allSteps;
+
+      const stepsToProcess =
+        step === undefined
+          ? allSteps
+          : typeof step === "number"
+            ? step >= 0 && step < stepsForIndexing.length
+              ? [stepsForIndexing[step]!]
+              : []
+            : allSteps.includes(step)
+              ? [step]
+              : [];
+
+      for (const currentStep of stepsToProcess) {
+        if (!isActive(currentStep.variants)) continue;
+        result.push({
+          step: currentStep,
+          isOptional:
+            currentStep.optional === true || currentSection.optional === true,
+        });
+      }
+    }
+    return result;
+  }
+
+  // Type for accumulated quantities (used internally by collectQuantityGroups)
+  // Defined as a static type alias for the private method's return type
+  /** @internal */
+  private collectQuantityGroups(options?: GetIngredientQuantitiesOptions) {
+    const { choices } = options || {};
+
+    // Active variant (undefined or "*" = default)
+    const activeVariant = choices?.variant;
+    const isDefaultVariant =
+      activeVariant === undefined || activeVariant === "*";
 
     // Type for accumulated quantities
     type QuantityAccumulator = {
@@ -985,219 +1050,127 @@ export class Recipe {
     // dynamically due to being in a variant-optional step ([?variant])
     const dynamicOptionalIndices = new Set<number>();
 
-    for (const currentSection of sectionsToProcess) {
-      // Skip sections that don't match the active variant
-      if (currentSection.variants) {
-        if (isDefaultVariant) {
-          // Default variant: skip sections tagged with non-"*" variants
-          if (!currentSection.variants.includes("*")) continue;
-        } else {
-          // Named variant: skip sections that don't include this variant
-          if (!currentSection.variants.includes(activeVariant)) continue;
-        }
-      }
-
-      const allSteps = currentSection.content.filter(
-        (item): item is Step => item.type === "step",
-      );
-
-      // Track whether this section is optional
-      const isOptionalSection = currentSection.optional === true;
-
-      // When a variant is given for step-index interpretation, limit indexing
-      // to the steps active in that variant — matching how step numbers are
-      // assigned during rendering (inactive steps are skipped/unnumbered).
-      const stepsForIndexing =
-        indexingVariant !== undefined
-          ? allSteps.filter((s) =>
-              this.isStepActiveForVariant(s, indexingVariant),
+    for (const {
+      step: currentStep,
+      isOptional: isOptionalStep,
+    } of this._getActiveSteps(options)) {
+      for (const item of currentStep.items.filter(
+        (item): item is IngredientItem => item.type === "ingredient",
+      )) {
+        const isGrouped = "group" in item && item.group !== undefined;
+        const allGroupSubgroups = isGrouped
+          ? this.choices.ingredientGroups.get(item.group!)
+          : undefined;
+        const groupSubgroups = allGroupSubgroups
+          ? this.filterGroupSubgroupsForVariant(
+              allGroupSubgroups,
+              activeVariant,
             )
-          : allSteps;
+          : undefined;
 
-      // Determine steps to process
-      const stepsToProcess =
-        step === undefined
-          ? allSteps
-          : typeof step === "number"
-            ? step >= 0 && step < stepsForIndexing.length
-              ? [stepsForIndexing[step]!]
-              : []
-            : allSteps.includes(step)
-              ? [step]
-              : [];
+        // Determine selection state
+        let selectedAltIndex = 0;
+        let isSelected: boolean;
+        let hasExplicitChoice: boolean;
 
-      for (const currentStep of stepsToProcess) {
-        // Skip steps that don't match the active variant
-        if (currentStep.variants) {
-          if (isDefaultVariant) {
-            if (!currentStep.variants.includes("*")) continue;
-          } else {
-            if (!currentStep.variants.includes(activeVariant)) continue;
-          }
-        }
+        if (isGrouped) {
+          const availableSubgroups = groupSubgroups!;
+          const groupChoice = choices?.ingredientGroups?.get(item.group!);
+          hasExplicitChoice = groupChoice !== undefined;
 
-        // Track whether this step is variant-optional
-        const isOptionalStep =
-          currentStep.optional === true || isOptionalSection;
-
-        for (const item of currentStep.items.filter(
-          (item): item is IngredientItem => item.type === "ingredient",
-        )) {
-          const isGrouped = "group" in item && item.group !== undefined;
-          const allGroupSubgroups = isGrouped
-            ? this.choices.ingredientGroups.get(item.group!)
-            : undefined;
-          const groupSubgroups = allGroupSubgroups
-            ? this.filterGroupSubgroupsForVariant(
-                allGroupSubgroups,
-                activeVariant,
-              )
-            : undefined;
-
-          // Determine selection state
-          let selectedAltIndex = 0;
-          let isSelected: boolean;
-          let hasExplicitChoice: boolean;
-
-          if (isGrouped) {
-            const availableSubgroups = groupSubgroups!;
-            const groupChoice = choices?.ingredientGroups?.get(item.group!);
-            hasExplicitChoice = groupChoice !== undefined;
-
-            // Variant-aware auto-selection for grouped items: when a named
-            // variant is active and no explicit choice, look for subgroups
-            // whose alternatives have a note matching the variant name
-            if (!hasExplicitChoice && !isDefaultVariant) {
-              const matchingSubgroupIdx = availableSubgroups.findIndex((sg) =>
-                sg.some(
-                  (alt) =>
-                    alt.note &&
-                    alt.note
-                      .toLowerCase()
-                      .includes(activeVariant.toLowerCase()),
-                ),
+          // Variant-aware auto-selection for grouped items: when a named
+          // variant is active and no explicit choice, look for subgroups
+          // whose alternatives have a note matching the variant name
+          if (!hasExplicitChoice && !isDefaultVariant) {
+            const matchingSubgroupIdx = availableSubgroups.findIndex((sg) =>
+              sg.some(
+                (alt) =>
+                  alt.note &&
+                  alt.note.toLowerCase().includes(activeVariant.toLowerCase()),
+              ),
+            );
+            if (matchingSubgroupIdx !== undefined && matchingSubgroupIdx >= 0) {
+              const matchedSubgroup = availableSubgroups[matchingSubgroupIdx]!;
+              isSelected = matchedSubgroup.some(
+                (alt) => alt.itemId === item.id,
               );
-              if (
-                matchingSubgroupIdx !== undefined &&
-                matchingSubgroupIdx >= 0
-              ) {
-                const matchedSubgroup =
-                  availableSubgroups[matchingSubgroupIdx]!;
-                isSelected = matchedSubgroup.some(
-                  (alt) => alt.itemId === item.id,
-                );
-                hasExplicitChoice = true; // treat as explicit so alternativeRefs are not built
-                selectedAltIndex = 0;
-              } else {
-                isSelected = availableSubgroups[0]!.some(
-                  (alt) => alt.itemId === item.id,
-                );
-              }
+              hasExplicitChoice = true; // treat as explicit so alternativeRefs are not built
+              selectedAltIndex = 0;
             } else {
-              const targetSubgroupIndex = groupChoice ?? 0;
-              const selectedSubgroup = availableSubgroups[targetSubgroupIndex];
-              if (!selectedSubgroup) continue;
-              isSelected = selectedSubgroup.some(
+              isSelected = availableSubgroups[0]!.some(
                 (alt) => alt.itemId === item.id,
               );
             }
           } else {
-            const itemChoice = choices?.ingredientItems?.get(item.id);
-            hasExplicitChoice = itemChoice !== undefined;
+            const targetSubgroupIndex = groupChoice ?? 0;
+            const selectedSubgroup = availableSubgroups[targetSubgroupIndex];
+            if (!selectedSubgroup) continue;
+            isSelected = selectedSubgroup.some((alt) => alt.itemId === item.id);
+          }
+        } else {
+          const itemChoice = choices?.ingredientItems?.get(item.id);
+          hasExplicitChoice = itemChoice !== undefined;
 
-            // Variant-aware auto-selection for inline alternatives: when a
-            // named variant is active and no explicit choice, look for
-            // alternatives whose note matches the variant name (substring,
-            // case-insensitive). Multiple matches are kept as alternatives.
-            if (!hasExplicitChoice && !isDefaultVariant) {
-              const matchingIndices = item.alternatives
-                .map((alt, idx) => ({ alt, idx }))
-                .filter(
-                  ({ alt }) =>
-                    alt.note &&
-                    alt.note
-                      .toLowerCase()
-                      .includes(activeVariant.toLowerCase()),
-                )
-                .map(({ idx }) => idx);
-              if (matchingIndices.length > 0) {
-                selectedAltIndex = matchingIndices[0]!;
-                hasExplicitChoice = true; // suppress alternativeRefs for non-matching
-              } else {
-                selectedAltIndex = itemChoice ?? 0;
-              }
+          // Variant-aware auto-selection for inline alternatives: when a
+          // named variant is active and no explicit choice, look for
+          // alternatives whose note matches the variant name (substring,
+          // case-insensitive). Multiple matches are kept as alternatives.
+          if (!hasExplicitChoice && !isDefaultVariant) {
+            const matchingIndices = item.alternatives
+              .map((alt, idx) => ({ alt, idx }))
+              .filter(
+                ({ alt }) =>
+                  alt.note &&
+                  alt.note.toLowerCase().includes(activeVariant.toLowerCase()),
+              )
+              .map(({ idx }) => idx);
+            if (matchingIndices.length > 0) {
+              selectedAltIndex = matchingIndices[0]!;
+              hasExplicitChoice = true; // suppress alternativeRefs for non-matching
             } else {
               selectedAltIndex = itemChoice ?? 0;
             }
-
-            isSelected = true;
+          } else {
+            selectedAltIndex = itemChoice ?? 0;
           }
 
-          const alternative = item.alternatives[selectedAltIndex];
-          if (!alternative || !isSelected) continue;
+          isSelected = true;
+        }
 
-          selectedIndices.add(alternative.index);
+        const alternative = item.alternatives[selectedAltIndex];
+        if (!alternative || !isSelected) continue;
 
-          // Track dynamic optional flag for ingredients in variant-optional steps
-          if (isOptionalStep) {
-            dynamicOptionalIndices.add(alternative.index);
-          }
+        selectedIndices.add(alternative.index);
 
-          // Add all alternatives to referenced set (so indices remain valid in result)
-          const allAltsFlat = (
-            isGrouped ? groupSubgroups!.flat() : item.alternatives
-          ).filter((alt): alt is IngredientAlternative => alt !== undefined);
-          for (const alt of allAltsFlat) {
-            referencedIndices.add(alt.index);
-          }
+        // Track dynamic optional flag for ingredients in variant-optional steps
+        if (isOptionalStep) {
+          dynamicOptionalIndices.add(alternative.index);
+        }
 
-          // Build alternative refs (only when no explicit choice)
-          // Each inner array is one choice option (subgroup); items within
-          // the same inner array are combined with "+" (AND).
-          let alternativeRefs: AlternativeIngredientRef[][] | undefined;
-          if (
-            !hasExplicitChoice &&
-            groupSubgroups &&
-            groupSubgroups.length > 1
-          ) {
-            // For grouped items: alternatives are the other subgroups (not the current item's subgroup)
-            const currentSubgroupIdx = groupSubgroups.findIndex((sg) =>
-              sg.some((alt) => alt.itemId === item.id),
-            );
-            alternativeRefs = groupSubgroups
-              .filter((_, idx) => idx !== currentSubgroupIdx)
-              .map((subgroup) =>
-                subgroup.map((otherAlt) => {
-                  const ref: AlternativeIngredientRef = {
-                    index: otherAlt.index,
-                  };
-                  if (otherAlt.quantity) {
-                    const altQty: QuantityWithPlainUnit = {
-                      quantity: otherAlt.quantity,
-                      ...(otherAlt.unit && {
-                        unit: otherAlt.unit.name,
-                      }),
-                      ...(otherAlt.equivalents && {
-                        equivalents: otherAlt.equivalents.map(
-                          (eq: QuantityWithExtendedUnit) =>
-                            toPlainUnit(eq) as QuantityWithPlainUnit,
-                        ),
-                      }),
-                    };
-                    ref.quantities = [altQty];
-                  }
-                  return ref;
-                }),
-              );
-          } else if (
-            !hasExplicitChoice &&
-            !isGrouped &&
-            allAltsFlat.length > 1
-          ) {
-            alternativeRefs = allAltsFlat
-              .filter((alt) => alt.index !== alternative.index)
-              .map((otherAlt) => {
-                const ref: AlternativeIngredientRef = { index: otherAlt.index };
+        // Add all alternatives to referenced set (so indices remain valid in result)
+        const allAltsFlat = (
+          isGrouped ? groupSubgroups!.flat() : item.alternatives
+        ).filter((alt): alt is IngredientAlternative => alt !== undefined);
+        for (const alt of allAltsFlat) {
+          referencedIndices.add(alt.index);
+        }
+
+        // Build alternative refs (only when no explicit choice)
+        // Each inner array is one choice option (subgroup); items within
+        // the same inner array are combined with "+" (AND).
+        let alternativeRefs: AlternativeIngredientRef[][] | undefined;
+        if (!hasExplicitChoice && groupSubgroups && groupSubgroups.length > 1) {
+          // For grouped items: alternatives are the other subgroups (not the current item's subgroup)
+          const currentSubgroupIdx = groupSubgroups.findIndex((sg) =>
+            sg.some((alt) => alt.itemId === item.id),
+          );
+          alternativeRefs = groupSubgroups
+            .filter((_, idx) => idx !== currentSubgroupIdx)
+            .map((subgroup) =>
+              subgroup.map((otherAlt) => {
+                const ref: AlternativeIngredientRef = {
+                  index: otherAlt.index,
+                };
                 if (otherAlt.quantity) {
                   const altQty: QuantityWithPlainUnit = {
                     quantity: otherAlt.quantity,
@@ -1213,90 +1186,112 @@ export class Recipe {
                   };
                   ref.quantities = [altQty];
                 }
-                return [ref];
-              });
-          }
-
-          // Quantity-less ingredients without alternatives have nothing to record
-          if (!alternative.quantity && !alternativeRefs) continue;
-
-          // Get or create accumulator for this ingredient/signature
-          // Use unit type+system for signature only when there are alternatives,
-          // so compatible units (g/kg) group together but incompatible (cup/g) stay separate
-          const altIndices = getAlternativeSignature(alternativeRefs) ?? "";
-          let signature: string | null;
-          if (isGrouped) {
-            const resolvedUnit = resolveUnit(alternative.unit?.name);
-            signature = `group:${item.group}|${altIndices}|${resolvedUnit.type}`;
-          } else if (altIndices) {
-            // Has alternatives: include unit type to keep incompatible units separate
-            const resolvedUnit = resolveUnit(alternative.unit?.name);
-            signature = `${altIndices}|${resolvedUnit.type}}`;
-          } else {
-            // No alternatives: use null to allow normal summing behavior
-            signature = null;
-          }
-
-          if (!ingredientGroups.has(alternative.index)) {
-            ingredientGroups.set(alternative.index, new Map());
-          }
-          const groupsForIng = ingredientGroups.get(alternative.index)!;
-          if (!groupsForIng.has(signature)) {
-            groupsForIng.set(signature, {
-              quantities: [],
-              alternativeQuantities: new Map(),
-              alternativeSubgroups: [],
-            });
-          }
-          const group = groupsForIng.get(signature)!;
-
-          if (alternative.quantity) {
-            const baseQty: QuantityWithExtendedUnit = {
-              quantity: alternative.quantity,
-              ...(alternative.unit && {
-                unit: alternative.unit,
+                return ref;
               }),
-            };
-            group.quantities.push(
-              alternative.equivalents?.length
-                ? { or: [baseQty, ...alternative.equivalents] }
-                : baseQty,
             );
-          }
-
-          // Record subgroup structure (only on first encounter for this signature)
-          if (
-            alternativeRefs &&
-            alternativeRefs.length > 0 &&
-            group.alternativeSubgroups.length === 0
-          ) {
-            group.alternativeSubgroups = alternativeRefs.map((subgroup) =>
-              subgroup.map((ref) => ref.index),
-            );
-          }
-
-          // Accumulate alternative quantities
-          for (const subgroup of alternativeRefs ?? []) {
-            for (const ref of subgroup) {
-              if (!group.alternativeQuantities.has(ref.index)) {
-                group.alternativeQuantities.set(ref.index, []);
+        } else if (!hasExplicitChoice && !isGrouped && allAltsFlat.length > 1) {
+          alternativeRefs = allAltsFlat
+            .filter((alt) => alt.index !== alternative.index)
+            .map((otherAlt) => {
+              const ref: AlternativeIngredientRef = { index: otherAlt.index };
+              if (otherAlt.quantity) {
+                const altQty: QuantityWithPlainUnit = {
+                  quantity: otherAlt.quantity,
+                  ...(otherAlt.unit && {
+                    unit: otherAlt.unit.name,
+                  }),
+                  ...(otherAlt.equivalents && {
+                    equivalents: otherAlt.equivalents.map(
+                      (eq: QuantityWithExtendedUnit) =>
+                        toPlainUnit(eq) as QuantityWithPlainUnit,
+                    ),
+                  }),
+                };
+                ref.quantities = [altQty];
               }
-              for (const altQty of ref.quantities ?? []) {
-                const extended = toExtendedUnit({
-                  quantity: altQty.quantity,
-                  unit: altQty.unit,
-                });
-                if (altQty.equivalents?.length) {
-                  const eqEntries: QuantityWithExtendedUnit[] = [
-                    extended,
-                    ...altQty.equivalents.map((eq) => toExtendedUnit(eq)),
-                  ];
-                  group.alternativeQuantities
-                    .get(ref.index)!
-                    .push({ or: eqEntries });
-                } else {
-                  group.alternativeQuantities.get(ref.index)!.push(extended);
-                }
+              return [ref];
+            });
+        }
+
+        // Quantity-less ingredients without alternatives have nothing to record
+        if (!alternative.quantity && !alternativeRefs) continue;
+
+        // Get or create accumulator for this ingredient/signature
+        // Use unit type+system for signature only when there are alternatives,
+        // so compatible units (g/kg) group together but incompatible (cup/g) stay separate
+        const altIndices = getAlternativeSignature(alternativeRefs) ?? "";
+        let signature: string | null;
+        if (isGrouped) {
+          const resolvedUnit = resolveUnit(alternative.unit?.name);
+          signature = `group:${item.group}|${altIndices}|${resolvedUnit.type}`;
+        } else if (altIndices) {
+          // Has alternatives: include unit type to keep incompatible units separate
+          const resolvedUnit = resolveUnit(alternative.unit?.name);
+          signature = `${altIndices}|${resolvedUnit.type}}`;
+        } else {
+          // No alternatives: use null to allow normal summing behavior
+          signature = null;
+        }
+
+        if (!ingredientGroups.has(alternative.index)) {
+          ingredientGroups.set(alternative.index, new Map());
+        }
+        const groupsForIng = ingredientGroups.get(alternative.index)!;
+        if (!groupsForIng.has(signature)) {
+          groupsForIng.set(signature, {
+            quantities: [],
+            alternativeQuantities: new Map(),
+            alternativeSubgroups: [],
+          });
+        }
+        const group = groupsForIng.get(signature)!;
+
+        if (alternative.quantity) {
+          const baseQty: QuantityWithExtendedUnit = {
+            quantity: alternative.quantity,
+            ...(alternative.unit && {
+              unit: alternative.unit,
+            }),
+          };
+          group.quantities.push(
+            alternative.equivalents?.length
+              ? { or: [baseQty, ...alternative.equivalents] }
+              : baseQty,
+          );
+        }
+
+        // Record subgroup structure (only on first encounter for this signature)
+        if (
+          alternativeRefs &&
+          alternativeRefs.length > 0 &&
+          group.alternativeSubgroups.length === 0
+        ) {
+          group.alternativeSubgroups = alternativeRefs.map((subgroup) =>
+            subgroup.map((ref) => ref.index),
+          );
+        }
+
+        // Accumulate alternative quantities
+        for (const subgroup of alternativeRefs ?? []) {
+          for (const ref of subgroup) {
+            if (!group.alternativeQuantities.has(ref.index)) {
+              group.alternativeQuantities.set(ref.index, []);
+            }
+            for (const altQty of ref.quantities ?? []) {
+              const extended = toExtendedUnit({
+                quantity: altQty.quantity,
+                unit: altQty.unit,
+              });
+              if (altQty.equivalents?.length) {
+                const eqEntries: QuantityWithExtendedUnit[] = [
+                  extended,
+                  ...altQty.equivalents.map((eq) => toExtendedUnit(eq)),
+                ];
+                group.alternativeQuantities
+                  .get(ref.index)!
+                  .push({ or: eqEntries });
+              } else {
+                group.alternativeQuantities.get(ref.index)!.push(extended);
               }
             }
           }
@@ -1564,68 +1559,126 @@ export class Recipe {
   }
 
   /**
-   * Returns the list of cookware items that are used in the active variant.
-   * Cookware in steps/sections not matching the active variant are excluded.
-   * Hidden cookware is always excluded.
+   * Returns the list of cookware used in the active variant, with their
+   * quantities summed over the steps active for that variant.
+   * Cookware in steps/sections not matching the active variant is excluded.
+   * Hidden cookware is always excluded. Cookware mentioned in a variant-optional
+   * step or section (`[?variant]`) gets the `optional` flag.
    *
-   * @param options - Options for filtering:
+   * @param options - Options for filtering (same as {@link getIngredientQuantities},
+   *   except that only `choices.variant` is used from `choices`):
+   *   - `section`: Filter to a specific section (Section object or 0-based index)
+   *   - `step`: Filter to a specific step (Step object or 0-based index)
+   *   - `variant`: Variant used to interpret a numeric `step` index
    *   - `choices`: The choices to apply (only `variant` is used)
    * @returns Array of Cookware objects referenced by active steps
    *
    * @example
    * ```typescript
    * // Get all cookware for the default variant
-   * const cookware = recipe.getCookwareForVariant();
+   * const cookware = recipe.getCookwareQuantities();
    *
    * // Get cookware for a specific variant
-   * const veganCookware = recipe.getCookwareForVariant({ choices: { variant: 'vegan' } });
+   * const veganCookware = recipe.getCookwareQuantities({ choices: { variant: 'vegan' } });
    * ```
    */
-  getCookwareForVariant(
-    options?: Pick<GetIngredientQuantitiesOptions, "choices">,
-  ): Cookware[] {
-    const { choices } = options || {};
-    const activeVariant = choices?.variant;
-    const isDefaultVariant =
-      activeVariant === undefined || activeVariant === "*";
+  getCookwareQuantities(options?: GetIngredientQuantitiesOptions): Cookware[] {
+    return this._computeCookwareQuantities(options)
+      .cookware.filter(({ cookware }) => !cookware.flags?.includes("hidden"))
+      .map(({ cookware }) => cookware);
+  }
 
-    const cookwareIndices = new Set<number>();
+  /**
+   * Sums the quantities of each cookware's mentions in the active steps.
+   * Cookware without any active mention is left out.
+   * @internal
+   */
+  private _computeCookwareQuantities(
+    options?: GetIngredientQuantitiesOptions,
+  ): {
+    cookware: { index: number; cookware: Cookware }[];
+    textMixCount: number;
+  } {
+    let textMixCount = 0;
+    const quantitiesByIndex = new Map<number, (FixedValue | Range)[]>();
+    const dynamicOptionalIndices = new Set<number>();
 
-    for (const currentSection of this.sections) {
-      // Skip sections that don't match the active variant
-      if (currentSection.variants) {
-        if (isDefaultVariant) {
-          if (!currentSection.variants.includes("*")) continue;
-        } else {
-          if (!currentSection.variants.includes(activeVariant)) continue;
+    for (const { step, isOptional } of this._getActiveSteps(options)) {
+      for (const item of step.items) {
+        if (item.type !== "cookware") continue;
+        const quantities = quantitiesByIndex.get(item.index) ?? [];
+        quantitiesByIndex.set(item.index, quantities);
+        if (isOptional) dynamicOptionalIndices.add(item.index);
+        if (!item.quantity) continue;
+        const last = quantities.length - 1;
+        if (last < 0) {
+          quantities.push(item.quantity);
+          continue;
         }
-      }
-
-      const allSteps = currentSection.content.filter(
-        (item): item is Step => item.type === "step",
-      );
-
-      for (const currentStep of allSteps) {
-        // Skip steps that don't match the active variant
-        if (currentStep.variants) {
-          if (isDefaultVariant) {
-            if (!currentStep.variants.includes("*")) continue;
+        try {
+          quantities[last] = addQuantityValues(
+            quantities[last]!,
+            item.quantity,
+          );
+        } catch (e) {
+          /* v8 ignore else -- @preserve */
+          if (e instanceof CannotAddTextValueError) {
+            textMixCount++;
+            quantities.push(item.quantity);
           } else {
-            if (!currentStep.variants.includes(activeVariant)) continue;
-          }
-        }
-
-        for (const item of currentStep.items) {
-          if (item.type === "cookware") {
-            cookwareIndices.add(item.index);
+            throw e;
           }
         }
       }
     }
 
-    return this.cookware.filter(
-      (cw, idx) => cookwareIndices.has(idx) && !cw.flags?.includes("hidden"),
-    );
+    const cookware: { index: number; cookware: Cookware }[] = [];
+    // Keep the list in recipe order
+    for (const index of [...quantitiesByIndex.keys()].sort((a, b) => a - b)) {
+      const orig = this.cookware[index]!;
+      const quantities = quantitiesByIndex.get(index)!;
+
+      // Merge static flags with dynamic optional flag from variant-optional steps
+      let flags = orig.flags;
+      if (dynamicOptionalIndices.has(index) && !flags?.includes("optional")) {
+        flags = [...(flags ?? []), "optional"];
+      }
+
+      cookware.push({
+        index,
+        cookware: {
+          name: orig.name,
+          ...(flags && { flags }),
+          ...(quantities.length > 0 && { quantities }),
+        },
+      });
+    }
+
+    return { cookware, textMixCount };
+  }
+
+  /**
+   * Populates the `quantities` property of each cookware with the sum of its
+   * mentions for the default variant.
+   * This is used by parse(), scaleBy/To().
+   *
+   * @internal
+   */
+  private _populateCookwareQuantities(collectDiagnostics = false): void {
+    for (const cw of this.cookware) {
+      delete cw.quantities;
+    }
+    const { cookware, textMixCount } = this._computeCookwareQuantities();
+    if (collectDiagnostics) {
+      for (let i = 0; i < textMixCount; i++) {
+        this.diagnostics.push(createDiagnostic("COOKLANG_W0401", {}));
+      }
+    }
+    for (const { index, cookware: computed } of cookware) {
+      if (computed.quantities) {
+        this.cookware[index]!.quantities = computed.quantities;
+      }
+    }
   }
 
   /**
@@ -1993,9 +2046,6 @@ export class Recipe {
           const newCookware: Cookware = {
             name,
           };
-          if (quantity) {
-            newCookware.quantity = quantity;
-          }
           if (flags.length > 0) {
             newCookware.flags = flags;
           }
@@ -2008,6 +2058,7 @@ export class Recipe {
               reference,
               this.diagnostics,
               makeSpan(this._lineOffsets, lineIdx, sourceColumn, sourceLength),
+              linkedVariants,
             );
             // Adding the item itself in the preparation
             const newItem: CookwareItem = {
@@ -2092,6 +2143,7 @@ export class Recipe {
       this.choices.variants = [...allVariants];
     }
 
+    this._populateCookwareQuantities(true);
     try {
       this._populateIngredientQuantities(true);
     } catch (error) {
@@ -2140,17 +2192,9 @@ export class Recipe {
       this.diagnostics.push(
         createDiagnostic("COOKLANG_E0202", { name: e.cookwareName }, span),
       );
-    } else if (e instanceof ReferencedItemCannotBeRedefinedError) {
+    } else if (e instanceof ReferencedCookwarePropsDoNotMatchError) {
       this.diagnostics.push(
-        createDiagnostic(
-          "COOKLANG_E0203",
-          {
-            itemType: e.itemType,
-            name: e.itemName,
-            flag: String(e.modifier),
-          },
-          span,
-        ),
+        createDiagnostic("COOKLANG_E0203", { name: e.cookwareName }, span),
       );
     } else throw e;
   }
@@ -2366,13 +2410,6 @@ export class Recipe {
       }
     }
 
-    // Scale Recipe.cookware[] quantities
-    for (const cookware of newRecipe.cookware) {
-      if (cookware.quantity) {
-        cookware.quantity = scaleCookwareQuantity(cookware.quantity, factor);
-      }
-    }
-
     // Scale Choices
     for (const subgroups of newRecipe.choices.ingredientGroups.values()) {
       for (const subgroup of subgroups) {
@@ -2396,6 +2433,7 @@ export class Recipe {
     }
 
     newRecipe._populateIngredientQuantities();
+    newRecipe._populateCookwareQuantities();
 
     newRecipe.servings = Big(originalServings).times(factor).toNumber();
 

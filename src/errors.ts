@@ -1,7 +1,5 @@
 import type {
   Diagnostic,
-  IngredientFlag,
-  CookwareFlag,
   NoProductMatchErrorCode,
 } from "./types";
 import { createDiagnostic } from "./diagnostics";
@@ -112,30 +110,16 @@ export class ReferencedCookwareNotFoundError extends SingleDiagnosticError {
 }
 
 /**
- * Thrown when a referenced ingredient or cookware (`&`) is redefined with a different flag than the original definition.
+ * Thrown when a referenced cookware (`&`) does not match the flags
+ * of the previously declared cookware
  * @category Errors
  */
-export class ReferencedItemCannotBeRedefinedError extends SingleDiagnosticError {
-  readonly itemType: "ingredient" | "cookware";
-  readonly itemName: string;
-  readonly modifier: IngredientFlag | CookwareFlag;
-
-  constructor(
-    item_type: "ingredient" | "cookware",
-    item_name: string,
-    new_modifier: IngredientFlag | CookwareFlag,
-  ) {
-    super(
-      createDiagnostic("COOKLANG_E0203", {
-        itemType: item_type,
-        name: item_name,
-        flag: new_modifier,
-      }),
-    );
-    this.name = "ReferencedItemCannotBeRedefinedError";
-    this.itemType = item_type;
-    this.itemName = item_name;
-    this.modifier = new_modifier;
+export class ReferencedCookwarePropsDoNotMatchError extends SingleDiagnosticError {
+  readonly cookwareName: string;
+  constructor(cookwareName: string) {
+    super(createDiagnostic("COOKLANG_E0203", { name: cookwareName }));
+    this.name = "ReferencedCookwarePropsDoNotMatchError";
+    this.cookwareName = cookwareName;
   }
 }
 

@@ -692,8 +692,8 @@ export type CookwareFlag = "optional" | "hidden";
 export interface Cookware {
   /** The name of the cookware. */
   name: string;
-  /** The quantity of cookware */
-  quantity?: FixedValue | Range;
+  /** The summed quantities of the cookware across its mentions in the default variant. */
+  quantities?: (FixedValue | Range)[];
   /** A list of potential state modifiers or other flags for the cookware */
   flags?: CookwareFlag[];
 }

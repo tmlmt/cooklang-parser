@@ -695,7 +695,7 @@ describe("recipe variants", () => {
       });
     });
 
-    describe("getCookwareForVariant", () => {
+    describe("getCookwareQuantities", () => {
       const recipeWithVariantCookware = `
 ---
 servings: 1
@@ -728,9 +728,52 @@ Preheat the #oven{}.
 Serve on a #plate{}.
 `;
 
+      it("flags cookware in variant-optional steps and sections as optional", () => {
+        const recipe = new Recipe(`
+Use a #bowl{}.
+
+[?vegan] Use a #whisk{}, a #?pan{} and a #bowl{}.
+
+= [?vegan] Extras
+
+Use a #blender{}.
+`);
+        const vegan = recipe.getCookwareQuantities({
+          choices: { variant: "vegan" },
+        });
+        expect(vegan).toEqual([
+          { name: "bowl" },
+          { name: "whisk", flags: ["optional"] },
+          { name: "pan", flags: ["optional"] },
+          { name: "bowl", flags: ["optional"] },
+          { name: "blender", flags: ["optional"] },
+        ]);
+      });
+
+      it("filters cookware by section and step", () => {
+        const recipe = new Recipe(`
+Use a #bowl{}.
+
+Use a #pan{}.
+
+= Second
+
+Use a #pot{}.
+`);
+        const names = (
+          options: Parameters<Recipe["getCookwareQuantities"]>[0],
+        ) => recipe.getCookwareQuantities(options).map((cw) => cw.name);
+        expect(names({ section: 1 })).toEqual(["pot"]);
+        expect(names({ section: 0, step: 1 })).toEqual(["pan"]);
+        expect(names({ section: recipe.sections[0]! })).toEqual([
+          "bowl",
+          "pan",
+        ]);
+      });
+
       it("returns all non-hidden cookware for default variant", () => {
         const recipe = new Recipe(recipeWithVariantCookware);
-        const cookware = recipe.getCookwareForVariant();
+        const cookware = recipe.getCookwareQuantities();
         const names = cookware.map((cw) => cw.name);
         expect(names).toContain("bowl");
         expect(names).toContain("whisk");
@@ -739,7 +782,7 @@ Serve on a #plate{}.
 
       it("filters cookware by named variant in sections", () => {
         const recipe = new Recipe(recipeWithVariantCookware);
-        const cookware = recipe.getCookwareForVariant({
+        const cookware = recipe.getCookwareQuantities({
           choices: { variant: "vegan" },
         });
         const names = cookware.map((cw) => cw.name);
@@ -750,7 +793,7 @@ Serve on a #plate{}.
 
       it("filters cookware by named variant in steps", () => {
         const recipe = new Recipe(recipeWithStepVariantCookware);
-        const cookware = recipe.getCookwareForVariant({
+        const cookware = recipe.getCookwareQuantities({
           choices: { variant: "vegan" },
         });
         const names = cookware.map((cw) => cw.name);
@@ -762,7 +805,7 @@ Serve on a #plate{}.
 
       it("returns default-variant cookware when no choices provided", () => {
         const recipe = new Recipe(recipeWithStepVariantCookware);
-        const cookware = recipe.getCookwareForVariant();
+        const cookware = recipe.getCookwareQuantities();
         const names = cookware.map((cw) => cw.name);
         expect(names).toContain("oven");
         expect(names).toContain("grill");
@@ -772,7 +815,7 @@ Serve on a #plate{}.
 
       it("returns cookware for * variant explicitly", () => {
         const recipe = new Recipe(recipeWithStepVariantCookware);
-        const cookware = recipe.getCookwareForVariant({
+        const cookware = recipe.getCookwareQuantities({
           choices: { variant: "*" },
         });
         const names = cookware.map((cw) => cw.name);

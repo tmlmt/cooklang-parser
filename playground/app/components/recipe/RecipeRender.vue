@@ -111,7 +111,7 @@ const metadataEntries = computed(() => {
  * Get cookware filtered by the active variant, excluding hidden cookware.
  */
 const filteredCookware = computed(() => {
-  return props.recipe.getCookwareForVariant({ choices: props.choices });
+  return props.recipe.getCookwareQuantities({ choices: props.choices });
 });
 
 const hasMetadata = computed(() => metadataEntries.value.length > 0);

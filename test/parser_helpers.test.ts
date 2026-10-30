@@ -37,7 +37,8 @@ import {
 import {
   NoTabAsIndentError,
   BadIndentationError,
-  ReferencedItemCannotBeRedefinedError,
+  ReferencedCookwarePropsDoNotMatchError,
+  ReferencedIngredientPropsDoNotMatchError,
   ReferencedIngredientNotFoundError,
   ReferencedCookwareNotFoundError,
   DivisionByZeroError,
@@ -869,80 +870,61 @@ describe("findAndUpsertCookware", () => {
     expect(cookware.length).toEqual(2);
   });
 
-  it("should correctly add a referenced cookware", () => {
-    const cookware: Cookware[] = [{ name: "oven", flags: [] }];
-    const newCookware: Cookware = {
-      name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-      flags: [],
-    };
-    expect(findAndUpsertCookware(cookware, newCookware, true, [])).toBe(0);
-    expect(cookware.length).toBe(1);
-    expect(cookware[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", decimal: 1 },
-    });
+  it("should return the index of the matching referenced cookware", () => {
+    const cookware: Cookware[] = [{ name: "oven" }];
+    expect(
+      findAndUpsertCookware(cookware, { name: "Oven" }, true, []),
+    ).toBe(0);
+    expect(cookware).toHaveLength(1);
   });
 
-  it("should add quantities of referenced cookware", () => {
-    const cookware: Cookware[] = [
-      {
-        name: "oven",
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-        flags: [],
-      },
-    ];
-    const newCookware: Cookware = {
-      name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 2 } },
-      flags: [],
-    };
-    findAndUpsertCookware(cookware, newCookware, true, []);
-    expect(cookware[0]!.quantity).toEqual({
-      type: "fixed",
-      value: { type: "decimal", decimal: 3 },
-    });
-  });
-
-  it("should insert a new cookware if the referenced one has a text quantity", () => {
-    const cookware: Cookware[] = [
-      {
-        name: "oven",
-        quantity: { type: "fixed", value: { type: "text", text: "one" } },
-        flags: [],
-      },
-    ];
-    const newCookware: Cookware = {
-      name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-    };
+  it("should warn when a non-referenced cookware duplicates an existing one", () => {
+    const cookware: Cookware[] = [{ name: "oven", flags: ["optional"] }];
     const diagnostics: Diagnostic[] = [];
-    findAndUpsertCookware(cookware, newCookware, true, diagnostics);
-    expect(cookware.length).toEqual(2);
-    expect(diagnostics).toHaveDiagnostic("COOKLANG_W0401");
+    findAndUpsertCookware(
+      cookware,
+      { name: "oven", flags: ["optional"] },
+      false,
+      diagnostics,
+    );
+    expect(diagnostics).toHaveDiagnostic("COOKLANG_W0202", { times: 1 });
+    expect(cookware).toHaveLength(2);
+
+    const other: Diagnostic[] = [];
+    findAndUpsertCookware(cookware, { name: "oven" }, false, other);
+    expect(other).toHaveLength(0);
   });
 
-  it("should rethrow errors other than CannotAddTextValueError", () => {
-    const cookware: Cookware[] = [
-      {
-        name: "oven",
-        quantity: {
-          type: "fixed",
-          value: { type: "fraction", num: 1, den: 0 },
-        },
-      },
-    ];
-    const newCookware: Cookware = {
-      name: "oven",
-      quantity: {
-        type: "fixed",
-        value: { type: "fraction", num: 1, den: 1 },
-      },
-    };
-
+  it("should not treat declarations in disjoint variants as duplicates or reference targets", () => {
+    const cookware: Cookware[] = [];
+    const diagnostics: Diagnostic[] = [];
+    findAndUpsertCookware(
+      cookware,
+      { name: "pan" },
+      false,
+      diagnostics,
+      undefined,
+      ["vegan"],
+    );
+    findAndUpsertCookware(
+      cookware,
+      { name: "pan" },
+      false,
+      diagnostics,
+      undefined,
+      ["meat"],
+    );
+    expect(diagnostics).toHaveLength(0);
+    expect(
+      findAndUpsertCookware(cookware, { name: "pan" }, true, [], undefined, [
+        "meat",
+      ]),
+    ).toBe(1);
     expect(() =>
-      findAndUpsertCookware(cookware, newCookware, true, []),
-    ).toThrow(DivisionByZeroError);
+      findAndUpsertCookware(cookware, { name: "pan" }, true, [], undefined, [
+        "other",
+      ]),
+    ).toThrow(ReferencedCookwareNotFoundError);
   });
 
   it("should throw a ReferencedCookwareNotFoundError if a reference cookware does not exist", () => {
@@ -956,22 +938,18 @@ describe("findAndUpsertCookware", () => {
     const cookware: Cookware[] = [
       {
         name: "oven",
-        quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
         flags: ["hidden"],
       },
     ];
-    const newCookware: Cookware = {
-      name: "oven",
-      quantity: { type: "fixed", value: { type: "decimal", decimal: 1 } },
-    };
+    const newCookware: Cookware = { name: "oven" };
 
     expect(() =>
       findAndUpsertCookware(cookware, newCookware, true, []),
-    ).toThrow(ReferencedItemCannotBeRedefinedError);
+    ).toThrow(ReferencedCookwarePropsDoNotMatchError);
     newCookware.flags = ["optional"];
     expect(() =>
       findAndUpsertCookware(cookware, newCookware, true, []),
-    ).toThrow(ReferencedItemCannotBeRedefinedError);
+    ).toThrow(ReferencedCookwarePropsDoNotMatchError);
   });
 });
 
@@ -1123,11 +1101,11 @@ describe("findAndUpsertIngredient", () => {
     };
     expect(() =>
       findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
-    ).toThrow(ReferencedItemCannotBeRedefinedError);
+    ).toThrow(ReferencedIngredientPropsDoNotMatchError);
     newIngredient.flags = ["optional"];
     expect(() =>
       findAndUpsertIngredient(ingredients, newIngredient, true, diagnostics),
-    ).toThrow(ReferencedItemCannotBeRedefinedError);
+    ).toThrow(ReferencedIngredientPropsDoNotMatchError);
   });
 });
 
