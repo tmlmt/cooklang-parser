@@ -834,7 +834,10 @@ describe("parse function", () => {
       );
       expect(result.diagnostics).toHaveDiagnostic("COOKLANG_W0401", {
         times: 1,
-        match: { severity: "warning" },
+        match: {
+          severity: "warning",
+          span: { start: { line: 1, column: 22 } },
+        },
       });
       const separate = {
         name: "bowl",

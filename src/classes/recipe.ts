@@ -109,6 +109,11 @@ interface NoteSourceSegment {
   column: number;
 }
 
+interface QuantityDiagnosticContext {
+  ingredientSpans: Map<number, DiagnosticSourceSpan>;
+  cookwareSpans: WeakMap<CookwareItem, DiagnosticSourceSpan>;
+}
+
 /**
  * Recipe parser.
  *
@@ -503,6 +508,7 @@ export class Recipe {
     items: Step["items"],
     lineIdx: number,
     matchStart: number,
+    diagnosticContext: QuantityDiagnosticContext,
     linkedVariants?: string[],
   ): void {
     const alternatives: IngredientAlternative[] = [];
@@ -634,6 +640,15 @@ export class Recipe {
       }
       if (itemQuantity) {
         Object.assign(alternative, itemQuantity);
+        diagnosticContext.ingredientSpans.set(
+          idxInList,
+          makeSpan(
+            this._lineOffsets,
+            lineIdx,
+            matchStart,
+            ingredientMatchString.length,
+          ),
+        );
       }
       alternatives.push(alternative);
       testString = groups.ingredientAlternative || "";
@@ -685,6 +700,7 @@ export class Recipe {
     items: Step["items"],
     lineIdx: number,
     matchStart: number,
+    diagnosticContext: QuantityDiagnosticContext,
     linkedVariants?: string[],
   ): void {
     const match = ingredientMatchString.match(ingredientWithGroupKeyRegex);
@@ -807,6 +823,15 @@ export class Recipe {
     // Only add quantity fields if it exists
     if (itemQuantity) {
       Object.assign(alternative, itemQuantity);
+      diagnosticContext.ingredientSpans.set(
+        idxInList,
+        makeSpan(
+          this._lineOffsets,
+          lineIdx,
+          matchStart,
+          ingredientMatchString.length,
+        ),
+      );
     }
     // Add note if present
     const note = groups.gIngredientNote?.trim();
@@ -900,7 +925,10 @@ export class Recipe {
    *
    * @internal
    */
-  private _populateIngredientQuantities(collectDiagnostics = false): void {
+  private _populateIngredientQuantities(
+    collectDiagnostics = false,
+    diagnosticContext?: QuantityDiagnosticContext,
+  ): void {
     // Reset quantities and usedAsPrimary flag
     for (const ing of this.ingredients) {
       delete ing.quantities;
@@ -908,11 +936,11 @@ export class Recipe {
     }
 
     // Get ingredients with quantities using default (no explicit choice = primary with alternatives)
-    const { ingredients: ingredientsWithQuantities, textMixCount } =
-      this._computeIngredientQuantities({});
+    const { ingredients: ingredientsWithQuantities, textMixSpans } =
+      this._computeIngredientQuantities({}, diagnosticContext);
     if (collectDiagnostics) {
-      for (let i = 0; i < textMixCount; i++) {
-        this.diagnostics.push(createDiagnostic("COOKLANG_W0401", {}));
+      for (const span of textMixSpans) {
+        this.diagnostics.push(createDiagnostic("COOKLANG_W0401", {}, span));
       }
     }
 
@@ -1440,13 +1468,14 @@ export class Recipe {
 
   private _computeIngredientQuantities(
     options?: GetIngredientQuantitiesOptions,
+    diagnosticContext?: QuantityDiagnosticContext,
   ): {
     ingredients: Ingredient[];
-    textMixCount: number;
+    textMixSpans: (DiagnosticSourceSpan | undefined)[];
   } {
-    let textMixCount = 0;
-    const onTextQuantityMix = () => {
-      textMixCount++;
+    const textMixSpans: (DiagnosticSourceSpan | undefined)[] = [];
+    const onTextQuantityMix = (index: number) => {
+      textMixSpans.push(diagnosticContext?.ingredientSpans.get(index));
     };
     const {
       ingredientGroups,
@@ -1493,7 +1522,7 @@ export class Recipe {
                 ? addEquivalentsAndSimplify(
                     group.quantities,
                     this.unitSystem,
-                    onTextQuantityMix,
+                    () => onTextQuantityMix(index),
                   )
                 : undefined;
             const flattened = summed ? flattenPlainUnitGroup(summed) : [];
@@ -1511,7 +1540,7 @@ export class Recipe {
                         addEquivalentsAndSimplify(
                           altQtys,
                           this.unitSystem,
-                          onTextQuantityMix,
+                          () => onTextQuantityMix(altIdx),
                         ),
                       ).flatMap(
                         /* v8 ignore next -- item.and branch requires complex nested AND-with-equivalents structure */
@@ -1555,7 +1584,7 @@ export class Recipe {
       result.push(ing);
     }
 
-    return { ingredients: result, textMixCount };
+    return { ingredients: result, textMixSpans };
   }
 
   /**
@@ -1595,11 +1624,12 @@ export class Recipe {
    */
   private _computeCookwareQuantities(
     options?: GetIngredientQuantitiesOptions,
+    diagnosticContext?: QuantityDiagnosticContext,
   ): {
     cookware: { index: number; cookware: Cookware }[];
-    textMixCount: number;
+    textMixSpans: (DiagnosticSourceSpan | undefined)[];
   } {
-    let textMixCount = 0;
+    const textMixSpans: (DiagnosticSourceSpan | undefined)[] = [];
     const quantitiesByIndex = new Map<number, (FixedValue | Range)[]>();
     const dynamicOptionalIndices = new Set<number>();
 
@@ -1623,7 +1653,7 @@ export class Recipe {
         } catch (e) {
           /* v8 ignore else -- @preserve */
           if (e instanceof CannotAddTextValueError) {
-            textMixCount++;
+            textMixSpans.push(diagnosticContext?.cookwareSpans.get(item));
             quantities.push(item.quantity);
           } else {
             throw e;
@@ -1654,7 +1684,7 @@ export class Recipe {
       });
     }
 
-    return { cookware, textMixCount };
+    return { cookware, textMixSpans };
   }
 
   /**
@@ -1664,14 +1694,18 @@ export class Recipe {
    *
    * @internal
    */
-  private _populateCookwareQuantities(collectDiagnostics = false): void {
+  private _populateCookwareQuantities(
+    collectDiagnostics = false,
+    diagnosticContext?: QuantityDiagnosticContext,
+  ): void {
     for (const cw of this.cookware) {
       delete cw.quantities;
     }
-    const { cookware, textMixCount } = this._computeCookwareQuantities();
+    const { cookware, textMixSpans } =
+      this._computeCookwareQuantities(undefined, diagnosticContext);
     if (collectDiagnostics) {
-      for (let i = 0; i < textMixCount; i++) {
-        this.diagnostics.push(createDiagnostic("COOKLANG_W0401", {}));
+      for (const span of textMixSpans) {
+        this.diagnostics.push(createDiagnostic("COOKLANG_W0401", {}, span));
       }
     }
     for (const { index, cookware: computed } of cookware) {
@@ -1694,6 +1728,10 @@ export class Recipe {
     this.reset();
     this._source = content;
     this._lineOffsets = buildLineOffsets(content);
+    const diagnosticContext: QuantityDiagnosticContext = {
+      ingredientSpans: new Map(),
+      cookwareSpans: new WeakMap(),
+    };
 
     // Normalize and keep parseSource aligned with the original input to build accurate diagnostics spans.
     const maskSource = (match: string): string =>
@@ -2009,6 +2047,7 @@ export class Recipe {
             items,
             lineIdx,
             sourceColumn,
+            diagnosticContext,
             linkedVariants,
           );
         }
@@ -2019,6 +2058,7 @@ export class Recipe {
             items,
             lineIdx,
             sourceColumn,
+            diagnosticContext,
             linkedVariants,
           );
         }
@@ -2065,6 +2105,10 @@ export class Recipe {
               type: "cookware",
               index: idxInList,
             };
+            diagnosticContext.cookwareSpans.set(
+              newItem,
+              makeSpan(this._lineOffsets, lineIdx, sourceColumn, sourceLength),
+            );
             if (quantity) {
               newItem.quantity = quantity;
             }
@@ -2143,9 +2187,9 @@ export class Recipe {
       this.choices.variants = [...allVariants];
     }
 
-    this._populateCookwareQuantities(true);
+    this._populateCookwareQuantities(true, diagnosticContext);
     try {
-      this._populateIngredientQuantities(true);
+      this._populateIngredientQuantities(true, diagnosticContext);
     } catch (error) {
       if (!(error instanceof RatioNotComputableError)) throw error;
       this.diagnostics.push(error.diagnostic);
