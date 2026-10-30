@@ -91,6 +91,7 @@ import {
   RatioNotComputableError,
   DiagnosticError,
   ParseStoppedError,
+  ReferencedIngredientPropsDoNotMatchError,
 } from "../errors";
 import { createDiagnostic } from "../diagnostics";
 import {
@@ -2006,12 +2007,7 @@ export class Recipe {
               newCookware,
               reference,
               this.diagnostics,
-              makeSpan(
-                this._lineOffsets,
-                lineIdx,
-                sourceColumn,
-                sourceLength,
-              ),
+              makeSpan(this._lineOffsets, lineIdx, sourceColumn, sourceLength),
             );
             // Adding the item itself in the preparation
             const newItem: CookwareItem = {
@@ -2135,6 +2131,10 @@ export class Recipe {
     } else if (e instanceof ReferencedIngredientNotFoundError) {
       this.diagnostics.push(
         createDiagnostic("COOKLANG_E0201", { name: e.ingredientName }, span),
+      );
+    } else if (e instanceof ReferencedIngredientPropsDoNotMatchError) {
+      this.diagnostics.push(
+        createDiagnostic("COOKLANG_E0204", { name: e.ingredientName }, span),
       );
     } else if (e instanceof ReferencedCookwareNotFoundError) {
       this.diagnostics.push(

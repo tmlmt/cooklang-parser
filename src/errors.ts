@@ -140,6 +140,20 @@ export class ReferencedItemCannotBeRedefinedError extends SingleDiagnosticError 
 }
 
 /**
+ * Thrown when a referenced ingredient (`&`) does not match the flags and preparation
+ * of the previously declared ingredient
+ * @category Errors
+ */
+export class ReferencedIngredientPropsDoNotMatchError extends SingleDiagnosticError {
+  readonly ingredientName: string;
+  constructor(ingredientName: string) {
+    super(createDiagnostic("COOKLANG_E0204", { name: ingredientName }));
+    this.name = "ReferencedIngredientPropsDoNotMatchError";
+    this.ingredientName = ingredientName;
+  }
+}
+
+/**
  * Thrown when a quantity is found to be in an invalid format
  * @category Errors
  */

@@ -69,6 +69,11 @@ export const diagnosticCatalog = defineDiagnostics({
         `Referenced ${p.itemType} "${p.name}" cannot be redefined as "${p.flag}".`,
       fix: `Remove the reference ('&') to create a new entry, or add the flag to the original definition.`,
     },
+    COOKLANG_E0204: {
+      why: (p: { name: string }) =>
+        `Referenced ingredient "${p.name}" does not match the flags and preparation of the initial ingredient declaration. `,
+      fix: `Verify that the flags and preparation match, or drop the '&' to create a new entry with different flags and/or preparation.`,
+    },
     // -- Domain 3: metadata --------------------------------------------------
     COOKLANG_W0201: {
       why: (p: { name: string }) =>
